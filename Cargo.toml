@@ -69,3 +69,44 @@ nursery = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
 undocumented_unsafe_blocks = "warn"
 multiple_crate_versions = "allow"
+
+# Development and CI certify one immutable WaterUI foundation revision: every
+# framework package in the graph, Hydrolysis included, comes from the same commit.
+# The published requirements above remain the distribution contract; Cargo only
+# applies patches from the consuming graph's root manifest.
+[patch.crates-io]
+hydrolysis = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-assets = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-backend-core = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-controls = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-core = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-form = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-icon = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-internal = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-layout = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-locale = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-macros = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-map = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-media = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-shape = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-str = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-svg = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-testing = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-text = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-url = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-video = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-webview = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+
+# `waterui-testing` carries this theme as its default; inside the pinned
+# framework checkout that is a path dependency, so it is redirected to this
+# crate rather than linking a second copy.
+[patch."https://github.com/water-rs/waterui.git"]
+hydrolysis-m3 = { path = "." }
