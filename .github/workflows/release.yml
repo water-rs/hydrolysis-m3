@@ -23,7 +23,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev libva-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev
+          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev
       - uses: MarcoIeni/release-plz-action@v0.5
         with:
           command: release
@@ -44,7 +44,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev libva-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev
+          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev
       - uses: MarcoIeni/release-plz-action@v0.5
         with:
           command: release-pr
