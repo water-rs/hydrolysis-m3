@@ -71,9 +71,10 @@ undocumented_unsafe_blocks = "warn"
 multiple_crate_versions = "allow"
 
 # Development and CI certify one immutable WaterUI foundation revision: every
-# framework package in the graph, Hydrolysis included, comes from the same commit.
-# The published requirements above remain the distribution contract; Cargo only
-# applies patches from the consuming graph's root manifest.
+# framework package in the graph comes from the same commit, and the framework's
+# own dependency patches are mirrored so the graph matches what that commit
+# builds. The published requirements above remain the distribution contract;
+# Cargo only applies patches from the consuming graph's root manifest.
 [patch.crates-io]
 hydrolysis = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
 waterui = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
@@ -103,10 +104,17 @@ waterui-testing = { git = "https://github.com/water-rs/waterui.git", rev = "3255
 waterui-text = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
 waterui-url = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
 waterui-video = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
 waterui-webview = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
+xcb = { git = "https://github.com/rust-x-bindings/rust-xcb", rev = "ae3b2cd080e78173223038ccbebdc644eaf4a9ad" }
+block = { git = "https://github.com/Dicklesworthstone/rust-block", rev = "b39ae859d1ee8e8cb5eef6a516471f1578d26b96" }
+vello = { git = "https://github.com/lexoliu/vello", rev = "5e5f538556be16527f67379b105af82f408b747d" }
+vello_hybrid = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
+vello_common = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
+vello_sparse_shaders = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
+glifo = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
 
-# `waterui-testing` carries this theme as its default; inside the pinned
-# framework checkout that is a path dependency, so it is redirected to this
-# crate rather than linking a second copy.
+# The framework checkout carries its own copy of `hydrolysis-m3` as a path
+# dependency; redirect it here so the graph links exactly one.
 [patch."https://github.com/water-rs/waterui.git"]
 hydrolysis-m3 = { path = "." }
