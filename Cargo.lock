@@ -2381,6 +2381,23 @@ dependencies = [
 [[package]]
 name = "hydrolysis-m3"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1887692df400f25d7858ca5e823d7336a5b345ca665149ca1481226b24bb5553"
+dependencies = [
+ "material-color-utils",
+ "num-traits",
+ "vello",
+ "waterui",
+ "waterui-backend-core",
+ "waterui-controls",
+ "waterui-core",
+ "waterui-form",
+ "waterui-graphics 0.4.0",
+]
+
+[[package]]
+name = "hydrolysis-m3"
+version = "0.2.0"
 dependencies = [
  "material-color-utils",
  "num-traits",
@@ -7155,7 +7172,7 @@ dependencies = [
  "accesskit",
  "executor-core",
  "hydrolysis",
- "hydrolysis-m3",
+ "hydrolysis-m3 0.1.1",
  "image",
  "pollster 1.0.1",
  "serde_json",
