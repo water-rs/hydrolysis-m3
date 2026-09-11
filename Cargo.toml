@@ -3,7 +3,7 @@ resolver = "2"
 
 [package]
 name = "hydrolysis-m3"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Lexo Liu"]
 rust-version = "1.95"
@@ -18,19 +18,19 @@ categories = ["gui"]
 material-color-utils = { version = "0.1.3", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 vello = "0.9"
-waterui = { version = "0.3.0", default-features = false, features = ["snackbar"] }
-waterui-backend-core = { version = "0.1.0", default-features = false, features = ["widgets", "gestures"] }
-waterui-core = "0.3.0"
-waterui-controls = "0.3.0"
-waterui-form = "0.3.0"
-waterui-graphics = { version = "0.3.0", default-features = false, features = ["gpu"] }
+waterui = { version = "0.4.0", default-features = false, features = ["snackbar"] }
+waterui-backend-core = { version = "0.1.1", default-features = false, features = ["widgets", "gestures"] }
+waterui-core = "0.3.1"
+waterui-controls = "0.3.1"
+waterui-form = "0.3.1"
+waterui-graphics = { version = "0.4.0", default-features = false, features = ["gpu"] }
 
 [dev-dependencies]
 pollster = "1.0"
 # The theme itself draws into the scene directly; only the shape gallery test
 # authors a canvas.
-waterui-canvas = "0.1.1"
-waterui-testing = "0.3.0"
+waterui-canvas = "0.1.2"
+waterui-testing = "0.4.0"
 
 [package.metadata.waterui.assets]
 
@@ -70,42 +70,12 @@ cargo = { level = "warn", priority = -1 }
 undocumented_unsafe_blocks = "warn"
 multiple_crate_versions = "allow"
 
-# Development and CI certify one immutable WaterUI foundation revision: every
-# framework package in the graph comes from the same commit, and the framework's
-# own dependency patches are mirrored so the graph matches what that commit
-# builds. The published requirements above remain the distribution contract;
-# Cargo only applies patches from the consuming graph's root manifest.
+# The WaterUI packages above come from crates.io, so this repository builds
+# against the same released APIs its users get. The third-party pins below are
+# the framework's own: the published framework crates were built with these
+# forks, and dropping them here would run this repository's render tests
+# through different code than the framework runs.
 [patch.crates-io]
-hydrolysis = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-assets = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-backend-core = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-controls = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-core = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-form = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-icon = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-internal = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-layout = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-locale = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-macros = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-map = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-media = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-shape = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-str = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-svg = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-testing = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-text = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-url = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-video = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
-waterui-webview = { git = "https://github.com/water-rs/waterui.git", rev = "3255af7d4763033f543d31d1d5988501f8013dce" }
 xcb = { git = "https://github.com/rust-x-bindings/rust-xcb", rev = "ae3b2cd080e78173223038ccbebdc644eaf4a9ad" }
 block = { git = "https://github.com/Dicklesworthstone/rust-block", rev = "b39ae859d1ee8e8cb5eef6a516471f1578d26b96" }
 vello = { git = "https://github.com/lexoliu/vello", rev = "5e5f538556be16527f67379b105af82f408b747d" }
@@ -114,7 +84,7 @@ vello_common = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1
 vello_sparse_shaders = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
 glifo = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
 
-# The framework checkout carries its own copy of `hydrolysis-m3` as a path
-# dependency; redirect it here so the graph links exactly one.
-[patch."https://github.com/water-rs/waterui.git"]
+# `waterui-testing` depends on this crate, so a test graph that took it from
+# the registry would link two `hydrolysis-m3` copies and hand the harness a
+# theme of the wrong type. Redirect the registry copy at the one being built.
 hydrolysis-m3 = { path = "." }
