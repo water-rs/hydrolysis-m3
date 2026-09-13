@@ -6,7 +6,7 @@ use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, Accessibi
 use waterui::color::Color;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
+use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, boxed_action};
@@ -29,8 +29,6 @@ const NAVIGATION_BAR_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_BAR_ICON_SLOT_HEIGHT: f32 = 32.0;
 const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 64.0;
 const NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
-const NAVIGATION_BAR_ACTIVE_INDICATOR_CLIP_RADIUS: f32 =
-    NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT / NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH;
 const NAVIGATION_BAR_LABEL_TOP_SPACE: f32 = 4.0;
 
 /// A Material Design 3 navigation bar.
@@ -195,7 +193,7 @@ fn navigation_tab_content(
         .width(NAVIGATION_BAR_ICON_SIZE)
         .height(NAVIGATION_BAR_ICON_SIZE);
     let icon_container = waterui::component::zstack((
-        RoundedRectangle::new(NAVIGATION_BAR_ACTIVE_INDICATOR_CLIP_RADIUS)
+        Capsule
             .fill(indicator_color)
             .width(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH)
             .height(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),

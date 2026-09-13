@@ -22,7 +22,6 @@ const SNACKBAR_CLOSE_ICON_SIZE: f32 = 24.0;
 /// `IconButtonTokens.StateLayerSize` — the size Compose's `IconButton` measures.
 const SNACKBAR_CLOSE_STATE_LAYER_SIZE: f32 = 40.0;
 const SNACKBAR_CORNER_RADIUS: f32 = 4.0;
-const SNACKBAR_CLIP_RADIUS: f32 = 0.08;
 const SNACKBAR_MOTION_OFFSET_Y: f32 = 20.0;
 
 pub fn theme(_colors: &MaterialColorScheme) -> SnackbarTheme {
@@ -47,7 +46,6 @@ pub fn theme(_colors: &MaterialColorScheme) -> SnackbarTheme {
         close_state_layer_size: SNACKBAR_CLOSE_STATE_LAYER_SIZE,
         single_line_min_height: SNACKBAR_SINGLE_LINE_HEIGHT,
         corner_radius: SNACKBAR_CORNER_RADIUS,
-        clip_radius: SNACKBAR_CLIP_RADIUS,
         shadow_color: key.color,
         shadow_radius: key.radius,
         shadow_offset_y: key.offset_y,

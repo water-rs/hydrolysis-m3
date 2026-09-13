@@ -8,7 +8,7 @@ use waterui::layout::{
     container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
+use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::signal::IntoComputed;
 use waterui::style::Anchor;
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
@@ -27,7 +27,6 @@ const DIALOG_CONTAINER_MIN_WIDTH: f32 = 280.0;
 const DIALOG_CONTAINER_MAX_WIDTH: f32 = 560.0;
 const DIALOG_CONTAINER_MIN_HEIGHT: f32 = 140.0;
 const DIALOG_CONTAINER_SHAPE: f32 = 28.0;
-const DIALOG_CONTAINER_CLIP_RADIUS: f32 = DIALOG_CONTAINER_SHAPE / DIALOG_CONTAINER_MAX_WIDTH;
 const DIALOG_VIEWPORT_PADDING: f32 = 48.0;
 const DIALOG_CONTENT_PADDING: f32 = 24.0;
 const DIALOG_HEADLINE_BODY_SPACING: f32 = 16.0;
@@ -207,7 +206,7 @@ where
                 actions: self.actions,
             },
         )
-        .background(RoundedRectangle::new(DIALOG_CONTAINER_CLIP_RADIUS).fill(SurfaceContainerHigh))
+        .background(FixedRoundedRectangle::new(DIALOG_CONTAINER_SHAPE).fill(SurfaceContainerHigh))
         .background(
             SurfaceContainerHigh
                 .with_opacity(0.0)
