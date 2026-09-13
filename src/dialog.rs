@@ -217,7 +217,7 @@ where
                 ),
         )
         .a11y_label(self.accessibility_label)
-        .a11y_role(AccessibilityRole::Group);
+        .a11y_role(AccessibilityRole::Dialog);
 
         let surface = material_elevation(MaterialElevationLevel::LEVEL3, surface)
             .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
