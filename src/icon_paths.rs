@@ -120,6 +120,33 @@ pub const fn icon_grid_size() -> f64 {
     ICON_GRID
 }
 
+/// Material `arrow_back`: the standard leading navigation glyph, a filled
+/// left-pointing arrow. This is the icon Compose's `TopAppBar` navigation
+/// slot shows by default (`Icons.AutoMirrored.Filled.ArrowBack`).
+#[must_use]
+pub fn arrow_back(grid: IconGrid) -> BezPath {
+    const OUTLINE: [(f64, f64); 9] = [
+        (20.0, 11.0),
+        (7.83, 11.0),
+        (13.42, 5.41),
+        (12.0, 4.0),
+        (4.0, 12.0),
+        (12.0, 20.0),
+        (13.41, 18.59),
+        (7.83, 13.0),
+        (20.0, 13.0),
+    ];
+    let mut path = BezPath::new();
+    let mut corners = OUTLINE.iter();
+    let (x, y) = *corners.next().expect("the arrow outline is not empty");
+    path.move_to(grid.point(x, y));
+    for &(x, y) in corners {
+        path.line_to(grid.point(x, y));
+    }
+    path.close_path();
+    path
+}
+
 /// Material `remove`: the minus bar.
 #[must_use]
 pub fn remove(grid: IconGrid) -> BezPath {
