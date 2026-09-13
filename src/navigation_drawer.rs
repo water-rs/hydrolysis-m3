@@ -277,7 +277,7 @@ where
         let background = conditional_color(
             self.selected.clone(),
             SecondaryContainer,
-            SurfaceContainerLow,
+            SecondaryContainer.with_opacity(0.0),
         );
         let state_layer_color =
             conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
