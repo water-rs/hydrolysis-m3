@@ -10,7 +10,7 @@ use waterui::layout::{
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{RoundedRectangle, ShapeExt as _, UnevenRoundedRectangle};
+use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction, boxed_action};
@@ -25,13 +25,14 @@ use crate::theme::{motion, typography};
 
 const NAVIGATION_DRAWER_CONTAINER_WIDTH: f32 = 360.0;
 const NAVIGATION_DRAWER_MODAL_MAX_VIEWPORT_FRACTION: f32 = 0.8;
+/// `ModalNavigationDrawerTokens.ContainerShape` — the trailing corners in
+/// points; the leading edge sits flush against the viewport edge.
 const NAVIGATION_DRAWER_CONTAINER_SHAPE: f32 = 16.0;
-const NAVIGATION_DRAWER_CONTAINER_CLIP_RADIUS: f32 =
-    NAVIGATION_DRAWER_CONTAINER_SHAPE / NAVIGATION_DRAWER_CONTAINER_WIDTH;
 const NAVIGATION_DRAWER_ITEM_HEIGHT: f32 = 56.0;
-const NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE: f32 = 28.0;
-const NAVIGATION_DRAWER_ITEM_CLIP_RADIUS: f32 =
-    NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE / NAVIGATION_DRAWER_CONTAINER_WIDTH;
+/// `NavigationDrawerItem` active-indicator corners are `CornerFull` — half the
+/// item height — for both the fill (a `Capsule`) and the state layer, which
+/// takes the length in points.
+const NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE: f32 = NAVIGATION_DRAWER_ITEM_HEIGHT / 2.0;
 const NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING: f32 = 16.0;
 const NAVIGATION_DRAWER_ITEM_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE: f32 = 12.0;
@@ -130,11 +131,11 @@ where
         if self.modal {
             let panel_content = FixedContainer::new(NavigationDrawerPanelLayout, (self.content,))
                 .background(
-                    UnevenRoundedRectangle::new(
+                    FixedUnevenRoundedRectangle::new(
                         0.0,
-                        NAVIGATION_DRAWER_CONTAINER_CLIP_RADIUS,
+                        NAVIGATION_DRAWER_CONTAINER_SHAPE,
                         0.0,
-                        NAVIGATION_DRAWER_CONTAINER_CLIP_RADIUS,
+                        NAVIGATION_DRAWER_CONTAINER_SHAPE,
                     )
                     .fill(SurfaceContainerLow),
                 )
@@ -320,7 +321,7 @@ fn drawer_item_content(
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
     ))
-    .background(RoundedRectangle::new(NAVIGATION_DRAWER_ITEM_CLIP_RADIUS).fill(background))
+    .background(Capsule.fill(background))
 }
 
 const fn noop(_env: &Environment) {}

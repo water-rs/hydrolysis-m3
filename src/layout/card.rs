@@ -8,7 +8,6 @@ use crate::theme::colors::MaterialColorScheme;
 const CARD_CONTENT_PADDING: f32 = 16.0;
 const CARD_CONTENT_SPACING: f32 = 4.0;
 const CARD_CORNER_RADIUS: f32 = 12.0;
-const CARD_CLIP_RADIUS: f32 = 0.08;
 const CARD_OUTLINE_WIDTH: f32 = 1.0;
 
 struct CardShadowTokens {
@@ -46,7 +45,6 @@ fn tokens(
         outline_color,
         outline_width,
         corner_radius: CARD_CORNER_RADIUS,
-        clip_radius: CARD_CLIP_RADIUS,
         shadow_color: shadow.color,
         shadow_radius: shadow.radius,
         shadow_offset_y: shadow.offset_y,

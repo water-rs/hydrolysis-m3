@@ -8,7 +8,7 @@ use waterui::layout::{
     Layout, ProposalSize, Rect, Size, SubView, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
+use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
@@ -23,15 +23,11 @@ use crate::theme::{motion, typography};
 
 const PLAIN_TOOLTIP_CONTAINER_HEIGHT: f32 = 24.0;
 const PLAIN_TOOLTIP_CONTAINER_SHAPE: f32 = 4.0;
-const PLAIN_TOOLTIP_CONTAINER_CLIP_RADIUS: f32 =
-    PLAIN_TOOLTIP_CONTAINER_SHAPE / PLAIN_TOOLTIP_CONTAINER_HEIGHT;
 const PLAIN_TOOLTIP_TOP_SPACE: f32 = 4.0;
 const PLAIN_TOOLTIP_BOTTOM_SPACE: f32 = 4.0;
 const PLAIN_TOOLTIP_LEADING_SPACE: f32 = 8.0;
 const PLAIN_TOOLTIP_TRAILING_SPACE: f32 = 8.0;
 const RICH_TOOLTIP_CONTAINER_SHAPE: f32 = 12.0;
-const RICH_TOOLTIP_CONTAINER_CLIP_RADIUS: f32 =
-    RICH_TOOLTIP_CONTAINER_SHAPE / RICH_TOOLTIP_MAX_WIDTH;
 const RICH_TOOLTIP_MAX_WIDTH: f32 = 312.0;
 const RICH_TOOLTIP_HORIZONTAL_PADDING: f32 = 16.0;
 const RICH_TOOLTIP_TOP_PADDING: f32 = 12.0;
@@ -294,7 +290,7 @@ impl View for PlainTooltip {
                 PLAIN_TOOLTIP_TRAILING_SPACE,
             ))
             .background(
-                RoundedRectangle::new(PLAIN_TOOLTIP_CONTAINER_CLIP_RADIUS).fill(InverseSurface),
+                FixedRoundedRectangle::new(PLAIN_TOOLTIP_CONTAINER_SHAPE).fill(InverseSurface),
             )
             .min_width(28.0)
             .max_width(320.0)
@@ -392,9 +388,7 @@ where
             RICH_TOOLTIP_HORIZONTAL_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
-        .background(
-            RoundedRectangle::new(RICH_TOOLTIP_CONTAINER_CLIP_RADIUS).fill(SurfaceContainer),
-        )
+        .background(FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer))
         .max_width(RICH_TOOLTIP_MAX_WIDTH);
 
         material_elevation(MaterialElevationLevel::LEVEL2, content)
