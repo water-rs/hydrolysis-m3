@@ -44,8 +44,9 @@ pub fn label_color(colors: &MaterialColorScheme, style: ButtonStyle, disabled: b
             .with_opacity(crate::theme::colors::DISABLED_CONTENT_OPACITY);
     }
     match style {
-        ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
-        ButtonStyle::Automatic => colors.on_secondary_container.view_color(),
+        // `Automatic` is the theme's default button, which in M3 is the
+        // filled button — primary container with on-primary content.
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
         ButtonStyle::Bordered
         | ButtonStyle::Plain
         | ButtonStyle::Link
@@ -75,11 +76,11 @@ pub fn draw_chrome(
     // follows the disabled label (on-surface at 38%). Text buttons have no
     // container to dim.
     match style {
-        ButtonStyle::Automatic => {
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
             let fill = if state.disabled {
                 colors.on_surface.peniko_disabled_container()
             } else {
-                colors.secondary_container.peniko()
+                colors.primary.peniko()
             };
             draw.fill_rounded_rect(bounds, container_radius(bounds).into(), &Brush::from(fill));
         }
@@ -97,14 +98,6 @@ pub fn draw_chrome(
                 &Brush::from(border),
                 1.0,
             );
-        }
-        ButtonStyle::BorderedProminent => {
-            let fill = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
-            } else {
-                colors.primary.peniko()
-            };
-            draw.fill_rounded_rect(bounds, container_radius(bounds).into(), &Brush::from(fill));
         }
         ButtonStyle::Link => {
             let underline = if state.disabled {
@@ -133,8 +126,7 @@ pub fn draw_state_layer(
     state: WidgetInteractionState,
 ) {
     let color = match style {
-        ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
-        ButtonStyle::Automatic => colors.on_secondary_container.peniko(),
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
         ButtonStyle::Bordered
         | ButtonStyle::Link
         | ButtonStyle::Plain
@@ -263,13 +255,16 @@ mod tests {
 
     #[derive(Default)]
     struct RecordingDrawContext {
+        rounded_fills: Vec<(Rect, RoundedRectRadii, Brush)>,
         rounded_strokes: Vec<(Rect, RoundedRectRadii, Brush, f64)>,
     }
 
     impl DrawContext for RecordingDrawContext {
         fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
 
-        fn fill_rounded_rect(&mut self, _rect: Rect, _radii: RoundedRectRadii, _brush: &Brush) {}
+        fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
+            self.rounded_fills.push((rect, radii, brush.clone()));
+        }
 
         fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
 
@@ -358,6 +353,34 @@ mod tests {
                     expected.green,
                     expected.blue,
                     expected.opacity
+                ),
+                "style {style:?}"
+            );
+        }
+    }
+
+    /// `Automatic` is the theme's default button; in M3 that is the filled
+    /// button — a primary container with on-primary content, identical to the
+    /// prominent style.
+    #[test]
+    fn automatic_button_renders_filled() {
+        let colors = MaterialColorScheme::baseline_light();
+        for style in [ButtonStyle::Automatic, ButtonStyle::BorderedProminent] {
+            let mut draw = RecordingDrawContext::default();
+
+            draw_chrome(
+                &colors,
+                &mut draw,
+                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+                style,
+                crate::WidgetInteractionState::NONE,
+            );
+
+            assert_eq!(draw.rounded_fills.len(), 1, "style {style:?}");
+            assert!(
+                matches!(
+                    &draw.rounded_fills[0].2,
+                    Brush::Solid(color) if *color == colors.primary.peniko()
                 ),
                 "style {style:?}"
             );
