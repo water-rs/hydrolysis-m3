@@ -46,9 +46,7 @@ pub fn label_color(colors: &MaterialColorScheme, style: ButtonStyle, disabled: b
     match style {
         // `Automatic` is the theme's default button, which in M3 is the
         // filled button — primary container with on-primary content.
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
-            colors.on_primary.view_color()
-        }
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
         ButtonStyle::Bordered
         | ButtonStyle::Plain
         | ButtonStyle::Link
