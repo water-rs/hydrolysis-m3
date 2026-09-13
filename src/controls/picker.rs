@@ -6,6 +6,7 @@ use crate::dimensions::{
     PICKER_RADIO_ROW_SPACING, PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
     PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_OUTLINE_WIDTH, PICKER_VERTICAL_INSET,
 };
+use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, PickerMetrics, RadioIndicatorState, WidgetInteractionState};
@@ -87,16 +88,20 @@ pub fn draw_popup(
     draw: &mut dyn DrawContext,
     popup_rect: vello::kurbo::Rect,
 ) {
+    let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
+    // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
+    // menus carry no outline.
+    crate::elevation::draw_shadows(
+        draw,
+        popup_rect,
+        radii,
+        MaterialElevationLevel::LEVEL2,
+        colors,
+    );
     draw.fill_rounded_rect(
         popup_rect,
-        PICKER_MENU_POPUP_CORNER_RADIUS.into(),
+        radii,
         &Brush::from(colors.surface_container.peniko()),
-    );
-    draw.stroke_rounded_rect(
-        popup_rect,
-        PICKER_MENU_POPUP_CORNER_RADIUS.into(),
-        &Brush::from(colors.outline_variant.peniko()),
-        1.0,
     );
 }
 
@@ -342,6 +347,7 @@ mod tests {
         rect_fills: Vec<Color>,
         rounded_strokes: Vec<(RoundedRectRadii, Color, f64)>,
         line_strokes: Vec<(Color, f64)>,
+        shadows: Vec<(f64, f64, Color)>,
     }
 
     impl DrawContext for RecordingDrawContext {
@@ -398,10 +404,11 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
-            _blur: f64,
-            _color: vello::peniko::Color,
+            offset: vello::kurbo::Vec2,
+            blur: f64,
+            color: Color,
         ) {
+            self.shadows.push((blur, offset.y, color));
         }
 
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
@@ -589,6 +596,30 @@ mod tests {
                 (colors.outline.peniko(), 1.0),
                 (colors.outline.peniko(), 1.0)
             ]
+        );
+    }
+
+    #[test]
+    /// `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`: the popup
+    /// casts the level-2 key and ambient shadows and carries no outline.
+    fn popup_casts_the_level_two_elevation_shadows() {
+        use super::draw_popup;
+
+        let colors = MaterialColorScheme::baseline_light();
+        let mut draw = RecordingDrawContext::default();
+
+        draw_popup(&colors, &mut draw, Rect::new(0.0, 0.0, 112.0, 96.0));
+
+        assert_eq!(draw.shadows.len(), 2, "key then ambient shadow");
+        let (key_blur, key_y, _) = draw.shadows[0];
+        let (ambient_blur, ambient_y, _) = draw.shadows[1];
+        assert_eq!(key_blur, f64::from(3.0f32));
+        assert_eq!(key_y, f64::from(0.85f32));
+        assert_eq!(ambient_blur, f64::from(1.0f32));
+        assert_eq!(ambient_y, f64::from(0.25f32));
+        assert!(
+            draw.rounded_strokes.is_empty(),
+            "Material menus carry no outline"
         );
     }
 }

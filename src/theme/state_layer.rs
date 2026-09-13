@@ -418,10 +418,9 @@ mod tests {
             _radii: RoundedRectRadii,
             _offset: vello::kurbo::Vec2,
             _blur: f64,
-            _color: vello::peniko::Color,
+            _color: Color,
         ) {
         }
-
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
         fn push_rounded_layer(&mut self, _alpha: f32, _clip: Rect, _radii: RoundedRectRadii) {}
         fn pop_layer(&mut self) {}
@@ -517,7 +516,7 @@ mod tests {
             radii: RoundedRectRadii,
             offset: vello::kurbo::Vec2,
             blur: f64,
-            color: vello::peniko::Color,
+            color: Color,
         ) {
             let radius = radii
                 .as_single_radius()

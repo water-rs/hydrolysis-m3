@@ -157,7 +157,6 @@ mod tests {
         fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
 
         fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
-
         fn draw_shadow(
             &mut self,
             _rect: Rect,
