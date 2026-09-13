@@ -237,7 +237,11 @@ where
         let overlay_action = self.overlay_action;
         let scrim = Scrim
             .with_opacity(1.0)
-            .opacity(motion::dialog_opacity(presented.clone(), 0.0, 0.4))
+            .opacity(motion::dialog_opacity(
+                presented.clone(),
+                0.0,
+                crate::theme::colors::SCRIM_OPACITY,
+            ))
             .on_tap(move |env: Environment| overlay_action.call(&env))
             .a11y_hidden(true)
             .install(interaction_style(Scrim.with_opacity(0.0), 0.0).pointer_only());
