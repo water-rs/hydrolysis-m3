@@ -183,16 +183,16 @@ pub(crate) fn draw_shadows(
     colors: &crate::theme::colors::MaterialColorScheme,
 ) {
     let tokens = ElevationTokens::for_level(level);
-    for (shadow, base_opacity) in [
-        (tokens.key, KEY_OPACITY),
-        (tokens.ambient, AMBIENT_OPACITY),
-    ] {
+    for (shadow, base_opacity) in [(tokens.key, KEY_OPACITY), (tokens.ambient, AMBIENT_OPACITY)] {
         draw.draw_shadow(
             rect,
             radii,
             vello::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
             f64::from(shadow.blur),
-            colors.shadow.peniko().with_alpha(shadow.opacity(base_opacity)),
+            colors
+                .shadow
+                .peniko()
+                .with_alpha(shadow.opacity(base_opacity)),
         );
     }
 }

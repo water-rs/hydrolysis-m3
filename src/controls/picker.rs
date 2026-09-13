@@ -91,7 +91,13 @@ pub fn draw_popup(
     let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
     // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
     // menus carry no outline.
-    crate::elevation::draw_shadows(draw, popup_rect, radii, MaterialElevationLevel::LEVEL2, colors);
+    crate::elevation::draw_shadows(
+        draw,
+        popup_rect,
+        radii,
+        MaterialElevationLevel::LEVEL2,
+        colors,
+    );
     draw.fill_rounded_rect(
         popup_rect,
         radii,
@@ -607,10 +613,10 @@ mod tests {
         assert_eq!(draw.shadows.len(), 2, "key then ambient shadow");
         let (key_blur, key_y, _) = draw.shadows[0];
         let (ambient_blur, ambient_y, _) = draw.shadows[1];
-        assert_eq!(key_blur, 3.0);
-        assert_eq!(key_y, 0.85);
-        assert_eq!(ambient_blur, 1.0);
-        assert_eq!(ambient_y, 0.25);
+        assert_eq!(key_blur, f64::from(3.0f32));
+        assert_eq!(key_y, f64::from(0.85f32));
+        assert_eq!(ambient_blur, f64::from(1.0f32));
+        assert_eq!(ambient_y, f64::from(0.25f32));
         assert!(
             draw.rounded_strokes.is_empty(),
             "Material menus carry no outline"
