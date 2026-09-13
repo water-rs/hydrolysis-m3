@@ -659,12 +659,7 @@ mod tests {
         impl DrawContext for RecordingDrawContext {
             fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
 
-            fn fill_rounded_rect(
-                &mut self,
-                rect: Rect,
-                radii: RoundedRectRadii,
-                _brush: &Brush,
-            ) {
+            fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, _brush: &Brush) {
                 self.rounded_fills.push((rect, radii));
             }
 
@@ -681,7 +676,8 @@ mod tests {
 
             fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, _width: f64) {}
 
-            fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {}
+            fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {
+            }
 
             fn fill_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush) {}
 
