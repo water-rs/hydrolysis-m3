@@ -24,7 +24,7 @@ fn install_default<T: 'static>(env: &mut Environment, value: ResolvedFont) {
 }
 
 pub fn install_defaults(env: &mut Environment) {
-    install_default::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.15));
+    install_default::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
     install_default::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
     install_default::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
     install_default::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
@@ -99,7 +99,7 @@ impl Resolvable for BodyMedium {
     type Resolved = ResolvedFont;
 
     fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
-        Computed::constant(font(14.0, FontWeight::Normal, 20.0, 0.2))
+        Computed::constant(font(14.0, FontWeight::Normal, 20.0, 0.25))
     }
 }
 
@@ -199,7 +199,7 @@ mod tests {
             16.0,
             FontWeight::Normal,
             24.0,
-            0.15,
+            0.5,
         );
         assert_material_font(
             Title.resolve(&env).get(),
@@ -309,7 +309,7 @@ mod tests {
             14.0,
             FontWeight::Normal,
             20.0,
-            0.2,
+            0.25,
         );
     }
 
