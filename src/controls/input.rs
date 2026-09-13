@@ -157,6 +157,15 @@ mod tests {
         fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
 
         fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
+        fn draw_shadow(
+            &mut self,
+            _rect: Rect,
+            _radii: RoundedRectRadii,
+            _offset: vello::kurbo::Vec2,
+            _blur: f64,
+            _color: vello::peniko::Color,
+        ) {
+        }
 
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
 

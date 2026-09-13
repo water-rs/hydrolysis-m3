@@ -4,6 +4,7 @@ use crate::dimensions::{
     TEXT_CONTEXT_MENU_SEPARATOR_HORIZONTAL_INSET, TEXT_CONTEXT_MENU_SEPARATOR_THICKNESS,
     TEXT_CONTEXT_MENU_VERTICAL_PADDING, TEXT_CONTEXT_MENU_WIDTH_PER_CHAR,
 };
+use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, TextContextMenuMetrics};
 
@@ -28,9 +29,12 @@ pub fn draw_text_context_panel(
     draw: &mut dyn DrawContext,
     bounds: Rect,
 ) {
+    let radii = RoundedRectRadii::from_single_radius(TEXT_CONTEXT_MENU_CONTAINER_SHAPE);
+    // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`.
+    crate::elevation::draw_shadows(draw, bounds, radii, MaterialElevationLevel::LEVEL2, colors);
     draw.fill_rounded_rect(
         bounds,
-        RoundedRectRadii::from_single_radius(TEXT_CONTEXT_MENU_CONTAINER_SHAPE),
+        radii,
         &Brush::from(colors.surface_container.peniko()),
     );
 }
