@@ -404,9 +404,7 @@ where
             RICH_TOOLTIP_HORIZONTAL_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
-        .background(
-            FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer),
-        )
+        .background(FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer))
         .max_width(RICH_TOOLTIP_MAX_WIDTH);
 
         material_elevation(MaterialElevationLevel::LEVEL2, content)
