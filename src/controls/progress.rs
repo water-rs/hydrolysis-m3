@@ -570,10 +570,7 @@ fn morph_spring(seconds: f64) -> f64 {
     let omega_d = omega * zeta.mul_add(-zeta, 1.0).sqrt();
     let decay = (-zeta * omega * seconds).exp();
     let progress = decay.mul_add(
-        -(zeta * omega / omega_d).mul_add(
-            (omega_d * seconds).sin(),
-            (omega_d * seconds).cos(),
-        ),
+        -(zeta * omega / omega_d).mul_add((omega_d * seconds).sin(), (omega_d * seconds).cos()),
         1.0,
     );
     if (progress - 1.0).abs() <= LOADING_MORPH_VISIBILITY_THRESHOLD {
