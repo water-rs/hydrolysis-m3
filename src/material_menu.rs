@@ -53,9 +53,9 @@ mod tests {
     fn material_menu_tokens_match_compose_menu_tokens() {
         let metrics = text_context_metrics();
 
-        assert_eq!(metrics.row_height, 56.0);
+        assert_eq!(metrics.row_height, 48.0);
         assert_eq!(metrics.min_width, 112.0);
-        assert_eq!(metrics.max_width, 320.0);
+        assert_eq!(metrics.max_width, 280.0);
         assert_eq!(metrics.corner_radius, 4.0);
         assert_eq!(metrics.separator_thickness, 1.0);
     }
