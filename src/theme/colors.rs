@@ -302,6 +302,9 @@ pub const DISABLED_CONTAINER_OPACITY: f32 = 0.12;
 /// active indicators.
 pub const DISABLED_CONTENT_OPACITY: f32 = 0.38;
 
+/// MD3 scrim opacity token (32%): modal dialog and drawer scrims.
+pub const SCRIM_OPACITY: f32 = 0.32;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Material You system color roles generated from a source color.
 pub struct MaterialColorScheme {

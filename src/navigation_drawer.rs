@@ -149,7 +149,11 @@ where
             let overlay_action = self.overlay_action;
             let scrim = Scrim
                 .with_opacity(1.0)
-                .opacity(motion::navigation_drawer_scrim(opened.computed(), 0.0, 0.4))
+                .opacity(motion::navigation_drawer_scrim(
+                    opened.computed(),
+                    0.0,
+                    crate::theme::colors::SCRIM_OPACITY,
+                ))
                 .on_tap(move |env: Environment| {
                     overlay_action.call(&env);
                     if close_on_overlay_click {
