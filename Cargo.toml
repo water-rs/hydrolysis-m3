@@ -125,4 +125,4 @@ waterui-url = { git = "https://github.com/water-rs/waterui", rev = "b134a714b7a5
 waterui-video = { git = "https://github.com/water-rs/waterui", rev = "b134a714b7a55b9f2bbf83b34ee3112d64ec0a83" }
 waterui-watcher-set = { git = "https://github.com/water-rs/waterui", rev = "b134a714b7a55b9f2bbf83b34ee3112d64ec0a83" }
 waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "b134a714b7a55b9f2bbf83b34ee3112d64ec0a83" }
-hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "d8fae94fdb15d0c9c3c53dc2d719ece68b257ace" }
+hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "cc31897" }
