@@ -170,6 +170,33 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
     )
 }
 
+/// Casts `level`'s key and ambient shadows for a rounded-rect surface drawn
+/// through a [`DrawContext`]. `colors` resolves the `shadow` role — the same
+/// role [`Shadow`] resolves through the environment — at draw time.
+///
+/// [`DrawContext`]: waterui::backend_core::widget::DrawContext
+pub(crate) fn draw_shadows(
+    draw: &mut dyn crate::DrawContext,
+    rect: vello::kurbo::Rect,
+    radii: vello::kurbo::RoundedRectRadii,
+    level: MaterialElevationLevel,
+    colors: &crate::theme::colors::MaterialColorScheme,
+) {
+    let tokens = ElevationTokens::for_level(level);
+    for (shadow, base_opacity) in [
+        (tokens.key, KEY_OPACITY),
+        (tokens.ambient, AMBIENT_OPACITY),
+    ] {
+        draw.draw_shadow(
+            rect,
+            radii,
+            vello::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
+            f64::from(shadow.blur),
+            colors.shadow.peniko().with_alpha(shadow.opacity(base_opacity)),
+        );
+    }
+}
+
 pub(crate) fn apply_to_floating_style(style: &mut FloatingStyle, level: MaterialElevationLevel) {
     let tokens = ElevationTokens::for_level(level);
     style.key_shadow_color = Shadow.with_opacity(tokens.key.opacity(KEY_OPACITY)).into();
