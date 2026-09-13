@@ -63,10 +63,7 @@ mod tests {
             TEXT_CONTEXT_MENU_HORIZONTAL_PADDING
         );
         assert_eq!(metrics.horizontal_padding, 12.0);
-        assert_eq!(
-            metrics.vertical_padding,
-            TEXT_CONTEXT_MENU_VERTICAL_PADDING
-        );
+        assert_eq!(metrics.vertical_padding, TEXT_CONTEXT_MENU_VERTICAL_PADDING);
         assert_eq!(metrics.vertical_padding, 8.0);
         assert_eq!(metrics.min_width, TEXT_CONTEXT_MENU_MIN_WIDTH);
         assert_eq!(metrics.min_width, 112.0);
