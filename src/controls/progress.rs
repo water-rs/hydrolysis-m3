@@ -316,7 +316,9 @@ fn draw_indeterminate_bar(
     );
     let width = (track.width() * scale).max(0.0);
     let rect = Rect::new(x, track.y0, x + width, track.y1);
-    draw.fill_rect(rect, &Brush::from(color));
+    // Expressive gives every progress element CornerFull ends, so the moving
+    // segments cap at half the track height like the determinate fill does.
+    draw.fill_rounded_rect(rect, (track.height() / 2.0).into(), &Brush::from(color));
 }
 
 fn sample_segments(segments: &[Segment], elapsed: Duration, cycle: Duration) -> f64 {
@@ -636,6 +638,80 @@ mod tests {
                     ..=CIRCULAR_INDETERMINATE_MAX_PROGRESS + 1e-6)
                     .contains(&turns),
                 "sweep left its range at {at:?}: {turns}"
+            );
+        }
+    }
+
+    /// Expressive gives every progress element `CornerFull` ends: the moving
+    /// indeterminate segments cap at half the track height, same as the
+    /// determinate fill.
+    #[test]
+    fn indeterminate_segments_draw_with_rounded_caps() {
+        use super::{LINEAR_INDETERMINATE_CYCLE, draw_linear_indeterminate};
+        use crate::{Brush, DrawContext, MaterialColorScheme};
+        use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+
+        #[derive(Default)]
+        struct RecordingDrawContext {
+            rounded_fills: Vec<(Rect, RoundedRectRadii)>,
+        }
+
+        impl DrawContext for RecordingDrawContext {
+            fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
+
+            fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, _brush: &Brush) {
+                self.rounded_fills.push((rect, radii));
+            }
+
+            fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
+
+            fn stroke_rounded_rect(
+                &mut self,
+                _rect: Rect,
+                _radii: RoundedRectRadii,
+                _brush: &Brush,
+                _width: f64,
+            ) {
+            }
+
+            fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, _width: f64) {}
+
+            fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {
+            }
+
+            fn fill_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush) {}
+
+            fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
+
+            fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
+
+            fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
+
+            fn pop_layer(&mut self) {}
+
+            fn push_transform(&mut self, _affine: Affine) {}
+
+            fn pop_transform(&mut self) {}
+        }
+
+        let colors = MaterialColorScheme::baseline_light();
+        let track = Rect::new(0.0, 0.0, 320.0, 4.0);
+        let mut draw = RecordingDrawContext::default();
+        // Mid-cycle: both segments are on screen with real width.
+        draw_linear_indeterminate(
+            &colors,
+            &mut draw,
+            track,
+            LINEAR_INDETERMINATE_CYCLE / 2,
+            false,
+        );
+
+        assert_eq!(draw.rounded_fills.len(), 2);
+        for (rect, radii) in &draw.rounded_fills {
+            assert_eq!(
+                *radii,
+                RoundedRectRadii::from(track.height() / 2.0),
+                "segment {rect:?} did not cap at half the track height"
             );
         }
     }
