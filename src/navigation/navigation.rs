@@ -7,9 +7,10 @@ use crate::dimensions::{
     NAVIGATION_TITLE_LARGE_HEIGHT, NAVIGATION_TITLE_LEADING_INSET, NAVIGATION_TITLE_MEDIUM_HEIGHT,
     NAVIGATION_TITLE_TRAILING_INSET,
 };
+use crate::icon_paths::{self, IconGrid};
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, NavigationMetrics};
-use vello::kurbo::{BezPath, Point, Rect};
+use vello::kurbo::{Point, Rect};
 
 pub const fn metrics() -> NavigationMetrics {
     NavigationMetrics {
@@ -42,20 +43,17 @@ pub fn draw_bar_separator(colors: &MaterialColorScheme, draw: &mut dyn DrawConte
 }
 
 pub fn draw_back_button(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+    // The navigation slot is a standard icon button: no container, just the
+    // 24dp `arrow_back` glyph in on-surface, centered in the touch target.
     let center = Point::new(
         bounds.width().mul_add(0.5, bounds.x0),
         bounds.height().mul_add(0.5, bounds.y0),
     );
-    draw.fill_circle(
-        center,
-        bounds.width().min(bounds.height()) * 0.5,
-        &Brush::from(colors.surface_container.peniko()),
+    let grid = IconGrid::centered(center, icon_paths::icon_grid_size());
+    draw.fill_path(
+        &icon_paths::arrow_back(grid),
+        &Brush::from(colors.on_surface.peniko()),
     );
-    let mut chevron = BezPath::new();
-    chevron.move_to(Point::new(center.x + 4.0, center.y - 7.0));
-    chevron.line_to(Point::new(center.x - 4.0, center.y));
-    chevron.line_to(Point::new(center.x + 4.0, center.y + 7.0));
-    draw.stroke_path(&chevron, &Brush::from(colors.on_surface.peniko()), 2.0);
 }
 
 #[cfg(test)]
