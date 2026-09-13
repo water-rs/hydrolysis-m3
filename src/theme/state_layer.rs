@@ -412,6 +412,16 @@ mod tests {
         }
         fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
         fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
+        fn draw_shadow(
+            &mut self,
+            _rect: Rect,
+            _radii: RoundedRectRadii,
+            _offset: vello::kurbo::Vec2,
+            _blur: f64,
+            _color: vello::peniko::Color,
+        ) {
+        }
+
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
         fn push_rounded_layer(&mut self, _alpha: f32, _clip: Rect, _radii: RoundedRectRadii) {}
         fn pop_layer(&mut self) {}
@@ -499,6 +509,26 @@ mod tests {
 
         fn stroke_path(&mut self, path: &BezPath, brush: &Brush, width: f64) {
             self.stroke_shape(path, brush, width);
+        }
+
+        fn draw_shadow(
+            &mut self,
+            rect: Rect,
+            radii: RoundedRectRadii,
+            offset: vello::kurbo::Vec2,
+            blur: f64,
+            color: vello::peniko::Color,
+        ) {
+            let radius = radii
+                .as_single_radius()
+                .expect("vello blurred shadows require uniform corner radii");
+            self.scene.draw_blurred_rounded_rect(
+                Affine::IDENTITY,
+                rect + offset,
+                color,
+                radius,
+                blur.max(0.0),
+            );
         }
 
         fn push_layer(&mut self, alpha: f32, clip: Option<&Rect>) {
