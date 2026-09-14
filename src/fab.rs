@@ -76,10 +76,12 @@ impl FabSize {
                 icon: 28.0,
                 corner_radius: 20.0,
             },
-            // FabLargeTokens: CornerExtraLarge
+            // FabLargeTokens: CornerExtraLarge. Compose overrides the stale
+            // 32dp icon token — FloatingActionButtonDefaults.LargeIconSize is
+            // 36.dp ("TODO: FabLargeTokens.IconSize is incorrect").
             Self::Large => FabSizeTokens {
                 container: 96.0,
-                icon: 32.0,
+                icon: 36.0,
                 corner_radius: 28.0,
             },
         }
@@ -87,6 +89,8 @@ impl FabSize {
 }
 
 const EXTENDED_FAB_HEIGHT: f32 = 56.0;
+/// Compose wraps the content in `sizeIn(minWidth = ExtendedFabMinimumWidth)`.
+const EXTENDED_FAB_MINIMUM_WIDTH: f32 = 80.0;
 const EXTENDED_FAB_SHAPE: f32 = 16.0;
 const EXTENDED_FAB_CLIP_RADIUS: f32 = EXTENDED_FAB_SHAPE / EXTENDED_FAB_HEIGHT;
 const EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON: f32 = 20.0;
@@ -158,7 +162,10 @@ impl FabVariantTokens for TertiaryFab {
 }
 
 /// A Material Design 3 floating action button.
-pub struct Fab<Content, Action = fn(&Environment), Tokens = SurfaceFab> {
+///
+/// The default variant is `PrimaryFab`: `FloatingActionButtonDefaults
+/// .containerColor` resolves to `primaryContainer`.
+pub struct Fab<Content, Action = fn(&Environment), Tokens = PrimaryFab> {
     accessibility_label: Str,
     content: Content,
     action: Action,
@@ -174,8 +181,8 @@ impl<Content, Action, Tokens> Debug for Fab<Content, Action, Tokens> {
     }
 }
 
-impl<Content> Fab<Content, fn(&Environment), SurfaceFab> {
-    /// Creates a surface FAB with arbitrary visual content.
+impl<Content> Fab<Content, fn(&Environment), PrimaryFab> {
+    /// Creates a primary FAB with arbitrary visual content.
     #[must_use]
     pub fn new(accessibility_label: impl Into<Str>, content: Content) -> Self {
         Self {
@@ -189,6 +196,12 @@ impl<Content> Fab<Content, fn(&Environment), SurfaceFab> {
 }
 
 impl<Content, Action, Tokens> Fab<Content, Action, Tokens> {
+    /// Uses surface FAB color tokens.
+    #[must_use]
+    pub fn surface(self) -> Fab<Content, Action, SurfaceFab> {
+        self.with_variant()
+    }
+
     /// Uses primary FAB color tokens.
     #[must_use]
     pub fn primary(self) -> Fab<Content, Action, PrimaryFab> {
@@ -360,7 +373,7 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
         let floating_style = floating_style::<Tokens>(
-            0.0,
+            f64::from(EXTENDED_FAB_MINIMUM_WIDTH),
             f64::from(EXTENDED_FAB_HEIGHT),
             EXTENDED_FAB_CLIP_RADIUS,
         );
@@ -391,7 +404,7 @@ const fn noop(_env: &Environment) {}
 
 pub(crate) fn theme() -> FloatingStyle {
     let size = FabSize::Baseline.tokens();
-    floating_style::<SurfaceFab>(
+    floating_style::<PrimaryFab>(
         f64::from(size.container),
         f64::from(size.container),
         size.clip_radius(),
@@ -422,7 +435,7 @@ where
     style
 }
 
-/// Creates a surface FAB with arbitrary visual content.
+/// Creates a primary FAB with arbitrary visual content.
 #[must_use]
 pub fn fab<Content>(accessibility_label: impl Into<Str>, content: Content) -> Fab<Content>
 where
@@ -440,8 +453,8 @@ pub fn extended_fab(label: impl IntoLabel) -> ExtendedFab {
 #[cfg(test)]
 mod tests {
     use super::{
-        EXTENDED_FAB_HEIGHT, EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON, EXTENDED_FAB_SHAPE,
-        EXTENDED_FAB_TRAILING_SPACE, FabSize,
+        EXTENDED_FAB_HEIGHT, EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON, EXTENDED_FAB_MINIMUM_WIDTH,
+        EXTENDED_FAB_SHAPE, EXTENDED_FAB_TRAILING_SPACE, FabSize,
     };
 
     /// `FabBaselineTokens`, `FabMediumTokens` and `FabLargeTokens`. The corner
@@ -461,7 +474,9 @@ mod tests {
 
         let large = FabSize::Large.tokens();
         assert_eq!(large.container, 96.0);
-        assert_eq!(large.icon, 32.0);
+        // `FloatingActionButtonDefaults.LargeIconSize` — 36dp, overriding the
+        // stale `FabLargeTokens.IconSize` of 32.
+        assert_eq!(large.icon, 36.0);
         assert_eq!(large.corner_radius, 28.0);
 
         // The icon stays centred at every size.
@@ -475,6 +490,7 @@ mod tests {
     fn extended_fab_tokens_match_compose_extended_fab_tokens() {
         assert_eq!(EXTENDED_FAB_HEIGHT, 56.0);
         assert_eq!(EXTENDED_FAB_SHAPE, 16.0);
+        assert_eq!(EXTENDED_FAB_MINIMUM_WIDTH, 80.0);
         assert_eq!(EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON, 20.0);
         assert_eq!(EXTENDED_FAB_TRAILING_SPACE, 20.0);
     }
