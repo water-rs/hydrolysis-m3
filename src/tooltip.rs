@@ -391,9 +391,13 @@ where
         .background(FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer))
         .max_width(RICH_TOOLTIP_MAX_WIDTH);
 
-        material_elevation(MaterialElevationLevel::LEVEL2, content)
-            .a11y_label(self.accessibility_label)
-            .a11y_role(AccessibilityRole::Group)
+        material_elevation(
+            MaterialElevationLevel::LEVEL2,
+            RICH_TOOLTIP_CONTAINER_SHAPE,
+            content,
+        )
+        .a11y_label(self.accessibility_label)
+        .a11y_role(AccessibilityRole::Group)
     }
 }
 
