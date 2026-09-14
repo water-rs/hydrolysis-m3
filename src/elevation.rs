@@ -70,14 +70,22 @@ impl Default for MaterialElevationLevel {
 /// A Material Design 3 elevated surface wrapper.
 pub struct MaterialElevation<Content> {
     level: MaterialElevationLevel,
+    corner_radius: f32,
     content: Content,
 }
 
 impl<Content> MaterialElevation<Content> {
     /// Creates a Material elevation wrapper.
+    ///
+    /// `corner_radius` is the surface's corner radius; the shadow silhouette
+    /// follows it, so it must match the shape the content is clipped to.
     #[must_use]
-    pub const fn new(level: MaterialElevationLevel, content: Content) -> Self {
-        Self { level, content }
+    pub const fn new(level: MaterialElevationLevel, corner_radius: f32, content: Content) -> Self {
+        Self {
+            level,
+            corner_radius,
+            content,
+        }
     }
 }
 
@@ -88,8 +96,8 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let tokens = ElevationTokens::for_level(self.level);
         self.content
-            .shadow(tokens.ambient_shadow())
-            .shadow(tokens.key_shadow())
+            .shadow(tokens.ambient_shadow(self.corner_radius))
+            .shadow(tokens.key_shadow(self.corner_radius))
     }
 }
 
@@ -97,9 +105,10 @@ where
 #[must_use]
 pub const fn material_elevation<Content>(
     level: MaterialElevationLevel,
+    corner_radius: f32,
     content: Content,
 ) -> MaterialElevation<Content> {
-    MaterialElevation::new(level, content)
+    MaterialElevation::new(level, corner_radius, content)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -116,21 +125,23 @@ impl ElevationTokens {
         }
     }
 
-    fn key_shadow(self) -> ViewShadow {
+    fn key_shadow(self, corner_radius: f32) -> ViewShadow {
         ViewShadow::new(
             Shadow.with_opacity(self.key.opacity(KEY_OPACITY)).into(),
             Vector::new(0.0, self.key.y),
             self.key.blur,
+            corner_radius,
         )
     }
 
-    fn ambient_shadow(self) -> ViewShadow {
+    fn ambient_shadow(self, corner_radius: f32) -> ViewShadow {
         ViewShadow::new(
             Shadow
                 .with_opacity(self.ambient.opacity(AMBIENT_OPACITY))
                 .into(),
             Vector::new(0.0, self.ambient.y),
             self.ambient.blur,
+            corner_radius,
         )
     }
 }

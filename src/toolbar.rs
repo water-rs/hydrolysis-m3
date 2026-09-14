@@ -108,6 +108,7 @@ where
         let style = self.style;
         material_elevation(
             MaterialElevationLevel::LEVEL3,
+            CONTAINER_HEIGHT / 2.0,
             waterui::component::hstack(self.actions)
                 .spacing(FLOATING_BETWEEN_SPACE)
                 .padding_with(EdgeInsets::new(
