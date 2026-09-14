@@ -219,19 +219,23 @@ where
         .a11y_label(self.accessibility_label)
         .a11y_role(AccessibilityRole::Dialog);
 
-        let surface = material_elevation(MaterialElevationLevel::LEVEL3, surface)
-            .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
-            .offset(
-                0.0,
-                motion::dialog_transform(presented.clone(), DIALOG_HIDDEN_OFFSET_Y, 0.0),
-            )
-            .scale_from(
-                1.0,
-                motion::dialog_transform(presented.clone(), 0.0, 1.0),
-                Anchor::new(0.5, 0.0),
-            )
-            .padding_with(EdgeInsets::all(DIALOG_VIEWPORT_PADDING))
-            .position_in(UnitPoint::CENTER);
+        let surface = material_elevation(
+            MaterialElevationLevel::LEVEL3,
+            DIALOG_CONTAINER_SHAPE,
+            surface,
+        )
+        .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
+        .offset(
+            0.0,
+            motion::dialog_transform(presented.clone(), DIALOG_HIDDEN_OFFSET_Y, 0.0),
+        )
+        .scale_from(
+            1.0,
+            motion::dialog_transform(presented.clone(), 0.0, 1.0),
+            Anchor::new(0.5, 0.0),
+        )
+        .padding_with(EdgeInsets::all(DIALOG_VIEWPORT_PADDING))
+        .position_in(UnitPoint::CENTER);
 
         let overlay_action = self.overlay_action;
         let scrim = Scrim
