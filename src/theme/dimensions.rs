@@ -203,6 +203,9 @@ pub const SLIDER_HANDLE_HEIGHT: f64 = 44.0;
 pub const SLIDER_HANDLE_PADDING: f64 = 6.0;
 /// `SliderTokens.StopIndicatorSize`: the dot marking the track's far end.
 pub const SLIDER_STOP_INDICATOR_SIZE: f64 = 4.0;
+/// The corner radius on the track ends that face the handle gap. Only the
+/// outer ends take the full stadium radius (`trackHeight / 2`).
+pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
 
 pub const PROGRESS_LINEAR_LABEL_HEIGHT: f64 = 18.0;
 pub const PROGRESS_LINEAR_BAR_TOP_OFFSET: f64 = 10.0;
