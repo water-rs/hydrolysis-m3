@@ -66,40 +66,43 @@ pub fn ripple_diameter(bounds: Rect) -> f64 {
         .max(RIPPLE_MINIMUM_DIAMETER)
 }
 
-/// Material ripple kinematics for one frame: given the target's `bounds` and
-/// one sampled `wave`, returns the wave's current center and radius.
+/// Material ripple kinematics for one frame: given the target's `center` and
+/// the `full_radius` a completed wave reaches, plus one sampled `wave`,
+/// returns the wave's current center and radius.
 ///
 /// The center drifts linearly from the wave's press point (already mapped by
-/// the renderer into the same coordinate space as `bounds`; the bounds center
-/// when absent) to the bounds center, and the radius grows from
-/// [`RIPPLE_INITIAL_SCALE`] of the full [`ripple_diameter`] to the full size,
-/// both driven by the wave's progress.
-fn ripple_kinematics(bounds: Rect, wave: PressWave) -> (Point, f64) {
+/// the renderer into the target's coordinate space; `center` when absent) to
+/// `center`, and the radius grows from [`RIPPLE_INITIAL_SCALE`] of
+/// `full_radius` to the full size, both driven by the wave's progress.
+fn ripple_kinematics(center: Point, full_radius: f64, wave: PressWave) -> (Point, f64) {
     let progress = f64::from(wave.progress.clamp(0.0, 1.0));
-    let bounds_center = Point::new(
-        bounds.width().mul_add(0.5, bounds.x0),
-        bounds.height().mul_add(0.5, bounds.y0),
-    );
-    let origin = wave.origin.unwrap_or(bounds_center);
-    let center = Point::new(
-        (bounds_center.x - origin.x).mul_add(progress, origin.x),
-        (bounds_center.y - origin.y).mul_add(progress, origin.y),
+    let origin = wave.origin.unwrap_or(center);
+    let wave_center = Point::new(
+        (center.x - origin.x).mul_add(progress, origin.x),
+        (center.y - origin.y).mul_add(progress, origin.y),
     );
     let scale = (1.0 - RIPPLE_INITIAL_SCALE).mul_add(progress, RIPPLE_INITIAL_SCALE);
-    let radius = ripple_diameter(bounds) * 0.5 * scale;
-    (center, radius)
+    (wave_center, full_radius * scale)
 }
 
 /// Fills every visible wave as a solid circle at its current animated
-/// geometry. The waves are ordered oldest to newest, so overlapping ripples
-/// from rapid re-presses composite naturally (Material semantics: older waves keep
+/// geometry. `full_radius` is the radius a completed wave reaches: the
+/// surface diagonal for a bounded target, the disc radius for an unbounded
+/// halo. The waves are ordered oldest to newest, so overlapping ripples from
+/// rapid re-presses composite naturally (Material semantics: older waves keep
 /// fading while the newest grows).
-fn fill_waves(draw: &mut dyn DrawContext, bounds: Rect, color: Color, waves: PressWaves) {
+fn fill_waves(
+    draw: &mut dyn DrawContext,
+    center: Point,
+    full_radius: f64,
+    color: Color,
+    waves: PressWaves,
+) {
     for wave in waves.iter() {
         if wave.opacity <= 0.0 {
             continue;
         }
-        let (center, radius) = ripple_kinematics(bounds, wave);
+        let (center, radius) = ripple_kinematics(center, full_radius, wave);
         let brush = Brush::from(color.with_alpha(wave.opacity.clamp(0.0, 1.0)));
         draw.fill_circle(center, radius, &brush);
     }
@@ -145,7 +148,11 @@ pub fn draw_bounded(
     // while press animations run, so each wave's sampled progress/origin
     // drives its growth and drift directly.
     draw.push_rounded_layer(1.0, bounds, radii);
-    fill_waves(draw, bounds, color, waves);
+    let center = Point::new(
+        bounds.width().mul_add(0.5, bounds.x0),
+        bounds.height().mul_add(0.5, bounds.y0),
+    );
+    fill_waves(draw, center, ripple_diameter(bounds) * 0.5, color, waves);
     draw.pop_layer();
 }
 
@@ -167,9 +174,10 @@ pub fn draw_unbounded_circle(
     if waves.is_empty() {
         return;
     }
-    let bounds = Rect::from_center_size(center, (radius * 2.0, radius * 2.0));
+    // An unbounded halo is a fixed-radius disc — the wave converges to that
+    // radius, not to a covering diagonal the way a bounded surface does.
     draw.push_layer(1.0, None);
-    fill_waves(draw, bounds, color, waves);
+    fill_waves(draw, center, radius, color, waves);
     draw.pop_layer();
 }
 
@@ -350,6 +358,68 @@ mod tests {
                     if (alpha - PRESSED_STATE_LAYER_OPACITY).abs() < 1e-6
             ),
             "synthesized wave uses StateTokens.PressedStateLayerOpacity"
+        );
+    }
+
+    #[test]
+    fn unbounded_halo_wave_converges_to_the_disc_radius() {
+        // The unbounded halo is a fixed-radius disc (SwitchTokens.StateLayerSize
+        // for the switch thumb): a completed press wave fills exactly that
+        // disc — not the disc's covering diagonal, which would render a halo
+        // ~40% too wide and bleed onto neighbouring widgets.
+        let center = Point::new(60.0, 40.0);
+        let mut recorder = RecordingDrawContext::default();
+        state_layer::draw_unbounded_circle(
+            &mut recorder,
+            center,
+            20.0,
+            Color::new([1.0, 1.0, 1.0, 1.0]),
+            pressed_state(&[PressWave {
+                origin: Some(Point::new(48.0, 32.0)),
+                progress: 1.0,
+                opacity: PRESSED_STATE_LAYER_OPACITY,
+            }]),
+        );
+        let circle = recorder
+            .single_circle()
+            .expect("the press wave must fill a solid circle");
+        assert_eq!(circle.center, center, "a completed wave sits on the disc");
+        assert_eq!(
+            circle.radius, 20.0,
+            "a completed wave equals the halo radius, not the disc diagonal"
+        );
+    }
+
+    #[test]
+    fn unbounded_halo_wave_grows_from_its_press_point() {
+        // Mid-press the wave sits between the press point and the disc center
+        // at a fraction of the disc radius — same kinematics as bounded
+        // surfaces, scaled to the disc.
+        let center = Point::new(60.0, 40.0);
+        let mut recorder = RecordingDrawContext::default();
+        state_layer::draw_unbounded_circle(
+            &mut recorder,
+            center,
+            20.0,
+            Color::new([1.0, 1.0, 1.0, 1.0]),
+            pressed_state(&[PressWave {
+                origin: Some(Point::new(48.0, 32.0)),
+                progress: 0.5,
+                opacity: PRESSED_STATE_LAYER_OPACITY,
+            }]),
+        );
+        let circle = recorder
+            .single_circle()
+            .expect("the press wave must fill a solid circle");
+        assert_eq!(
+            circle.center,
+            Point::new(54.0, 36.0),
+            "center drifts halfway from the press point to the disc center"
+        );
+        assert_eq!(
+            circle.radius,
+            20.0 * 0.7,
+            "radius is halfway between the 0.4 initial fraction and the disc radius"
         );
     }
 
