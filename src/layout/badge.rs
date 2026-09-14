@@ -4,7 +4,7 @@ use waterui_backend_core::widget::{BadgeMetrics, DrawContext};
 use crate::{Brush, theme::colors::MaterialColorScheme};
 
 pub const fn metrics() -> BadgeMetrics {
-    BadgeMetrics::new(6.0, 16.0, 4.0, 6.0, 4.0, 2.0, 1.0)
+    BadgeMetrics::new(6.0, 16.0, 4.0, 6.0, 6.0, 12.0, 14.0)
 }
 
 pub fn label_color(colors: &MaterialColorScheme) -> waterui_graphics::color::Color {
@@ -41,8 +41,8 @@ mod tests {
         assert_eq!(metrics.large_size, 16.0);
         assert_eq!(metrics.large_horizontal_padding, 4.0);
         assert_eq!(metrics.small_offset_x, 6.0);
-        assert_eq!(metrics.small_offset_y, 4.0);
-        assert_eq!(metrics.large_offset_x, 2.0);
-        assert_eq!(metrics.large_offset_y, 1.0);
+        assert_eq!(metrics.small_offset_y, 6.0);
+        assert_eq!(metrics.large_offset_x, 12.0);
+        assert_eq!(metrics.large_offset_y, 14.0);
     }
 }
