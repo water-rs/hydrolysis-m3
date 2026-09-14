@@ -178,6 +178,19 @@ pub const fn tooltip() -> Animation {
     material_standard(duration::SHORT_4)
 }
 
+/// `MotionSchemeKeyTokens.FastSpatial` — `spring(dampingRatio = 0.9,
+/// stiffness = 1400)` in `StandardMotionTokens`. `WaterUI` springs take the raw
+/// damping coefficient c = 2ζ√k with unit mass: 2 · 0.9 · √1400 ≈ 67.35.
+pub const fn fast_spatial() -> Animation {
+    Animation::spring(1400.0, 67.35)
+}
+
+/// `MotionSchemeKeyTokens.DefaultEffects` — `spring(dampingRatio = 1.0,
+/// stiffness = 1600)` in `StandardMotionTokens`. c = 2 · 1.0 · √1600 = 80.
+pub const fn default_effects() -> Animation {
+    Animation::spring(1600.0, 80.0)
+}
+
 #[derive(Clone)]
 struct DialogProperty {
     opened: Computed<bool>,

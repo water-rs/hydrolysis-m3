@@ -9,9 +9,10 @@ use waterui::component::hstack;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{Rectangle, ShapeExt as _, UnevenRoundedRectangle};
-use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
+use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::interaction::Disabled;
 use waterui_core::view::TupleViews;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
@@ -29,6 +30,17 @@ const OUTLINED_SEGMENTED_BUTTON_TRAILING_SPACE: f32 = 12.0;
 const OUTLINED_SEGMENTED_BUTTON_ICON_SIZE: f32 = 18.0;
 const OUTLINED_SEGMENTED_BUTTON_CHECKMARK_LINE_WIDTH: f32 = 2.0;
 const OUTLINED_SEGMENTED_BUTTON_ICON_LABEL_SPACE: f32 = 8.0;
+/// `ButtonDefaults.MinWidth` — each segment is at least this wide.
+const OUTLINED_SEGMENTED_BUTTON_MIN_WIDTH: f32 = 58.0;
+/// With no unchecked icon, `SegmentedButtonContentMeasurePolicy` still reserves
+/// the icon slot and shifts the label `-half` of it, recentering the label over
+/// the icon-plus-label span.
+const OUTLINED_SEGMENTED_BUTTON_LABEL_OFFSET_UNSELECTED: f32 =
+    -(OUTLINED_SEGMENTED_BUTTON_ICON_SIZE + OUTLINED_SEGMENTED_BUTTON_ICON_LABEL_SPACE) * 0.5;
+/// Disabled labels and icons: `onSurface` at the M3 disabled-content alpha.
+const OUTLINED_SEGMENTED_BUTTON_DISABLED_CONTENT_OPACITY: f32 = 0.38;
+/// Disabled borders and separators: `onSurface` at the M3 disabled-outline alpha.
+const OUTLINED_SEGMENTED_BUTTON_DISABLED_OUTLINE_OPACITY: f32 = 0.12;
 
 /// Logical corner treatment for a segmented button inside a set.
 #[derive(Debug, Clone, Copy)]
@@ -191,13 +203,14 @@ impl<Action> View for OutlinedSegmentedButton<Action>
 where
     Action: FnMut(&Environment) + 'static,
 {
-    fn body(self, _env: &Environment) -> impl View {
+    fn body(self, env: &Environment) -> impl View {
         let mut action = self.action;
         let action = SharedAction::new(move |env: Environment| action(&env));
         let selected_for_view = self.selected.clone();
         let accessibility_state = self
             .selected
             .map(|selected| AccessibilityState::new().selected(selected));
+        let disabled = Disabled::resolve(env, false);
 
         segmented_button_view(
             self.label,
@@ -205,6 +218,7 @@ where
             self.accessibility_label,
             selected_for_view,
             action,
+            &disabled,
         )
         .a11y_state_signal(accessibility_state)
     }
@@ -246,12 +260,20 @@ impl<Content> View for OutlinedSegmentedButtonSet<Content>
 where
     Content: TupleViews + 'static,
 {
-    fn body(self, _env: &Environment) -> impl View {
+    fn body(self, env: &Environment) -> impl View {
+        let disabled = Disabled::resolve(env, false);
         hstack(self.content)
             .spacing(0.0)
             .border_with(
-                Border::new(Outline, OUTLINED_SEGMENTED_BUTTON_OUTLINE_WIDTH)
-                    .corner_radius(OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE),
+                Border::new(
+                    conditional_color(
+                        disabled,
+                        OnSurface.with_opacity(OUTLINED_SEGMENTED_BUTTON_DISABLED_OUTLINE_OPACITY),
+                        Outline,
+                    ),
+                    OUTLINED_SEGMENTED_BUTTON_OUTLINE_WIDTH,
+                )
+                .corner_radius(OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE),
             )
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Group)
@@ -281,8 +303,13 @@ fn segmented_button_view(
     accessibility_label: Str,
     selected_state: Binding<bool>,
     action: SharedAction,
+    disabled: &Computed<bool>,
 ) -> impl View {
-    let foreground = conditional_color(selected_state.clone(), OnSecondaryContainer, OnSurface);
+    let foreground = conditional_color(
+        disabled.clone(),
+        OnSurface.with_opacity(OUTLINED_SEGMENTED_BUTTON_DISABLED_CONTENT_OPACITY),
+        conditional_color(selected_state.clone(), OnSecondaryContainer, OnSurface),
+    );
     let background = conditional_color(
         selected_state.clone(),
         SecondaryContainer,
@@ -290,10 +317,28 @@ fn segmented_button_view(
     );
     let state_layer_color =
         conditional_color(selected_state.clone(), OnSecondaryContainer, OnSurface);
-    let checkmark_opacity = selected_state.map(|selected| if selected { 1.0 } else { 0.0 });
-    let label = label.font(typography::label_large()).foreground(foreground);
+    let checkmark_opacity = selected_state
+        .with(crate::theme::motion::default_effects())
+        .map(|selected| if selected { 1.0 } else { 0.0 });
+    let label_offset = selected_state
+        .with(crate::theme::motion::fast_spatial())
+        .map(|selected| {
+            if selected {
+                0.0
+            } else {
+                OUTLINED_SEGMENTED_BUTTON_LABEL_OFFSET_UNSELECTED
+            }
+        });
+    let label = label
+        .font(typography::label_large())
+        .foreground(foreground)
+        .offset(label_offset, 0.0);
     let checkmark = CheckmarkIcon::new(
-        OnSecondaryContainer,
+        conditional_color(
+            disabled.clone(),
+            OnSurface.with_opacity(OUTLINED_SEGMENTED_BUTTON_DISABLED_CONTENT_OPACITY),
+            OnSecondaryContainer,
+        ),
         OUTLINED_SEGMENTED_BUTTON_ICON_SIZE,
         OUTLINED_SEGMENTED_BUTTON_CHECKMARK_LINE_WIDTH,
     )
@@ -311,7 +356,11 @@ fn segmented_button_view(
         AnyView::new(
             hstack((
                 Rectangle
-                    .fill(Outline)
+                    .fill(conditional_color(
+                        disabled.clone(),
+                        OnSurface.with_opacity(OUTLINED_SEGMENTED_BUTTON_DISABLED_OUTLINE_OPACITY),
+                        Outline,
+                    ))
                     .width(OUTLINED_SEGMENTED_BUTTON_OUTLINE_WIDTH)
                     .height(OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT),
                 inner,
@@ -323,6 +372,7 @@ fn segmented_button_view(
     };
 
     content
+        .min_width(OUTLINED_SEGMENTED_BUTTON_MIN_WIDTH)
         .height(OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT)
         .background(shape.shape().fill(background))
         .on_tap(move |env: Environment| {
@@ -345,7 +395,8 @@ mod tests {
     use super::{
         OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT, OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE,
         OUTLINED_SEGMENTED_BUTTON_ICON_LABEL_SPACE, OUTLINED_SEGMENTED_BUTTON_ICON_SIZE,
-        OUTLINED_SEGMENTED_BUTTON_LEADING_SPACE, OUTLINED_SEGMENTED_BUTTON_OUTLINE_WIDTH,
+        OUTLINED_SEGMENTED_BUTTON_LABEL_OFFSET_UNSELECTED, OUTLINED_SEGMENTED_BUTTON_LEADING_SPACE,
+        OUTLINED_SEGMENTED_BUTTON_MIN_WIDTH, OUTLINED_SEGMENTED_BUTTON_OUTLINE_WIDTH,
         OUTLINED_SEGMENTED_BUTTON_TRAILING_SPACE,
     };
 
@@ -354,9 +405,11 @@ mod tests {
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT, 40.0);
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE, 20.0);
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_OUTLINE_WIDTH, 1.0);
+        assert_eq!(OUTLINED_SEGMENTED_BUTTON_MIN_WIDTH, 58.0);
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_LEADING_SPACE, 12.0);
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_TRAILING_SPACE, 12.0);
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_ICON_SIZE, 18.0);
         assert_eq!(OUTLINED_SEGMENTED_BUTTON_ICON_LABEL_SPACE, 8.0);
+        assert_eq!(OUTLINED_SEGMENTED_BUTTON_LABEL_OFFSET_UNSELECTED, -13.0);
     }
 }

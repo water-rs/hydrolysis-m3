@@ -147,9 +147,9 @@ where
         navigation_tab_content(
             self.label,
             self.icon,
-            indicator_color,
-            icon_color,
-            label_color,
+            indicator_color.into(),
+            icon_color.into(),
+            label_color.into(),
         )
         .min_width(NAVIGATION_BAR_ITEM_MIN_WIDTH)
         .max_width(f32::INFINITY)
