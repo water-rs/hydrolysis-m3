@@ -224,7 +224,7 @@ impl View for ConnectedButtonGroup {
                     .height(CONTAINER_HEIGHT)
                     .background(ReactiveSegmentShape {
                         shape,
-                        color: container,
+                        color: container.into(),
                     })
                     // The tap is what activates the segment, and it is also
                     // what makes it a real interaction target — a view carrying
