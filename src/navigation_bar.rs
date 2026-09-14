@@ -57,6 +57,8 @@ where
     fn body(self, _env: &Environment) -> impl View {
         material_elevation(
             MaterialElevationLevel::LEVEL2,
+            // The bar is a full-width rectangle: no corner rounding.
+            0.0,
             waterui::component::hstack(self.tabs)
                 .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
                 .max_width(f32::INFINITY)

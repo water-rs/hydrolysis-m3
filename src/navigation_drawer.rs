@@ -142,9 +142,13 @@ where
                 .a11y_label(self.accessibility_label)
                 .a11y_role(AccessibilityRole::Group)
                 .a11y_state_signal(accessibility_state);
-            let panel = material_elevation(MaterialElevationLevel::LEVEL1, panel_content)
-                .offset(offset, 0.0)
-                .position_in(UnitPoint::TOP_LEADING);
+            let panel = material_elevation(
+                MaterialElevationLevel::LEVEL1,
+                NAVIGATION_DRAWER_CONTAINER_SHAPE,
+                panel_content,
+            )
+            .offset(offset, 0.0)
+            .position_in(UnitPoint::TOP_LEADING);
             let close_on_overlay_click = self.close_on_overlay_click;
             let opened_for_overlay = opened.clone();
             let overlay_action = self.overlay_action;
