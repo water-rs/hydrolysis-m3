@@ -291,7 +291,7 @@ where
         let state_layer_color =
             conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
 
-        drawer_item_content(self.label, self.icon, foreground, background)
+        drawer_item_content(self.label, self.icon, foreground.into(), background.into())
             .on_tap(move |env: Environment| action(&env))
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
