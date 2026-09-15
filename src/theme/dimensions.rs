@@ -165,7 +165,12 @@ pub const TEXT_CONTEXT_MENU_CONTAINER_SHAPE: f64 = 4.0;
 pub const TEXT_CONTEXT_MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
 pub const TEXT_CONTEXT_MENU_SEPARATOR_THICKNESS: f64 = 1.0;
 
-pub const PICKER_MIN_WIDTH: f64 = 72.0;
+/// Compose `TextFieldDefaults.MinWidth`, which the menu-style picker's
+/// filled-field chrome inherits via `ExposedDropdownMenuBox`.
+pub const PICKER_MENU_MIN_WIDTH: f64 = 280.0;
+/// No spec floor exists for a radio column; this keeps a lone row from
+/// collapsing below a tappable width.
+pub const PICKER_RADIO_MIN_WIDTH: f64 = 72.0;
 pub const PICKER_MIN_HEIGHT: f64 = 56.0;
 pub const PICKER_HORIZONTAL_INSET: f64 = 16.0;
 pub const PICKER_VERTICAL_INSET: f64 = 8.0;
@@ -181,6 +186,8 @@ pub const PICKER_RADIO_ROW_SPACING: f64 = 6.0;
 pub const PICKER_MENU_POPUP_TOP_SPACING: f64 = 4.0;
 pub const PICKER_MENU_POPUP_ROW_HEIGHT: f64 = 48.0;
 pub const PICKER_MENU_POPUP_CORNER_RADIUS: f64 = 4.0;
+/// Compose `ButtonDefaults.MinWidth`, enforced per segment.
+pub const PICKER_SEGMENTED_MIN_WIDTH: f64 = 58.0;
 pub const PICKER_SEGMENTED_MIN_HEIGHT: f64 = 40.0;
 pub const PICKER_SEGMENTED_HORIZONTAL_INSET: f64 = 12.0;
 pub const PICKER_SEGMENTED_CONTAINER_RADIUS: f64 = 20.0;
