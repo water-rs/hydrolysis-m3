@@ -147,9 +147,9 @@ where
         navigation_tab_content(
             self.label,
             self.icon,
-            indicator_color,
-            icon_color,
-            label_color,
+            indicator_color.into(),
+            icon_color.into(),
+            label_color.into(),
         )
         // Padding applies inside the fixed item height: the 32dp indicator
         // slot starts `TOP_PADDING` below the item top and the label sits

@@ -43,16 +43,16 @@ pub fn conditional_color(
     condition: impl IntoComputed<bool>,
     when_true: impl Into<Color>,
     when_false: impl Into<Color>,
-) -> Color {
-    Color::new(ConditionalColor {
+) -> ConditionalColor {
+    ConditionalColor {
         condition: condition.into_computed(),
         when_true: when_true.into(),
         when_false: when_false.into(),
-    })
+    }
 }
 
 #[derive(Debug, Clone)]
-struct ConditionalColor {
+pub struct ConditionalColor {
     condition: Computed<bool>,
     when_true: Color,
     when_false: Color,
