@@ -183,6 +183,7 @@ mod tests {
         assert_eq!(metrics.min_height, INPUT_FIELD_MIN_HEIGHT);
         assert_eq!(metrics.min_width, INPUT_FIELD_MIN_WIDTH);
         assert_eq!(INPUT_FIELD_MIN_HEIGHT, 56.0);
+        assert_eq!(INPUT_FIELD_MIN_WIDTH, 280.0);
         assert_eq!(INPUT_FILLED_CONTAINER_TOP_RADIUS, 4.0);
         assert_eq!(INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, 1.0);
     }
