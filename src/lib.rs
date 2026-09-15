@@ -678,9 +678,19 @@ impl WidgetTheme for MaterialTheme {
         draw: &mut dyn DrawContext,
         bounds: Rect,
         selected: bool,
+        is_first: bool,
+        is_last: bool,
         state: WidgetInteractionState,
     ) {
-        picker::draw_segmented_state_layer(&self.colors(), draw, bounds, selected, state);
+        picker::draw_segmented_state_layer(
+            &self.colors(),
+            draw,
+            bounds,
+            selected,
+            is_first,
+            is_last,
+            state,
+        );
     }
 
     fn slider_metrics(&self) -> SliderMetrics {
