@@ -146,7 +146,8 @@ pub const STEPPER_INNER_CORNER_RADIUS: f64 = 8.0;
 pub const STEPPER_PRESSED_INNER_CORNER_RADIUS: f64 = 4.0;
 
 pub const INPUT_LABEL_HEIGHT: f64 = 18.0;
-pub const INPUT_FIELD_MIN_WIDTH: f64 = 72.0;
+/// `TextFieldDefaults.MinWidth` — 280dp for both filled and outlined fields.
+pub const INPUT_FIELD_MIN_WIDTH: f64 = 280.0;
 pub const INPUT_FIELD_MIN_HEIGHT: f64 = 56.0;
 pub const INPUT_FIELD_HORIZONTAL_INSET: f64 = 16.0;
 pub const INPUT_FIELD_VERTICAL_INSET: f64 = 8.0;
