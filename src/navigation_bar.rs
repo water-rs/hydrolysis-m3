@@ -13,7 +13,7 @@ use waterui_core::handler::{Handler, boxed_action};
 use waterui_core::view::TupleViews;
 
 use crate::color::{
-    OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer, Surface,
+    OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, SurfaceContainer,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
 use crate::semantics::{conditional_color, interaction_style, label_plain_text};
@@ -23,8 +23,8 @@ use crate::theme::typography;
 /// `TallContainerHeight`, the opt-in variant, not the default bar.
 const NAVIGATION_BAR_CONTAINER_HEIGHT: f32 = 64.0;
 const NAVIGATION_BAR_ITEM_MIN_WIDTH: f32 = 48.0;
-const NAVIGATION_BAR_ITEM_TOP_PADDING: f32 = 8.0;
-const NAVIGATION_BAR_ITEM_BOTTOM_PADDING: f32 = 12.0;
+const NAVIGATION_BAR_ITEM_TOP_PADDING: f32 = 4.0;
+const NAVIGATION_BAR_ITEM_BOTTOM_PADDING: f32 = 8.0;
 const NAVIGATION_BAR_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_BAR_ICON_SLOT_HEIGHT: f32 = 32.0;
 const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 64.0;
@@ -62,7 +62,7 @@ where
             waterui::component::hstack(self.tabs)
                 .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
                 .max_width(f32::INFINITY)
-                .background(Surface),
+                .background(SurfaceContainer),
         )
         .a11y_label("Navigation")
         .a11y_role(AccessibilityRole::TabList)
@@ -140,7 +140,7 @@ where
             OnSecondaryContainer,
             OnSurfaceVariant,
         );
-        let label_color = conditional_color(self.selected.clone(), OnSurface, OnSurfaceVariant);
+        let label_color = conditional_color(self.selected.clone(), Secondary, OnSurfaceVariant);
         let state_layer_color =
             conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
 
@@ -151,15 +151,20 @@ where
             icon_color,
             label_color,
         )
-        .min_width(NAVIGATION_BAR_ITEM_MIN_WIDTH)
-        .max_width(f32::INFINITY)
-        .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
+        // Padding applies inside the fixed item height: the 32dp indicator
+        // slot starts `TOP_PADDING` below the item top and the label sits
+        // `BOTTOM_PADDING` above the bottom — matching Compose, where the
+        // 48dp content block centers in the item and the indicator pill
+        // extends `IndicatorVerticalPadding` above the icon.
         .padding_with(EdgeInsets::new(
             NAVIGATION_BAR_ITEM_TOP_PADDING,
             NAVIGATION_BAR_ITEM_BOTTOM_PADDING,
             0.0,
             0.0,
         ))
+        .min_width(NAVIGATION_BAR_ITEM_MIN_WIDTH)
+        .max_width(f32::INFINITY)
+        .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
         .on_tap(move |env: Environment| action(&env))
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Tab)
@@ -236,8 +241,9 @@ pub fn navigation_tab<Icon>(
 mod tests {
     use super::{
         NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT, NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH,
-        NAVIGATION_BAR_CONTAINER_HEIGHT, NAVIGATION_BAR_ICON_SIZE, NAVIGATION_BAR_ITEM_MIN_WIDTH,
-        NAVIGATION_BAR_LABEL_TOP_SPACE,
+        NAVIGATION_BAR_CONTAINER_HEIGHT, NAVIGATION_BAR_ICON_SIZE,
+        NAVIGATION_BAR_ITEM_BOTTOM_PADDING, NAVIGATION_BAR_ITEM_MIN_WIDTH,
+        NAVIGATION_BAR_ITEM_TOP_PADDING, NAVIGATION_BAR_LABEL_TOP_SPACE,
     };
     use crate::elevation::MaterialElevationLevel;
 
@@ -250,6 +256,10 @@ mod tests {
         assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT, 32.0);
         assert_eq!(NAVIGATION_BAR_ICON_SIZE, 24.0);
         assert_eq!(NAVIGATION_BAR_LABEL_TOP_SPACE, 4.0);
+        // The 48dp content block (24 icon + 8 + 16 label) centers in the 64dp
+        // item, and the 32dp indicator pill starts 4dp above the icon.
+        assert_eq!(NAVIGATION_BAR_ITEM_TOP_PADDING, 4.0);
+        assert_eq!(NAVIGATION_BAR_ITEM_BOTTOM_PADDING, 8.0);
         assert_eq!(
             MaterialElevationLevel::new(2),
             MaterialElevationLevel::LEVEL2
