@@ -5,8 +5,8 @@ use core::fmt::{self, Debug};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
 use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, StretchAxis, SubView, container::FixedContainer,
-    padding::EdgeInsets,
+    Layout, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
+    container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::reactive::SignalExt as _;
@@ -208,8 +208,17 @@ impl Layout for NavigationDrawerPanelLayout {
         Size::new(width, height)
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
-        children.iter().map(|_| bounds).collect()
+    fn place(
+        &self,
+        bounds: Rect,
+        proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
+        let child_proposal = ProposalSize::new(Some(bounds.width()), proposal.height);
+        children
+            .iter()
+            .map(|_| SubviewPlacement::new(bounds, child_proposal))
+            .collect()
     }
 
     fn stretch_axis(&self, _children: &[StretchAxis]) -> StretchAxis {
@@ -367,5 +376,23 @@ mod tests {
         assert_eq!(NAVIGATION_DRAWER_ITEM_ICON_SIZE, 24.0);
         assert_eq!(NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE, 12.0);
         assert_eq!(NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING, 16.0);
+    }
+    #[test]
+    fn layout_contract_drawer_distinguishes_equal_height_offers() {
+        use super::NavigationDrawerPanelLayout;
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let child = FixedLeaf(Size::new(240.0, 100.0));
+        let layout = NavigationDrawerPanelLayout;
+        for height in [None, Some(100.0), None] {
+            let proposal = ProposalSize::new(Some(300.0), height);
+            let size = layout.size_that_fits(proposal, &[&child]);
+            let placements = layout.place(Rect::from_size(size), proposal, &[&child]);
+            assert_eq!(size, child.0);
+            assert_eq!(
+                placements[0].proposal,
+                ProposalSize::new(Some(240.0), height)
+            );
+        }
     }
 }
