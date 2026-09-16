@@ -1,6 +1,6 @@
 use waterui::layout::{ProposalSize, Size, StretchAxis, SubView, ViewDimensions};
 
-pub(crate) struct FixedLeaf(pub(crate) Size);
+pub struct FixedLeaf(pub Size);
 
 impl SubView for FixedLeaf {
     fn measure(&self, _proposal: ProposalSize) -> ViewDimensions {
