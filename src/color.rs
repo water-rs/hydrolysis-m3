@@ -333,6 +333,18 @@ mod tests {
             scheme.on_secondary_container.resolved(),
         );
         assert_resolved_color_eq(
+            installed_color_signal::<theme_color::Error>(&env)
+                .expect("error token should be installed")
+                .get(),
+            scheme.error.resolved(),
+        );
+        assert_resolved_color_eq(
+            installed_color_signal::<theme_color::ErrorForeground>(&env)
+                .expect("error-foreground token should be installed")
+                .get(),
+            scheme.on_error.resolved(),
+        );
+        assert_resolved_color_eq(
             installed_color_signal::<theme_color::Surface>(&env)
                 .expect("surface token should be installed")
                 .get(),

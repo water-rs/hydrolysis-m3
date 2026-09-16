@@ -288,7 +288,9 @@ pub fn install_with_colors(env: &mut Environment, colors: MaterialColorScheme) {
                 .tertiary(colors.tertiary.resolved())
                 .tertiary_container(colors.tertiary_container.resolved())
                 .selection_container(colors.secondary_container.resolved())
-                .selection_foreground(colors.on_secondary_container.resolved()),
+                .selection_foreground(colors.on_secondary_container.resolved())
+                .error(colors.error.resolved())
+                .error_foreground(colors.on_error.resolved()),
         )
         .install(env);
     theme::typography::install_defaults(env);
@@ -362,6 +364,8 @@ fn install_dynamic_color_tokens(
         TertiaryContainer => tertiary_container,
         SelectionContainer => secondary_container,
         SelectionForeground => on_secondary_container,
+        Error => error,
+        ErrorForeground => on_error,
     }
 }
 
