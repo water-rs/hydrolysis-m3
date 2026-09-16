@@ -4,8 +4,8 @@ use core::convert::TryFrom as _;
 use core::time::Duration;
 
 use hydrolysis_m3::{
-    assist_chip, dialog, dialog_action, extended_fab, fab, filled_icon_button, filter_chip,
-    icon_button, input_chip, install, material_badge, material_card, material_list,
+    MaterialColorScheme, assist_chip, dialog, dialog_action, extended_fab, fab, filled_icon_button,
+    filter_chip, icon_button, input_chip, install, material_badge, material_card, material_list,
     material_list_item, material_menu, material_menu_divider, material_menu_item,
     material_navigation_view, material_sub_menu, material_tab, material_tabs, navigation_bar,
     navigation_drawer, navigation_drawer_item, navigation_tab, outlined_icon_button,
@@ -775,6 +775,47 @@ fn material_badge_preserves_badged_content_semantics(app: &mut SemanticApp) {
         .role(Role::LABEL)
         .label("Inbox, 3 new notifications")
         .assert_exists();
+}
+
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "accessibility bounds are logical pixels and the capture runs at \
+              scale factor 1.0, so truncating them to snapshot indices is the \
+              intended conversion"
+)]
+#[waterui::test(material_badge_view, theme = install, viewport = (360, 320), offscreen)]
+fn material_badge_paints_scheme_error_behind_its_label(app: &mut OffscreenApp) {
+    // The badge indicator registers its own Label node over the pill rect, so
+    // its bounds mark exactly where the error fill sits behind the "3".
+    let bounds = app.query().role(Role::LABEL).label("3").single().bounds();
+    assert!(
+        bounds.width() > 0.0 && bounds.height() > 0.0,
+        "the badge indicator should mount"
+    );
+
+    let snapshot = app.snapshot();
+    let error = MaterialColorScheme::baseline_light().error.argb();
+    let is_error = |pixel: &[u8]| {
+        pixel[0].abs_diff(error.red()) <= 1
+            && pixel[1].abs_diff(error.green()) <= 1
+            && pixel[2].abs_diff(error.blue()) <= 1
+            && pixel[3] == error.alpha()
+    };
+    let x0 = bounds.x() as usize;
+    let y0 = bounds.y() as usize;
+    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width as usize);
+    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height as usize);
+    let width = snapshot.width as usize;
+    let error_pixels = (y0..y1)
+        .flat_map(|y| (x0..x1).map(move |x| y * width + x))
+        .filter(|&index| is_error(&snapshot.rgba8[index * 4..index * 4 + 4]))
+        .count();
+    assert!(
+        error_pixels > 20,
+        "the badge pill should paint the scheme's error colour behind its label; \
+         found {error_pixels} error pixels in {bounds:?}"
+    );
 }
 
 fn material_menu_view() -> impl View {
