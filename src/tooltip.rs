@@ -5,7 +5,8 @@ use core::time::Duration;
 
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, SubView, container::FixedContainer, padding::EdgeInsets,
+    Layout, ProposalSize, Rect, Size, SubView, SubviewPlacement, container::FixedContainer,
+    padding::EdgeInsets,
 };
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
@@ -199,27 +200,26 @@ impl Layout for TooltipLayout {
         target.measure(proposal).size
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    fn place(
+        &self,
+        bounds: Rect,
+        proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let [target, popup] = children else {
             return Vec::new();
         };
-        let target_size = target
-            .measure(ProposalSize::new(
-                Some(bounds.width()),
-                Some(bounds.height()),
-            ))
-            .size;
+        let target_size = target.measure(proposal).size;
         let target_rect = Rect::new(bounds.origin(), target_size);
-        let popup_size = popup
-            .measure(ProposalSize::new(
-                Some(if self.rich {
-                    RICH_TOOLTIP_MAX_WIDTH
-                } else {
-                    320.0
-                }),
-                None,
-            ))
-            .size;
+        let popup_proposal = ProposalSize::new(
+            Some(if self.rich {
+                RICH_TOOLTIP_MAX_WIDTH
+            } else {
+                320.0
+            }),
+            None,
+        );
+        let popup_size = popup.measure(popup_proposal).size;
         let popup_x = if self.rich {
             target_rect.x() + target_rect.width() + RICH_TOOLTIP_TARGET_GAP
         } else {
@@ -231,8 +231,11 @@ impl Layout for TooltipLayout {
             target_rect.y() - popup_size.height - PLAIN_TOOLTIP_TARGET_GAP
         };
         vec![
-            target_rect,
-            Rect::new(waterui::layout::Point::new(popup_x, popup_y), popup_size),
+            SubviewPlacement::new(target_rect, proposal),
+            SubviewPlacement::new(
+                Rect::new(waterui::layout::Point::new(popup_x, popup_y), popup_size),
+                popup_proposal,
+            ),
         ]
     }
 }
@@ -505,5 +508,27 @@ mod tests {
         assert_eq!(RICH_TOOLTIP_MAX_WIDTH, 312.0);
         assert_eq!(RICH_TOOLTIP_HORIZONTAL_PADDING, 16.0);
         assert_eq!(RICH_TOOLTIP_TARGET_GAP, 0.0);
+    }
+    #[test]
+    fn layout_contract_tooltip_preserves_target_and_popup_proposals() {
+        use super::TooltipLayout;
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let target = FixedLeaf(Size::new(160.0, 20.0));
+        let popup = FixedLeaf(Size::new(100.0, 30.0));
+        for rich in [false, true] {
+            let layout = TooltipLayout { rich };
+            for width in [None, Some(160.0), None] {
+                let proposal = ProposalSize::new(width, None);
+                let placements =
+                    layout.place(Rect::from_size(target.0), proposal, &[&target, &popup]);
+                assert_eq!(placements[0].proposal, proposal);
+                assert_eq!(placements[0].frame.size(), &target.0);
+                assert_eq!(
+                    placements[1].proposal,
+                    ProposalSize::new(Some(if rich { 312.0 } else { 320.0 }), None)
+                );
+            }
+        }
     }
 }
