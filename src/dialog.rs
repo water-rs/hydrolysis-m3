@@ -5,7 +5,7 @@ use core::fmt::{self, Debug};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::layout::{
     HorizontalAlignment, Layout, PlacedSubview, Point, ProposalSize, Rect, Size, SubView,
-    container::FixedContainer, padding::EdgeInsets,
+    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
@@ -330,7 +330,12 @@ impl Layout for DialogSurfaceLayout {
         Size::new(width, height)
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    fn place(
+        &self,
+        bounds: Rect,
+        _proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let [headline, supporting_text, actions] = children else {
             return vec![];
         };
@@ -338,13 +343,10 @@ impl Layout for DialogSurfaceLayout {
         let text_width = DIALOG_CONTENT_PADDING
             .mul_add(-2.0, bounds.width())
             .max(0.0);
-        let headline_size = headline
-            .measure(ProposalSize::new(Some(text_width), None))
-            .size;
-        let supporting_size = supporting_text
-            .measure(ProposalSize::new(Some(text_width), None))
-            .size;
-        let action_size = actions.measure(ProposalSize::new(None, None)).size;
+        let text_proposal = ProposalSize::new(Some(text_width), None);
+        let headline_size = headline.measure(text_proposal).size;
+        let supporting_size = supporting_text.measure(text_proposal).size;
+        let action_size = actions.measure(ProposalSize::UNSPECIFIED).size;
         let headline_origin = Point::new(
             bounds.x() + DIALOG_CONTENT_PADDING,
             bounds.y() + DIALOG_CONTENT_PADDING,
@@ -362,12 +364,21 @@ impl Layout for DialogSurfaceLayout {
         );
 
         vec![
-            Rect::new(headline_origin, Size::new(text_width, headline_size.height)),
-            Rect::new(
-                supporting_origin,
-                Size::new(text_width, supporting_size.height),
+            SubviewPlacement::new(
+                Rect::new(headline_origin, Size::new(text_width, headline_size.height)),
+                text_proposal,
             ),
-            Rect::new(actions_origin, action_size),
+            SubviewPlacement::new(
+                Rect::new(
+                    supporting_origin,
+                    Size::new(text_width, supporting_size.height),
+                ),
+                text_proposal,
+            ),
+            SubviewPlacement::new(
+                Rect::new(actions_origin, action_size),
+                ProposalSize::UNSPECIFIED,
+            ),
         ]
     }
 
@@ -432,5 +443,22 @@ mod tests {
         assert_eq!(DIALOG_ACTION_SPACING, 8.0);
         assert_eq!(DIALOG_ACTION_TRAILING_SPACE, 24.0);
         assert_eq!(DIALOG_ACTION_BOTTOM_SPACE, 24.0);
+    }
+    #[test]
+    fn layout_contract_dialog_retains_intrinsic_action_and_text_height() {
+        use super::DialogSurfaceLayout;
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let headline = FixedLeaf(Size::new(180.0, 24.0));
+        let body = FixedLeaf(Size::new(140.0, 60.0));
+        let actions = FixedLeaf(Size::new(100.0, 40.0));
+        let children: &[&dyn waterui::layout::SubView] = &[&headline, &body, &actions];
+        let layout = DialogSurfaceLayout;
+        let proposal = ProposalSize::new(Some(400.0), Some(300.0));
+        let size = layout.size_that_fits(proposal, children);
+        let placements = layout.place(Rect::from_size(size), proposal, children);
+        assert_eq!(placements[0].proposal, ProposalSize::new(Some(232.0), None));
+        assert_eq!(placements[1].proposal, placements[0].proposal);
+        assert_eq!(placements[2].proposal, ProposalSize::UNSPECIFIED);
     }
 }
