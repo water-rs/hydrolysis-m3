@@ -5,7 +5,6 @@
 //! The PNG-producing tests are ignored by default and reviewed by eye.
 
 use core::time::Duration;
-use hydrolysis_m3::install;
 use waterui::reactive::binding;
 use waterui_controls::toggle;
 use waterui_core::View;
@@ -21,7 +20,7 @@ fn wifi_toggle_view() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(wifi_toggle_view, theme = install, viewport = (200, 120), offscreen)]
+#[waterui::test(wifi_toggle_view, theme = hydrolysis_m3::Material3::defaults(), viewport = (200, 120), offscreen)]
 fn switch_toggle_slides_and_reveals_checkmark(app: &mut OffscreenApp) {
     assert!(
         app.query()

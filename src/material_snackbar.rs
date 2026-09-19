@@ -18,11 +18,11 @@ pub fn material_snackbar(message: impl Into<Str>) -> MaterialSnackbar {
 
 #[cfg(test)]
 mod tests {
-    use crate::MaterialTheme;
+    use crate::MaterialColorScheme;
 
     #[test]
     fn material_snackbar_tokens_match_compose_snackbar_tokens() {
-        let theme = crate::layout::snackbar::theme(&MaterialTheme::new().colors());
+        let theme = crate::layout::snackbar::theme(&MaterialColorScheme::baseline_light());
 
         assert_eq!(theme.single_line_min_height, 48.0);
         assert_eq!(theme.corner_radius, 4.0);

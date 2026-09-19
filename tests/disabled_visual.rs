@@ -6,7 +6,6 @@
 //! The PNG-producing tests are ignored by default and reviewed by eye.
 
 use core::time::Duration;
-use hydrolysis_m3::install;
 use waterui::ViewExt as _;
 use waterui::component::vstack;
 use waterui::reactive::binding;
@@ -44,7 +43,7 @@ fn disabled_controls_view() -> impl View {
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(
     disabled_controls_view,
-    theme = install,
+    theme = hydrolysis_m3::Material3::defaults(),
     viewport = (360, 420),
     offscreen
 )]

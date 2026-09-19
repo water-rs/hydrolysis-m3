@@ -9,7 +9,7 @@ use waterui::navigation::{NavigationLink, NavigationPath, NavigationStack, Navig
 use waterui::navigation::{NavigationTransitionViewExt as _, navigation_transition};
 use waterui::prelude::*;
 use waterui_core::id::Id;
-use waterui_testing::UiBuilder;
+use waterui_testing::{Styled, UiBuilder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Page(u8);
@@ -37,10 +37,10 @@ fn invalid_gallery() -> impl View {
 }
 
 /// An incomplete matched pair is rejected instead of changing transition kind.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 400))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 400))]
 #[should_panic(expected = "navigation zoom destination")]
-fn a_zoom_without_matched_geometry_fails_fast(ui: UiBuilder) {
-    let mut app = ui.mount(invalid_gallery);
+fn a_zoom_without_matched_geometry_fails_fast(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+    let mut app = ui.mount_offscreen(invalid_gallery);
     app.settle();
 
     let tile = app.query().label("Unmatched tile").single().bounds();

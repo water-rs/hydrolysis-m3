@@ -9,7 +9,7 @@ use waterui::component::list::{List, ListDelete, ListItem, ListMove};
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui::reactive::collection::List as ReactiveList;
-use waterui_testing::{OffscreenApp, Role, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
 
 const ROW_COUNT: usize = 6;
 
@@ -59,8 +59,8 @@ fn save(app: &mut OffscreenApp, case: &str, stage: &str) {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
-fn swipe_reveals_the_dismiss_background(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
+fn swipe_reveals_the_dismiss_background(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let mut app = ui.mount_offscreen(|| list_view(false));
     save(&mut app, "list-swipe", "rest");
 
@@ -84,8 +84,8 @@ fn swipe_reveals_the_dismiss_background(ui: UiBuilder) {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
-fn reorder_drag_lifts_the_row(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
+fn reorder_drag_lifts_the_row(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let mut app = ui.mount_offscreen(|| list_view(true));
     save(&mut app, "list-reorder", "rest");
 

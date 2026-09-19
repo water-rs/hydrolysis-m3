@@ -427,7 +427,8 @@ mod tests {
     #[test]
     fn outlined_icon_button_border_uses_outline_variant() {
         use super::{IconButtonVariantTokens, SelectedOutlinedIconButton};
-        use crate::{install_with_colors, theme::colors::MaterialColorScheme};
+        use crate::{Material3, theme::colors::MaterialColorScheme};
+        use hydrolysis::Style as _;
         use waterui::{Environment, Signal, color::ResolvedColor};
 
         fn assert_resolves_to(actual: ResolvedColor, expected: ResolvedColor) {
@@ -440,7 +441,7 @@ mod tests {
 
         let scheme = MaterialColorScheme::baseline_light();
         let mut env = Environment::new();
-        install_with_colors(&mut env, scheme);
+        Material3::with_colors(scheme).install_tokens(&mut env);
 
         for color in [
             OutlinedIconButton::outline_color(),
