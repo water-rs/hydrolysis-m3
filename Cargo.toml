@@ -79,10 +79,6 @@ multiple_crate_versions = "allow"
 [patch.crates-io]
 waterui-image = { git = "https://github.com/water-rs/image", rev = "a1632420ddecde008bde3fe392eee0d9f660d67a" }
 waterui-svg = { git = "https://github.com/water-rs/svg", rev = "79493d096341faf630e03350f22db73c07bb3b3a" }
-# `waterui-testing` requires `hydrolysis-m3` at the 0.5.0-wave `0.3.0`, which
-# is this package; a registry copy would be pre-freeze code. Drop the entry
-# once hydrolysis-m3 0.3.0 ships.
-hydrolysis-m3 = { path = "." }
 # waterui 0.5.0 is not on crates.io yet; the `dev` revision below is the
 # release-candidate head release-plz will publish. Every `waterui-*` member of that
 # repository is pinned to the same revision so the graph carries exactly one

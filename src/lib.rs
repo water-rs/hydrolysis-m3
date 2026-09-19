@@ -52,7 +52,6 @@ pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use std::rc::Rc;
 
 use vello::kurbo::{BezPath, Point, Rect};
 use waterui::Plugin as _;
@@ -145,18 +144,34 @@ pub use toolbar::{
 };
 pub use tooltip::{PlainTooltip, RichTooltip, TooltipAnchor, plain_tooltip, rich_tooltip};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 /// Material Design 3 style for the Hydrolysis runtime.
 ///
 /// `Material3` is both the [`WidgetTheme`] the backend resolves widget chrome
 /// through and the [`hydrolysis::Style`] whose `install_tokens` writes the
 /// Material color and typography tokens into the environment:
 /// `hydrolysis::run(app, Material3::defaults())`.
+///
+/// A dynamic `Material3` ([`Material3::defaults`]) binds to the color-scheme
+/// signal of the first environment `install_tokens` installs it into and
+/// follows that signal for the rest of its lifetime; every later environment
+/// the same instance is installed into is rebound to that signal, so paint
+/// and tokens can never diverge. Cloning produces a fresh, unbound style: the
+/// clone binds to the first environment *it* is installed into, never to the
+/// original's signal.
 pub struct Material3 {
     colors: Material3Colors,
 }
 
-#[derive(Debug, Clone)]
+impl Clone for Material3 {
+    fn clone(&self) -> Self {
+        Self {
+            colors: self.colors.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
 #[allow(
     clippy::large_enum_variant,
     reason = "a `Material3` holds exactly one of these; the variant size difference is immaterial and boxing would add needless indirection"
@@ -165,24 +180,37 @@ enum Material3Colors {
     /// One fixed color scheme, resolved at construction.
     Static(MaterialColorScheme),
     /// A light/dark pair that follows the environment's color-scheme signal;
-    /// the signal binds when `install_tokens` runs.
+    /// the signal binds on the first `install_tokens` and stays bound.
     Dynamic {
         light: MaterialColorScheme,
         dark: MaterialColorScheme,
-        scheme: Rc<OnceCell<Computed<ColorScheme>>>,
+        scheme: OnceCell<Computed<ColorScheme>>,
     },
+}
+
+impl Clone for Material3Colors {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Static(colors) => Self::Static(*colors),
+            Self::Dynamic { light, dark, .. } => Self::Dynamic {
+                light: *light,
+                dark: *dark,
+                scheme: OnceCell::new(),
+            },
+        }
+    }
 }
 
 impl Material3 {
     /// The default Material Design 3 style: baseline light/dark color roles
     /// that follow the app's color-scheme signal.
     #[must_use]
-    pub fn defaults() -> Self {
+    pub const fn defaults() -> Self {
         Self {
             colors: Material3Colors::Dynamic {
                 light: MaterialColorScheme::baseline_light(),
                 dark: MaterialColorScheme::baseline_dark(),
-                scheme: Rc::new(OnceCell::new()),
+                scheme: OnceCell::new(),
             },
         }
     }
@@ -263,6 +291,12 @@ impl Material3Colors {
 impl hydrolysis::Style for Material3 {
     /// Writes the Material color and typography tokens into `env`, over the
     /// framework defaults the runtime installs first.
+    ///
+    /// A dynamic scheme binds on first install: it takes `env`'s color-scheme
+    /// signal if one is installed, else binds a constant [`ColorScheme::Light`]
+    /// signal. On every install the bound signal is written into `env`, so an
+    /// environment carrying a different signal is rebound to it and the tokens
+    /// always match what the style paints.
     fn install_tokens(&self, env: &mut Environment) {
         match &self.colors {
             Material3Colors::Static(colors) => insert_static_tokens(env, *colors),
@@ -271,13 +305,12 @@ impl hydrolysis::Style for Material3 {
                 dark,
                 scheme,
             } => {
-                let installed = waterui_theme::installed_color_scheme(env).unwrap_or_else(|| {
-                    let scheme = Computed::constant(ColorScheme::Light);
-                    Theme::new().color_scheme(scheme.clone()).install(env);
-                    scheme
+                let scheme = scheme.get_or_init(|| {
+                    waterui_theme::installed_color_scheme(env)
+                        .unwrap_or_else(|| Computed::constant(ColorScheme::Light))
                 });
-                scheme.get_or_init(|| installed.clone());
-                insert_dynamic_tokens(env, &installed, *light, *dark);
+                Theme::new().color_scheme(scheme.clone()).install(env);
+                insert_dynamic_tokens(env, scheme, *light, *dark);
             }
         }
     }
