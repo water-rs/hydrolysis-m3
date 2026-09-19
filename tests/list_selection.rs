@@ -6,10 +6,11 @@
 //! behind it and nothing told the accessibility tree, so a sidebar had no way
 //! to show which row was current.
 
+use hydrolysis_m3::Material3;
 use waterui::component::list::{List, ListItem};
 use waterui::prelude::*;
 use waterui::reactive::{SignalExt, binding};
-use waterui_testing::UiBuilder;
+use waterui_testing::{Styled, UiBuilder};
 
 const LABELS: [&str; 3] = ["First", "Second", "Third"];
 
@@ -30,7 +31,7 @@ fn selectable_list(current: Binding<usize>) -> impl View {
 
 /// Exactly the selected row reports itself selected, and the flag follows the
 /// signal without the list being rebuilt.
-#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 300))]
+#[waterui::test(viewport = (400, 300))]
 fn only_the_selected_row_is_marked_selected(ui: UiBuilder) {
     let current = binding(1usize);
     let mut app = ui.mount({
@@ -54,7 +55,7 @@ fn only_the_selected_row_is_marked_selected(ui: UiBuilder) {
 /// its content reads against that fill, while its neighbours are untouched.
 #[ignore = "writes a visual acceptance PNG for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 300))]
-fn the_selected_row_shows_its_selection_fill(ui: UiBuilder) {
+fn the_selected_row_shows_its_selection_fill(ui: UiBuilder<Styled<Material3>>) {
     let current = binding(1usize);
     let mut app = ui.mount_offscreen(move || selectable_list(current.clone()));
     let _ = app.capture_snapshot("material3-preview", "list-selection", "second-selected");

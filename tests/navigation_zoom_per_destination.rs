@@ -17,7 +17,7 @@ use waterui::navigation::{
 };
 use waterui::prelude::*;
 use waterui_core::id::Id;
-use waterui_testing::UiBuilder;
+use waterui_testing::{Styled, UiBuilder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Tile(i32);
@@ -94,7 +94,7 @@ fn gallery(frames: Rc<Cell<usize>>) -> impl View {
 /// one `zoom(id)` on the whole stack, one of six tiles marked as its source, so
 /// only that tile could ever zoom.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 400))]
-fn a_destination_transition_wins_over_the_stack(ui: UiBuilder) {
+fn a_destination_transition_wins_over_the_stack(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let frames = Rc::new(Cell::new(0usize));
     let mut app = ui.mount_offscreen({
         let frames = Rc::clone(&frames);

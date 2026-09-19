@@ -4,11 +4,12 @@
 //! seam are tucked in, and the selected segment rounds back out so it reads as
 //! lifted out of the row. The PNG is reviewed by eye.
 
-use hydrolysis_m3::{connected_button, connected_button_group};
+use hydrolysis::Style as _;
+use hydrolysis_m3::{Material3, connected_button, connected_button_group};
 use waterui::prelude::vstack;
 use waterui::prelude::*;
 use waterui::reactive::binding;
-use waterui_testing::{OffscreenApp, Role, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
 
 fn group() -> impl View {
     let day = binding(false);
@@ -23,7 +24,7 @@ fn group() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 120))]
-fn connected_group_tucks_its_inner_corners(ui: UiBuilder) {
+fn connected_group_tucks_its_inner_corners(ui: UiBuilder<Styled<Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(group);
     let _ = app.capture_snapshot(
         "material3-preview",
@@ -34,9 +35,14 @@ fn connected_group_tucks_its_inner_corners(ui: UiBuilder) {
 
 /// Each segment is a button carrying its own selected state, so assistive
 /// technology can tell which choice is active.
-#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 120))]
+#[waterui::test(viewport = (360, 120))]
 fn connected_group_exposes_each_segment(ui: UiBuilder) {
-    let mut app = ui.mount(group);
+    // The semantic runtime carries no style package, so the Material tokens
+    // the widgets resolve while their bodies build are installed as plain
+    // environment values.
+    let mut env = waterui::configure_environment!(Environment::new());
+    Material3::defaults().install_tokens(&mut env);
+    let mut app = ui.environment(env).mount(group);
 
     for segment in ["Day", "Week", "Month"] {
         app.query()
@@ -67,14 +73,14 @@ fn spaced_group() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 120))]
-fn spaced_group_lays_its_buttons_out_in_a_row(ui: UiBuilder) {
+fn spaced_group_lays_its_buttons_out_in_a_row(ui: UiBuilder<Styled<Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(spaced_group);
     let _ = app.capture_snapshot("material3-preview", "button-group", "spaced");
 }
 
 /// Every button in the group is its own target, and the group announces itself
 /// as the set they belong to.
-#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 120))]
+#[waterui::test(viewport = (420, 120))]
 fn spaced_group_exposes_every_button(ui: UiBuilder) {
     let mut app = ui.mount(spaced_group);
 
@@ -86,7 +92,7 @@ fn spaced_group_exposes_every_button(ui: UiBuilder) {
 /// The buttons sit side by side, in order, separated by the group's between
 /// space — the layout places them, so this is what proves it ran.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 120))]
-fn spaced_group_places_its_buttons_in_order(ui: UiBuilder) {
+fn spaced_group_places_its_buttons_in_order(ui: UiBuilder<Styled<Material3>>) {
     let mut app = ui.mount_offscreen(spaced_group);
 
     let mut bounds = |label: &str| {

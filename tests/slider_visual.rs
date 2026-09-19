@@ -7,7 +7,7 @@
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui_controls::slider::slider;
-use waterui_testing::{OffscreenApp, UiBuilder};
+use waterui_testing::{OffscreenApp, Styled, UiBuilder};
 
 fn sliders() -> impl View {
     let quiet = binding(0.0_f64);
@@ -26,7 +26,7 @@ fn sliders() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 320))]
-fn slider_renders_the_expressive_bar_handle(ui: UiBuilder) {
+fn slider_renders_the_expressive_bar_handle(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(sliders);
     let _ = app.capture_snapshot("material3-preview", "slider", "expressive");
 }

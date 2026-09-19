@@ -9,7 +9,7 @@ use vello::kurbo::Point;
 use waterui::layout::Point as CanvasPoint;
 use waterui::prelude::*;
 use waterui_canvas::{Canvas, DrawingContext};
-use waterui_testing::{OffscreenApp, UiBuilder};
+use waterui_testing::{OffscreenApp, Styled, UiBuilder};
 
 const CELL: f32 = 72.0;
 const RADIUS: f64 = 30.0;
@@ -75,7 +75,7 @@ fn shapes() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (288, 144))]
-fn the_material_shape_set_renders(ui: UiBuilder) {
+fn the_material_shape_set_renders(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(shapes);
     let _ = app.capture_snapshot("material3-preview", "material-shapes", "sequence");
 }
