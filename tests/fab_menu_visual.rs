@@ -5,12 +5,12 @@
 
 use core::time::Duration;
 
-use hydrolysis_m3::{fab_menu, fab_menu_item};
+use hydrolysis_m3::{Material3, fab_menu, fab_menu_item};
 use waterui::prelude::theme_color::Foreground;
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui::shape::{Circle, ShapeExt as _};
-use waterui_testing::{OffscreenApp, Role, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
 
 #[allow(
     clippy::needless_pass_by_value,
@@ -26,8 +26,8 @@ fn menu(expanded: Binding<bool>) -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (320, 320))]
-fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 320))]
+fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder<Styled<Material3>>) {
     let expanded = binding(false);
     let toggle = expanded.clone();
     let mut app: OffscreenApp = ui.mount_offscreen(move || menu(expanded.clone()));
@@ -41,10 +41,12 @@ fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder) {
 }
 
 /// Every action must be reachable and named once the menu is open.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (320, 320))]
+#[waterui::test(viewport = (320, 320))]
 fn fab_menu_exposes_its_actions(ui: UiBuilder) {
     let expanded = binding(true);
-    let mut app = ui.mount(move || menu(expanded.clone()));
+    let mut app = ui
+        .theme(Material3::defaults())
+        .mount(move || menu(expanded.clone()));
 
     app.query()
         .role(Role::BUTTON)
