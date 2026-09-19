@@ -85,11 +85,11 @@ fn list_view(fixture: Fixture) -> impl View {
     vstack((list,)).state(&fixture)
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn swiping_a_row_past_the_threshold_deletes_it(ui: UiBuilder) {
     let fixture = Fixture::new(false);
     let probe = fixture.clone();
-    let mut app = ui.mount(move || list_view(fixture.clone()));
+    let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
 
     app.query()
         .role(Role::LIST_ITEM)
@@ -115,11 +115,11 @@ fn swiping_a_row_past_the_threshold_deletes_it(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn swiping_a_row_short_of_the_threshold_keeps_it(ui: UiBuilder) {
     let fixture = Fixture::new(false);
     let probe = fixture.clone();
-    let mut app = ui.mount(move || list_view(fixture.clone()));
+    let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
 
     // Beyond the touch slop so a drag is recognized, but nowhere near half the
     // row: the row must spring back instead of committing.
@@ -136,11 +136,11 @@ fn swiping_a_row_short_of_the_threshold_keeps_it(ui: UiBuilder) {
     assert_eq!(probe.order().len(), ROW_COUNT);
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn a_press_inside_the_touch_slop_is_not_a_swipe(ui: UiBuilder) {
     let fixture = Fixture::new(false);
     let probe = fixture.clone();
-    let mut app = ui.mount(move || list_view(fixture.clone()));
+    let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
 
     app.query()
         .role(Role::LIST_ITEM)
@@ -154,11 +154,11 @@ fn a_press_inside_the_touch_slop_is_not_a_swipe(ui: UiBuilder) {
     assert_eq!(probe.order().len(), ROW_COUNT);
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn dragging_the_move_handle_reorders_the_row(ui: UiBuilder) {
     let fixture = Fixture::new(true);
     let probe = fixture.clone();
-    let mut app = ui.mount(move || list_view(fixture.clone()));
+    let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
 
     let bounds = app
         .query()
@@ -191,7 +191,7 @@ fn dragging_the_move_handle_reorders_the_row(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn rows_stay_reachable_in_the_accessibility_tree(ui: UiBuilder) {
     let fixture = Fixture::new(true);
     let mut app = ui.mount(move || list_view(fixture.clone()));

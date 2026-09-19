@@ -93,10 +93,10 @@ fn gallery(frames: Rc<Cell<usize>>) -> impl View {
 /// does not. The repository's own navigation example shows the consequence —
 /// one `zoom(id)` on the whole stack, one of six tiles marked as its source, so
 /// only that tile could ever zoom.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 400))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 400))]
 fn a_destination_transition_wins_over_the_stack(ui: UiBuilder) {
     let frames = Rc::new(Cell::new(0usize));
-    let mut app = ui.mount({
+    let mut app = ui.mount_offscreen({
         let frames = Rc::clone(&frames);
         move || gallery(Rc::clone(&frames))
     });

@@ -71,7 +71,7 @@ fn top_visible_row(app: &mut OffscreenApp) -> Option<usize> {
         .min()
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder) {
     let fixture = fixture();
     let scroll = fixture.scroll.clone();
@@ -120,7 +120,7 @@ fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 420))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn a_short_jump_is_animated_end_to_end(ui: UiBuilder) {
     const NEARBY_ROW: usize = 12;
 

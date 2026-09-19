@@ -4,7 +4,7 @@
 //! menu. The menu opens in its own window, so this also exercises the harness
 //! seeing more than the main one.
 
-use hydrolysis_m3::install;
+use hydrolysis_m3::Material3;
 use waterui::prelude::*;
 use waterui_testing::ui as test_ui;
 
@@ -13,8 +13,8 @@ use waterui_testing::ui as test_ui;
 fn right_clicking_offers_to_inspect_the_element() {
     let mut app = test_ui()
         .viewport(320, 200)
-        .theme(install)
-        .mount(|| text("Hello").padding_with(EdgeInsets::all(20.0)));
+        .theme(Material3::defaults())
+        .mount_offscreen(|| text("Hello").padding_with(EdgeInsets::all(20.0)));
 
     app.query().label("Inspect element").assert_not_exists();
 
@@ -27,11 +27,14 @@ fn right_clicking_offers_to_inspect_the_element() {
 /// after what the application put there, not instead of it.
 #[core::prelude::v1::test]
 fn an_application_menu_keeps_its_own_items() {
-    let mut app = test_ui().viewport(320, 200).theme(install).mount(|| {
-        text("Hello")
-            .padding_with(EdgeInsets::all(20.0))
-            .context_menu(vec!["Rename".action(|| {})])
-    });
+    let mut app = test_ui()
+        .viewport(320, 200)
+        .theme(Material3::defaults())
+        .mount_offscreen(|| {
+            text("Hello")
+                .padding_with(EdgeInsets::all(20.0))
+                .context_menu(vec!["Rename".action(|| {})])
+        });
 
     app.secondary_click_at(40.0, 30.0);
 

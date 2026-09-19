@@ -1,7 +1,7 @@
 //! Material Design 3 color role tokens.
 //!
-//! These tokens resolve against the `MaterialColorScheme` installed by
-//! `hydrolysis_m3::install_with_colors` and can be used anywhere a `WaterUI`
+//! These tokens resolve against the `MaterialColorScheme` installed by a
+//! `hydrolysis_m3::Material3` style and can be used anywhere a `WaterUI`
 //! color is accepted.
 
 use waterui::View;
@@ -26,7 +26,7 @@ fn resolve_role(
 
     let scheme = env.get::<MaterialColorScheme>().unwrap_or_else(|| {
         panic!(
-            "hydrolysis_m3::color::{token} requires hydrolysis_m3::install or install_with_colors"
+            "hydrolysis_m3::color::{token} requires a hydrolysis_m3::Material3 style's tokens in the environment"
         )
     });
     Computed::constant(role(scheme).resolved())
@@ -187,7 +187,8 @@ mod tests {
     use waterui::theme::{ColorScheme, current_color_scheme, installed_color_signal};
 
     use super::*;
-    use crate::{MaterialColorMode, install, install_with_colors};
+    use crate::{Material3, MaterialColorMode};
+    use hydrolysis::Style as _;
 
     fn assert_resolved_color_eq(actual: ResolvedColor, expected: ResolvedColor) {
         assert_eq!(actual.red.to_bits(), expected.red.to_bits());
@@ -213,7 +214,7 @@ mod tests {
     fn material_role_tokens_resolve_from_installed_scheme() {
         let scheme = MaterialColorScheme::baseline_light();
         let mut env = Environment::new();
-        install_with_colors(&mut env, scheme);
+        Material3::with_colors(scheme).install_tokens(&mut env);
 
         macro_rules! assert_role {
             ($token:expr, $field:ident) => {
@@ -275,7 +276,7 @@ mod tests {
     #[test]
     fn defaults_install_a_light_scheme_on_an_empty_environment() {
         let mut env = Environment::new();
-        install(&mut env);
+        Material3::defaults().install_tokens(&mut env);
 
         assert_eq!(current_color_scheme(&env).get(), ColorScheme::Light);
         assert_resolved_color_eq(
@@ -293,7 +294,7 @@ mod tests {
             MaterialColorMode::Dark,
         );
         let mut env = Environment::new();
-        install_with_colors(&mut env, scheme);
+        Material3::with_colors(scheme).install_tokens(&mut env);
 
         assert_eq!(current_color_scheme(&env).get(), ColorScheme::Dark);
         assert_resolved_color_eq(

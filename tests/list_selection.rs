@@ -30,7 +30,7 @@ fn selectable_list(current: Binding<usize>) -> impl View {
 
 /// Exactly the selected row reports itself selected, and the flag follows the
 /// signal without the list being rebuilt.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 300))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 300))]
 fn only_the_selected_row_is_marked_selected(ui: UiBuilder) {
     let current = binding(1usize);
     let mut app = ui.mount({
@@ -53,7 +53,7 @@ fn only_the_selected_row_is_marked_selected(ui: UiBuilder) {
 /// Visual acceptance: the selected row carries the theme's selection fill and
 /// its content reads against that fill, while its neighbours are untouched.
 #[ignore = "writes a visual acceptance PNG for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 300))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 300))]
 fn the_selected_row_shows_its_selection_fill(ui: UiBuilder) {
     let current = binding(1usize);
     let mut app = ui.mount_offscreen(move || selectable_list(current.clone()));

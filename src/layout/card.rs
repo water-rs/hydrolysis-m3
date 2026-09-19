@@ -99,12 +99,12 @@ pub fn theme(_colors: &MaterialColorScheme) -> CardTheme {
 #[cfg(test)]
 mod tests {
     use super::{CARD_CONTENT_PADDING, CARD_CORNER_RADIUS, theme};
-    use crate::MaterialTheme;
+    use crate::MaterialColorScheme;
     use waterui::widget::CardStyle;
 
     #[test]
     fn card_theme_matches_compose_card_tokens() {
-        let theme = theme(&MaterialTheme::new().colors());
+        let theme = theme(&MaterialColorScheme::baseline_light());
 
         assert_eq!(theme.default_style, CardStyle::Filled);
         assert_eq!(theme.content_padding, CARD_CONTENT_PADDING);

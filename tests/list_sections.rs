@@ -56,7 +56,7 @@ fn sectioned_list(fixture: Fixture) -> impl View {
     ))
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 520))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 520))]
 fn section_chrome_is_its_own_accessibility_node(ui: UiBuilder) {
     let fixture = Fixture::new();
     let mut app = ui.mount(move || sectioned_list(fixture.clone()));
@@ -80,7 +80,7 @@ fn section_chrome_is_its_own_accessibility_node(ui: UiBuilder) {
         .assert_exists();
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 520))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 520))]
 fn a_section_header_follows_its_signal(ui: UiBuilder) {
     let fixture = Fixture::new();
     let probe = fixture.clone();
@@ -117,7 +117,7 @@ fn a_section_header_follows_its_signal(ui: UiBuilder) {
         .assert_exists();
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 520))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 520))]
 fn a_section_footer_follows_its_signal(ui: UiBuilder) {
     let fixture = Fixture::new();
     let probe = fixture.clone();
@@ -139,7 +139,7 @@ fn a_section_footer_follows_its_signal(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 520))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 520))]
 fn an_unlabeled_section_adds_no_chrome_nodes(ui: UiBuilder) {
     let mut app = ui.mount(|| {
         List::content((
@@ -162,9 +162,9 @@ fn an_unlabeled_section_adds_no_chrome_nodes(ui: UiBuilder) {
 
 /// The section marker rides the *first* item its content produces, so the
 /// header has to land above that row rather than anywhere else in the list.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 520))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 520))]
 fn a_section_opens_on_the_first_row_of_its_content(ui: UiBuilder) {
-    let mut app = ui.mount(|| {
+    let mut app = ui.mount_offscreen(|| {
         List::content((Section::new("Only").content((
             || ListItem::new(text("First").padding()),
             || ListItem::new(text("Second").padding()),

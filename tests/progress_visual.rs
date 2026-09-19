@@ -20,7 +20,7 @@ fn indicators() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (420, 300))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 300))]
 fn linear_progress_renders_the_expressive_track_gap(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(indicators);
     let _ = app.capture_snapshot("material3-preview", "progress", "linear-expressive");
@@ -37,7 +37,7 @@ fn circular_indicators() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (300, 120))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (300, 120))]
 fn circular_progress_draws_its_track(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(circular_indicators);
     let _ = app.capture_snapshot("material3-preview", "progress", "circular-expressive");

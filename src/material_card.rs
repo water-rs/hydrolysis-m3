@@ -87,12 +87,12 @@ pub const fn material_card<Content>(content: Content) -> MaterialCard<Content> {
 
 #[cfg(test)]
 mod tests {
-    use crate::MaterialTheme;
+    use crate::MaterialColorScheme;
     use waterui::widget::CardStyle;
 
     #[test]
     fn material_card_tokens_match_compose_card_tokens() {
-        let theme = crate::layout::card::theme(&MaterialTheme::new().colors());
+        let theme = crate::layout::card::theme(&MaterialColorScheme::baseline_light());
 
         assert_eq!(theme.default_style, CardStyle::Filled);
         assert_eq!(theme.elevated.corner_radius, 12.0);

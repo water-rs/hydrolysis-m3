@@ -23,21 +23,21 @@ fn rail(layout: NavigationRailLayout) -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 320))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
 fn navigation_rail_renders_collapsed(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(|| rail(NavigationRailLayout::Collapsed));
     let _ = app.capture_snapshot("material3-preview", "navigation-rail", "collapsed");
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 320))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
 fn navigation_rail_renders_expanded(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(|| rail(NavigationRailLayout::Expanded));
     let _ = app.capture_snapshot("material3-preview", "navigation-rail", "expanded");
 }
 
 /// Destinations must be tabs carrying their selected state, in both layouts.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 320))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
 fn navigation_rail_exposes_its_destinations(ui: UiBuilder) {
     let mut app = ui.mount(|| rail(NavigationRailLayout::Expanded));
 

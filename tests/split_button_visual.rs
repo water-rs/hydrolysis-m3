@@ -17,7 +17,7 @@ fn buttons() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (320, 160))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 160))]
 fn split_button_renders_as_one_silhouette(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(buttons);
     let _ = app.capture_snapshot("material3-preview", "split-button", "filled-and-tonal");
@@ -25,7 +25,7 @@ fn split_button_renders_as_one_silhouette(ui: UiBuilder) {
 
 /// Both halves must be reachable and separately labelled, or the trailing
 /// chevron becomes an unnamed tap target.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (320, 160))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 160))]
 fn split_button_exposes_both_halves(ui: UiBuilder) {
     let mut app = ui.mount(buttons);
 

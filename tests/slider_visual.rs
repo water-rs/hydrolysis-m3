@@ -25,7 +25,7 @@ fn sliders() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (420, 320))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 320))]
 fn slider_renders_the_expressive_bar_handle(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(sliders);
     let _ = app.capture_snapshot("material3-preview", "slider", "expressive");

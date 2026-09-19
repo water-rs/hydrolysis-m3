@@ -26,7 +26,7 @@ fn menu(expanded: Binding<bool>) -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (320, 320))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 320))]
 fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder) {
     let expanded = binding(false);
     let toggle = expanded.clone();
@@ -41,7 +41,7 @@ fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder) {
 }
 
 /// Every action must be reachable and named once the menu is open.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (320, 320))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 320))]
 fn fab_menu_exposes_its_actions(ui: UiBuilder) {
     let expanded = binding(true);
     let mut app = ui.mount(move || menu(expanded.clone()));

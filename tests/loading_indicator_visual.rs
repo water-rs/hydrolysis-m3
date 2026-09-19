@@ -13,7 +13,7 @@ fn indicator() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (120, 120))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (120, 120))]
 fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(indicator);
 
@@ -31,7 +31,7 @@ fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder) {
 }
 
 /// The indicator is an indeterminate progress indicator, and says so.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (120, 120))]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (120, 120))]
 fn the_loading_indicator_exposes_progress_semantics(ui: UiBuilder) {
     let mut app = ui.mount(indicator);
 
