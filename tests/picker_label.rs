@@ -50,7 +50,7 @@ fn sized_picker(selection: Binding<Size>, style: PickerStyle) -> impl View {
 
 /// The menu style names the control and reports the selection as its value.
 /// Those are two different strings and it used to give the selection for both.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 300))]
+#[waterui::test(viewport = (400, 300))]
 fn a_menu_picker_announces_its_own_label(ui: UiBuilder) {
     let selection = binding(Size::Medium);
     let mut app = ui.mount(move || sized_picker(selection.clone(), PickerStyle::Menu));
@@ -60,7 +60,7 @@ fn a_menu_picker_announces_its_own_label(ui: UiBuilder) {
 }
 
 /// The radio style groups its options, and the group is what carries the name.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 300))]
+#[waterui::test(viewport = (400, 300))]
 fn a_radio_picker_announces_its_own_label(ui: UiBuilder) {
     let selection = binding(Size::Small);
     let mut app = ui.mount(move || sized_picker(selection.clone(), PickerStyle::Radio));

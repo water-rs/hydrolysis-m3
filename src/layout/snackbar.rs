@@ -63,13 +63,13 @@ mod tests {
     use super::{
         SNACKBAR_CORNER_RADIUS, SNACKBAR_HORIZONTAL_PADDING, SNACKBAR_SINGLE_LINE_HEIGHT, theme,
     };
-    use crate::MaterialTheme;
+    use crate::MaterialColorScheme;
     use core::time::Duration;
     use waterui::animation::Animation;
 
     #[test]
     fn snackbar_theme_matches_compose_snackbar_tokens() {
-        let theme = theme(&MaterialTheme::new().colors());
+        let theme = theme(&MaterialColorScheme::baseline_light());
 
         assert_eq!(theme.content_padding.leading(), SNACKBAR_HORIZONTAL_PADDING);
         assert_eq!(
