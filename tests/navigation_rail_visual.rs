@@ -3,7 +3,6 @@
 //! Collapsed stacks each label under its icon; expanded lays it beside, inside
 //! one active-indicator pill. The PNGs are reviewed by eye.
 
-use hydrolysis::Style as _;
 use hydrolysis_m3::{Material3, NavigationRailLayout, navigation_rail, navigation_rail_item};
 use waterui::prelude::*;
 use waterui::reactive::binding;
@@ -40,13 +39,8 @@ fn navigation_rail_renders_expanded(ui: UiBuilder<Styled<Material3>>) {
 /// Destinations must be tabs carrying their selected state, in both layouts.
 #[waterui::test(viewport = (400, 320))]
 fn navigation_rail_exposes_its_destinations(ui: UiBuilder) {
-    // The semantic runtime carries no style package, so the Material tokens
-    // the rail resolves while its body builds are installed as plain
-    // environment values.
-    let mut env = waterui::configure_environment!(Environment::new());
-    Material3::defaults().install_tokens(&mut env);
     let mut app = ui
-        .environment(env)
+        .theme(Material3::defaults())
         .mount(|| rail(NavigationRailLayout::Expanded));
 
     // The rail's own container currently emits no accessibility node, so its

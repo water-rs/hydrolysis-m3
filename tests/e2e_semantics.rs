@@ -3,7 +3,6 @@
 use core::convert::TryFrom as _;
 use core::time::Duration;
 
-use hydrolysis::Style as _;
 use hydrolysis_m3::{
     Material3, MaterialColorScheme, assist_chip, dialog, dialog_action, extended_fab, fab,
     filled_icon_button, filter_chip, icon_button, input_chip, material_badge, material_card,
@@ -18,7 +17,7 @@ use waterui::component::{hstack, text, vstack};
 use waterui::graphics::color::Srgb;
 use waterui::id::Id;
 use waterui::navigation::NavigationView;
-use waterui::{Binding, Environment, Str};
+use waterui::{Binding, Str};
 use waterui_controls::{TextField, button, slider::slider, stepper::stepper, toggle};
 use waterui_core::View;
 use waterui_testing::{
@@ -36,16 +35,6 @@ fn material_shell<V: View>(content: V) -> impl View {
 
 fn tab_id(value: i32) -> Id {
     Id::try_from(value).expect("test tab id must be non-zero")
-}
-
-/// The semantic runtime carries no style package, so the Material tokens the
-/// widgets resolve while their bodies build are installed as plain environment
-/// values — the same tokens `Material3::defaults()` installs for the rendered
-/// runtime.
-fn material_token_env() -> Environment {
-    let mut env = waterui::configure_environment!(Environment::new());
-    Material3::defaults().install_tokens(&mut env);
-    env
 }
 
 fn material_controls_view() -> impl View {
@@ -104,7 +93,7 @@ fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_view = tapped.clone();
     let tapped_for_action = tapped;
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(assist_chip("Assist").action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -124,7 +113,7 @@ fn material_suggestion_chip_exposes_button_semantics_and_tap_action(ui: UiBuilde
     let tapped = Binding::bool(false);
     let tapped_for_view = tapped.clone();
     let tapped_for_action = tapped;
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(suggestion_chip("Suggestion").action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -148,7 +137,7 @@ fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBui
     let selected_for_view = selected.clone();
     let tapped = Binding::bool(false);
     let tapped_for_action = tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(filter_chip("Filter", &selected_for_view).action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -300,7 +289,7 @@ fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder
     let remove_tapped = Binding::bool(false);
     let primary_for_action = primary_tapped.clone();
     let remove_for_action = remove_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             input_chip("Person")
                 .action({
@@ -339,7 +328,7 @@ fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder
 fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_action = tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(fab("Create", text("+")).action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -358,7 +347,7 @@ fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
 fn material_extended_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_action = tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(extended_fab("Create").action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -381,7 +370,7 @@ fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) 
     let standard_for_action = standard_tapped.clone();
     let filled_for_action = filled_tapped.clone();
     let outlined_for_action = outlined_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             hstack((
                 icon_button("Favorite", text("*")).action({
@@ -423,7 +412,7 @@ fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) 
 fn material_tooltips_expose_accessibility_labels_and_action_semantics(ui: UiBuilder) {
     let action_tapped = Binding::bool(false);
     let action_for_view = action_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             vstack((
                 plain_tooltip("Adds this item to your favorites"),
@@ -459,9 +448,7 @@ fn anchored_tooltip_view() -> impl View {
 
 #[waterui::test(viewport = (360, 320))]
 fn anchored_material_tooltip_opens_on_keyboard_focus(ui: UiBuilder) {
-    let mut app = ui
-        .environment(material_token_env())
-        .mount(anchored_tooltip_view);
+    let mut app = ui.theme(Material3::defaults()).mount(anchored_tooltip_view);
     app.query()
         .label("Adds this item to your favorites")
         .assert_not_exists();
@@ -481,7 +468,7 @@ fn material_dialog_exposes_semantics_and_action_buttons(ui: UiBuilder) {
     let confirm_tapped = Binding::bool(false);
     let cancel_for_view = cancel_tapped.clone();
     let confirm_for_view = confirm_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             dialog("Delete draft?", "This action cannot be undone.").actions((
                 dialog_action("Cancel").action({
@@ -519,7 +506,7 @@ fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
     let home_for_view = home_selected;
     let search_for_view = search_selected;
     let home_for_action = home_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(navigation_bar((
             navigation_tab("Home", text("H"), &home_for_view).action({
                 let home_for_action = home_for_action.clone();
@@ -563,7 +550,7 @@ fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilde
     let inbox_for_view = inbox_selected;
     let archive_for_view = archive_selected;
     let archive_for_action = archive_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(navigation_drawer(
             &opened_for_view,
             vstack((
@@ -649,7 +636,7 @@ fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilde
     let first_for_view = first_selected;
     let second_for_view = second_selected.clone();
     let second_for_action = second_tapped.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             outlined_segmented_button_set((
                 outlined_segmented_button("Day", &first_for_view).start(),
@@ -718,7 +705,7 @@ fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
     let second = tab_id(2);
     let selection = Binding::container(first);
     let selection_for_view = selection.clone();
-    let mut app = ui.environment(material_token_env()).mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(material_tabs(
             &selection_for_view,
             vec![

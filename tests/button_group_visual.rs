@@ -4,7 +4,6 @@
 //! seam are tucked in, and the selected segment rounds back out so it reads as
 //! lifted out of the row. The PNG is reviewed by eye.
 
-use hydrolysis::Style as _;
 use hydrolysis_m3::{Material3, connected_button, connected_button_group};
 use waterui::prelude::vstack;
 use waterui::prelude::*;
@@ -37,12 +36,7 @@ fn connected_group_tucks_its_inner_corners(ui: UiBuilder<Styled<Material3>>) {
 /// technology can tell which choice is active.
 #[waterui::test(viewport = (360, 120))]
 fn connected_group_exposes_each_segment(ui: UiBuilder) {
-    // The semantic runtime carries no style package, so the Material tokens
-    // the widgets resolve while their bodies build are installed as plain
-    // environment values.
-    let mut env = waterui::configure_environment!(Environment::new());
-    Material3::defaults().install_tokens(&mut env);
-    let mut app = ui.environment(env).mount(group);
+    let mut app = ui.theme(Material3::defaults()).mount(group);
 
     for segment in ["Day", "Week", "Month"] {
         app.query()

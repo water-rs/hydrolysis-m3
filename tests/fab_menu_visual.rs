@@ -5,7 +5,6 @@
 
 use core::time::Duration;
 
-use hydrolysis::Style as _;
 use hydrolysis_m3::{Material3, fab_menu, fab_menu_item};
 use waterui::prelude::theme_color::Foreground;
 use waterui::prelude::*;
@@ -45,12 +44,9 @@ fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder<Styled<Material3>
 #[waterui::test(viewport = (320, 320))]
 fn fab_menu_exposes_its_actions(ui: UiBuilder) {
     let expanded = binding(true);
-    // The semantic runtime carries no style package, so the Material tokens
-    // the menu resolves while its body builds are installed as plain
-    // environment values.
-    let mut env = waterui::configure_environment!(Environment::new());
-    Material3::defaults().install_tokens(&mut env);
-    let mut app = ui.environment(env).mount(move || menu(expanded.clone()));
+    let mut app = ui
+        .theme(Material3::defaults())
+        .mount(move || menu(expanded.clone()));
 
     app.query()
         .role(Role::BUTTON)

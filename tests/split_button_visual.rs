@@ -3,7 +3,6 @@
 //! The pair must read as one control with a seam: fully round on the outside,
 //! tucked in where the halves meet. The PNG is reviewed by eye.
 
-use hydrolysis::Style as _;
 use hydrolysis_m3::{Material3, split_button};
 use waterui::prelude::*;
 use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
@@ -28,12 +27,7 @@ fn split_button_renders_as_one_silhouette(ui: UiBuilder<Styled<Material3>>) {
 /// chevron becomes an unnamed tap target.
 #[waterui::test(viewport = (320, 160))]
 fn split_button_exposes_both_halves(ui: UiBuilder) {
-    // The semantic runtime carries no style package, so the Material tokens
-    // the button resolves while its body builds are installed as plain
-    // environment values.
-    let mut env = waterui::configure_environment!(Environment::new());
-    Material3::defaults().install_tokens(&mut env);
-    let mut app = ui.environment(env).mount(buttons);
+    let mut app = ui.theme(Material3::defaults()).mount(buttons);
 
     app.query().role(Role::BUTTON).label("Save").assert_exists();
     app.query()
