@@ -17,7 +17,7 @@ use waterui::shape::RoundedRectangle;
 use waterui::widget::avatar::Avatar;
 use waterui_testing::{OffscreenApp, Styled, UiBuilder};
 
-/// A 240×240 test portrait: four saturated quadrants.
+/// A 320×200 test portrait: four saturated quadrants.
 ///
 /// Every feature is chosen to be read off the rendered avatar directly. The
 /// quadrant boundaries show whether the picture is centred and undistorted,
@@ -116,7 +116,7 @@ fn capture(ui: UiBuilder<Styled<Material3>>, stage: &str) {
         app.pump_until(Duration::from_secs(5), || loaded.get()),
         "the test portrait must decode before the gallery is captured"
     );
-    let _ = app.capture_snapshot("material3-preview", "avatar-gallery", stage);
+    let _ = app.capture_snapshot("avatar-preview", "gallery", stage);
 }
 
 // Moved from waterui's tests/avatar.rs.

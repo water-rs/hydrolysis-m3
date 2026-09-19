@@ -41,7 +41,7 @@ fn navigation_stack_exports_root_destination_and_interactive_pop_stages(
         ui.mount_offscreen(move || visual_stack(Rc::clone(&destination_appeared_for_view)));
 
     app.query().label("Library").assert_exists();
-    let _root = app.capture_snapshot("material3-preview", "navigation-stack", "root");
+    let _root = app.capture_snapshot("navigation", "stack", "root");
 
     app.query().role(Role::BUTTON).label("Open Atlas").tap();
     let deadline = Instant::now() + Duration::from_secs(2);
@@ -52,7 +52,7 @@ fn navigation_stack_exports_root_destination_and_interactive_pop_stages(
         );
         let _ = app.snapshot();
     }
-    let _destination = app.capture_snapshot("material3-preview", "navigation-stack", "destination");
+    let _destination = app.capture_snapshot("navigation", "stack", "destination");
 
     app.queue_pointer_down(2.0, f32::from(VIEWPORT_HEIGHT) * 0.5);
     let _ = app.snapshot();
@@ -60,11 +60,7 @@ fn navigation_stack_exports_root_destination_and_interactive_pop_stages(
         f32::from(VIEWPORT_WIDTH) * 0.45,
         f32::from(VIEWPORT_HEIGHT) * 0.5,
     );
-    let _interactive = app.capture_snapshot(
-        "material3-preview",
-        "navigation-stack",
-        "interactive-pop-progress",
-    );
+    let _interactive = app.capture_snapshot("navigation", "stack", "interactive-pop-progress");
     app.queue_pointer_up(
         f32::from(VIEWPORT_WIDTH) * 0.45,
         f32::from(VIEWPORT_HEIGHT) * 0.5,

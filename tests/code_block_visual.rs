@@ -27,7 +27,7 @@ fn assert_code_block_semantics(app: &mut OffscreenApp) {
 )]
 fn a_code_block_draws_from_the_light_theme(app: &mut OffscreenApp) {
     assert_code_block_semantics(app);
-    let _ = app.capture_snapshot("material3-preview", "code-block", "light");
+    let _ = app.capture_snapshot("text", "code_block", "light");
 }
 
 // Moved from waterui's components/foundation/text/tests/e2e_visual.rs.
@@ -39,5 +39,5 @@ fn a_code_block_draws_from_the_light_theme(app: &mut OffscreenApp) {
 )]
 fn a_code_block_draws_from_the_dark_theme(app: &mut OffscreenApp) {
     assert_code_block_semantics(app);
-    let _ = app.capture_snapshot("material3-preview", "code-block", "dark");
+    let _ = app.capture_snapshot("text", "code_block", "dark");
 }

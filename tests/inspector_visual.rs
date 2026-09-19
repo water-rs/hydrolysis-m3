@@ -11,7 +11,7 @@ use waterui_inspector_app::{connection, preview_model, ui};
 use waterui_testing::{OffscreenApp, ui as test_ui};
 
 fn save(app: &mut OffscreenApp, case: &str) {
-    let _ = app.capture_snapshot("material3-preview", case, "default");
+    let _ = app.capture_snapshot("inspector", case, "default");
 }
 
 /// Mounts one pane at a size that shows its whole layout.
@@ -31,42 +31,42 @@ fn pane(case: &str, width: u32, height: u32, section: Section) {
 #[test]
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 fn overview_pane() {
-    pane("inspector-overview", 900, 700, Section::Overview);
+    pane("overview", 900, 700, Section::Overview);
 }
 
 // Moved from waterui's components/devtools/inspector/app/tests/visual.rs.
 #[test]
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 fn frames_pane() {
-    pane("inspector-frames", 900, 700, Section::Frames);
+    pane("frames", 900, 700, Section::Frames);
 }
 
 // Moved from waterui's components/devtools/inspector/app/tests/visual.rs.
 #[test]
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 fn tree_pane() {
-    pane("inspector-tree", 900, 700, Section::Tree);
+    pane("tree", 900, 700, Section::Tree);
 }
 
 // Moved from waterui's components/devtools/inspector/app/tests/visual.rs.
 #[test]
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 fn tasks_pane() {
-    pane("inspector-tasks", 900, 700, Section::Tasks);
+    pane("tasks", 900, 700, Section::Tasks);
 }
 
 // Moved from waterui's components/devtools/inspector/app/tests/visual.rs.
 #[test]
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 fn logs_pane() {
-    pane("inspector-logs", 900, 700, Section::Logs);
+    pane("logs", 900, 700, Section::Logs);
 }
 
 // Moved from waterui's components/devtools/inspector/app/tests/visual.rs.
 #[test]
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 fn signals_pane() {
-    pane("inspector-signals", 900, 700, Section::Signals);
+    pane("signals", 900, 700, Section::Signals);
 }
 
 /// The whole window, sidebar included.
@@ -82,5 +82,5 @@ fn full_window() {
             let (sender, _receiver) = connection::subscription_channel();
             ui::inspector(model, sender)
         });
-    save(&mut app, "inspector-window");
+    save(&mut app, "window");
 }

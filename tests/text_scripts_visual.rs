@@ -56,7 +56,7 @@ fn gallery() -> impl View {
 
 fn capture(ui: UiBuilder<Styled<Material3>>, stage: &str) {
     let mut app: OffscreenApp = ui.mount_offscreen(gallery);
-    let _ = app.capture_snapshot("material3-preview", "text-scripts", stage);
+    let _ = app.capture_snapshot("text-scripts", "gallery", stage);
 }
 
 // Moved from waterui's tests/text_scripts.rs.
