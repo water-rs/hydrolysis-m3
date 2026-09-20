@@ -17,19 +17,19 @@ const fn font(
         .with_typography_metrics(line_height, letter_spacing)
 }
 
-fn install_default<T: 'static>(env: &mut Environment, value: ResolvedFont) {
+fn default<T: 'static>(env: &mut Environment, value: ResolvedFont) {
     if env.query::<T, Computed<ResolvedFont>>().is_none() {
         install_font_signal::<T>(env, Computed::constant(value));
     }
 }
 
-pub fn install_defaults(env: &mut Environment) {
-    install_default::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.15));
-    install_default::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
-    install_default::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
-    install_default::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
-    install_default::<Caption>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
-    install_default::<Footnote>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
+pub fn defaults(env: &mut Environment) {
+    default::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
+    default::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
+    default::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
+    default::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
+    default::<Caption>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
+    default::<Footnote>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -99,7 +99,7 @@ impl Resolvable for BodyMedium {
     type Resolved = ResolvedFont;
 
     fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
-        Computed::constant(font(14.0, FontWeight::Normal, 20.0, 0.2))
+        Computed::constant(font(14.0, FontWeight::Normal, 20.0, 0.25))
     }
 }
 
@@ -155,7 +155,7 @@ pub fn headline_small() -> Font {
 #[cfg(test)]
 mod tests {
     use super::{
-        MATERIAL_TYPEFACE, body_large, body_medium, body_small, headline_small, install_defaults,
+        MATERIAL_TYPEFACE, body_large, body_medium, body_small, defaults, headline_small,
         label_large, label_medium, label_small, title_small,
     };
     use waterui::Plugin as _;
@@ -192,14 +192,14 @@ mod tests {
     #[test]
     fn font_slots_match_compose_type_scale_tokens() {
         let mut env = Environment::new();
-        install_defaults(&mut env);
+        defaults(&mut env);
 
         assert_material_font(
             Body.resolve(&env).get(),
             16.0,
             FontWeight::Normal,
             24.0,
-            0.15,
+            0.5,
         );
         assert_material_font(
             Title.resolve(&env).get(),
@@ -246,7 +246,7 @@ mod tests {
             .fonts(waterui::theme::FontSettings::new().body(app_body.clone()))
             .install(&mut env);
 
-        install_defaults(&mut env);
+        defaults(&mut env);
 
         let resolved_body = Body.resolve(&env).get();
         assert_eq!(resolved_body.size, app_body.size);
@@ -309,7 +309,7 @@ mod tests {
             14.0,
             FontWeight::Normal,
             20.0,
-            0.2,
+            0.25,
         );
     }
 

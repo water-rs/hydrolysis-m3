@@ -1,7 +1,8 @@
 use crate::dimensions::{
     SLIDER_HANDLE_HEIGHT, SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_HORIZONTAL_INSET,
     SLIDER_HORIZONTAL_SPACING, SLIDER_MIN_TRACK_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH,
-    SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT, SLIDER_VERTICAL_SPACING,
+    SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT, SLIDER_TRACK_INSIDE_CORNER_SIZE,
+    SLIDER_VERTICAL_SPACING,
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, SliderMetrics, WidgetInteractionState};
@@ -41,24 +42,33 @@ pub fn draw_track(
     } else {
         (colors.secondary_container.peniko(), colors.primary.peniko())
     };
-    let radius = (SLIDER_TRACK_HEIGHT / 2.0).into();
+    let outside = SLIDER_TRACK_HEIGHT / 2.0;
+    let inside = SLIDER_TRACK_INSIDE_CORNER_SIZE;
+    // The gap clears the handle's edge, not its centre, and it follows the
+    // live handle width so pressing (a narrower handle) shrinks it.
+    let handle_width = if state.pressed || state.focus_visible {
+        SLIDER_PRESSED_HANDLE_WIDTH
+    } else {
+        SLIDER_HANDLE_WIDTH
+    };
+    let gap = handle_width / 2.0 + SLIDER_HANDLE_PADDING;
 
     // Inactive remainder, starting clear of the handle.
-    let inactive_start = (fill_rect.x1 + SLIDER_HANDLE_PADDING).min(track_rect.x1);
-    if inactive_start < track_rect.x1 {
+    let inactive_start = fill_rect.x1 + gap;
+    if inactive_start < track_rect.x1 - outside {
         draw.fill_rounded_rect(
             vello::kurbo::Rect::new(inactive_start, track_rect.y0, track_rect.x1, track_rect.y1),
-            radius,
+            vello::kurbo::RoundedRectRadii::new(inside, outside, outside, inside),
             &Brush::from(track_color),
         );
     }
 
     // Active portion, stopping clear of the handle.
-    let active_end = (fill_rect.x1 - SLIDER_HANDLE_PADDING).max(track_rect.x0);
-    if active_end > track_rect.x0 {
+    let active_end = fill_rect.x1 - gap;
+    if active_end > track_rect.x0 + outside {
         draw.fill_rounded_rect(
             vello::kurbo::Rect::new(track_rect.x0, track_rect.y0, active_end, track_rect.y1),
-            radius,
+            vello::kurbo::RoundedRectRadii::new(outside, inside, inside, outside),
             &Brush::from(fill_color),
         );
     }
@@ -146,15 +156,15 @@ mod tests {
 
     #[derive(Default)]
     struct RecordingDrawContext {
-        rounded_fills: Vec<(Rect, Brush)>,
+        rounded_fills: Vec<(Rect, RoundedRectRadii, Brush)>,
         circle_fills: usize,
     }
 
     impl DrawContext for RecordingDrawContext {
         fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
 
-        fn fill_rounded_rect(&mut self, rect: Rect, _radii: RoundedRectRadii, brush: &Brush) {
-            self.rounded_fills.push((rect, brush.clone()));
+        fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
+            self.rounded_fills.push((rect, radii, brush.clone()));
         }
 
         fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
@@ -179,6 +189,15 @@ mod tests {
         fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
 
         fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
+        fn draw_shadow(
+            &mut self,
+            _rect: Rect,
+            _radii: RoundedRectRadii,
+            _offset: vello::kurbo::Vec2,
+            _blur: f64,
+            _color: vello::peniko::Color,
+        ) {
+        }
 
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
 
@@ -268,11 +287,11 @@ mod tests {
             disabled,
         );
         assert!(matches!(
-            &track.rounded_fills[0].1,
+            &track.rounded_fills[0].2,
             Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_container()
         ));
         assert!(matches!(
-            &track.rounded_fills[1].1,
+            &track.rounded_fills[1].2,
             Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_content()
         ));
 
@@ -290,11 +309,11 @@ mod tests {
             "surface underlay then 38% handle"
         );
         assert!(matches!(
-            &thumb.rounded_fills[0].1,
+            &thumb.rounded_fills[0].2,
             Brush::Solid(color) if *color == colors.background.peniko()
         ));
         assert!(matches!(
-            &thumb.rounded_fills[1].1,
+            &thumb.rounded_fills[1].2,
             Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_content()
         ));
     }
@@ -313,16 +332,70 @@ mod tests {
 
         assert_eq!(draw.rounded_fills.len(), 2);
         assert!(matches!(
-            &draw.rounded_fills[0].1,
+            &draw.rounded_fills[0].2,
             Brush::Solid(color) if *color == colors.secondary_container.peniko()
         ));
         assert!(matches!(
-            &draw.rounded_fills[1].1,
+            &draw.rounded_fills[1].2,
             Brush::Solid(color) if *color == colors.primary.peniko()
         ));
-        // The track is split around the handle, so the active bar stops short
-        // of the value position by one `ActiveHandlePadding`.
-        assert_eq!(draw.rounded_fills[1].0.x1, 72.0 - SLIDER_HANDLE_PADDING);
-        assert_eq!(draw.rounded_fills[0].0.x0, 72.0 + SLIDER_HANDLE_PADDING);
+        // The track is split around the handle: each bar stops half a handle
+        // width plus `ActiveHandlePadding` short of the value position.
+        let gap = SLIDER_HANDLE_WIDTH / 2.0 + SLIDER_HANDLE_PADDING;
+        assert_eq!(draw.rounded_fills[1].0.x1, 72.0 - gap);
+        assert_eq!(draw.rounded_fills[0].0.x0, 72.0 + gap);
+    }
+
+    /// Corners facing the handle gap use the 2dp inside-corner size; only the
+    /// outer ends are stadium.
+    #[test]
+    fn slider_track_gap_corners_use_the_inside_corner_size() {
+        let colors = MaterialColorScheme::baseline_light();
+        let mut draw = RecordingDrawContext::default();
+        draw_track(
+            &colors,
+            &mut draw,
+            Rect::new(0.0, 0.0, 120.0, SLIDER_TRACK_HEIGHT),
+            Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
+            WidgetInteractionState::NONE,
+        );
+
+        let outside = SLIDER_TRACK_HEIGHT / 2.0;
+        let inside = 2.0;
+        // rounded_fills[0] is the inactive remainder: inside corner on the
+        // leading (gap) edge, stadium on the trailing edge.
+        // rounded_fills[1] is the active bar: stadium leading, inside trailing.
+        assert_eq!(draw.rounded_fills.len(), 2);
+        let inactive_radii = draw.rounded_fills[0].1;
+        assert_eq!(inactive_radii.top_left, inside);
+        assert_eq!(inactive_radii.bottom_left, inside);
+        assert_eq!(inactive_radii.top_right, outside);
+        assert_eq!(inactive_radii.bottom_right, outside);
+        let active_radii = draw.rounded_fills[1].1;
+        assert_eq!(active_radii.top_left, outside);
+        assert_eq!(active_radii.bottom_left, outside);
+        assert_eq!(active_radii.top_right, inside);
+        assert_eq!(active_radii.bottom_right, inside);
+    }
+
+    /// Pressing narrows the handle, so the track gap narrows with it.
+    #[test]
+    fn slider_track_gap_follows_the_pressed_handle_width() {
+        let colors = MaterialColorScheme::baseline_light();
+        let mut draw = RecordingDrawContext::default();
+        draw_track(
+            &colors,
+            &mut draw,
+            Rect::new(0.0, 0.0, 120.0, SLIDER_TRACK_HEIGHT),
+            Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
+            WidgetInteractionState {
+                pressed: true,
+                ..WidgetInteractionState::NONE
+            },
+        );
+
+        let gap = SLIDER_PRESSED_HANDLE_WIDTH / 2.0 + SLIDER_HANDLE_PADDING;
+        assert_eq!(draw.rounded_fills[1].0.x1, 72.0 - gap);
+        assert_eq!(draw.rounded_fills[0].0.x0, 72.0 + gap);
     }
 }

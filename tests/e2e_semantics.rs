@@ -4,9 +4,9 @@ use core::convert::TryFrom as _;
 use core::time::Duration;
 
 use hydrolysis_m3::{
-    assist_chip, dialog, dialog_action, extended_fab, fab, filled_icon_button, filter_chip,
-    icon_button, input_chip, install, material_badge, material_card, material_list,
-    material_list_item, material_menu, material_menu_divider, material_menu_item,
+    Material3, MaterialColorScheme, assist_chip, dialog, dialog_action, extended_fab, fab,
+    filled_icon_button, filter_chip, icon_button, input_chip, material_badge, material_card,
+    material_list, material_list_item, material_menu, material_menu_divider, material_menu_item,
     material_navigation_view, material_sub_menu, material_tab, material_tabs, navigation_bar,
     navigation_drawer, navigation_drawer_item, navigation_tab, outlined_icon_button,
     outlined_segmented_button, outlined_segmented_button_set, plain_tooltip, rich_tooltip,
@@ -21,7 +21,7 @@ use waterui::{Binding, Str};
 use waterui_controls::{TextField, button, slider::slider, stepper::stepper, toggle};
 use waterui_core::View;
 use waterui_testing::{
-    OffscreenApp, Role, Selector, SemanticApp, UiBuilder, WaitOptions, WaitResult,
+    OffscreenApp, Role, Selector, SemanticApp, Styled, UiBuilder, WaitOptions, WaitResult,
 };
 
 /// Wraps test content the way every Material control scenario in this file
@@ -54,7 +54,7 @@ fn material_controls_view() -> impl View {
     )
 }
 
-#[waterui::test(material_controls_view, theme = install, viewport = (360, 320))]
+#[waterui::test(material_controls_view, viewport = (360, 320))]
 fn material_controls_expose_accessibility_semantics(app: &mut SemanticApp) {
     app.query().role(Role::BUTTON).label("Save").assert_exists();
     app.query()
@@ -79,7 +79,7 @@ fn material_search_field_view() -> impl View {
     material_shell(TextField::new("Search", &name))
 }
 
-#[waterui::test(material_search_field_view, theme = install, viewport = (360, 320))]
+#[waterui::test(material_search_field_view, viewport = (360, 320))]
 fn material_text_field_focus_is_routed_through_hydrolysis_accessibility_tree(
     app: &mut SemanticApp,
 ) {
@@ -88,12 +88,12 @@ fn material_text_field_focus_is_routed_through_hydrolysis_accessibility_tree(
     app.assert_ui_focus(&selector);
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_view = tapped.clone();
     let tapped_for_action = tapped;
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(assist_chip("Assist").action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -108,12 +108,12 @@ fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     assert!(tapped_for_view.get(), "assist chip tap should update state");
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_suggestion_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_view = tapped.clone();
     let tapped_for_action = tapped;
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(suggestion_chip("Suggestion").action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -131,13 +131,13 @@ fn material_suggestion_chip_exposes_button_semantics_and_tap_action(ui: UiBuilde
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBuilder) {
     let selected = Binding::bool(false);
     let selected_for_view = selected.clone();
     let tapped = Binding::bool(false);
     let tapped_for_action = tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(filter_chip("Filter", &selected_for_view).action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -185,8 +185,8 @@ fn material_button_styles_view() -> impl View {
     )
 }
 
-#[waterui::test(material_button_styles_view, theme = install, viewport = (360, 320))]
-fn material_button_reserves_its_container_box_for_every_style(app: &mut SemanticApp) {
+#[waterui::test(material_button_styles_view, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320), offscreen)]
+fn material_button_reserves_its_container_box_for_every_style(app: &mut OffscreenApp) {
     const MIN_HEIGHT: f32 = 40.0;
     // The narrowest label still has to clear min-width plus the container's own
     // horizontal padding on both sides.
@@ -219,12 +219,12 @@ fn material_button_reserves_its_container_box_for_every_style(app: &mut Semantic
     }
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
-fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
+fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder<Styled<Material3>>) {
     let unselected = Binding::bool(false);
     let unselected_for_view = unselected;
     let already_selected = Binding::bool(true);
-    let mut unselected_app = ui.clone().mount(move || {
+    let mut unselected_app = ui.clone().mount_offscreen(move || {
         material_shell(
             hstack((
                 filter_chip("Filter", &unselected_for_view),
@@ -250,7 +250,7 @@ fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
     let selected = Binding::bool(true);
     let selected_for_view = selected;
     let already_selected = Binding::bool(true);
-    let mut selected_app = ui.mount(move || {
+    let mut selected_app = ui.mount_offscreen(move || {
         material_shell(
             hstack((
                 filter_chip("Filter", &selected_for_view),
@@ -283,13 +283,13 @@ fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder) {
     let primary_tapped = Binding::bool(false);
     let remove_tapped = Binding::bool(false);
     let primary_for_action = primary_tapped.clone();
     let remove_for_action = remove_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             input_chip("Person")
                 .action({
@@ -324,11 +324,11 @@ fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_action = tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(fab("Create", text("+")).action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -343,11 +343,11 @@ fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     assert!(tapped.get(), "FAB tap should update state");
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_extended_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
     let tapped = Binding::bool(false);
     let tapped_for_action = tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(extended_fab("Create").action({
             let tapped_for_action = tapped_for_action.clone();
             move || tapped_for_action.set(true)
@@ -362,7 +362,7 @@ fn material_extended_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) 
     assert!(tapped.get(), "extended FAB tap should update state");
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) {
     let standard_tapped = Binding::bool(false);
     let filled_tapped = Binding::bool(false);
@@ -370,7 +370,7 @@ fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) 
     let standard_for_action = standard_tapped.clone();
     let filled_for_action = filled_tapped.clone();
     let outlined_for_action = outlined_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             hstack((
                 icon_button("Favorite", text("*")).action({
@@ -408,11 +408,11 @@ fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) 
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_tooltips_expose_accessibility_labels_and_action_semantics(ui: UiBuilder) {
     let action_tapped = Binding::bool(false);
     let action_for_view = action_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             vstack((
                 plain_tooltip("Adds this item to your favorites"),
@@ -446,8 +446,9 @@ fn anchored_tooltip_view() -> impl View {
     )
 }
 
-#[waterui::test(anchored_tooltip_view, theme = install, viewport = (360, 320))]
-fn anchored_material_tooltip_opens_on_keyboard_focus(app: &mut SemanticApp) {
+#[waterui::test(viewport = (360, 320))]
+fn anchored_material_tooltip_opens_on_keyboard_focus(ui: UiBuilder) {
+    let mut app = ui.theme(Material3::defaults()).mount(anchored_tooltip_view);
     app.query()
         .label("Adds this item to your favorites")
         .assert_not_exists();
@@ -461,13 +462,13 @@ fn anchored_material_tooltip_opens_on_keyboard_focus(app: &mut SemanticApp) {
         .assert_not_exists();
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_dialog_exposes_semantics_and_action_buttons(ui: UiBuilder) {
     let cancel_tapped = Binding::bool(false);
     let confirm_tapped = Binding::bool(false);
     let cancel_for_view = cancel_tapped.clone();
     let confirm_for_view = confirm_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             dialog("Delete draft?", "This action cannot be undone.").actions((
                 dialog_action("Cancel").action({
@@ -497,7 +498,7 @@ fn material_dialog_exposes_semantics_and_action_buttons(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
     let home_selected = Binding::bool(false);
     let search_selected = Binding::bool(true);
@@ -505,7 +506,7 @@ fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
     let home_for_view = home_selected;
     let search_for_view = search_selected;
     let home_for_action = home_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(navigation_bar((
             navigation_tab("Home", text("H"), &home_for_view).action({
                 let home_for_action = home_for_action.clone();
@@ -539,7 +540,7 @@ fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
     assert!(home_tapped.get(), "navigation tab tap should update state");
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilder) {
     let opened = Binding::bool(true);
     let inbox_selected = Binding::bool(true);
@@ -549,7 +550,7 @@ fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilde
     let inbox_for_view = inbox_selected;
     let archive_for_view = archive_selected;
     let archive_for_action = archive_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(navigation_drawer(
             &opened_for_view,
             vstack((
@@ -585,13 +586,13 @@ fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilde
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
-fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
+fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder<Styled<Material3>>) {
     let opened = Binding::bool(true);
     let opened_for_view = opened.clone();
     let overlay_tapped = Binding::bool(false);
     let overlay_for_view = overlay_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.mount_offscreen(move || {
         navigation_drawer(
             &opened_for_view,
             navigation_drawer_item("Inbox", text("I"), &Binding::bool(true)),
@@ -627,7 +628,7 @@ fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder) 
     assert!(!opened.get());
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilder) {
     let first_selected = Binding::bool(true);
     let second_selected = Binding::bool(false);
@@ -635,7 +636,7 @@ fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilde
     let first_for_view = first_selected;
     let second_for_view = second_selected.clone();
     let second_for_action = second_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
             outlined_segmented_button_set((
                 outlined_segmented_button("Day", &first_for_view).start(),
@@ -671,11 +672,11 @@ fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilde
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
-fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
+fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder<Styled<Material3>>) {
     let reports_tapped = Binding::bool(false);
     let reports_for_action = reports_tapped.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.mount_offscreen(move || {
         material_shell(material_list((
             material_list_item("Inbox")
                 .supporting_text("3 new messages")
@@ -698,13 +699,13 @@ fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder) {
     );
 }
 
-#[waterui::test(theme = install, viewport = (360, 320))]
+#[waterui::test(viewport = (360, 320))]
 fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
     let first = tab_id(1);
     let second = tab_id(2);
     let selection = Binding::container(first);
     let selection_for_view = selection.clone();
-    let mut app = ui.mount(move || {
+    let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(material_tabs(
             &selection_for_view,
             vec![
@@ -756,7 +757,7 @@ fn material_card_view() -> impl View {
     )
 }
 
-#[waterui::test(material_card_view, theme = install, viewport = (360, 320))]
+#[waterui::test(material_card_view, viewport = (360, 320))]
 fn material_card_exposes_group_semantics_and_preserves_content(app: &mut SemanticApp) {
     app.query().label("Project card").assert_exists();
     app.query()
@@ -769,12 +770,53 @@ fn material_badge_view() -> impl View {
     material_shell(material_badge(3, text("Inbox")).label("Inbox, 3 new notifications"))
 }
 
-#[waterui::test(material_badge_view, theme = install, viewport = (360, 320))]
+#[waterui::test(material_badge_view, viewport = (360, 320))]
 fn material_badge_preserves_badged_content_semantics(app: &mut SemanticApp) {
     app.query()
         .role(Role::LABEL)
         .label("Inbox, 3 new notifications")
         .assert_exists();
+}
+
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "accessibility bounds are logical pixels and the capture runs at \
+              scale factor 1.0, so truncating them to snapshot indices is the \
+              intended conversion"
+)]
+#[waterui::test(material_badge_view, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320), offscreen)]
+fn material_badge_paints_scheme_error_behind_its_label(app: &mut OffscreenApp) {
+    // The badge indicator registers its own Label node over the pill rect, so
+    // its bounds mark exactly where the error fill sits behind the "3".
+    let bounds = app.query().role(Role::LABEL).label("3").single().bounds();
+    assert!(
+        bounds.width() > 0.0 && bounds.height() > 0.0,
+        "the badge indicator should mount"
+    );
+
+    let snapshot = app.snapshot();
+    let error = MaterialColorScheme::baseline_light().error.argb();
+    let is_error = |pixel: &[u8]| {
+        pixel[0].abs_diff(error.red()) <= 1
+            && pixel[1].abs_diff(error.green()) <= 1
+            && pixel[2].abs_diff(error.blue()) <= 1
+            && pixel[3] == error.alpha()
+    };
+    let x0 = bounds.x() as usize;
+    let y0 = bounds.y() as usize;
+    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width as usize);
+    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height as usize);
+    let width = snapshot.width as usize;
+    let error_pixels = (y0..y1)
+        .flat_map(|y| (x0..x1).map(move |x| y * width + x))
+        .filter(|&index| is_error(&snapshot.rgba8[index * 4..index * 4 + 4]))
+        .count();
+    assert!(
+        error_pixels > 20,
+        "the badge pill should paint the scheme's error colour behind its label; \
+         found {error_pixels} error pixels in {bounds:?}"
+    );
 }
 
 fn material_menu_view() -> impl View {
@@ -788,8 +830,8 @@ fn material_menu_view() -> impl View {
     ))
 }
 
-#[waterui::test(material_menu_view, theme = install, viewport = (360, 320))]
-fn material_menu_exposes_trigger_semantics(app: &mut SemanticApp) {
+#[waterui::test(material_menu_view, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320), offscreen)]
+fn material_menu_exposes_trigger_semantics(app: &mut OffscreenApp) {
     let menu = app.query().role(Role::BUTTON).label("Actions").single();
     let bounds = menu.bounds();
     assert!(
@@ -802,7 +844,7 @@ fn material_navigation_view_content() -> impl View {
     material_shell(material_navigation_view("Inbox", text("Primary content")))
 }
 
-#[waterui::test(material_navigation_view_content, theme = install, viewport = (360, 320))]
+#[waterui::test(material_navigation_view_content, viewport = (360, 320))]
 fn material_navigation_view_preserves_title_and_content_semantics(app: &mut SemanticApp) {
     app.query().label("Inbox").assert_exists();
 }
@@ -815,7 +857,7 @@ fn material_focused_text_field_view() -> impl View {
 #[ignore = "captures a real Hydrolysis focused text field PNG for direct visual review"]
 #[waterui::test(
     material_focused_text_field_view,
-    theme = install,
+    theme = hydrolysis_m3::Material3::defaults(),
     viewport = (360, 320),
     offscreen
 )]
@@ -871,7 +913,7 @@ fn collection_membership_view() -> impl View {
     )))
 }
 
-#[waterui::test(collection_membership_view, theme = install, viewport = (360, 320))]
+#[waterui::test(collection_membership_view, viewport = (360, 320))]
 fn material_collection_items_expose_accessibility_and_survive_membership_change(
     app: &mut SemanticApp,
 ) {

@@ -47,6 +47,17 @@ const ITEM_ICON_SIZE: f32 = 24.0;
 const ACTIVE_INDICATOR_HORIZONTAL_SPACE: f32 = 16.0;
 /// `NavigationRailBaselineItemTokens.ActiveIndicatorIconLabelSpace`.
 const ACTIVE_INDICATOR_ICON_LABEL_SPACE: f32 = 8.0;
+/// `NavigationRailVerticalItemTokens.ActiveIndicatorWidth` — the collapsed
+/// item's pill.
+const COLLAPSED_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
+/// `NavigationRailVerticalItemTokens.ActiveIndicatorHeight`.
+const COLLAPSED_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
+/// `NavigationRailVerticalItemTokens.IconLabelSpace` — the gap between the
+/// collapsed indicator's bottom edge and its label.
+const COLLAPSED_ICON_LABEL_SPACE: f32 = 4.0;
+/// `NavigationRailItemHeight` — the collapsed item's minimum height, which
+/// Compose derives from `ActiveIndicatorWidth`.
+const COLLAPSED_ITEM_HEIGHT: f32 = 56.0;
 
 /// How wide the rail stands.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -265,20 +276,32 @@ where
                 ))
                 .height(ITEM_HEIGHT)
                 .background(Capsule.fill(indicator_color))
+                .install(interaction_style(
+                    state_layer_color,
+                    f64::from(ITEM_HEIGHT / 2.0),
+                ))
                 .anyview()
         } else {
             waterui::component::vstack((
+                // The whole item is selectable, but only the indicator pill
+                // carries the state layer — Compose clips the indication to
+                // the indicator shape and re-maps the item's interactions
+                // onto it.
                 waterui::component::zstack((
                     Capsule
                         .fill(indicator_color)
-                        .width(COLLAPSED_NARROW_CONTAINER_WIDTH / 2.0)
-                        .height(ITEM_ICON_SIZE + ACTIVE_INDICATOR_ICON_LABEL_SPACE),
+                        .width(COLLAPSED_ACTIVE_INDICATOR_WIDTH)
+                        .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
                     icon,
+                ))
+                .install(interaction_style(
+                    state_layer_color,
+                    f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
                 )),
                 label,
             ))
-            .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
-            .height(ITEM_HEIGHT)
+            .spacing(COLLAPSED_ICON_LABEL_SPACE)
+            .height(COLLAPSED_ITEM_HEIGHT)
             .anyview()
         };
 
@@ -289,10 +312,6 @@ where
             .a11y_role(AccessibilityRole::Tab)
             .a11y_state_signal(accessibility_state)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
-                state_layer_color,
-                f64::from(ITEM_HEIGHT / 2.0),
-            ))
     }
 }
 
@@ -318,7 +337,9 @@ pub fn navigation_rail_item<Icon>(
 mod tests {
     use super::{
         ACTIVE_INDICATOR_HORIZONTAL_SPACE, ACTIVE_INDICATOR_ICON_LABEL_SPACE,
-        COLLAPSED_CONTAINER_WIDTH, COLLAPSED_ITEM_VERTICAL_SPACE, COLLAPSED_NARROW_CONTAINER_WIDTH,
+        COLLAPSED_ACTIVE_INDICATOR_HEIGHT, COLLAPSED_ACTIVE_INDICATOR_WIDTH,
+        COLLAPSED_CONTAINER_WIDTH, COLLAPSED_ICON_LABEL_SPACE, COLLAPSED_ITEM_HEIGHT,
+        COLLAPSED_ITEM_VERTICAL_SPACE, COLLAPSED_NARROW_CONTAINER_WIDTH,
         EXPANDED_CONTAINER_WIDTH_MAXIMUM, EXPANDED_CONTAINER_WIDTH_MINIMUM, ITEM_HEIGHT,
         ITEM_ICON_SIZE, ITEM_VERTICAL_SPACE, NavigationRailLayout, TOP_SPACE,
     };
@@ -338,6 +359,22 @@ mod tests {
         assert_eq!(ITEM_ICON_SIZE, 24.0);
         assert_eq!(ACTIVE_INDICATOR_HORIZONTAL_SPACE, 16.0);
         assert_eq!(ACTIVE_INDICATOR_ICON_LABEL_SPACE, 8.0);
+    }
+
+    /// `NavigationRailVerticalItemTokens` and the item metrics Compose derives
+    /// from them (`NavigationRailItemHeight` = `ActiveIndicatorWidth`).
+    #[test]
+    fn collapsed_item_matches_compose_vertical_item_tokens() {
+        assert_eq!(COLLAPSED_ACTIVE_INDICATOR_WIDTH, 56.0);
+        assert_eq!(COLLAPSED_ACTIVE_INDICATOR_HEIGHT, 32.0);
+        assert_eq!(COLLAPSED_ICON_LABEL_SPACE, 4.0);
+        assert_eq!(COLLAPSED_ITEM_HEIGHT, 56.0);
+        // The pill is CornerFull: its radius is half its height.
+        assert_eq!(
+            COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0,
+            16.0,
+            "collapsed indicator capsule radius"
+        );
     }
 
     /// Each layout reports its own width, and only the expanded one puts the

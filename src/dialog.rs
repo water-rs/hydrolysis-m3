@@ -5,10 +5,10 @@ use core::fmt::{self, Debug};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::layout::{
     HorizontalAlignment, Layout, PlacedSubview, Point, ProposalSize, Rect, Size, SubView,
-    container::FixedContainer, padding::EdgeInsets,
+    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
+use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::signal::IntoComputed;
 use waterui::style::Anchor;
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
@@ -27,7 +27,6 @@ const DIALOG_CONTAINER_MIN_WIDTH: f32 = 280.0;
 const DIALOG_CONTAINER_MAX_WIDTH: f32 = 560.0;
 const DIALOG_CONTAINER_MIN_HEIGHT: f32 = 140.0;
 const DIALOG_CONTAINER_SHAPE: f32 = 28.0;
-const DIALOG_CONTAINER_CLIP_RADIUS: f32 = DIALOG_CONTAINER_SHAPE / DIALOG_CONTAINER_MAX_WIDTH;
 const DIALOG_VIEWPORT_PADDING: f32 = 48.0;
 const DIALOG_CONTENT_PADDING: f32 = 24.0;
 const DIALOG_HEADLINE_BODY_SPACING: f32 = 16.0;
@@ -207,7 +206,7 @@ where
                 actions: self.actions,
             },
         )
-        .background(RoundedRectangle::new(DIALOG_CONTAINER_CLIP_RADIUS).fill(SurfaceContainerHigh))
+        .background(FixedRoundedRectangle::new(DIALOG_CONTAINER_SHAPE).fill(SurfaceContainerHigh))
         .background(
             SurfaceContainerHigh
                 .with_opacity(0.0)
@@ -218,26 +217,34 @@ where
                 ),
         )
         .a11y_label(self.accessibility_label)
-        .a11y_role(AccessibilityRole::Group);
+        .a11y_role(AccessibilityRole::Dialog);
 
-        let surface = material_elevation(MaterialElevationLevel::LEVEL3, surface)
-            .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
-            .offset(
-                0.0,
-                motion::dialog_transform(presented.clone(), DIALOG_HIDDEN_OFFSET_Y, 0.0),
-            )
-            .scale_from(
-                1.0,
-                motion::dialog_transform(presented.clone(), 0.0, 1.0),
-                Anchor::new(0.5, 0.0),
-            )
-            .padding_with(EdgeInsets::all(DIALOG_VIEWPORT_PADDING))
-            .position_in(UnitPoint::CENTER);
+        let surface = material_elevation(
+            MaterialElevationLevel::LEVEL3,
+            DIALOG_CONTAINER_SHAPE,
+            surface,
+        )
+        .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
+        .offset(
+            0.0,
+            motion::dialog_transform(presented.clone(), DIALOG_HIDDEN_OFFSET_Y, 0.0),
+        )
+        .scale_from(
+            1.0,
+            motion::dialog_transform(presented.clone(), 0.0, 1.0),
+            Anchor::new(0.5, 0.0),
+        )
+        .padding_with(EdgeInsets::all(DIALOG_VIEWPORT_PADDING))
+        .position_in(UnitPoint::CENTER);
 
         let overlay_action = self.overlay_action;
         let scrim = Scrim
             .with_opacity(1.0)
-            .opacity(motion::dialog_opacity(presented.clone(), 0.0, 0.4))
+            .opacity(motion::dialog_opacity(
+                presented.clone(),
+                0.0,
+                crate::theme::colors::SCRIM_OPACITY,
+            ))
             .on_tap(move |env: Environment| overlay_action.call(&env))
             .a11y_hidden(true)
             .install(interaction_style(Scrim.with_opacity(0.0), 0.0).pointer_only());
@@ -323,7 +330,12 @@ impl Layout for DialogSurfaceLayout {
         Size::new(width, height)
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    fn place(
+        &self,
+        bounds: Rect,
+        _proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let [headline, supporting_text, actions] = children else {
             return vec![];
         };
@@ -331,13 +343,10 @@ impl Layout for DialogSurfaceLayout {
         let text_width = DIALOG_CONTENT_PADDING
             .mul_add(-2.0, bounds.width())
             .max(0.0);
-        let headline_size = headline
-            .measure(ProposalSize::new(Some(text_width), None))
-            .size;
-        let supporting_size = supporting_text
-            .measure(ProposalSize::new(Some(text_width), None))
-            .size;
-        let action_size = actions.measure(ProposalSize::new(None, None)).size;
+        let text_proposal = ProposalSize::new(Some(text_width), None);
+        let headline_size = headline.measure(text_proposal).size;
+        let supporting_size = supporting_text.measure(text_proposal).size;
+        let action_size = actions.measure(ProposalSize::UNSPECIFIED).size;
         let headline_origin = Point::new(
             bounds.x() + DIALOG_CONTENT_PADDING,
             bounds.y() + DIALOG_CONTENT_PADDING,
@@ -355,12 +364,21 @@ impl Layout for DialogSurfaceLayout {
         );
 
         vec![
-            Rect::new(headline_origin, Size::new(text_width, headline_size.height)),
-            Rect::new(
-                supporting_origin,
-                Size::new(text_width, supporting_size.height),
+            SubviewPlacement::new(
+                Rect::new(headline_origin, Size::new(text_width, headline_size.height)),
+                text_proposal,
             ),
-            Rect::new(actions_origin, action_size),
+            SubviewPlacement::new(
+                Rect::new(
+                    supporting_origin,
+                    Size::new(text_width, supporting_size.height),
+                ),
+                text_proposal,
+            ),
+            SubviewPlacement::new(
+                Rect::new(actions_origin, action_size),
+                ProposalSize::UNSPECIFIED,
+            ),
         ]
     }
 
@@ -425,5 +443,22 @@ mod tests {
         assert_eq!(DIALOG_ACTION_SPACING, 8.0);
         assert_eq!(DIALOG_ACTION_TRAILING_SPACE, 24.0);
         assert_eq!(DIALOG_ACTION_BOTTOM_SPACE, 24.0);
+    }
+    #[test]
+    fn layout_contract_dialog_retains_intrinsic_action_and_text_height() {
+        use super::DialogSurfaceLayout;
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let headline = FixedLeaf(Size::new(180.0, 24.0));
+        let body = FixedLeaf(Size::new(140.0, 60.0));
+        let actions = FixedLeaf(Size::new(100.0, 40.0));
+        let children: &[&dyn waterui::layout::SubView] = &[&headline, &body, &actions];
+        let layout = DialogSurfaceLayout;
+        let proposal = ProposalSize::new(Some(400.0), Some(300.0));
+        let size = layout.size_that_fits(proposal, children);
+        let placements = layout.place(Rect::from_size(size), proposal, children);
+        assert_eq!(placements[0].proposal, ProposalSize::new(Some(232.0), None));
+        assert_eq!(placements[1].proposal, placements[0].proposal);
+        assert_eq!(placements[2].proposal, ProposalSize::UNSPECIFIED);
     }
 }

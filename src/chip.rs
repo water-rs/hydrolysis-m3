@@ -8,7 +8,7 @@ use waterui::color::Color;
 use waterui::layout::frame::Frame;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{Rectangle, RoundedRectangle, ShapeExt as _};
+use waterui::shape::{FixedRoundedRectangle, Rectangle, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction, boxed_action};
@@ -22,13 +22,11 @@ use crate::theme::typography;
 
 const ASSIST_CHIP_CONTAINER_HEIGHT: f32 = 32.0;
 const ASSIST_CHIP_CONTAINER_SHAPE: f32 = 8.0;
-const ASSIST_CHIP_CONTAINER_CLIP_RADIUS: f32 = 0.25;
 const ASSIST_CHIP_OUTLINE_WIDTH: f32 = 1.0;
 const ASSIST_CHIP_LEADING_SPACE: f32 = 16.0;
 const ASSIST_CHIP_TRAILING_SPACE: f32 = 16.0;
 const FILTER_CHIP_CONTAINER_HEIGHT: f32 = 32.0;
 const FILTER_CHIP_CONTAINER_SHAPE: f32 = 8.0;
-const FILTER_CHIP_CONTAINER_CLIP_RADIUS: f32 = 0.25;
 const FILTER_CHIP_UNSELECTED_OUTLINE_WIDTH: f32 = 1.0;
 const FILTER_CHIP_SELECTED_OUTLINE_WIDTH: f32 = 0.0;
 const FILTER_CHIP_LEADING_SPACE: f32 = 16.0;
@@ -40,7 +38,6 @@ const FILTER_CHIP_ICON_SIZE: f32 = 18.0;
 const FILTER_CHIP_CHECKMARK_LINE_WIDTH: f32 = 2.0;
 const INPUT_CHIP_CONTAINER_HEIGHT: f32 = 32.0;
 const INPUT_CHIP_CONTAINER_SHAPE: f32 = 8.0;
-const INPUT_CHIP_CONTAINER_CLIP_RADIUS: f32 = 0.25;
 const INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH: f32 = 1.0;
 const INPUT_CHIP_LEADING_SPACE: f32 = 16.0;
 const INPUT_CHIP_WITH_TRAILING_ICON_TRAILING_SPACE: f32 = 8.0;
@@ -119,7 +116,7 @@ where
                 ASSIST_CHIP_LEADING_SPACE,
                 ASSIST_CHIP_TRAILING_SPACE,
             ))
-            .background(RoundedRectangle::new(ASSIST_CHIP_CONTAINER_CLIP_RADIUS).fill(Surface))
+            .background(FixedRoundedRectangle::new(ASSIST_CHIP_CONTAINER_SHAPE).fill(Surface))
             .border_with(
                 Border::new(Outline, ASSIST_CHIP_OUTLINE_WIDTH)
                     .corner_radius(ASSIST_CHIP_CONTAINER_SHAPE),
@@ -324,7 +321,7 @@ where
             FILTER_CHIP_WITH_ICON_LEADING_SPACE,
             FILTER_CHIP_TRAILING_SPACE,
         ))
-        .background(RoundedRectangle::new(FILTER_CHIP_CONTAINER_CLIP_RADIUS).fill(background))
+        .background(FixedRoundedRectangle::new(FILTER_CHIP_CONTAINER_SHAPE).fill(background))
         .border_with(
             Border::new(outline, FILTER_CHIP_UNSELECTED_OUTLINE_WIDTH)
                 .corner_radius(FILTER_CHIP_CONTAINER_SHAPE),
@@ -382,7 +379,7 @@ where
             INPUT_CHIP_LEADING_SPACE,
             INPUT_CHIP_WITH_TRAILING_ICON_TRAILING_SPACE,
         ))
-        .background(RoundedRectangle::new(INPUT_CHIP_CONTAINER_CLIP_RADIUS).fill(Surface))
+        .background(FixedRoundedRectangle::new(INPUT_CHIP_CONTAINER_SHAPE).fill(Surface))
         .border_with(
             Border::new(Outline, INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH)
                 .corner_radius(INPUT_CHIP_CONTAINER_SHAPE),

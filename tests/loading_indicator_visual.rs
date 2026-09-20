@@ -6,15 +6,15 @@
 
 use core::time::Duration;
 use waterui::prelude::*;
-use waterui_testing::{OffscreenApp, Role, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
 
 fn indicator() -> impl View {
     vstack((waterui::component::progress::loading().label("Loading"),)).padding()
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (120, 120))]
-fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (120, 120))]
+fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(indicator);
 
     // Sample across one morph interval (650ms). Pumping is what advances the
@@ -31,7 +31,7 @@ fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder) {
 }
 
 /// The indicator is an indeterminate progress indicator, and says so.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (120, 120))]
+#[waterui::test(viewport = (120, 120))]
 fn the_loading_indicator_exposes_progress_semantics(ui: UiBuilder) {
     let mut app = ui.mount(indicator);
 

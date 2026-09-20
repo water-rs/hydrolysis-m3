@@ -5,12 +5,12 @@ use core::fmt::{self, Debug};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
 use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, StretchAxis, SubView, container::FixedContainer,
-    padding::EdgeInsets,
+    Layout, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
+    container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{RoundedRectangle, ShapeExt as _, UnevenRoundedRectangle};
+use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction, boxed_action};
@@ -25,13 +25,14 @@ use crate::theme::{motion, typography};
 
 const NAVIGATION_DRAWER_CONTAINER_WIDTH: f32 = 360.0;
 const NAVIGATION_DRAWER_MODAL_MAX_VIEWPORT_FRACTION: f32 = 0.8;
+/// `ModalNavigationDrawerTokens.ContainerShape` — the trailing corners in
+/// points; the leading edge sits flush against the viewport edge.
 const NAVIGATION_DRAWER_CONTAINER_SHAPE: f32 = 16.0;
-const NAVIGATION_DRAWER_CONTAINER_CLIP_RADIUS: f32 =
-    NAVIGATION_DRAWER_CONTAINER_SHAPE / NAVIGATION_DRAWER_CONTAINER_WIDTH;
 const NAVIGATION_DRAWER_ITEM_HEIGHT: f32 = 56.0;
-const NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE: f32 = 28.0;
-const NAVIGATION_DRAWER_ITEM_CLIP_RADIUS: f32 =
-    NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE / NAVIGATION_DRAWER_CONTAINER_WIDTH;
+/// `NavigationDrawerItem` active-indicator corners are `CornerFull` — half the
+/// item height — for both the fill (a `Capsule`) and the state layer, which
+/// takes the length in points.
+const NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE: f32 = NAVIGATION_DRAWER_ITEM_HEIGHT / 2.0;
 const NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING: f32 = 16.0;
 const NAVIGATION_DRAWER_ITEM_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE: f32 = 12.0;
@@ -130,26 +131,34 @@ where
         if self.modal {
             let panel_content = FixedContainer::new(NavigationDrawerPanelLayout, (self.content,))
                 .background(
-                    UnevenRoundedRectangle::new(
+                    FixedUnevenRoundedRectangle::new(
                         0.0,
-                        NAVIGATION_DRAWER_CONTAINER_CLIP_RADIUS,
+                        NAVIGATION_DRAWER_CONTAINER_SHAPE,
                         0.0,
-                        NAVIGATION_DRAWER_CONTAINER_CLIP_RADIUS,
+                        NAVIGATION_DRAWER_CONTAINER_SHAPE,
                     )
                     .fill(SurfaceContainerLow),
                 )
                 .a11y_label(self.accessibility_label)
                 .a11y_role(AccessibilityRole::Group)
                 .a11y_state_signal(accessibility_state);
-            let panel = material_elevation(MaterialElevationLevel::LEVEL1, panel_content)
-                .offset(offset, 0.0)
-                .position_in(UnitPoint::TOP_LEADING);
+            let panel = material_elevation(
+                MaterialElevationLevel::LEVEL1,
+                NAVIGATION_DRAWER_CONTAINER_SHAPE,
+                panel_content,
+            )
+            .offset(offset, 0.0)
+            .position_in(UnitPoint::TOP_LEADING);
             let close_on_overlay_click = self.close_on_overlay_click;
             let opened_for_overlay = opened.clone();
             let overlay_action = self.overlay_action;
             let scrim = Scrim
                 .with_opacity(1.0)
-                .opacity(motion::navigation_drawer_scrim(opened.computed(), 0.0, 0.4))
+                .opacity(motion::navigation_drawer_scrim(
+                    opened.computed(),
+                    0.0,
+                    crate::theme::colors::SCRIM_OPACITY,
+                ))
                 .on_tap(move |env: Environment| {
                     overlay_action.call(&env);
                     if close_on_overlay_click {
@@ -199,8 +208,17 @@ impl Layout for NavigationDrawerPanelLayout {
         Size::new(width, height)
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
-        children.iter().map(|_| bounds).collect()
+    fn place(
+        &self,
+        bounds: Rect,
+        proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
+        let child_proposal = ProposalSize::new(Some(bounds.width()), proposal.height);
+        children
+            .iter()
+            .map(|_| SubviewPlacement::new(bounds, child_proposal))
+            .collect()
     }
 
     fn stretch_axis(&self, _children: &[StretchAxis]) -> StretchAxis {
@@ -277,12 +295,12 @@ where
         let background = conditional_color(
             self.selected.clone(),
             SecondaryContainer,
-            SurfaceContainerLow,
+            SecondaryContainer.with_opacity(0.0),
         );
         let state_layer_color =
             conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
 
-        drawer_item_content(self.label, self.icon, foreground, background)
+        drawer_item_content(self.label, self.icon, foreground.into(), background.into())
             .on_tap(move |env: Environment| action(&env))
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
@@ -316,7 +334,7 @@ fn drawer_item_content(
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
     ))
-    .background(RoundedRectangle::new(NAVIGATION_DRAWER_ITEM_CLIP_RADIUS).fill(background))
+    .background(Capsule.fill(background))
 }
 
 const fn noop(_env: &Environment) {}
@@ -358,5 +376,23 @@ mod tests {
         assert_eq!(NAVIGATION_DRAWER_ITEM_ICON_SIZE, 24.0);
         assert_eq!(NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE, 12.0);
         assert_eq!(NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING, 16.0);
+    }
+    #[test]
+    fn layout_contract_drawer_distinguishes_equal_height_offers() {
+        use super::NavigationDrawerPanelLayout;
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let child = FixedLeaf(Size::new(240.0, 100.0));
+        let layout = NavigationDrawerPanelLayout;
+        for height in [None, Some(100.0), None] {
+            let proposal = ProposalSize::new(Some(300.0), height);
+            let size = layout.size_that_fits(proposal, &[&child]);
+            let placements = layout.place(Rect::from_size(size), proposal, &[&child]);
+            assert_eq!(size, child.0);
+            assert_eq!(
+                placements[0].proposal,
+                ProposalSize::new(Some(240.0), height)
+            );
+        }
     }
 }

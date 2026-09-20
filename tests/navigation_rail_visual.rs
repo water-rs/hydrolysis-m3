@@ -3,10 +3,10 @@
 //! Collapsed stacks each label under its icon; expanded lays it beside, inside
 //! one active-indicator pill. The PNGs are reviewed by eye.
 
-use hydrolysis_m3::{NavigationRailLayout, navigation_rail, navigation_rail_item};
+use hydrolysis_m3::{Material3, NavigationRailLayout, navigation_rail, navigation_rail_item};
 use waterui::prelude::*;
 use waterui::reactive::binding;
-use waterui_testing::{OffscreenApp, Role, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
 
 fn rail(layout: NavigationRailLayout) -> impl View {
     // A cloneable stand-in for a real icon: the item keeps its icon type.
@@ -23,23 +23,25 @@ fn rail(layout: NavigationRailLayout) -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 320))]
-fn navigation_rail_renders_collapsed(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
+fn navigation_rail_renders_collapsed(ui: UiBuilder<Styled<Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(|| rail(NavigationRailLayout::Collapsed));
     let _ = app.capture_snapshot("material3-preview", "navigation-rail", "collapsed");
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 320))]
-fn navigation_rail_renders_expanded(ui: UiBuilder) {
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
+fn navigation_rail_renders_expanded(ui: UiBuilder<Styled<Material3>>) {
     let mut app: OffscreenApp = ui.mount_offscreen(|| rail(NavigationRailLayout::Expanded));
     let _ = app.capture_snapshot("material3-preview", "navigation-rail", "expanded");
 }
 
 /// Destinations must be tabs carrying their selected state, in both layouts.
-#[waterui::test(theme = hydrolysis_m3::install, viewport = (400, 320))]
+#[waterui::test(viewport = (400, 320))]
 fn navigation_rail_exposes_its_destinations(ui: UiBuilder) {
-    let mut app = ui.mount(|| rail(NavigationRailLayout::Expanded));
+    let mut app = ui
+        .theme(Material3::defaults())
+        .mount(|| rail(NavigationRailLayout::Expanded));
 
     // The rail's own container currently emits no accessibility node, so its
     // `TabList` role is not assertable here. That is framework behaviour, not

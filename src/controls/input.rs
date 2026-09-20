@@ -157,6 +157,15 @@ mod tests {
         fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
 
         fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
+        fn draw_shadow(
+            &mut self,
+            _rect: Rect,
+            _radii: RoundedRectRadii,
+            _offset: vello::kurbo::Vec2,
+            _blur: f64,
+            _color: vello::peniko::Color,
+        ) {
+        }
 
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
 
@@ -174,6 +183,7 @@ mod tests {
         assert_eq!(metrics.min_height, INPUT_FIELD_MIN_HEIGHT);
         assert_eq!(metrics.min_width, INPUT_FIELD_MIN_WIDTH);
         assert_eq!(INPUT_FIELD_MIN_HEIGHT, 56.0);
+        assert_eq!(INPUT_FIELD_MIN_WIDTH, 280.0);
         assert_eq!(INPUT_FILLED_CONTAINER_TOP_RADIUS, 4.0);
         assert_eq!(INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, 1.0);
     }

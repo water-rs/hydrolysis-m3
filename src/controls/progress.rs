@@ -316,7 +316,9 @@ fn draw_indeterminate_bar(
     );
     let width = (track.width() * scale).max(0.0);
     let rect = Rect::new(x, track.y0, x + width, track.y1);
-    draw.fill_rect(rect, &Brush::from(color));
+    // Expressive gives every progress element CornerFull ends, so the moving
+    // segments cap at half the track height like the determinate fill does.
+    draw.fill_rounded_rect(rect, (track.height() / 2.0).into(), &Brush::from(color));
 }
 
 fn sample_segments(segments: &[Segment], elapsed: Duration, cycle: Duration) -> f64 {
@@ -498,6 +500,11 @@ const LOADING_GLOBAL_ROTATION_MS: u64 = 4_666;
 const LOADING_GLOBAL_ROTATION: Duration = Duration::from_millis(LOADING_GLOBAL_ROTATION_MS);
 /// `QuarterRotation`: each morph also kicks the shape a quarter turn on.
 const LOADING_QUARTER_ROTATION: f64 = core::f64::consts::FRAC_PI_2;
+/// Compose morphs between shapes with `spring(dampingRatio = 0.6f, stiffness = 200f)`.
+const LOADING_MORPH_SPRING_DAMPING_RATIO: f64 = 0.6;
+const LOADING_MORPH_SPRING_STIFFNESS: f64 = 200.0;
+/// `visibilityThreshold = 0.1f`: within 10% of the target the spring is at rest.
+const LOADING_MORPH_VISIBILITY_THRESHOLD: f64 = 0.1;
 
 /// Returns the metrics for a loading indicator.
 pub const fn loading_metrics() -> ProgressMetrics {
@@ -532,9 +539,10 @@ const fn gcd(mut a: u64, mut b: u64) -> u64 {
 
 /// The indicator's outline at `elapsed` into its cycle, in its own unit space.
 ///
-/// Compose springs between consecutive shapes; the spring is critically damped
-/// enough at these intervals that the visible motion is the settle, so this
-/// eases the morph with the standard emphasized curve over the interval.
+/// Compose drives the morph progress with a low-damping spring, so the shape
+/// snaps onto each target quickly and rests there for the rest of the
+/// interval; the spring's step response is evaluated directly at the elapsed
+/// fraction of the morph interval.
 fn loading_outline(elapsed: Duration) -> Vec<f64> {
     let shapes = material_shape_sequence();
     // Which shape is counted in whole milliseconds, so a long-running indicator
@@ -545,16 +553,33 @@ fn loading_outline(elapsed: Duration) -> Vec<f64> {
     let steps = millis / LOADING_MORPH_INTERVAL_MS;
     let index = usize::try_from(steps).unwrap_or(0) % shapes.len();
     let next = (index + 1) % shapes.len();
-    let interval = LOADING_MORPH_INTERVAL.as_secs_f64();
-    let progress =
-        Duration::from_millis(millis % LOADING_MORPH_INTERVAL_MS).as_secs_f64() / interval;
-    morph(&shapes[index], &shapes[next], ease_in_out(progress))
+    let interval_progress = Duration::from_millis(millis % LOADING_MORPH_INTERVAL_MS).as_secs_f64();
+    morph(
+        &shapes[index],
+        &shapes[next],
+        morph_spring(interval_progress),
+    )
 }
 
-/// A smoothstep, standing in for the settle of Compose's morph spring.
-fn ease_in_out(progress: f64) -> f64 {
-    let progress = progress.clamp(0.0, 1.0);
-    progress * progress * 3.0f64.mul_add(-2.0 * progress / 3.0, 3.0) / 3.0
+/// The step response of the Compose morph spring
+/// (`spring(dampingRatio = 0.6f, stiffness = 200f)`): the underdamped oscillator
+/// `x(t) = 1 − e^(−ζωt)·(cos ωd·t + (ζω/ωd)·sin ωd·t)` with `ω = √stiffness`
+/// and `ωd = ω√(1−ζ²)`, evaluated at `seconds` into the morph interval. Within
+/// the visibility threshold of the target the spring is considered at rest.
+fn morph_spring(seconds: f64) -> f64 {
+    let omega = LOADING_MORPH_SPRING_STIFFNESS.sqrt();
+    let zeta = LOADING_MORPH_SPRING_DAMPING_RATIO;
+    let omega_d = omega * zeta.mul_add(-zeta, 1.0).sqrt();
+    let decay = (-zeta * omega * seconds).exp();
+    let progress = decay.mul_add(
+        -(zeta * omega / omega_d).mul_add((omega_d * seconds).sin(), (omega_d * seconds).cos()),
+        1.0,
+    );
+    if (progress - 1.0).abs() <= LOADING_MORPH_VISIBILITY_THRESHOLD {
+        1.0
+    } else {
+        progress
+    }
 }
 
 /// How far the indicator has turned at `elapsed`: a steady rotation, plus the
@@ -640,6 +665,90 @@ mod tests {
         }
     }
 
+    /// Expressive gives every progress element `CornerFull` ends: the moving
+    /// indeterminate segments cap at half the track height, same as the
+    /// determinate fill.
+    #[test]
+    fn indeterminate_segments_draw_with_rounded_caps() {
+        use super::{LINEAR_INDETERMINATE_CYCLE, draw_linear_indeterminate};
+        use crate::{Brush, DrawContext, MaterialColorScheme};
+        use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+
+        #[derive(Default)]
+        struct RecordingDrawContext {
+            rounded_fills: Vec<(Rect, RoundedRectRadii)>,
+        }
+
+        impl DrawContext for RecordingDrawContext {
+            fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
+
+            fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, _brush: &Brush) {
+                self.rounded_fills.push((rect, radii));
+            }
+
+            fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
+
+            fn stroke_rounded_rect(
+                &mut self,
+                _rect: Rect,
+                _radii: RoundedRectRadii,
+                _brush: &Brush,
+                _width: f64,
+            ) {
+            }
+
+            fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, _width: f64) {}
+
+            fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {
+            }
+
+            fn fill_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush) {}
+
+            fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
+
+            fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
+
+            fn draw_shadow(
+                &mut self,
+                _rect: Rect,
+                _radii: RoundedRectRadii,
+                _offset: vello::kurbo::Vec2,
+                _blur: f64,
+                _color: vello::peniko::Color,
+            ) {
+            }
+
+            fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
+
+            fn pop_layer(&mut self) {}
+
+            fn push_transform(&mut self, _affine: Affine) {}
+
+            fn pop_transform(&mut self) {}
+        }
+
+        let colors = MaterialColorScheme::baseline_light();
+        let track = Rect::new(0.0, 0.0, 320.0, 4.0);
+        let mut draw = RecordingDrawContext::default();
+        // Mid-cycle: both segments are on screen with real width.
+        draw_linear_indeterminate(
+            &colors,
+            &mut draw,
+            track,
+            LINEAR_INDETERMINATE_CYCLE / 2,
+            false,
+        );
+
+        assert_eq!(draw.rounded_fills.len(), 2);
+        for (rect, radii) in &draw.rounded_fills {
+            assert_eq!(
+                *radii,
+                RoundedRectRadii::from(track.height() / 2.0),
+                "segment {rect:?} did not cap at half the track height"
+            );
+        }
+    }
+
     /// The additional rotation reaches a full turn by the end of the cycle, in
     /// four 90-degree steps.
     #[test]
@@ -699,5 +808,28 @@ mod tests {
         assert_eq!(PROGRESS_LINEAR_TRACK_ACTIVE_SPACE, 4.0);
         // LinearProgressIndicatorTokens.StopSize
         assert_eq!(PROGRESS_LINEAR_STOP_SIZE, 4.0);
+    }
+
+    /// Compose morphs between loading shapes with `spring(dampingRatio = 0.6,
+    /// stiffness = 200, visibilityThreshold = 0.1)`: the low-damping spring
+    /// settles within the 0.1 visibility threshold well inside the 650ms morph
+    /// interval, ending the morph early rather than running a full ease.
+    #[test]
+    fn loading_morph_spring_settles_within_the_interval() {
+        use super::morph_spring;
+
+        assert_eq!(morph_spring(0.0), 0.0, "the morph starts on the shape");
+        let mid = morph_spring(0.1);
+        assert!(mid > 0.0 && mid < 1.0, "still morphing at 100ms, was {mid}");
+        assert_eq!(
+            morph_spring(0.35),
+            1.0,
+            "the spring settles inside the visibility threshold before half the interval"
+        );
+        assert_eq!(
+            morph_spring(0.65),
+            1.0,
+            "the shape rests on the target for the remainder of the interval"
+        );
     }
 }

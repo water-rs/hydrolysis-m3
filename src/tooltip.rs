@@ -5,10 +5,11 @@ use core::time::Duration;
 
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, SubView, container::FixedContainer, padding::EdgeInsets,
+    Layout, ProposalSize, Rect, Size, SubView, SubviewPlacement, container::FixedContainer,
+    padding::EdgeInsets,
 };
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
+use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
@@ -23,15 +24,11 @@ use crate::theme::{motion, typography};
 
 const PLAIN_TOOLTIP_CONTAINER_HEIGHT: f32 = 24.0;
 const PLAIN_TOOLTIP_CONTAINER_SHAPE: f32 = 4.0;
-const PLAIN_TOOLTIP_CONTAINER_CLIP_RADIUS: f32 =
-    PLAIN_TOOLTIP_CONTAINER_SHAPE / PLAIN_TOOLTIP_CONTAINER_HEIGHT;
 const PLAIN_TOOLTIP_TOP_SPACE: f32 = 4.0;
 const PLAIN_TOOLTIP_BOTTOM_SPACE: f32 = 4.0;
 const PLAIN_TOOLTIP_LEADING_SPACE: f32 = 8.0;
 const PLAIN_TOOLTIP_TRAILING_SPACE: f32 = 8.0;
 const RICH_TOOLTIP_CONTAINER_SHAPE: f32 = 12.0;
-const RICH_TOOLTIP_CONTAINER_CLIP_RADIUS: f32 =
-    RICH_TOOLTIP_CONTAINER_SHAPE / RICH_TOOLTIP_MAX_WIDTH;
 const RICH_TOOLTIP_MAX_WIDTH: f32 = 312.0;
 const RICH_TOOLTIP_HORIZONTAL_PADDING: f32 = 16.0;
 const RICH_TOOLTIP_TOP_PADDING: f32 = 12.0;
@@ -41,8 +38,10 @@ const RICH_TOOLTIP_ACTION_TOP_SPACE: f32 = 8.0;
 const RICH_TOOLTIP_ACTION_HEIGHT: f32 = 40.0;
 const PLAIN_TOOLTIP_TARGET_GAP: f32 = 4.0;
 const RICH_TOOLTIP_TARGET_GAP: f32 = 0.0;
-const TOOLTIP_OPEN_DELAY: Duration = Duration::from_millis(150);
-const TOOLTIP_CLOSE_DELAY: Duration = Duration::from_millis(150);
+/// Platform long-press timeout that opens a tooltip from touch input.
+const TOOLTIP_LONG_PRESS_MS: u32 = 500;
+/// How long a non-persistent tooltip stays visible after a long-press.
+const TOOLTIP_DISMISS_DURATION: Duration = Duration::from_millis(1500);
 
 /// A tooltip attached to the target that owns its hover interaction.
 pub struct TooltipAnchor<Target, Popup> {
@@ -65,18 +64,20 @@ struct TooltipVisibility {
     open: Binding<bool>,
     generation: Binding<u64>,
     target_hovered: Binding<bool>,
-    popup_hovered: Binding<bool>,
     focused: Binding<bool>,
+    /// Persistent tooltips stay open until dismissed explicitly, like M3
+    /// `TooltipBox(isPersistent = true)` used by rich tooltips.
+    persistent: bool,
 }
 
 impl TooltipVisibility {
-    fn new() -> Self {
+    fn new(persistent: bool) -> Self {
         Self {
             open: Binding::bool(false),
             generation: Binding::container(0),
             target_hovered: Binding::bool(false),
-            popup_hovered: Binding::bool(false),
             focused: Binding::bool(false),
+            persistent,
         }
     }
 
@@ -94,32 +95,14 @@ impl TooltipVisibility {
         self.next_generation();
     }
 
-    fn schedule_open(&self) {
-        if self.open.get() {
-            self.cancel_pending();
-            return;
-        }
+    /// Dismisses a non-persistent tooltip after the spec'd 1500ms unless a
+    /// newer interaction has superseded it.
+    fn schedule_dismiss(&self) {
         let generation = self.next_generation();
         let state = self.clone();
         spawn_local(async move {
-            sleep(TOOLTIP_OPEN_DELAY).await;
-            if state.generation.get() == generation && state.target_hovered.get() {
-                state.open.set(true);
-            }
-        })
-        .detach();
-    }
-
-    fn schedule_close(&self) {
-        let generation = self.next_generation();
-        let state = self.clone();
-        spawn_local(async move {
-            sleep(TOOLTIP_CLOSE_DELAY).await;
-            if state.generation.get() == generation
-                && !state.target_hovered.get()
-                && !state.popup_hovered.get()
-                && !state.focused.get()
-            {
+            sleep(TOOLTIP_DISMISS_DURATION).await;
+            if state.generation.get() == generation && state.open.get() {
                 state.open.set(false);
             }
         })
@@ -128,21 +111,19 @@ impl TooltipVisibility {
 
     fn set_target_hovered(&self, hovered: bool) {
         self.target_hovered.set(hovered);
+        self.cancel_pending();
         if hovered {
-            self.schedule_open();
-        } else if self.open.get() && !self.focused.get() {
-            self.schedule_close();
-        } else {
-            self.cancel_pending();
+            self.open.set(true);
+        } else if !self.persistent {
+            self.open.set(false);
         }
     }
 
-    fn set_popup_hovered(&self, hovered: bool) {
-        self.popup_hovered.set(hovered);
-        if hovered {
-            self.cancel_pending();
-        } else if self.open.get() && !self.target_hovered.get() && !self.focused.get() {
-            self.schedule_close();
+    fn long_press(&self) {
+        self.cancel_pending();
+        self.open.set(true);
+        if !self.persistent {
+            self.schedule_dismiss();
         }
     }
 
@@ -151,7 +132,7 @@ impl TooltipVisibility {
         self.cancel_pending();
         if focused {
             self.open.set(true);
-        } else if !self.target_hovered.get() && !self.popup_hovered.get() {
+        } else if !self.target_hovered.get() && !self.persistent {
             self.open.set(false);
         }
     }
@@ -171,8 +152,7 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let target_enter = self.visibility.clone();
         let target_exit = self.visibility.clone();
-        let popup_enter = self.visibility.clone();
-        let popup_exit = self.visibility.clone();
+        let long_press = self.visibility.clone();
         let focus_change = self.visibility.clone();
         let escape = self.visibility.clone();
         let focused = Binding::bool(false);
@@ -187,6 +167,9 @@ where
             .target
             .on_hover_enter(move || target_enter.set_target_hovered(true))
             .on_hover_exit(move || target_exit.set_target_hovered(false))
+            .on_long_press_gesture(TOOLTIP_LONG_PRESS_MS, move |_: Environment| {
+                long_press.long_press();
+            })
             .install(focus_binding)
             .on_change(&focused, move |focused| focus_change.set_focused(focused));
         let popup_anchor = if self.rich {
@@ -196,8 +179,6 @@ where
         };
         let popup = self
             .popup
-            .on_hover_enter(move || popup_enter.set_popup_hovered(true))
-            .on_hover_exit(move || popup_exit.set_popup_hovered(false))
             .scale_from(popup_scale.clone(), popup_scale, popup_anchor)
             .a11y_state_signal(popup_accessibility)
             .hittable(open);
@@ -219,27 +200,26 @@ impl Layout for TooltipLayout {
         target.measure(proposal).size
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    fn place(
+        &self,
+        bounds: Rect,
+        proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let [target, popup] = children else {
             return Vec::new();
         };
-        let target_size = target
-            .measure(ProposalSize::new(
-                Some(bounds.width()),
-                Some(bounds.height()),
-            ))
-            .size;
+        let target_size = target.measure(proposal).size;
         let target_rect = Rect::new(bounds.origin(), target_size);
-        let popup_size = popup
-            .measure(ProposalSize::new(
-                Some(if self.rich {
-                    RICH_TOOLTIP_MAX_WIDTH
-                } else {
-                    320.0
-                }),
-                None,
-            ))
-            .size;
+        let popup_proposal = ProposalSize::new(
+            Some(if self.rich {
+                RICH_TOOLTIP_MAX_WIDTH
+            } else {
+                320.0
+            }),
+            None,
+        );
+        let popup_size = popup.measure(popup_proposal).size;
         let popup_x = if self.rich {
             target_rect.x() + target_rect.width() + RICH_TOOLTIP_TARGET_GAP
         } else {
@@ -251,8 +231,11 @@ impl Layout for TooltipLayout {
             target_rect.y() - popup_size.height - PLAIN_TOOLTIP_TARGET_GAP
         };
         vec![
-            target_rect,
-            Rect::new(waterui::layout::Point::new(popup_x, popup_y), popup_size),
+            SubviewPlacement::new(target_rect, proposal),
+            SubviewPlacement::new(
+                Rect::new(waterui::layout::Point::new(popup_x, popup_y), popup_size),
+                popup_proposal,
+            ),
         ]
     }
 }
@@ -293,7 +276,7 @@ impl PlainTooltip {
             target,
             popup: self,
             rich: false,
-            visibility: TooltipVisibility::new(),
+            visibility: TooltipVisibility::new(false),
         }
     }
 }
@@ -310,7 +293,7 @@ impl View for PlainTooltip {
                 PLAIN_TOOLTIP_TRAILING_SPACE,
             ))
             .background(
-                RoundedRectangle::new(PLAIN_TOOLTIP_CONTAINER_CLIP_RADIUS).fill(InverseSurface),
+                FixedRoundedRectangle::new(PLAIN_TOOLTIP_CONTAINER_SHAPE).fill(InverseSurface),
             )
             .min_width(28.0)
             .max_width(320.0)
@@ -382,7 +365,7 @@ impl<Action> RichTooltip<Action> {
             target,
             popup: self,
             rich: true,
-            visibility: TooltipVisibility::new(),
+            visibility: TooltipVisibility::new(true),
         }
     }
 }
@@ -408,14 +391,16 @@ where
             RICH_TOOLTIP_HORIZONTAL_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
-        .background(
-            RoundedRectangle::new(RICH_TOOLTIP_CONTAINER_CLIP_RADIUS).fill(SurfaceContainer),
-        )
+        .background(FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer))
         .max_width(RICH_TOOLTIP_MAX_WIDTH);
 
-        material_elevation(MaterialElevationLevel::LEVEL2, content)
-            .a11y_label(self.accessibility_label)
-            .a11y_role(AccessibilityRole::Group)
+        material_elevation(
+            MaterialElevationLevel::LEVEL2,
+            RICH_TOOLTIP_CONTAINER_SHAPE,
+            content,
+        )
+        .a11y_label(self.accessibility_label)
+        .a11y_role(AccessibilityRole::Group)
     }
 }
 
@@ -466,7 +451,7 @@ mod tests {
         PLAIN_TOOLTIP_CONTAINER_HEIGHT, PLAIN_TOOLTIP_CONTAINER_SHAPE, PLAIN_TOOLTIP_LEADING_SPACE,
         PLAIN_TOOLTIP_TARGET_GAP, PLAIN_TOOLTIP_TOP_SPACE, RICH_TOOLTIP_CONTAINER_SHAPE,
         RICH_TOOLTIP_HORIZONTAL_PADDING, RICH_TOOLTIP_MAX_WIDTH, RICH_TOOLTIP_TARGET_GAP,
-        TOOLTIP_CLOSE_DELAY, TOOLTIP_OPEN_DELAY,
+        TOOLTIP_DISMISS_DURATION, TOOLTIP_LONG_PRESS_MS, TooltipVisibility,
     };
     use core::time::Duration;
 
@@ -477,8 +462,44 @@ mod tests {
         assert_eq!(PLAIN_TOOLTIP_TOP_SPACE, 4.0);
         assert_eq!(PLAIN_TOOLTIP_LEADING_SPACE, 8.0);
         assert_eq!(PLAIN_TOOLTIP_TARGET_GAP, 4.0);
-        assert_eq!(TOOLTIP_OPEN_DELAY, Duration::from_millis(150));
-        assert_eq!(TOOLTIP_CLOSE_DELAY, Duration::from_millis(150));
+        assert_eq!(TOOLTIP_LONG_PRESS_MS, 500);
+        assert_eq!(TOOLTIP_DISMISS_DURATION, Duration::from_millis(1500));
+    }
+
+    #[test]
+    fn plain_tooltip_hover_opens_immediately_and_exit_dismisses() {
+        let visibility = TooltipVisibility::new(false);
+        visibility.set_target_hovered(true);
+        assert!(visibility.open.get());
+        visibility.set_target_hovered(false);
+        assert!(!visibility.open.get());
+    }
+
+    #[test]
+    fn rich_tooltip_stays_open_after_hover_exit() {
+        let visibility = TooltipVisibility::new(true);
+        visibility.set_target_hovered(true);
+        assert!(visibility.open.get());
+        visibility.set_target_hovered(false);
+        assert!(visibility.open.get());
+    }
+
+    #[test]
+    fn focus_loss_dismisses_plain_tooltip() {
+        let visibility = TooltipVisibility::new(false);
+        visibility.set_focused(true);
+        assert!(visibility.open.get());
+        visibility.set_focused(false);
+        assert!(!visibility.open.get());
+    }
+
+    #[test]
+    fn escape_dismisses_even_persistent_tooltip() {
+        let visibility = TooltipVisibility::new(true);
+        visibility.long_press();
+        assert!(visibility.open.get());
+        visibility.dismiss();
+        assert!(!visibility.open.get());
     }
 
     #[test]
@@ -487,5 +508,27 @@ mod tests {
         assert_eq!(RICH_TOOLTIP_MAX_WIDTH, 312.0);
         assert_eq!(RICH_TOOLTIP_HORIZONTAL_PADDING, 16.0);
         assert_eq!(RICH_TOOLTIP_TARGET_GAP, 0.0);
+    }
+    #[test]
+    fn layout_contract_tooltip_preserves_target_and_popup_proposals() {
+        use super::TooltipLayout;
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let target = FixedLeaf(Size::new(160.0, 20.0));
+        let popup = FixedLeaf(Size::new(100.0, 30.0));
+        for rich in [false, true] {
+            let layout = TooltipLayout { rich };
+            for width in [None, Some(160.0), None] {
+                let proposal = ProposalSize::new(width, None);
+                let placements =
+                    layout.place(Rect::from_size(target.0), proposal, &[&target, &popup]);
+                assert_eq!(placements[0].proposal, proposal);
+                assert_eq!(placements[0].frame.size(), &target.0);
+                assert_eq!(
+                    placements[1].proposal,
+                    ProposalSize::new(Some(if rich { 312.0 } else { 320.0 }), None)
+                );
+            }
+        }
     }
 }

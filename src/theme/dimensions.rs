@@ -146,7 +146,8 @@ pub const STEPPER_INNER_CORNER_RADIUS: f64 = 8.0;
 pub const STEPPER_PRESSED_INNER_CORNER_RADIUS: f64 = 4.0;
 
 pub const INPUT_LABEL_HEIGHT: f64 = 18.0;
-pub const INPUT_FIELD_MIN_WIDTH: f64 = 72.0;
+/// `TextFieldDefaults.MinWidth` — 280dp for both filled and outlined fields.
+pub const INPUT_FIELD_MIN_WIDTH: f64 = 280.0;
 pub const INPUT_FIELD_MIN_HEIGHT: f64 = 56.0;
 pub const INPUT_FIELD_HORIZONTAL_INSET: f64 = 16.0;
 pub const INPUT_FIELD_VERTICAL_INSET: f64 = 8.0;
@@ -154,17 +155,22 @@ pub const INPUT_FILLED_CONTAINER_TOP_RADIUS: f64 = 4.0;
 pub const INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT: f64 = 1.0;
 pub const INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT: f64 = 2.0;
 
-pub const TEXT_CONTEXT_MENU_ROW_HEIGHT: f64 = 56.0;
-pub const TEXT_CONTEXT_MENU_HORIZONTAL_PADDING: f64 = 16.0;
-pub const TEXT_CONTEXT_MENU_VERTICAL_PADDING: f64 = 12.0;
+pub const TEXT_CONTEXT_MENU_ROW_HEIGHT: f64 = 48.0;
+pub const TEXT_CONTEXT_MENU_HORIZONTAL_PADDING: f64 = 12.0;
+pub const TEXT_CONTEXT_MENU_VERTICAL_PADDING: f64 = 8.0;
 pub const TEXT_CONTEXT_MENU_MIN_WIDTH: f64 = 112.0;
-pub const TEXT_CONTEXT_MENU_MAX_WIDTH: f64 = 320.0;
+pub const TEXT_CONTEXT_MENU_MAX_WIDTH: f64 = 280.0;
 pub const TEXT_CONTEXT_MENU_WIDTH_PER_CHAR: f64 = 8.5;
 pub const TEXT_CONTEXT_MENU_CONTAINER_SHAPE: f64 = 4.0;
 pub const TEXT_CONTEXT_MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
 pub const TEXT_CONTEXT_MENU_SEPARATOR_THICKNESS: f64 = 1.0;
 
-pub const PICKER_MIN_WIDTH: f64 = 72.0;
+/// Compose `TextFieldDefaults.MinWidth`, which the menu-style picker's
+/// filled-field chrome inherits via `ExposedDropdownMenuBox`.
+pub const PICKER_MENU_MIN_WIDTH: f64 = 280.0;
+/// No spec floor exists for a radio column; this keeps a lone row from
+/// collapsing below a tappable width.
+pub const PICKER_RADIO_MIN_WIDTH: f64 = 72.0;
 pub const PICKER_MIN_HEIGHT: f64 = 56.0;
 pub const PICKER_HORIZONTAL_INSET: f64 = 16.0;
 pub const PICKER_VERTICAL_INSET: f64 = 8.0;
@@ -180,6 +186,8 @@ pub const PICKER_RADIO_ROW_SPACING: f64 = 6.0;
 pub const PICKER_MENU_POPUP_TOP_SPACING: f64 = 4.0;
 pub const PICKER_MENU_POPUP_ROW_HEIGHT: f64 = 48.0;
 pub const PICKER_MENU_POPUP_CORNER_RADIUS: f64 = 4.0;
+/// Compose `ButtonDefaults.MinWidth`, enforced per segment.
+pub const PICKER_SEGMENTED_MIN_WIDTH: f64 = 58.0;
 pub const PICKER_SEGMENTED_MIN_HEIGHT: f64 = 40.0;
 pub const PICKER_SEGMENTED_HORIZONTAL_INSET: f64 = 12.0;
 pub const PICKER_SEGMENTED_CONTAINER_RADIUS: f64 = 20.0;
@@ -203,6 +211,9 @@ pub const SLIDER_HANDLE_HEIGHT: f64 = 44.0;
 pub const SLIDER_HANDLE_PADDING: f64 = 6.0;
 /// `SliderTokens.StopIndicatorSize`: the dot marking the track's far end.
 pub const SLIDER_STOP_INDICATOR_SIZE: f64 = 4.0;
+/// The corner radius on the track ends that face the handle gap. Only the
+/// outer ends take the full stadium radius (`trackHeight / 2`).
+pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
 
 pub const PROGRESS_LINEAR_LABEL_HEIGHT: f64 = 18.0;
 pub const PROGRESS_LINEAR_BAR_TOP_OFFSET: f64 = 10.0;

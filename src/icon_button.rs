@@ -11,8 +11,8 @@ use waterui::{Environment, Str, View, ViewExt as _};
 use waterui_core::handler::{Handler, boxed_action};
 
 use crate::color::{
-    InverseOnSurface, InverseSurface, OnPrimary, OnSecondaryContainer, OnSurfaceVariant, Outline,
-    Primary, SecondaryContainer,
+    InverseOnSurface, InverseSurface, OnPrimary, OnSecondaryContainer, OnSurfaceVariant,
+    OutlineVariant, Primary, SecondaryContainer,
 };
 use crate::semantics::interaction_style;
 
@@ -92,9 +92,12 @@ pub trait IconButtonVariantTokens: Default + 'static {
     fn icon_color() -> Color;
 
     /// Border color.
+    ///
+    /// `OutlinedIconButtonTokens.OutlineColor` is `outlineVariant` — the
+    /// softer variant role, same as the outlined `Button`.
     #[must_use]
     fn outline_color() -> Color {
-        Outline.into()
+        OutlineVariant.into()
     }
 
     /// Border width.
@@ -417,5 +420,34 @@ mod tests {
             OutlinedIconButton::outline_width(),
             ICON_BUTTON_OUTLINE_WIDTH
         );
+    }
+
+    /// `OutlinedIconButtonTokens.OutlineColor` is `outlineVariant` — the
+    /// softer variant role — not `outline`.
+    #[test]
+    fn outlined_icon_button_border_uses_outline_variant() {
+        use super::{IconButtonVariantTokens, SelectedOutlinedIconButton};
+        use crate::{Material3, theme::colors::MaterialColorScheme};
+        use hydrolysis::Style as _;
+        use waterui::{Environment, Signal, color::ResolvedColor};
+
+        fn assert_resolves_to(actual: ResolvedColor, expected: ResolvedColor) {
+            assert_eq!(actual.red.to_bits(), expected.red.to_bits());
+            assert_eq!(actual.green.to_bits(), expected.green.to_bits());
+            assert_eq!(actual.blue.to_bits(), expected.blue.to_bits());
+            assert_eq!(actual.headroom.to_bits(), expected.headroom.to_bits());
+            assert_eq!(actual.opacity.to_bits(), expected.opacity.to_bits());
+        }
+
+        let scheme = MaterialColorScheme::baseline_light();
+        let mut env = Environment::new();
+        Material3::with_colors(scheme).install_tokens(&mut env);
+
+        for color in [
+            OutlinedIconButton::outline_color(),
+            SelectedOutlinedIconButton::outline_color(),
+        ] {
+            assert_resolves_to(color.resolve(&env).get(), scheme.outline_variant.resolved());
+        }
     }
 }

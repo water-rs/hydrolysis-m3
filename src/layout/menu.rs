@@ -4,6 +4,7 @@ use crate::dimensions::{
     TEXT_CONTEXT_MENU_SEPARATOR_HORIZONTAL_INSET, TEXT_CONTEXT_MENU_SEPARATOR_THICKNESS,
     TEXT_CONTEXT_MENU_VERTICAL_PADDING, TEXT_CONTEXT_MENU_WIDTH_PER_CHAR,
 };
+use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, TextContextMenuMetrics};
 
@@ -28,9 +29,12 @@ pub fn draw_text_context_panel(
     draw: &mut dyn DrawContext,
     bounds: Rect,
 ) {
+    let radii = RoundedRectRadii::from_single_radius(TEXT_CONTEXT_MENU_CONTAINER_SHAPE);
+    // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`.
+    crate::elevation::draw_shadows(draw, bounds, radii, MaterialElevationLevel::LEVEL2, colors);
     draw.fill_rounded_rect(
         bounds,
-        RoundedRectRadii::from_single_radius(TEXT_CONTEXT_MENU_CONTAINER_SHAPE),
+        radii,
         &Brush::from(colors.surface_container.peniko()),
     );
 }
@@ -48,7 +52,8 @@ mod tests {
     use super::text_context_metrics;
     use crate::dimensions::{
         TEXT_CONTEXT_MENU_CONTAINER_SHAPE, TEXT_CONTEXT_MENU_HORIZONTAL_PADDING,
-        TEXT_CONTEXT_MENU_MIN_WIDTH, TEXT_CONTEXT_MENU_ROW_HEIGHT,
+        TEXT_CONTEXT_MENU_MAX_WIDTH, TEXT_CONTEXT_MENU_MIN_WIDTH, TEXT_CONTEXT_MENU_ROW_HEIGHT,
+        TEXT_CONTEXT_MENU_VERTICAL_PADDING,
     };
 
     #[test]
@@ -56,13 +61,18 @@ mod tests {
         let metrics = text_context_metrics();
 
         assert_eq!(metrics.row_height, TEXT_CONTEXT_MENU_ROW_HEIGHT);
-        assert_eq!(metrics.row_height, 56.0);
+        assert_eq!(metrics.row_height, 48.0);
         assert_eq!(
             metrics.horizontal_padding,
             TEXT_CONTEXT_MENU_HORIZONTAL_PADDING
         );
+        assert_eq!(metrics.horizontal_padding, 12.0);
+        assert_eq!(metrics.vertical_padding, TEXT_CONTEXT_MENU_VERTICAL_PADDING);
+        assert_eq!(metrics.vertical_padding, 8.0);
         assert_eq!(metrics.min_width, TEXT_CONTEXT_MENU_MIN_WIDTH);
         assert_eq!(metrics.min_width, 112.0);
+        assert_eq!(metrics.max_width, TEXT_CONTEXT_MENU_MAX_WIDTH);
+        assert_eq!(metrics.max_width, 280.0);
         assert_eq!(metrics.corner_radius, TEXT_CONTEXT_MENU_CONTAINER_SHAPE);
         assert_eq!(metrics.corner_radius, 4.0);
     }

@@ -13,7 +13,7 @@ use waterui::color::Color;
 use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
 use waterui::layout::padding::EdgeInsets;
 use waterui::layout::{
-    Layout, LayoutInvalidationCallback, Point, ProposalSize, Rect, Size, SubView,
+    Layout, LayoutInvalidationCallback, Point, ProposalSize, Rect, Size, SubView, SubviewPlacement,
     container::FixedContainer,
 };
 use waterui::prelude::dynamic::watch;
@@ -224,7 +224,7 @@ impl View for ConnectedButtonGroup {
                     .height(CONTAINER_HEIGHT)
                     .background(ReactiveSegmentShape {
                         shape,
-                        color: container,
+                        color: container.into(),
                     })
                     // The tap is what activates the segment, and it is also
                     // what makes it a real interaction target — a view carrying
@@ -513,7 +513,12 @@ impl Layout for ButtonGroupLayout {
         )
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    fn place(
+        &self,
+        bounds: Rect,
+        _proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let mut widths = Self::resting_widths(children);
         self.expand(&mut widths);
         let height = Self::row_height(children).min(bounds.height());
@@ -524,7 +529,7 @@ impl Layout for ButtonGroupLayout {
             .map(|width| {
                 let frame = Rect::new(Point::new(x, top), Size::new(width, height));
                 x += width + GROUP_BETWEEN_SPACE;
-                frame
+                SubviewPlacement::new(frame, ProposalSize::new(Some(width), Some(height)))
             })
             .collect()
     }
@@ -681,6 +686,30 @@ mod tests {
                 normalized > 0.0 && normalized <= 0.5,
                 "{radius} -> {normalized}"
             );
+        }
+    }
+    #[test]
+    fn layout_contract_button_press_updates_child_offers() {
+        use crate::layout_test_support::FixedLeaf;
+        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        let child = FixedLeaf(Size::new(100.0, 40.0));
+        let layout = layout(&[20.0, 20.0], None);
+        let bounds = Rect::from_size(Size::new(212.0, 40.0));
+        for pressed in [false, true, false] {
+            layout.pressed[0].set(pressed);
+            let placements = layout.place(bounds, ProposalSize::UNSPECIFIED, &[&child, &child]);
+            let widths = if pressed {
+                [107.5, 92.5]
+            } else {
+                [100.0, 100.0]
+            };
+            for (placement, width) in placements.iter().zip(widths) {
+                assert_eq!(
+                    placement.proposal,
+                    ProposalSize::new(Some(width), Some(40.0))
+                );
+                assert_eq!(placement.frame.size(), &Size::new(width, 40.0));
+            }
         }
     }
 }

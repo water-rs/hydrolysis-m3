@@ -1,11 +1,13 @@
 use crate::dimensions::{
-    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING,
+    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING, PICKER_MENU_MIN_WIDTH,
     PICKER_MENU_POPUP_CORNER_RADIUS, PICKER_MENU_POPUP_ROW_HEIGHT, PICKER_MENU_POPUP_TOP_SPACING,
-    PICKER_MIN_HEIGHT, PICKER_MIN_WIDTH, PICKER_RADIO_INDICATOR_SIZE,
-    PICKER_RADIO_INNER_DOT_RADIUS, PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_OUTER_RING_WIDTH,
+    PICKER_MIN_HEIGHT, PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS,
+    PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_MIN_WIDTH, PICKER_RADIO_OUTER_RING_WIDTH,
     PICKER_RADIO_ROW_SPACING, PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
-    PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_OUTLINE_WIDTH, PICKER_VERTICAL_INSET,
+    PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_MIN_WIDTH, PICKER_SEGMENTED_OUTLINE_WIDTH,
+    PICKER_VERTICAL_INSET,
 };
+use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, PickerMetrics, RadioIndicatorState, WidgetInteractionState};
@@ -14,15 +16,16 @@ use waterui_form::picker::PickerStyle;
 
 pub fn metrics(style: PickerStyle) -> PickerMetrics {
     match style {
-        PickerStyle::Automatic | PickerStyle::Menu | PickerStyle::Radio => material_metrics(),
+        PickerStyle::Automatic | PickerStyle::Menu => menu_metrics(),
+        PickerStyle::Radio => radio_metrics(),
         PickerStyle::Segmented => segmented_metrics(),
         _ => panic!("hydrolysis PickerStyle variant is not implemented"),
     }
 }
 
-const fn material_metrics() -> PickerMetrics {
+const fn menu_metrics() -> PickerMetrics {
     PickerMetrics {
-        min_width: PICKER_MIN_WIDTH,
+        min_width: PICKER_MENU_MIN_WIDTH,
         min_height: PICKER_MIN_HEIGHT,
         horizontal_inset: PICKER_HORIZONTAL_INSET,
         vertical_inset: PICKER_VERTICAL_INSET,
@@ -34,12 +37,31 @@ const fn material_metrics() -> PickerMetrics {
         popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
         popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
         popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
+        segment_min_width: 0.0,
+    }
+}
+
+const fn radio_metrics() -> PickerMetrics {
+    PickerMetrics {
+        min_width: PICKER_RADIO_MIN_WIDTH,
+        min_height: PICKER_MIN_HEIGHT,
+        horizontal_inset: PICKER_HORIZONTAL_INSET,
+        vertical_inset: PICKER_VERTICAL_INSET,
+        label_spacing: PICKER_LABEL_SPACING,
+        indicator_space: PICKER_INDICATOR_SPACE,
+        radio_indicator_size: PICKER_RADIO_INDICATOR_SIZE,
+        radio_label_spacing: PICKER_RADIO_LABEL_SPACING,
+        radio_row_spacing: PICKER_RADIO_ROW_SPACING,
+        popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
+        popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
+        popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
+        segment_min_width: 0.0,
     }
 }
 
 const fn segmented_metrics() -> PickerMetrics {
     PickerMetrics {
-        min_width: PICKER_MIN_WIDTH,
+        min_width: PICKER_SEGMENTED_MIN_WIDTH,
         min_height: PICKER_SEGMENTED_MIN_HEIGHT,
         horizontal_inset: PICKER_SEGMENTED_HORIZONTAL_INSET,
         vertical_inset: 0.0,
@@ -51,6 +73,7 @@ const fn segmented_metrics() -> PickerMetrics {
         popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
         popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
         popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
+        segment_min_width: PICKER_SEGMENTED_MIN_WIDTH,
     }
 }
 
@@ -87,16 +110,20 @@ pub fn draw_popup(
     draw: &mut dyn DrawContext,
     popup_rect: vello::kurbo::Rect,
 ) {
+    let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
+    // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
+    // menus carry no outline.
+    crate::elevation::draw_shadows(
+        draw,
+        popup_rect,
+        radii,
+        MaterialElevationLevel::LEVEL2,
+        colors,
+    );
     draw.fill_rounded_rect(
         popup_rect,
-        PICKER_MENU_POPUP_CORNER_RADIUS.into(),
+        radii,
         &Brush::from(colors.surface_container.peniko()),
-    );
-    draw.stroke_rounded_rect(
-        popup_rect,
-        PICKER_MENU_POPUP_CORNER_RADIUS.into(),
-        &Brush::from(colors.outline_variant.peniko()),
-        1.0,
     );
 }
 
@@ -152,7 +179,7 @@ pub fn draw_separator(
     draw: &mut dyn DrawContext,
     separator: vello::kurbo::Rect,
 ) {
-    draw.fill_rect(separator, &Brush::from(colors.surface_variant.peniko()));
+    draw.fill_rect(separator, &Brush::from(colors.outline_variant.peniko()));
 }
 
 pub fn draw_radio_indicator(
@@ -275,6 +302,20 @@ pub fn draw_segmented_container(
     }
 }
 
+/// One segment's item shape, per Compose `itemShape(index, count)`: only the
+/// outside edge of each end segment takes the group's full rounding — the
+/// first item rounds its leading corners, the last its trailing corners, and
+/// middle items stay square against the separator strokes.
+const fn segment_radii(is_first: bool, is_last: bool) -> vello::kurbo::RoundedRectRadii {
+    let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
+    match (is_first, is_last) {
+        (true, true) => vello::kurbo::RoundedRectRadii::new(radius, radius, radius, radius),
+        (true, false) => vello::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
+        (false, true) => vello::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
+        (false, false) => vello::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
+    }
+}
+
 pub fn draw_segmented_segment(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
@@ -286,15 +327,11 @@ pub fn draw_segmented_segment(
     if !selected {
         return;
     }
-    if is_first && is_last {
-        draw.fill_rounded_rect(
-            bounds,
-            PICKER_SEGMENTED_CONTAINER_RADIUS.into(),
-            &Brush::from(colors.secondary_container.peniko()),
-        );
-        return;
-    }
-    draw.fill_rect(bounds, &Brush::from(colors.secondary_container.peniko()));
+    draw.fill_rounded_rect(
+        bounds,
+        segment_radii(is_first, is_last),
+        &Brush::from(colors.secondary_container.peniko()),
+    );
 }
 
 pub fn draw_segmented_state_layer(
@@ -302,12 +339,14 @@ pub fn draw_segmented_state_layer(
     draw: &mut dyn DrawContext,
     bounds: vello::kurbo::Rect,
     selected: bool,
+    is_first: bool,
+    is_last: bool,
     state: WidgetInteractionState,
 ) {
     state_layer::draw_bounded(
         draw,
         bounds,
-        PICKER_SEGMENTED_CONTAINER_RADIUS.into(),
+        segment_radii(is_first, is_last),
         if selected {
             colors.on_secondary_container.peniko()
         } else {
@@ -325,7 +364,7 @@ mod tests {
     use super::{
         MaterialColorScheme, RadioIndicatorState, blend_role_color, draw_popup_row_background,
         draw_radio_indicator, draw_segmented_container, draw_segmented_segment, draw_separator,
-        material_metrics, segmented_metrics,
+        menu_metrics, radio_metrics, segment_radii, segmented_metrics,
     };
     use crate::dimensions::{
         PICKER_LABEL_SPACING, PICKER_MENU_POPUP_CORNER_RADIUS, PICKER_MENU_POPUP_ROW_HEIGHT,
@@ -340,8 +379,10 @@ mod tests {
         circle_fills: Vec<(f64, Color)>,
         circle_strokes: Vec<(f64, f64, Color)>,
         rect_fills: Vec<Color>,
+        rounded_fills: Vec<(RoundedRectRadii, Color)>,
         rounded_strokes: Vec<(RoundedRectRadii, Color, f64)>,
         line_strokes: Vec<(Color, f64)>,
+        shadows: Vec<(f64, f64, Color)>,
     }
 
     impl DrawContext for RecordingDrawContext {
@@ -352,7 +393,12 @@ mod tests {
             self.rect_fills.push(*color);
         }
 
-        fn fill_rounded_rect(&mut self, _rect: Rect, _radii: RoundedRectRadii, _brush: &Brush) {}
+        fn fill_rounded_rect(&mut self, _rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
+            let Brush::Solid(color) = brush else {
+                panic!("Material picker token fills must be solid colors");
+            };
+            self.rounded_fills.push((radii, *color));
+        }
 
         fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
 
@@ -394,6 +440,17 @@ mod tests {
 
         fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
 
+        fn draw_shadow(
+            &mut self,
+            _rect: Rect,
+            _radii: RoundedRectRadii,
+            offset: vello::kurbo::Vec2,
+            blur: f64,
+            color: Color,
+        ) {
+            self.shadows.push((blur, offset.y, color));
+        }
+
         fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
 
         fn pop_layer(&mut self) {}
@@ -407,7 +464,7 @@ mod tests {
     /// Values from `androidx.compose.material3.tokens.RadioButtonTokens` and
     /// the private dimensions in `RadioButton.kt`.
     fn radio_metrics_match_compose_radio_tokens() {
-        let metrics = material_metrics();
+        let metrics = radio_metrics();
 
         assert_eq!(metrics.radio_indicator_size, PICKER_RADIO_INDICATOR_SIZE);
         assert_eq!(metrics.label_spacing, PICKER_LABEL_SPACING);
@@ -539,9 +596,17 @@ mod tests {
             draw.rect_fills,
             vec![
                 colors.surface_container_highest.peniko(),
-                colors.surface_variant.peniko(),
+                colors.outline_variant.peniko(),
             ]
         );
+    }
+
+    #[test]
+    fn menu_picker_min_width_matches_text_field() {
+        // The menu style is filled-TextField chrome; `ExposedDropdownMenuBox`
+        // inherits `TextFieldDefaults.MinWidth` = 280dp.
+        assert_eq!(menu_metrics().min_width, 280.0);
+        assert_eq!(radio_metrics().min_width, 72.0);
     }
 
     #[test]
@@ -550,8 +615,31 @@ mod tests {
 
         assert_eq!(metrics.min_height, PICKER_SEGMENTED_MIN_HEIGHT);
         assert_eq!(metrics.horizontal_inset, PICKER_SEGMENTED_HORIZONTAL_INSET);
+        assert_eq!(metrics.segment_min_width, 58.0);
         assert_eq!(PICKER_SEGMENTED_MIN_HEIGHT, 40.0);
         assert_eq!(PICKER_SEGMENTED_CONTAINER_RADIUS, 20.0);
+    }
+
+    /// Compose `itemShape(index, count)`: only the outside edge of each end
+    /// segment rounds; middle segments are square.
+    #[test]
+    fn segmented_item_shape_rounds_only_the_outside_edge() {
+        let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
+        let zero = RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0);
+
+        assert_eq!(
+            segment_radii(true, false),
+            RoundedRectRadii::new(radius, 0.0, 0.0, radius)
+        );
+        assert_eq!(
+            segment_radii(false, true),
+            RoundedRectRadii::new(0.0, radius, radius, 0.0)
+        );
+        assert_eq!(segment_radii(false, false), zero);
+        assert_eq!(
+            segment_radii(true, true),
+            RoundedRectRadii::new(radius, radius, radius, radius)
+        );
     }
 
     #[test]
@@ -569,7 +657,13 @@ mod tests {
         );
         draw_segmented_container(&colors, &mut draw, Rect::new(0.0, 0.0, 240.0, 40.0), 3);
 
-        assert_eq!(draw.rect_fills, vec![colors.secondary_container.peniko()]);
+        assert_eq!(
+            draw.rounded_fills,
+            vec![(
+                RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
+                colors.secondary_container.peniko()
+            )]
+        );
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert_eq!(draw.rounded_strokes[0].1, colors.outline.peniko());
         assert_eq!(draw.rounded_strokes[0].2, 1.0);
@@ -579,6 +673,30 @@ mod tests {
                 (colors.outline.peniko(), 1.0),
                 (colors.outline.peniko(), 1.0)
             ]
+        );
+    }
+
+    #[test]
+    /// `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`: the popup
+    /// casts the level-2 key and ambient shadows and carries no outline.
+    fn popup_casts_the_level_two_elevation_shadows() {
+        use super::draw_popup;
+
+        let colors = MaterialColorScheme::baseline_light();
+        let mut draw = RecordingDrawContext::default();
+
+        draw_popup(&colors, &mut draw, Rect::new(0.0, 0.0, 112.0, 96.0));
+
+        assert_eq!(draw.shadows.len(), 2, "key then ambient shadow");
+        let (key_blur, key_y, _) = draw.shadows[0];
+        let (ambient_blur, ambient_y, _) = draw.shadows[1];
+        assert_eq!(key_blur, f64::from(3.0f32));
+        assert_eq!(key_y, f64::from(0.85f32));
+        assert_eq!(ambient_blur, f64::from(1.0f32));
+        assert_eq!(ambient_y, f64::from(0.25f32));
+        assert!(
+            draw.rounded_strokes.is_empty(),
+            "Material menus carry no outline"
         );
     }
 }

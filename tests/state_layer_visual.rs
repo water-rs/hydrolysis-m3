@@ -6,7 +6,6 @@
 //! The PNG-producing tests are ignored by default and reviewed by eye.
 
 use core::time::Duration;
-use hydrolysis_m3::install;
 use waterui::AnyView;
 use waterui::component::{text, vstack};
 use waterui::reactive::binding;
@@ -38,7 +37,7 @@ fn press_me_button() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(press_me_button, theme = install, viewport = (360, 200), offscreen)]
+#[waterui::test(press_me_button, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 200), offscreen)]
 fn plain_button_press_shows_growing_ripple(app: &mut OffscreenApp) {
     let (cx, cy) = press_center(app, "Press Me");
     save(app, "press-before");
@@ -59,7 +58,7 @@ fn release_me_button() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(release_me_button, theme = install, viewport = (360, 200), offscreen)]
+#[waterui::test(release_me_button, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 200), offscreen)]
 fn released_ripple_fades_at_full_size_without_shrinking(app: &mut OffscreenApp) {
     // Regression stage for the reverse-playback bug: after release the wave
     // must hold its expanded, centered shape and only lose opacity — the
@@ -89,7 +88,7 @@ fn tap_tap_button() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(tap_tap_button, theme = install, viewport = (360, 200), offscreen)]
+#[waterui::test(tap_tap_button, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 200), offscreen)]
 fn rapid_represses_overlap_independent_waves(app: &mut OffscreenApp) {
     // Material multi-wave behavior: a quick tap's wave keeps fading at full size
     // while a second press spawns a fresh wave growing from its own point —
@@ -118,7 +117,7 @@ fn hover_me_button() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(hover_me_button, theme = install, viewport = (360, 200), offscreen)]
+#[waterui::test(hover_me_button, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 200), offscreen)]
 fn plain_button_hover_shows_state_layer(app: &mut OffscreenApp) {
     let _ = press_center(app, "Hover Me");
     save(app, "hover-before");
@@ -147,7 +146,7 @@ fn structural_patch_view() -> impl View {
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
-#[waterui::test(structural_patch_view, theme = install, viewport = (360, 240), offscreen)]
+#[waterui::test(structural_patch_view, theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 240), offscreen)]
 fn ripple_survives_same_frame_structural_patch(app: &mut OffscreenApp) {
     // The chart-demo scenario: the button's release action flips a signal that
     // a `watch` subtree rebuilds from in the same refresh frame. The quick

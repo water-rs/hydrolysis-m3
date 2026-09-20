@@ -4,9 +4,10 @@
 )]
 //! Material Design 3 widget metrics and drawing primitives.
 //!
-//! This crate is a theme package. It implements the backend-neutral widget
-//! chrome contract from `waterui-backend-core` and does not depend on the
-//! Hydrolysis renderer crate.
+//! This crate is a style package: [`Material3`] implements the backend-neutral
+//! widget chrome contract from `waterui-backend-core` and the
+//! [`hydrolysis::Style`] contract the rendered Hydrolysis runtime is
+//! constructed with — `hydrolysis::run(app, Material3::defaults())`.
 
 pub mod button_group;
 pub mod chip;
@@ -32,6 +33,9 @@ pub mod segmented_button;
 pub mod toolbar;
 pub mod tooltip;
 
+#[cfg(test)]
+mod layout_test_support;
+
 mod controls;
 mod icon_paths;
 mod icons;
@@ -46,6 +50,8 @@ pub(crate) use controls::{button, input, picker, progress, slider, stepper, togg
 pub(crate) use layout::{badge, card, divider, list, menu, scroll, snackbar, table};
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
+
+use core::cell::OnceCell;
 
 use vello::kurbo::{BezPath, Point, Rect};
 use waterui::Plugin as _;
@@ -96,7 +102,7 @@ pub use material_color_utils::dynamic::{
     variant::Variant as MaterialColorVariant,
 };
 /// The ARGB seed color the Material You generators take (`Argb(0xAARRGGBB)`),
-/// re-exported so `install_with_seed` / `MaterialColorSource::new` are callable
+/// re-exported so `Material3::with_seed` / `MaterialColorSource::new` are callable
 /// without naming the color-utils crate directly.
 pub use material_color_utils::utils::color_utils::Argb;
 pub use material_divider::{MaterialDivider, material_divider};
@@ -138,65 +144,131 @@ pub use toolbar::{
 };
 pub use tooltip::{PlainTooltip, RichTooltip, TooltipAnchor, plain_tooltip, rich_tooltip};
 
-#[derive(Debug, Clone)]
-/// Material Design 3 widget theme.
-pub struct MaterialTheme {
-    colors: MaterialThemeColors,
+#[derive(Debug)]
+/// Material Design 3 style for the Hydrolysis runtime.
+///
+/// `Material3` is both the [`WidgetTheme`] the backend resolves widget chrome
+/// through and the [`hydrolysis::Style`] whose `install_tokens` writes the
+/// Material color and typography tokens into the environment:
+/// `hydrolysis::run(app, Material3::defaults())`.
+///
+/// A dynamic `Material3` ([`Material3::defaults`]) binds to the color-scheme
+/// signal of the first environment `install_tokens` installs it into and
+/// follows that signal for the rest of its lifetime; every later environment
+/// the same instance is installed into is rebound to that signal, so paint
+/// and tokens can never diverge. Cloning produces a fresh, unbound style: the
+/// clone binds to the first environment *it* is installed into, never to the
+/// original's signal.
+pub struct Material3 {
+    colors: Material3Colors,
 }
 
-#[derive(Debug, Clone)]
+impl Clone for Material3 {
+    fn clone(&self) -> Self {
+        Self {
+            colors: self.colors.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
 #[allow(
     clippy::large_enum_variant,
-    reason = "a `MaterialTheme` holds exactly one of these; the variant size difference is immaterial and boxing would add needless indirection"
+    reason = "a `Material3` holds exactly one of these; the variant size difference is immaterial and boxing would add needless indirection"
 )]
-enum MaterialThemeColors {
+enum Material3Colors {
+    /// One fixed color scheme, resolved at construction.
     Static(MaterialColorScheme),
+    /// A light/dark pair that follows the environment's color-scheme signal;
+    /// the signal binds on the first `install_tokens` and stays bound.
     Dynamic {
         light: MaterialColorScheme,
         dark: MaterialColorScheme,
-        scheme: Computed<ColorScheme>,
+        scheme: OnceCell<Computed<ColorScheme>>,
     },
 }
 
-impl MaterialTheme {
-    /// Create a Material Design 3 widget theme.
-    #[must_use]
-    pub const fn new() -> Self {
-        Self::with_colors(MaterialColorScheme::baseline_light())
-    }
-
-    /// Create a Material Design 3 widget theme from explicit Material color roles.
-    #[must_use]
-    pub const fn with_colors(colors: MaterialColorScheme) -> Self {
-        Self {
-            colors: MaterialThemeColors::Static(colors),
+impl Clone for Material3Colors {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Static(colors) => Self::Static(*colors),
+            Self::Dynamic { light, dark, .. } => Self::Dynamic {
+                light: *light,
+                dark: *dark,
+                scheme: OnceCell::new(),
+            },
         }
     }
+}
 
-    /// Create a Material Design 3 widget theme from paired light/dark color roles.
+impl Material3 {
+    /// The default Material Design 3 style: baseline light/dark color roles
+    /// that follow the app's color-scheme signal.
     #[must_use]
-    pub const fn with_color_schemes(
-        light: MaterialColorScheme,
-        dark: MaterialColorScheme,
-        scheme: Computed<ColorScheme>,
-    ) -> Self {
+    pub const fn defaults() -> Self {
         Self {
-            colors: MaterialThemeColors::Dynamic {
-                light,
-                dark,
-                scheme,
+            colors: Material3Colors::Dynamic {
+                light: MaterialColorScheme::baseline_light(),
+                dark: MaterialColorScheme::baseline_dark(),
+                scheme: OnceCell::new(),
             },
         }
     }
 
-    /// Return the Material color roles used by this theme.
+    /// The dark Material Design 3 baseline color scheme.
+    #[must_use]
+    pub const fn dark() -> Self {
+        Self::with_colors(MaterialColorScheme::baseline_dark())
+    }
+
+    /// A Material Design 3 style from explicit Material color roles.
+    #[must_use]
+    pub const fn with_colors(colors: MaterialColorScheme) -> Self {
+        Self {
+            colors: Material3Colors::Static(colors),
+        }
+    }
+
+    /// A Material Design 3 style generated from a Material You seed color.
+    #[must_use]
+    pub fn with_seed(seed: Argb) -> Self {
+        Self::with_seed_mode(seed, MaterialColorMode::Light)
+    }
+
+    /// A Material Design 3 style generated from a seed color and mode.
+    #[must_use]
+    pub fn with_seed_mode(seed: Argb, mode: MaterialColorMode) -> Self {
+        Self::with_source(MaterialColorSource::new(seed), mode)
+    }
+
+    /// A Material Design 3 style generated from a complete Material You source.
+    #[must_use]
+    pub fn with_source(source: MaterialColorSource, mode: MaterialColorMode) -> Self {
+        Self::with_colors(source.scheme(mode))
+    }
+
+    /// A Material Design 3 style picking one scheme from a paired
+    /// light/dark Material You scheme set.
+    #[must_use]
+    pub const fn with_color_schemes(
+        schemes: &MaterialColorSchemes,
+        mode: MaterialColorMode,
+    ) -> Self {
+        Self::with_colors(schemes.scheme(mode))
+    }
+
+    /// Return the Material color roles this style resolves to.
+    ///
+    /// For the dynamic constructors the roles follow the color-scheme signal
+    /// bound during `install_tokens`; a `Material3` that was never installed
+    /// has no signal to read and this method panics.
     #[must_use]
     pub fn colors(&self) -> MaterialColorScheme {
         self.colors.current()
     }
 }
 
-impl MaterialThemeColors {
+impl Material3Colors {
     fn current(&self) -> MaterialColorScheme {
         match self {
             Self::Static(colors) => *colors,
@@ -204,67 +276,49 @@ impl MaterialThemeColors {
                 light,
                 dark,
                 scheme,
-            } => material_scheme_for_color_scheme(*light, *dark, scheme.get()),
+            } => material_scheme_for_color_scheme(
+                *light,
+                *dark,
+                scheme
+                    .get()
+                    .expect("a `Material3` reads its color scheme only after `install_tokens`")
+                    .get(),
+            ),
         }
     }
 }
 
-/// Install the Material Design 3 widget theme into an environment.
-pub fn install(env: &mut Environment) {
-    install_defaults(env);
+impl hydrolysis::Style for Material3 {
+    /// Writes the Material color and typography tokens into `env`, over the
+    /// framework defaults the runtime installs first.
+    ///
+    /// A dynamic scheme binds on first install: it takes `env`'s color-scheme
+    /// signal if one is installed, else binds a constant [`ColorScheme::Light`]
+    /// signal. On every install the bound signal is written into `env`, so an
+    /// environment carrying a different signal is rebound to it and the tokens
+    /// always match what the style paints.
+    fn install_tokens(&self, env: &mut Environment) {
+        match &self.colors {
+            Material3Colors::Static(colors) => insert_static_tokens(env, *colors),
+            Material3Colors::Dynamic {
+                light,
+                dark,
+                scheme,
+            } => {
+                let scheme = scheme.get_or_init(|| {
+                    waterui_theme::installed_color_scheme(env)
+                        .unwrap_or_else(|| Computed::constant(ColorScheme::Light))
+                });
+                Theme::new().color_scheme(scheme.clone()).install(env);
+                insert_dynamic_tokens(env, scheme, *light, *dark);
+            }
+        }
+    }
 }
 
-/// Install the dark Material Design 3 baseline color scheme into an environment.
-pub fn install_dark(env: &mut Environment) {
-    install_with_colors(env, MaterialColorScheme::baseline_dark());
-}
-
-/// Install a Material Design 3 widget theme generated from a Material You source color.
-pub fn install_with_seed(
-    env: &mut Environment,
-    seed: material_color_utils::utils::color_utils::Argb,
-) {
-    install_with_seed_mode(env, seed, MaterialColorMode::Light);
-}
-
-/// Install a Material Design 3 widget theme generated from a source color and mode.
-pub fn install_with_seed_mode(
-    env: &mut Environment,
-    seed: material_color_utils::utils::color_utils::Argb,
-    mode: MaterialColorMode,
-) {
-    install_with_source(env, MaterialColorSource::new(seed), mode);
-}
-
-/// Install a Material Design 3 widget theme generated from a complete Material You source.
-pub fn install_with_source(
-    env: &mut Environment,
-    source: MaterialColorSource,
-    mode: MaterialColorMode,
-) {
-    install_with_colors(env, source.scheme(mode));
-}
-
-/// Install one scheme from paired light and dark Material You color schemes.
-pub fn install_with_color_schemes(
-    env: &mut Environment,
-    schemes: &MaterialColorSchemes,
-    mode: MaterialColorMode,
-) {
-    install_with_colors(env, schemes.scheme(mode));
-}
-
-/// Install Material Design 3 defaults while preserving the app's color-scheme signal.
-pub fn install_defaults(env: &mut Environment) {
-    install_dynamic_defaults(
-        env,
-        MaterialColorScheme::baseline_light(),
-        MaterialColorScheme::baseline_dark(),
-    );
-}
-
-/// Install a Material Design 3 widget theme from an explicit color scheme.
-pub fn install_with_colors(env: &mut Environment, colors: MaterialColorScheme) {
+/// Installs the `WaterUI` theme tokens and Material component themes for one
+/// fixed color scheme.
+fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
     let color_scheme = match colors.mode {
         MaterialColorMode::Light => ColorScheme::Light,
         MaterialColorMode::Dark => ColorScheme::Dark,
@@ -285,29 +339,28 @@ pub fn install_with_colors(env: &mut Environment, colors: MaterialColorScheme) {
                 .tertiary(colors.tertiary.resolved())
                 .tertiary_container(colors.tertiary_container.resolved())
                 .selection_container(colors.secondary_container.resolved())
-                .selection_foreground(colors.on_secondary_container.resolved()),
+                .selection_foreground(colors.on_secondary_container.resolved())
+                .error(colors.error.resolved())
+                .error_foreground(colors.on_error.resolved()),
         )
         .install(env);
-    theme::typography::install_defaults(env);
+    theme::typography::defaults(env);
     env.insert(colors);
     env.insert(card::theme(&colors));
     env.insert(fab::theme());
     env.insert(snackbar::theme(&colors));
-    env.insert(Box::new(MaterialTheme::with_colors(colors)) as Box<dyn WidgetTheme>);
 }
 
-fn install_dynamic_defaults(
+/// Installs the paired light/dark schemes bound to `scheme`, the
+/// environment's color-scheme signal.
+fn insert_dynamic_tokens(
     env: &mut Environment,
+    scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
 ) {
-    let scheme = waterui_theme::installed_color_scheme(env).unwrap_or_else(|| {
-        let scheme = Computed::constant(ColorScheme::Light);
-        Theme::new().color_scheme(scheme.clone()).install(env);
-        scheme
-    });
-    install_dynamic_color_tokens(env, &scheme, light, dark);
-    theme::typography::install_defaults(env);
+    project_color_tokens(env, scheme, light, dark);
+    theme::typography::defaults(env);
     let initial = material_scheme_for_color_scheme(light, dark, scheme.get());
     env.insert(initial);
     env.insert(MaterialColorSchemes::new(
@@ -318,23 +371,20 @@ fn install_dynamic_defaults(
     env.insert(card::theme(&initial));
     env.insert(fab::theme());
     env.insert(snackbar::theme(&initial));
-    env.insert(
-        Box::new(MaterialTheme::with_color_schemes(light, dark, scheme)) as Box<dyn WidgetTheme>,
-    );
 }
 
 /// Projects each `WaterUI` color token onto the Material role that carries it,
 /// as a signal that re-resolves when the color scheme flips.
-fn install_dynamic_color_tokens(
+fn project_color_tokens(
     env: &mut Environment,
     scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
 ) {
-    macro_rules! install {
+    macro_rules! project {
         ($($token:ident => $role:ident),* $(,)?) => {
             $(
-                install_dynamic_color_signal::<waterui_theme::color::$token>(
+                project_color_token::<waterui_theme::color::$token>(
                     env,
                     scheme,
                     light,
@@ -345,7 +395,7 @@ fn install_dynamic_color_tokens(
         };
     }
 
-    install! {
+    project! {
         Background => background,
         Surface => surface,
         SurfaceVariant => surface_variant,
@@ -359,10 +409,12 @@ fn install_dynamic_color_tokens(
         TertiaryContainer => tertiary_container,
         SelectionContainer => secondary_container,
         SelectionForeground => on_secondary_container,
+        Error => error,
+        ErrorForeground => on_error,
     }
 }
 
-fn install_dynamic_color_signal<T: 'static>(
+fn project_color_token<T: 'static>(
     env: &mut Environment,
     scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
@@ -386,13 +438,13 @@ const fn material_scheme_for_color_scheme(
     }
 }
 
-impl Default for MaterialTheme {
+impl Default for Material3 {
     fn default() -> Self {
-        Self::new()
+        Self::defaults()
     }
 }
 
-impl WidgetTheme for MaterialTheme {
+impl WidgetTheme for Material3 {
     fn interaction_motion(&self) -> InteractionMotion {
         theme::motion::interaction()
     }
@@ -678,9 +730,19 @@ impl WidgetTheme for MaterialTheme {
         draw: &mut dyn DrawContext,
         bounds: Rect,
         selected: bool,
+        is_first: bool,
+        is_last: bool,
         state: WidgetInteractionState,
     ) {
-        picker::draw_segmented_state_layer(&self.colors(), draw, bounds, selected, state);
+        picker::draw_segmented_state_layer(
+            &self.colors(),
+            draw,
+            bounds,
+            selected,
+            is_first,
+            is_last,
+            state,
+        );
     }
 
     fn slider_metrics(&self) -> SliderMetrics {
