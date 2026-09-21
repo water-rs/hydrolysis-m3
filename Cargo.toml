@@ -49,37 +49,17 @@ waterui-testing = "0.5.0"
 name = "Roboto"
 local_path = "assets/fonts/Roboto-Variable.ttf"
 
-# The CJK faces are 4 × ~20 MB and only one of them is ever the right one, so
-# an app opts into the scripts it serves with the matching feature rather than
-# carrying all four. Each is fetched into the font cache out of band; nothing
-# here is downloaded during a build.
-[[package.metadata.waterui.assets.font]]
-name = "Noto Sans CJK JP"
-remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/06_NotoSansCJKjp.zip"
-required-feature = "cjk-jp"
-
-[[package.metadata.waterui.assets.font]]
-name = "Noto Sans CJK KR"
-remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/07_NotoSansCJKkr.zip"
-required-feature = "cjk-kr"
-
-[[package.metadata.waterui.assets.font]]
-name = "Noto Sans CJK SC"
-remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/08_NotoSansCJKsc.zip"
-required-feature = "cjk-sc"
-
-[[package.metadata.waterui.assets.font]]
-name = "Noto Sans CJK TC"
-remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/09_NotoSansCJKtc.zip"
-required-feature = "cjk-tc"
-
-[features]
-# Opt-in CJK coverage: each pulls in the matching Noto Sans CJK face, which
-# the font cache must already hold.
-cjk-jp = []
-cjk-kr = []
-cjk-sc = []
-cjk-tc = []
+# CJK, Arabic, Hebrew and every other script Roboto does not cover are the
+# application's declaration, not the theme's: the face an app needs depends on
+# the languages it serves, and the four Noto Sans CJK archives are ~20 MB each
+# with at most one of them ever right. An app names the face it wants in its
+# own `Water.toml`, which is the one place a project can actually reach:
+#
+#     [[assets.font]]
+#     name = "Noto Sans CJK SC"
+#
+# The CLI's font registry knows those names; the file has to be in the local
+# font cache, because a build never downloads one.
 
 [lints.rust]
 missing_docs = "warn"
