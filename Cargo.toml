@@ -40,24 +40,46 @@ waterui-testing = "0.5.0"
 
 [package.metadata.waterui.assets]
 
+# Material's typeface ships in-tree: the theme renders in Roboto on a machine
+# that has never seen it, offline, with no font of that name installed. The
+# variable build carries the whole weight axis, so the type scale's Regular
+# and Medium are real instances rather than synthesised weights.
+# `assets/fonts/README.md` records its provenance and its OFL-1.1 licence.
 [[package.metadata.waterui.assets.font]]
 name = "Roboto"
+local_path = "assets/fonts/Roboto-Variable.ttf"
 
+# The CJK faces are 4 × ~20 MB and only one of them is ever the right one, so
+# an app opts into the scripts it serves with the matching feature rather than
+# carrying all four. Each is fetched into the font cache out of band; nothing
+# here is downloaded during a build.
 [[package.metadata.waterui.assets.font]]
 name = "Noto Sans CJK JP"
 remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/06_NotoSansCJKjp.zip"
+required-feature = "cjk-jp"
 
 [[package.metadata.waterui.assets.font]]
 name = "Noto Sans CJK KR"
 remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/07_NotoSansCJKkr.zip"
+required-feature = "cjk-kr"
 
 [[package.metadata.waterui.assets.font]]
 name = "Noto Sans CJK SC"
 remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/08_NotoSansCJKsc.zip"
+required-feature = "cjk-sc"
 
 [[package.metadata.waterui.assets.font]]
 name = "Noto Sans CJK TC"
 remote_path = "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/09_NotoSansCJKtc.zip"
+required-feature = "cjk-tc"
+
+[features]
+# Opt-in CJK coverage: each pulls in the matching Noto Sans CJK face, which
+# the font cache must already hold.
+cjk-jp = []
+cjk-kr = []
+cjk-sc = []
+cjk-tc = []
 
 [lints.rust]
 missing_docs = "warn"
