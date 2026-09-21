@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/water-rs/hydrolysis-m3/compare/v0.3.0...v0.3.1) - 2026-09-21
+
+### Added
+
+- *(assets)* ship Roboto in-tree instead of fetching it ([#76](https://github.com/water-rs/hydrolysis-m3/pull/76))
+
+### Fixed
+
+- *(assets)* let the application declare the scripts it serves ([#77](https://github.com/water-rs/hydrolysis-m3/pull/77))
+
+### Other
+
+- gate the declared rust-version on the floor toolchain ([#78](https://github.com/water-rs/hydrolysis-m3/pull/78))
+- consume the 0.5.0 framework wave from crates.io ([#73](https://github.com/water-rs/hydrolysis-m3/pull/73))
+
 ## [0.2.0](https://github.com/water-rs/hydrolysis-m3/compare/v0.1.1...v0.2.0) - 2026-09-11
 
 ### Added
