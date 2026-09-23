@@ -465,6 +465,10 @@ impl WidgetTheme for Material3 {
         button::metrics(style, size)
     }
 
+    fn icon_button_metrics(&self, style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
+        icon_button::metrics(style, size)
+    }
+
     fn button_label_color(&self, style: ButtonStyle, disabled: bool) -> Option<Color> {
         Some(button::label_color(&self.colors(), style, disabled))
     }
@@ -478,9 +482,14 @@ impl WidgetTheme for Material3 {
         draw: &mut dyn DrawContext,
         bounds: Rect,
         style: ButtonStyle,
+        icon_only: bool,
         state: WidgetInteractionState,
     ) {
-        button::draw_chrome(&self.colors(), draw, bounds, style, state);
+        if icon_only {
+            icon_button::draw_chrome(&self.colors(), draw, bounds, style, state);
+        } else {
+            button::draw_chrome(&self.colors(), draw, bounds, style, state);
+        }
     }
 
     fn draw_button_state_layer(
@@ -488,9 +497,14 @@ impl WidgetTheme for Material3 {
         draw: &mut dyn DrawContext,
         bounds: Rect,
         style: ButtonStyle,
+        icon_only: bool,
         state: WidgetInteractionState,
     ) {
-        button::draw_state_layer(&self.colors(), draw, bounds, style, state);
+        if icon_only {
+            icon_button::draw_state_layer(&self.colors(), draw, bounds, style, state);
+        } else {
+            button::draw_state_layer(&self.colors(), draw, bounds, style, state);
+        }
     }
 
     fn draw_interaction_state_layer(
