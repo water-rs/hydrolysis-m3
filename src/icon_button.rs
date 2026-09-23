@@ -10,11 +10,13 @@ use waterui::shape::{Circle, ShapeExt as _};
 use waterui::{Environment, Str, View, ViewExt as _};
 use waterui_core::handler::{Handler, boxed_action};
 
+use crate::ButtonMetrics;
 use crate::color::{
     InverseOnSurface, InverseSurface, OnPrimary, OnSecondaryContainer, OnSurfaceVariant,
     OutlineVariant, Primary, SecondaryContainer,
 };
 use crate::semantics::interaction_style;
+use waterui_controls::button::{ButtonSize, ButtonStyle};
 
 /// `IconButtonTokens.StateLayerSize`: the size of the visible state layer.
 const ICON_BUTTON_STATE_LAYER_SIZE: f32 = 40.0;
@@ -80,6 +82,147 @@ impl IconButtonSize {
                 outline_width: 2.0,
             },
         }
+    }
+}
+
+/// `WidgetTheme::icon_button_metrics`: the metrics a semantic `Button`
+/// resolves when its label is `IconOnly`.
+///
+/// The `ButtonStyle` → variant mapping follows the text-button mapping in
+/// `controls::button::metrics`. Every container style lays out at the
+/// icon-button touch target — 48dp at the small size — with no text
+/// padding, and the layout bounds are the hit area; the chrome draws the
+/// smaller state-layer circle centred inside them, as Compose does. A
+/// link keeps no container and no minimum box.
+///
+/// # Panics
+///
+/// Panics on a `ButtonStyle` or `ButtonSize` variant this theme does not
+/// implement.
+#[must_use]
+pub fn metrics(style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
+    let tokens = icon_button_size(size).tokens();
+    match style {
+        ButtonStyle::Automatic
+        | ButtonStyle::Bordered
+        | ButtonStyle::BorderedProminent
+        | ButtonStyle::Plain
+        | ButtonStyle::Borderless => ButtonMetrics::new(
+            0.0,
+            0.0,
+            f64::from(tokens.container),
+            f64::from(tokens.container),
+        ),
+        // A link has no container, so it takes no minimum box.
+        ButtonStyle::Link => ButtonMetrics::new(0.0, 0.0, 0.0, 0.0),
+        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    }
+}
+
+/// The rect the icon-button state layer draws in: centred in the layout
+/// bounds at the size tokens give it — 40dp inside the 48dp small touch
+/// target, and the full bounds once the container is the touch target
+/// itself (medium and large).
+fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
+    let side = if bounds.height() > f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE) {
+        bounds.height()
+    } else {
+        f64::from(ICON_BUTTON_STATE_LAYER_SIZE)
+    };
+    let center = bounds.center();
+    vello::kurbo::Rect::from_center_size(center, (side, side))
+}
+
+/// `WidgetTheme::draw_button_chrome` for an icon-only button.
+///
+/// The icon-button container is the state-layer circle centred in the
+/// bounds, not the bounds themselves. Filled and tonal variants fill it,
+/// the outlined variant strokes it, and the standard variant — like a
+/// link — draws no container at all.
+///
+/// # Panics
+///
+/// Panics on a `ButtonStyle` variant this theme does not implement.
+pub fn draw_chrome(
+    colors: &crate::theme::colors::MaterialColorScheme,
+    draw: &mut dyn crate::DrawContext,
+    bounds: vello::kurbo::Rect,
+    style: ButtonStyle,
+    state: crate::WidgetInteractionState,
+) {
+    let layer = state_layer_rect(bounds);
+    let radii = (layer.height() / 2.0).into();
+    match style {
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
+            let fill = if state.disabled {
+                colors.on_surface.peniko_disabled_container()
+            } else {
+                colors.primary.peniko()
+            };
+            draw.fill_rounded_rect(layer, radii, &crate::Brush::from(fill));
+        }
+        ButtonStyle::Bordered => {
+            let border = if state.disabled {
+                colors.on_surface.peniko_disabled_container()
+            } else if state.focus_visible {
+                colors.primary.peniko()
+            } else {
+                colors.outline.peniko()
+            };
+            draw.stroke_rounded_rect(
+                layer,
+                radii,
+                &crate::Brush::from(border),
+                f64::from(ICON_BUTTON_OUTLINE_WIDTH),
+            );
+        }
+        // Standard and link icon buttons carry no container.
+        ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => {}
+        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    }
+}
+
+/// `WidgetTheme::draw_button_state_layer` for an icon-only button.
+///
+/// The interaction state layer is the icon-button state-layer circle
+/// centred in the bounds — 40dp inside the 48dp small touch target.
+///
+/// # Panics
+///
+/// Panics on a `ButtonStyle` variant this theme does not implement.
+pub fn draw_state_layer(
+    colors: &crate::theme::colors::MaterialColorScheme,
+    draw: &mut dyn crate::DrawContext,
+    bounds: vello::kurbo::Rect,
+    style: ButtonStyle,
+    state: crate::WidgetInteractionState,
+) {
+    let color = match style {
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
+        ButtonStyle::Bordered
+        | ButtonStyle::Plain
+        | ButtonStyle::Borderless
+        | ButtonStyle::Link => colors.primary.peniko(),
+        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    };
+    let layer = state_layer_rect(bounds);
+    crate::theme::state_layer::draw_bounded(
+        draw,
+        layer,
+        (layer.height() / 2.0).into(),
+        color,
+        state,
+    );
+}
+
+const fn icon_button_size(size: ButtonSize) -> IconButtonSize {
+    match size {
+        // The icon-button scale has no extra-small or extra-large token set:
+        // both ends clamp to the nearest defined size.
+        ButtonSize::ExtraSmall | ButtonSize::Small => IconButtonSize::Small,
+        ButtonSize::Medium => IconButtonSize::Medium,
+        ButtonSize::Large | ButtonSize::ExtraLarge => IconButtonSize::Large,
+        _ => panic!("hydrolysis ButtonSize variant is not implemented"),
     }
 }
 
@@ -376,8 +519,27 @@ where
 mod tests {
     use super::{
         ICON_BUTTON_ICON_SIZE, ICON_BUTTON_OUTLINE_WIDTH, ICON_BUTTON_STATE_LAYER_SIZE,
-        IconButtonSize, IconButtonVariantTokens, OutlinedIconButton,
+        ICON_BUTTON_TOUCH_TARGET_SIZE, IconButtonSize, IconButtonVariantTokens, OutlinedIconButton,
+        metrics,
     };
+    use waterui_controls::button::{ButtonSize, ButtonStyle};
+
+    /// A semantic icon-only button lays out at the icon-button touch
+    /// target — 48dp at the small size — with no text padding, and the
+    /// layout bounds are the hit area. A link keeps no container and no
+    /// minimum box.
+    #[test]
+    fn icon_button_metrics_lay_out_at_the_touch_target() {
+        let m = metrics(ButtonStyle::Automatic, ButtonSize::Small);
+        assert_eq!(m.min_width, f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE));
+        assert_eq!(m.min_height, f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE));
+        assert_eq!(m.padding_x, 0.0);
+        assert_eq!(m.padding_y, 0.0);
+
+        let link = metrics(ButtonStyle::Link, ButtonSize::Small);
+        assert_eq!(link.min_width, 0.0);
+        assert_eq!(link.min_height, 0.0);
+    }
 
     /// `MediumIconButtonTokens` and `LargeIconButtonTokens`. Past the small
     /// size the container has outgrown the 48dp minimum, so the state layer

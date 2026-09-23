@@ -10,7 +10,7 @@ use hydrolysis_m3::Material3;
 use waterui::component::list::{List, ListItem};
 use waterui::prelude::*;
 use waterui::reactive::{SignalExt, binding};
-use waterui_testing::{Styled, UiBuilder};
+use waterui_testing::{Role, Styled, UiBuilder};
 
 const LABELS: [&str; 3] = ["First", "Second", "Third"];
 
@@ -40,15 +40,40 @@ fn only_the_selected_row_is_marked_selected(ui: UiBuilder) {
     });
     app.settle();
 
-    let _ = app.query().label("First").selected(false).single();
-    let _ = app.query().label("Second").selected(true).single();
-    let _ = app.query().label("Third").selected(false).single();
+    let _ = app
+        .query()
+        .role(Role::LIST_ITEM)
+        .label("First")
+        .selected(false)
+        .single();
+    let _ = app
+        .query()
+        .role(Role::LIST_ITEM)
+        .label("Second")
+        .selected(true)
+        .single();
+    let _ = app
+        .query()
+        .role(Role::LIST_ITEM)
+        .label("Third")
+        .selected(false)
+        .single();
 
     current.set(2);
     app.settle();
 
-    let _ = app.query().label("Second").selected(false).single();
-    let _ = app.query().label("Third").selected(true).single();
+    let _ = app
+        .query()
+        .role(Role::LIST_ITEM)
+        .label("Second")
+        .selected(false)
+        .single();
+    let _ = app
+        .query()
+        .role(Role::LIST_ITEM)
+        .label("Third")
+        .selected(true)
+        .single();
 }
 
 /// Visual acceptance: the selected row carries the theme's selection fill and
