@@ -418,7 +418,11 @@ mod tests {
 
         env.insert(hydrolysis::IconOnlyButtonLabel);
         let standard = color.resolve(&env).snapshot();
-        let expected_standard = colors.on_surface_variant.view_color().resolve(&env).snapshot();
+        let expected_standard = colors
+            .on_surface_variant
+            .view_color()
+            .resolve(&env)
+            .snapshot();
         assert_eq!(standard.red, expected_standard.red);
         assert_eq!(standard.green, expected_standard.green);
         assert_eq!(standard.blue, expected_standard.blue);
