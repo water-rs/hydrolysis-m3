@@ -88,12 +88,12 @@ impl IconButtonSize {
 /// `WidgetTheme::icon_button_metrics`: the metrics a semantic `Button`
 /// resolves when its label is `IconOnly`.
 ///
-/// The `ButtonStyle` → variant mapping follows the text-button mapping in
-/// `controls::button::metrics`. Every container style lays out at the
-/// icon-button touch target — 48dp at the small size — with no text
-/// padding, and the layout bounds are the hit area; the chrome draws the
-/// smaller state-layer circle centred inside them, as Compose does. A
-/// link keeps no container and no minimum box.
+/// Every style except `Link` reserves the icon-button touch target —
+/// 48dp at the small size — with no text padding, and the layout bounds
+/// are the hit area; the chrome draws the smaller state-layer circle
+/// centred inside them, as Compose does. A link keeps no container and
+/// no minimum box. `Automatic` resolves to the standard variant, which
+/// draws no container but still reserves the touch target.
 ///
 /// # Panics
 ///
@@ -138,7 +138,9 @@ fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
 /// The icon-button container is the state-layer circle centred in the
 /// bounds, not the bounds themselves. Filled and tonal variants fill it,
 /// the outlined variant strokes it, and the standard variant — like a
-/// link — draws no container at all.
+/// link — draws no container at all. `Automatic` resolves to the
+/// standard variant, the Material default for icon buttons; the
+/// text-button chrome in `controls::button` keeps it filled.
 ///
 /// # Panics
 ///
@@ -153,7 +155,7 @@ pub fn draw_chrome(
     let layer = state_layer_rect(bounds);
     let radii = (layer.height() / 2.0).into();
     match style {
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
+        ButtonStyle::BorderedProminent => {
             let fill = if state.disabled {
                 colors.on_surface.peniko_disabled_container()
             } else {
@@ -176,8 +178,12 @@ pub fn draw_chrome(
                 f64::from(ICON_BUTTON_OUTLINE_WIDTH),
             );
         }
-        // Standard and link icon buttons carry no container.
-        ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => {}
+        // Standard and link icon buttons carry no container; `Automatic`
+        // resolves to the standard variant for icon buttons.
+        ButtonStyle::Automatic
+        | ButtonStyle::Plain
+        | ButtonStyle::Borderless
+        | ButtonStyle::Link => {}
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     }
 }
@@ -198,8 +204,9 @@ pub fn draw_state_layer(
     state: crate::WidgetInteractionState,
 ) {
     let color = match style {
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
-        ButtonStyle::Bordered
+        ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
+        ButtonStyle::Automatic
+        | ButtonStyle::Bordered
         | ButtonStyle::Plain
         | ButtonStyle::Borderless
         | ButtonStyle::Link => colors.primary.peniko(),
