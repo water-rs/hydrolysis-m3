@@ -131,7 +131,7 @@ waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "be1b15a0
 # The published hydrolysis 0.3.x predates the executor-refresh API on
 # waterui `dev`; the backend's own `dev` head builds against the revision
 # above.
-hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "1acbb3910d103ac2990647289150bdf80e95e277" }
+hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "2096f41ed3925b42ad2e6a1a7a81ff72d63af5c0" }
 
 waterui-canvas = { git = "https://github.com/water-rs/canvas", rev = "11d7a8ec55879b36119538451ad3bafc84e969e0" }
 waterui-image = { git = "https://github.com/water-rs/image", rev = "5eb1edfd9da977607acf19333d1326d3bd893394" }
