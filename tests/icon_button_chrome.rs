@@ -67,7 +67,7 @@ fn button_bounds(app: &mut OffscreenApp, label: &str) -> NodeBounds {
         .bounds()
 }
 
-fn pixel_is(pixel: &[u8], argb: Argb) -> bool {
+const fn pixel_is(pixel: &[u8], argb: Argb) -> bool {
     pixel[0].abs_diff(argb.red()) <= 2
         && pixel[1].abs_diff(argb.green()) <= 2
         && pixel[2].abs_diff(argb.blue()) <= 2
