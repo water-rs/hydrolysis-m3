@@ -311,7 +311,7 @@ impl ExtendedFab<fn(&Environment), PrimaryFab> {
             .clone()
             .resolve(&Environment::new())
             .content
-            .get()
+            .snapshot()
             .to_plain();
         Self {
             label,

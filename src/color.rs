@@ -211,7 +211,7 @@ mod tests {
         color: impl Resolvable<Resolved = ResolvedColor>,
         expected: MaterialRoleColor,
     ) {
-        assert_resolved_color_eq(color.resolve(env).get(), expected.resolved());
+        assert_resolved_color_eq(color.resolve(env).snapshot(), expected.resolved());
     }
 
     #[test]
@@ -282,11 +282,11 @@ mod tests {
         let mut env = Environment::new();
         Material3::defaults().install_tokens(&mut env);
 
-        assert_eq!(current_color_scheme(&env).get(), ColorScheme::Light);
+        assert_eq!(current_color_scheme(&env).snapshot(), ColorScheme::Light);
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::Accent>(&env)
                 .expect("default accent token should be installed")
-                .get(),
+                .snapshot(),
             MaterialColorScheme::baseline_light().primary.resolved(),
         );
     }
@@ -324,13 +324,13 @@ mod tests {
         assert_eq!(
             installed_color_scheme(&env2)
                 .expect("the bound scheme signal should be installed")
-                .get(),
+                .snapshot(),
             ColorScheme::Light
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::Accent>(&env2)
                 .expect("default accent token should be installed")
-                .get(),
+                .snapshot(),
             MaterialColorScheme::baseline_light().primary.resolved(),
         );
     }
@@ -344,59 +344,59 @@ mod tests {
         let mut env = Environment::new();
         Material3::with_colors(scheme).install_tokens(&mut env);
 
-        assert_eq!(current_color_scheme(&env).get(), ColorScheme::Dark);
+        assert_eq!(current_color_scheme(&env).snapshot(), ColorScheme::Dark);
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::Accent>(&env)
                 .expect("accent token should be installed")
-                .get(),
+                .snapshot(),
             scheme.primary.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::AccentContainer>(&env)
                 .expect("accent-container token should be installed")
-                .get(),
+                .snapshot(),
             scheme.primary_container.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::Tertiary>(&env)
                 .expect("tertiary token should be installed")
-                .get(),
+                .snapshot(),
             scheme.tertiary.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::TertiaryContainer>(&env)
                 .expect("tertiary-container token should be installed")
-                .get(),
+                .snapshot(),
             scheme.tertiary_container.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::SelectionContainer>(&env)
                 .expect("selection-container token should be installed")
-                .get(),
+                .snapshot(),
             scheme.secondary_container.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::SelectionForeground>(&env)
                 .expect("selection-foreground token should be installed")
-                .get(),
+                .snapshot(),
             scheme.on_secondary_container.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::Error>(&env)
                 .expect("error token should be installed")
-                .get(),
+                .snapshot(),
             scheme.error.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::ErrorForeground>(&env)
                 .expect("error-foreground token should be installed")
-                .get(),
+                .snapshot(),
             scheme.on_error.resolved(),
         );
         assert_resolved_color_eq(
             installed_color_signal::<theme_color::Surface>(&env)
                 .expect("surface token should be installed")
-                .get(),
+                .snapshot(),
             scheme.surface.resolved(),
         );
         assert_resolves_to(&env, Primary, scheme.primary);

@@ -195,42 +195,42 @@ mod tests {
         defaults(&mut env);
 
         assert_material_font(
-            Body.resolve(&env).get(),
+            Body.resolve(&env).snapshot(),
             16.0,
             FontWeight::Normal,
             24.0,
             0.5,
         );
         assert_material_font(
-            Title.resolve(&env).get(),
+            Title.resolve(&env).snapshot(),
             22.0,
             FontWeight::Normal,
             28.0,
             0.0,
         );
         assert_material_font(
-            Headline.resolve(&env).get(),
+            Headline.resolve(&env).snapshot(),
             24.0,
             FontWeight::Normal,
             32.0,
             0.0,
         );
         assert_material_font(
-            Subheadline.resolve(&env).get(),
+            Subheadline.resolve(&env).snapshot(),
             16.0,
             FontWeight::Medium,
             24.0,
             0.15,
         );
         assert_material_font(
-            Caption.resolve(&env).get(),
+            Caption.resolve(&env).snapshot(),
             12.0,
             FontWeight::Normal,
             16.0,
             0.4,
         );
         assert_material_font(
-            Footnote.resolve(&env).get(),
+            Footnote.resolve(&env).snapshot(),
             11.0,
             FontWeight::Medium,
             16.0,
@@ -248,12 +248,12 @@ mod tests {
 
         defaults(&mut env);
 
-        let resolved_body = Body.resolve(&env).get();
+        let resolved_body = Body.resolve(&env).snapshot();
         assert_eq!(resolved_body.size, app_body.size);
         assert_eq!(resolved_body.weight, app_body.weight);
         assert_eq!(resolved_body.family, app_body.family);
         assert_material_font(
-            Title.resolve(&env).get(),
+            Title.resolve(&env).snapshot(),
             22.0,
             FontWeight::Normal,
             28.0,
@@ -266,7 +266,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            label_large().resolve(&env).get(),
+            label_large().resolve(&env).snapshot(),
             14.0,
             FontWeight::Medium,
             20.0,
@@ -279,7 +279,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            label_medium().resolve(&env).get(),
+            label_medium().resolve(&env).snapshot(),
             12.0,
             FontWeight::Medium,
             16.0,
@@ -292,7 +292,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            label_small().resolve(&env).get(),
+            label_small().resolve(&env).snapshot(),
             11.0,
             FontWeight::Medium,
             16.0,
@@ -305,7 +305,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            body_medium().resolve(&env).get(),
+            body_medium().resolve(&env).snapshot(),
             14.0,
             FontWeight::Normal,
             20.0,
@@ -318,7 +318,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            body_large().resolve(&env).get(),
+            body_large().resolve(&env).snapshot(),
             16.0,
             FontWeight::Normal,
             24.0,
@@ -331,7 +331,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            body_small().resolve(&env).get(),
+            body_small().resolve(&env).snapshot(),
             12.0,
             FontWeight::Normal,
             16.0,
@@ -344,7 +344,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            title_small().resolve(&env).get(),
+            title_small().resolve(&env).snapshot(),
             14.0,
             FontWeight::Medium,
             20.0,
@@ -357,7 +357,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            headline_small().resolve(&env).get(),
+            headline_small().resolve(&env).snapshot(),
             24.0,
             FontWeight::Normal,
             32.0,

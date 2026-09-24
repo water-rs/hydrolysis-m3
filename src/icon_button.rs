@@ -609,7 +609,7 @@ mod tests {
             OutlinedIconButton::outline_color(),
             SelectedOutlinedIconButton::outline_color(),
         ] {
-            assert_resolves_to(color.resolve(&env).get(), scheme.outline_variant.resolved());
+            assert_resolves_to(color.resolve(&env).snapshot(), scheme.outline_variant.resolved());
         }
     }
 }

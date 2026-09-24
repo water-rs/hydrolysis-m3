@@ -343,13 +343,13 @@ mod tests {
             ButtonStyle::Plain,
         ] {
             let color = super::label_color(&colors, style, true);
-            let resolved = color.resolve(&waterui_core::Environment::new()).get();
+            let resolved = color.resolve(&waterui_core::Environment::new()).snapshot();
             let expected = colors
                 .on_surface
                 .view_color()
                 .with_opacity(crate::theme::colors::DISABLED_CONTENT_OPACITY)
                 .resolve(&waterui_core::Environment::new())
-                .get();
+                .snapshot();
             assert_eq!(
                 (
                     resolved.red,

@@ -376,7 +376,7 @@ fn segmented_button_view(
         .height(OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT)
         .background(shape.shape().fill(background))
         .on_tap(move |env: Environment| {
-            selected_state.set(!selected_state.get());
+            selected_state.toggle();
             action.call(&env);
         })
         .a11y_label(accessibility_label)
