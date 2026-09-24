@@ -469,7 +469,7 @@ impl ButtonGroupLayout {
     fn expand(&self, widths: &mut [f32]) {
         let count = widths.len();
         for index in 0..count {
-            if !self.pressed[index].get() {
+            if !self.pressed[index].snapshot() {
                 continue;
             }
             let reach = GROUP_EXPANDED_RATIO * widths[index] / 2.0;
