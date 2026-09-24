@@ -282,7 +282,7 @@ impl Material3Colors {
                 scheme
                     .get()
                     .expect("a `Material3` reads its color scheme only after `install_tokens`")
-                    .get(),
+                    .snapshot(),
             ),
         }
     }
@@ -361,7 +361,7 @@ fn insert_dynamic_tokens(
 ) {
     project_color_tokens(env, scheme, light, dark);
     theme::typography::defaults(env);
-    let initial = material_scheme_for_color_scheme(light, dark, scheme.get());
+    let initial = material_scheme_for_color_scheme(light, dark, scheme.snapshot());
     env.insert(initial);
     env.insert(MaterialColorSchemes::new(
         MaterialColorSource::default(),

@@ -13,7 +13,7 @@ pub fn label_plain_text(label: &Label) -> Str {
         .clone()
         .resolve(&Environment::new())
         .content
-        .get()
+        .snapshot()
         .to_plain()
 }
 

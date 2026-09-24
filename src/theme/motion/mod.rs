@@ -204,8 +204,8 @@ impl Signal for DialogProperty {
     type Output = f32;
     type Guard = <Computed<bool> as Signal>::Guard;
 
-    fn get(&self) -> Self::Output {
-        if self.opened.get() {
+    fn snapshot(&self) -> Self::Output {
+        if self.opened.snapshot() {
             self.opened_value
         } else {
             self.closed_value

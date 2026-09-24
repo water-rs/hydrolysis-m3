@@ -8,7 +8,7 @@ use waterui::layout::{
     Layout, ProposalSize, Rect, Size, SubView, SubviewPlacement, container::FixedContainer,
     padding::EdgeInsets,
 };
-use waterui::reactive::SignalExt as _;
+use waterui::reactive::{Signal, SignalExt as _};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
@@ -82,13 +82,12 @@ impl TooltipVisibility {
     }
 
     fn next_generation(&self) -> u64 {
-        let generation = self
-            .generation
-            .get()
-            .checked_add(1)
-            .expect("Material tooltip generation overflow");
-        self.generation.set(generation);
-        generation
+        self.generation.with_mut(|generation| {
+            *generation = generation
+                .checked_add(1)
+                .expect("Material tooltip generation overflow");
+            *generation
+        })
     }
 
     fn cancel_pending(&self) {
@@ -102,7 +101,7 @@ impl TooltipVisibility {
         let state = self.clone();
         spawn_local(async move {
             sleep(TOOLTIP_DISMISS_DURATION).await;
-            if state.generation.get() == generation && state.open.get() {
+            if state.generation.snapshot() == generation && state.open.snapshot() {
                 state.open.set(false);
             }
         })
@@ -132,7 +131,7 @@ impl TooltipVisibility {
         self.cancel_pending();
         if focused {
             self.open.set(true);
-        } else if !self.target_hovered.get() && !self.persistent {
+        } else if !self.target_hovered.snapshot() && !self.persistent {
             self.open.set(false);
         }
     }
@@ -454,6 +453,7 @@ mod tests {
         TOOLTIP_DISMISS_DURATION, TOOLTIP_LONG_PRESS_MS, TooltipVisibility,
     };
     use core::time::Duration;
+    use waterui::reactive::Signal;
 
     #[test]
     fn plain_tooltip_tokens_match_compose_plain_tooltip_tokens() {
@@ -470,36 +470,36 @@ mod tests {
     fn plain_tooltip_hover_opens_immediately_and_exit_dismisses() {
         let visibility = TooltipVisibility::new(false);
         visibility.set_target_hovered(true);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.set_target_hovered(false);
-        assert!(!visibility.open.get());
+        assert!(!visibility.open.snapshot());
     }
 
     #[test]
     fn rich_tooltip_stays_open_after_hover_exit() {
         let visibility = TooltipVisibility::new(true);
         visibility.set_target_hovered(true);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.set_target_hovered(false);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
     }
 
     #[test]
     fn focus_loss_dismisses_plain_tooltip() {
         let visibility = TooltipVisibility::new(false);
         visibility.set_focused(true);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.set_focused(false);
-        assert!(!visibility.open.get());
+        assert!(!visibility.open.snapshot());
     }
 
     #[test]
     fn escape_dismisses_even_persistent_tooltip() {
         let visibility = TooltipVisibility::new(true);
         visibility.long_press();
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.dismiss();
-        assert!(!visibility.open.get());
+        assert!(!visibility.open.snapshot());
     }
 
     #[test]
