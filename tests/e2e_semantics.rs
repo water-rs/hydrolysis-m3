@@ -17,8 +17,8 @@ use waterui::component::{hstack, text, vstack};
 use waterui::graphics::color::Srgb;
 use waterui::id::Id;
 use waterui::navigation::NavigationView;
-use waterui::{Binding, Str};
 use waterui::reactive::Signal;
+use waterui::{Binding, Str};
 use waterui_controls::{TextField, button, slider::slider, stepper::stepper, toggle};
 use waterui_core::View;
 use waterui_testing::{
@@ -106,7 +106,10 @@ fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
         .label("Assist")
         .assert_exists();
     app.query().role(Role::BUTTON).label("Assist").tap();
-    assert!(tapped_for_view.snapshot(), "assist chip tap should update state");
+    assert!(
+        tapped_for_view.snapshot(),
+        "assist chip tap should update state"
+    );
 }
 
 #[waterui::test(viewport = (360, 320))]
@@ -155,7 +158,10 @@ fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBui
         selected.snapshot(),
         "filter chip tap should toggle selected state"
     );
-    assert!(tapped.snapshot(), "filter chip tap should invoke user action");
+    assert!(
+        tapped.snapshot(),
+        "filter chip tap should invoke user action"
+    );
     assert!(
         app.wait_for(
             &[app.expect_exists(
@@ -492,7 +498,10 @@ fn material_dialog_exposes_semantics_and_action_buttons(ui: UiBuilder) {
         app.query().role(Role::BUTTON).label(label).assert_exists();
         app.query().role(Role::BUTTON).label(label).tap();
     }
-    assert!(cancel_tapped.snapshot(), "cancel action tap should update state");
+    assert!(
+        cancel_tapped.snapshot(),
+        "cancel action tap should update state"
+    );
     assert!(
         confirm_tapped.snapshot(),
         "confirm action tap should update state"
@@ -538,7 +547,10 @@ fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
         .selected(true)
         .assert_exists();
     app.query().role(Role::TAB).label("Home").tap();
-    assert!(home_tapped.snapshot(), "navigation tab tap should update state");
+    assert!(
+        home_tapped.snapshot(),
+        "navigation tab tap should update state"
+    );
 }
 
 #[waterui::test(viewport = (360, 320))]
