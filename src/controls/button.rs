@@ -374,13 +374,13 @@ mod tests {
             ButtonStyle::Plain,
         ] {
             let color = super::label_color(&colors, style, true);
-            let resolved = color.resolve(&waterui_core::Environment::new()).get();
+            let resolved = color.resolve(&waterui_core::Environment::new()).snapshot();
             let expected = colors
                 .on_surface
                 .view_color()
                 .with_opacity(crate::theme::colors::DISABLED_CONTENT_OPACITY)
                 .resolve(&waterui_core::Environment::new())
-                .get();
+                .snapshot();
             assert_eq!(
                 (
                     resolved.red,
@@ -410,15 +410,19 @@ mod tests {
         let color = super::label_color(&colors, ButtonStyle::Automatic, false);
 
         let mut env = waterui_core::Environment::new();
-        let filled = color.resolve(&env).get();
-        let expected_filled = colors.on_primary.view_color().resolve(&env).get();
+        let filled = color.resolve(&env).snapshot();
+        let expected_filled = colors.on_primary.view_color().resolve(&env).snapshot();
         assert_eq!(filled.red, expected_filled.red);
         assert_eq!(filled.green, expected_filled.green);
         assert_eq!(filled.blue, expected_filled.blue);
 
         env.insert(hydrolysis::IconOnlyButtonLabel);
-        let standard = color.resolve(&env).get();
-        let expected_standard = colors.on_surface_variant.view_color().resolve(&env).get();
+        let standard = color.resolve(&env).snapshot();
+        let expected_standard = colors
+            .on_surface_variant
+            .view_color()
+            .resolve(&env)
+            .snapshot();
         assert_eq!(standard.red, expected_standard.red);
         assert_eq!(standard.green, expected_standard.green);
         assert_eq!(standard.blue, expected_standard.blue);

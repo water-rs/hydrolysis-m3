@@ -210,8 +210,7 @@ impl View for FloatingActionButtonMenu {
             .size(CLOSE_BUTTON_CONTAINER, CLOSE_BUTTON_CONTAINER)
             .floating_with(item_style())
             .on_tap(move |_env: Environment| {
-                let open = expanded_for_toggle.get();
-                expanded_for_toggle.set(!open);
+                expanded_for_toggle.toggle();
             })
             .a11y_label(toggle_accessibility_label)
             .a11y_role(AccessibilityRole::Button)

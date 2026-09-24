@@ -327,7 +327,7 @@ where
                 .corner_radius(FILTER_CHIP_CONTAINER_SHAPE),
         )
         .on_tap(move |env: Environment| {
-            selected_for_tap.set(!selected_for_tap.get());
+            selected_for_tap.toggle();
             action.call(&env);
         })
         .a11y_label(self.accessibility_label)

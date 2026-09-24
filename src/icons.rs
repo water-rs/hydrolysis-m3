@@ -101,7 +101,7 @@ where
             .with_caps(Cap::Round)
             .with_join(Join::Round)
             .with_miter_limit(MITER_LIMIT);
-        let brush = Brush::Solid(to_peniko(self.stroke.get()));
+        let brush = Brush::Solid(to_peniko(self.stroke.snapshot()));
         scene.stroke(&stroke, Affine::IDENTITY, &brush, None, &path);
 
         self.pending_redraw.replace(false)
