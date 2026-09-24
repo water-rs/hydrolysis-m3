@@ -45,13 +45,44 @@ pub fn label_color(colors: &MaterialColorScheme, style: ButtonStyle, disabled: b
     }
     match style {
         // `Automatic` is the theme's default button, which in M3 is the
-        // filled button — primary container with on-primary content.
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
+        // filled button for a text label — on-primary content — and the
+        // standard button for an icon-only label — on-surface-variant
+        // content over no container. The backend marks an icon-only label's
+        // subtree so the two resolve differently.
+        ButtonStyle::Automatic => Color::new(AutomaticLabelColor {
+            filled: colors.on_primary.view_color(),
+            standard: colors.on_surface_variant.view_color(),
+        }),
+        ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
         ButtonStyle::Bordered
         | ButtonStyle::Plain
         | ButtonStyle::Link
         | ButtonStyle::Borderless => colors.primary.view_color(),
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    }
+}
+
+/// Resolves to `filled` for an ordinary button label and to `standard` in an
+/// icon-only label's subtree — `hydrolysis::IconOnlyButtonLabel` is installed
+/// there — because `Automatic` maps to a different variant for the two.
+#[derive(Debug, Clone)]
+struct AutomaticLabelColor {
+    filled: Color,
+    standard: Color,
+}
+
+impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
+    type Resolved = waterui_graphics::color::ResolvedColor;
+
+    fn resolve(
+        &self,
+        env: &waterui_core::Environment,
+    ) -> impl waterui_core::Signal<Output = Self::Resolved> {
+        if env.get::<hydrolysis::IconOnlyButtonLabel>().is_some() {
+            self.standard.resolve(env)
+        } else {
+            self.filled.resolve(env)
+        }
     }
 }
 
@@ -366,6 +397,31 @@ mod tests {
                 "style {style:?}"
             );
         }
+    }
+
+    /// `Automatic` resolves differently for the two button kinds: the text
+    /// button keeps on-primary content, while an icon-only label — marked by
+    /// `hydrolysis::IconOnlyButtonLabel` — paints the standard icon button's
+    /// on-surface-variant.
+    #[test]
+    fn automatic_label_color_resolves_standard_under_icon_only_marker() {
+        use waterui_core::Signal as _;
+        let colors = MaterialColorScheme::baseline_light();
+        let color = super::label_color(&colors, ButtonStyle::Automatic, false);
+
+        let mut env = waterui_core::Environment::new();
+        let filled = color.resolve(&env).get();
+        let expected_filled = colors.on_primary.view_color().resolve(&env).get();
+        assert_eq!(filled.red, expected_filled.red);
+        assert_eq!(filled.green, expected_filled.green);
+        assert_eq!(filled.blue, expected_filled.blue);
+
+        env.insert(hydrolysis::IconOnlyButtonLabel);
+        let standard = color.resolve(&env).get();
+        let expected_standard = colors.on_surface_variant.view_color().resolve(&env).get();
+        assert_eq!(standard.red, expected_standard.red);
+        assert_eq!(standard.green, expected_standard.green);
+        assert_eq!(standard.blue, expected_standard.blue);
     }
 
     /// `Automatic` is the theme's default button; in M3 that is the filled
