@@ -1,10 +1,8 @@
 //! Selection chrome on `List` rows.
 //!
-//! The self-drawn renderer ignored row selection outright. The row's
-//! own content already flipped to `SelectionForeground` — that part is the
-//! list component's job and always worked — but nothing painted the container
-//! behind it and nothing told the accessibility tree, so a sidebar had no way
-//! to show which row was current.
+//! The framework owns row selection through `List::selection`: the backend
+//! paints the container behind the current row and reports it to the
+//! accessibility tree, so a sidebar can show which row is current.
 
 use hydrolysis_m3::Material3;
 use waterui::component::list::{List, ListItem};
