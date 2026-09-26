@@ -1,3 +1,0 @@
-[patch."https://github.com/water-rs/nami"]
-nami = { path = "/home/ubuntu/.cargo/git/checkouts/nami-3b7bff5da959545f/6908aac" }
-nami-core = { path = "/home/ubuntu/.cargo/git/checkouts/nami-3b7bff5da959545f/6908aac/core" }
