@@ -47,6 +47,24 @@ pub fn label_large() -> Font {
     Font::new(LabelLarge)
 }
 
+/// `md.sys.typescale.label-large-prominent`: label-large at `weight.bold`,
+/// which the spec uses for the active item's label in navigation rails and
+/// drawers.
+#[derive(Debug, Clone, Copy)]
+pub struct LabelLargeProminent;
+
+impl Resolvable for LabelLargeProminent {
+    type Resolved = ResolvedFont;
+
+    fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
+        Computed::constant(font(14.0, FontWeight::Bold, 20.0, 0.1))
+    }
+}
+
+pub fn label_large_prominent() -> Font {
+    Font::new(LabelLargeProminent)
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct LabelMedium;
 
@@ -60,6 +78,23 @@ impl Resolvable for LabelMedium {
 
 pub fn label_medium() -> Font {
     Font::new(LabelMedium)
+}
+
+/// `md.sys.typescale.label-medium-prominent`: label-medium at `weight.bold`,
+/// which the spec uses for the active item's label in a navigation bar.
+#[derive(Debug, Clone, Copy)]
+pub struct LabelMediumProminent;
+
+impl Resolvable for LabelMediumProminent {
+    type Resolved = ResolvedFont;
+
+    fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
+        Computed::constant(font(12.0, FontWeight::Bold, 16.0, 0.5))
+    }
+}
+
+pub fn label_medium_prominent() -> Font {
+    Font::new(LabelMediumProminent)
 }
 
 #[derive(Debug, Clone, Copy)]
