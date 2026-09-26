@@ -8,10 +8,11 @@ use crate::icon_paths::{self, IconGrid};
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{
-    Brush, DrawContext, ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
+    ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
     ListTrailingControlMetrics, WidgetInteractionState,
 };
-use vello::kurbo::{Point, Rect};
+use cherenkov::kurbo::{Point, Rect};
+use cherenkov::{Draw as _, Recorder, WorkingColor};
 
 /// Size the trailing row affordances draw their icons at (Material's 24dp
 /// icon), centered in the larger hit box the row gives them.
@@ -51,11 +52,11 @@ pub const fn metrics() -> ListMetrics {
 
 pub fn draw_row_background(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     _alternate: bool,
 ) {
-    draw.fill_rect(bounds, &Brush::from(colors.surface.peniko()));
+    draw.fill(bounds, colors.surface.working());
 }
 
 /// The reorder grip: Material's `drag_handle` icon on the bare row.
@@ -63,33 +64,30 @@ pub fn draw_row_background(
 /// Material gives a list's trailing affordance an icon and a state layer, not a
 /// bordered container of its own — an outlined box here reads as a stepper
 /// control rather than something to drag.
-pub fn draw_move_control(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+pub fn draw_move_control(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     let grid = IconGrid::centered(icon_center(bounds), LIST_CONTROL_ICON_SIZE);
-    draw.fill_path(
-        &icon_paths::drag_handle(grid),
-        &Brush::from(colors.on_surface_variant.peniko()),
+    draw.fill(
+        icon_paths::drag_handle(grid),
+        colors.on_surface_variant.working(),
     );
 }
 
 pub fn draw_move_control_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     state: WidgetInteractionState,
 ) {
-    draw_control_state_layer(draw, bounds, colors.on_surface.peniko(), state);
+    draw_control_state_layer(draw, bounds, colors.on_surface.working(), state);
 }
 
 /// The delete affordance: Material's `delete` icon tinted `error`.
 ///
 /// A solid error-coloured slab was never the Material treatment — the row keeps
 /// its own surface and the destructive action is carried by the icon's colour.
-pub fn draw_delete_control(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+pub fn draw_delete_control(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     let grid = IconGrid::centered(icon_center(bounds), LIST_CONTROL_ICON_SIZE);
-    draw.fill_path(
-        &icon_paths::delete(grid),
-        &Brush::from(colors.error.peniko()),
-    );
+    draw.fill(icon_paths::delete(grid), colors.error.working());
 }
 
 /// Centre of a trailing control's hit box, where its icon is drawn.
@@ -102,11 +100,11 @@ fn icon_center(bounds: Rect) -> Point {
 
 pub fn draw_delete_control_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     state: WidgetInteractionState,
 ) {
-    draw_control_state_layer(draw, bounds, colors.on_error.peniko(), state);
+    draw_control_state_layer(draw, bounds, colors.on_error.working(), state);
 }
 
 /// Background revealed behind a row being swiped away: the error container,
@@ -116,12 +114,12 @@ pub fn draw_delete_control_state_layer(
 /// threshold is legible before the finger lifts.
 pub fn draw_swipe_dismiss_background(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     progress: f64,
     toward_start: bool,
 ) {
-    draw.fill_rect(bounds, &Brush::from(colors.error_container.peniko()));
+    draw.fill(bounds, colors.error_container.working());
     let inset = SWIPE_ICON_EDGE_INSET + SWIPE_ICON_SIZE / 2.0;
     let center_x = if toward_start {
         bounds.x1 - inset
@@ -134,9 +132,9 @@ pub fn draw_swipe_dismiss_background(
     let scale =
         (1.0 - SWIPE_ICON_MIN_SCALE).mul_add(progress.clamp(0.0, 1.0), SWIPE_ICON_MIN_SCALE);
     let grid = IconGrid::centered(center, SWIPE_ICON_SIZE * scale);
-    draw.fill_path(
-        &icon_paths::delete(grid),
-        &Brush::from(colors.on_error_container.peniko()),
+    draw.fill(
+        icon_paths::delete(grid),
+        colors.on_error_container.working(),
     );
 }
 
@@ -144,7 +142,7 @@ pub fn draw_swipe_dismiss_background(
 /// the item to a surface-container tone and casts the level-3 key shadow.
 pub fn draw_row_lifted(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     elevation: f64,
 ) {
@@ -154,22 +152,22 @@ pub fn draw_row_lifted(
         bounds.x1,
         elevation.mul_add(0.5, bounds.y1),
     );
-    draw.fill_rect(
+    draw.fill(
         shadow,
-        &Brush::from(colors.shadow.peniko().multiply_alpha(LIFT_SHADOW_ALPHA)),
+        colors.shadow.working().with_alpha(LIFT_SHADOW_ALPHA),
     );
-    draw.fill_rect(bounds, &Brush::from(colors.surface_container_high.peniko()));
+    draw.fill(bounds, colors.surface_container_high.working());
 }
 
-pub fn draw_separator(_colors: &MaterialColorScheme, _draw: &mut dyn DrawContext, _bounds: Rect) {}
+pub const fn draw_separator(_colors: &MaterialColorScheme, _draw: &mut Recorder, _bounds: Rect) {}
 
 /// Material draws an icon button's state layer as a circle, so the layer is
 /// inscribed in `bounds` rather than filling it — stretching it across a wide,
 /// short hit box would produce an oval no Material surface has.
 fn draw_control_state_layer(
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
-    color: vello::peniko::Color,
+    color: WorkingColor,
     state: WidgetInteractionState,
 ) {
     let diameter = bounds

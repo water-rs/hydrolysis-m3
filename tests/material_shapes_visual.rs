@@ -4,8 +4,9 @@
 //! Numbers only say each outline closes; whether it is the right silhouette is
 //! a question for the eye. The PNG shows all seven, plus a morph mid-flight.
 
+use cherenkov::WorkingColor;
+use cherenkov::kurbo::Point;
 use hydrolysis_m3::material_shapes::{material_shape_sequence, morph, radii_to_path};
-use vello::kurbo::Point;
 use waterui::layout::Point as CanvasPoint;
 use waterui::prelude::*;
 use waterui_canvas::{Canvas, DrawingContext};
@@ -23,8 +24,8 @@ fn draw_radii(ctx: &mut DrawingContext<'_>, radii: &[f64], centre: Point) {
     let outline = radii_to_path(radii, centre, RADIUS);
     let mut path = ctx.begin_path();
     let mut first = true;
-    vello::kurbo::flatten(outline.iter(), 0.05, |element| match element {
-        vello::kurbo::PathEl::MoveTo(point) | vello::kurbo::PathEl::LineTo(point) => {
+    cherenkov::kurbo::flatten(outline.iter(), 0.05, |element| match element {
+        cherenkov::kurbo::PathEl::MoveTo(point) | cherenkov::kurbo::PathEl::LineTo(point) => {
             let point = CanvasPoint::new(point.x as f32, point.y as f32);
             if first {
                 path.move_to(point);
@@ -46,13 +47,7 @@ fn draw_radii(ctx: &mut DrawingContext<'_>, radii: &[f64], centre: Point) {
 fn shapes() -> impl View {
     Canvas::new(|ctx: &mut DrawingContext<'_>| {
         let sequence = material_shape_sequence();
-        ctx.set_fill_style(waterui::color::ResolvedColor {
-            red: 0.196,
-            green: 0.184,
-            blue: 0.208,
-            headroom: 1.0,
-            opacity: 1.0,
-        });
+        ctx.set_fill_style(WorkingColor::new([0.196, 0.184, 0.208, 1.0]));
         for (index, radii) in sequence.iter().enumerate() {
             let column = index % 4;
             let row = index / 4;

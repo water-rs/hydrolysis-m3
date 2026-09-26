@@ -1,10 +1,12 @@
+use crate::TableMetrics;
 use crate::dimensions::{
     TABLE_CELL_HORIZONTAL_PADDING, TABLE_CELL_VERTICAL_INSET, TABLE_HEADER_HEIGHT,
     TABLE_MIN_COLUMN_WIDTH, TABLE_OUTLINE_WIDTH, TABLE_ROW_HEIGHT,
 };
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DrawContext, TableMetrics};
-use vello::kurbo::{Point, Rect};
+use cherenkov::kurbo::{Line, Stroke};
+use cherenkov::kurbo::{Point, Rect};
+use cherenkov::{Draw as _, Recorder};
 
 pub const fn metrics() -> TableMetrics {
     TableMetrics {
@@ -17,37 +19,32 @@ pub const fn metrics() -> TableMetrics {
     }
 }
 
-pub fn draw_background(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
-    draw.fill_rect(bounds, &Brush::from(colors.surface.peniko()));
+pub fn draw_background(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.fill(bounds, colors.surface.working());
 }
 
-pub fn draw_header_background(
-    colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: Rect,
-) {
-    draw.fill_rect(bounds, &Brush::from(colors.surface.peniko()));
+pub fn draw_header_background(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.fill(bounds, colors.surface.working());
 }
 
-pub fn draw_cell_border(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
-    draw.stroke_rect(
+pub fn draw_cell_border(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.stroke(
         bounds,
-        &Brush::from(colors.outline_variant.peniko()),
-        TABLE_OUTLINE_WIDTH,
+        Stroke::new(TABLE_OUTLINE_WIDTH),
+        colors.outline_variant.working(),
     );
 }
 
 pub fn draw_column_separator(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     from: Point,
     to: Point,
 ) {
-    draw.stroke_line(
-        from,
-        to,
-        &Brush::from(colors.outline_variant.peniko()),
-        TABLE_OUTLINE_WIDTH,
+    draw.stroke(
+        Line::new(from, to),
+        Stroke::new(TABLE_OUTLINE_WIDTH),
+        colors.outline_variant.working(),
     );
 }
 

@@ -1,6 +1,6 @@
 use core::time::Duration;
 
-use waterui::animation::Animation;
+use waterui::animation::Curve;
 use waterui::prelude::EdgeInsets;
 use waterui::snackbar::SnackbarTheme;
 
@@ -53,8 +53,8 @@ pub fn theme(_colors: &MaterialColorScheme) -> SnackbarTheme {
         ambient_shadow_radius: ambient.radius,
         ambient_shadow_offset_y: ambient.offset_y,
         motion_offset_y: SNACKBAR_MOTION_OFFSET_Y,
-        enter_animation: Animation::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0),
-        exit_animation: Animation::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0),
+        enter_animation: Curve::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0),
+        exit_animation: Curve::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0),
     }
 }
 
@@ -65,7 +65,7 @@ mod tests {
     };
     use crate::MaterialColorScheme;
     use core::time::Duration;
-    use waterui::animation::Animation;
+    use waterui::animation::Curve;
 
     #[test]
     fn snackbar_theme_matches_compose_snackbar_tokens() {
@@ -84,7 +84,7 @@ mod tests {
         assert_eq!(theme.ambient_shadow_offset_y, 0.3333);
         assert_eq!(
             theme.enter_animation,
-            Animation::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0)
+            Curve::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0)
         );
     }
 }

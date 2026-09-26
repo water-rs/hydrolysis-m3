@@ -6,7 +6,7 @@
 //! the path data below is the same geometry Compose ships in
 //! `androidx.compose.material.icons`.
 
-use vello::kurbo::{BezPath, Point, Rect};
+use cherenkov::kurbo::{BezPath, Point, Rect};
 
 /// The grid every Material icon is authored on.
 const ICON_GRID: f64 = 24.0;
@@ -190,7 +190,7 @@ pub fn add(grid: IconGrid) -> BezPath {
 #[cfg(test)]
 mod tests {
     use super::{IconGrid, delete, drag_handle};
-    use vello::kurbo::{Rect, Shape as _};
+    use cherenkov::kurbo::{Rect, Shape as _};
 
     /// Both icons must stay inside the box they are fitted to, or they would
     /// bleed into neighbouring row content.

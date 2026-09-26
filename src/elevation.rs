@@ -1,5 +1,6 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
+use cherenkov::Draw as _;
 use waterui::style::{FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
 
@@ -182,28 +183,28 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
 }
 
 /// Casts `level`'s key and ambient shadows for a rounded-rect surface drawn
-/// through a [`DrawContext`]. `colors` resolves the `shadow` role — the same
-/// role [`Shadow`] resolves through the environment — at draw time.
-///
-/// [`DrawContext`]: waterui::backend_core::widget::DrawContext
+/// into `draw`. `colors` resolves the `shadow` role — the same role
+/// [`Shadow`] resolves through the environment — at draw time.
 pub(crate) fn draw_shadows(
-    draw: &mut dyn crate::DrawContext,
-    rect: vello::kurbo::Rect,
-    radii: vello::kurbo::RoundedRectRadii,
+    draw: &mut cherenkov::Recorder,
+    rect: cherenkov::kurbo::Rect,
+    radii: cherenkov::kurbo::RoundedRectRadii,
     level: MaterialElevationLevel,
     colors: &crate::theme::colors::MaterialColorScheme,
 ) {
     let tokens = ElevationTokens::for_level(level);
     for (shadow, base_opacity) in [(tokens.key, KEY_OPACITY), (tokens.ambient, AMBIENT_OPACITY)] {
-        draw.draw_shadow(
-            rect,
-            radii,
-            vello::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
-            f64::from(shadow.blur),
-            colors
-                .shadow
-                .peniko()
-                .with_alpha(shadow.opacity(base_opacity)),
+        draw.shadow(
+            cherenkov::kurbo::RoundedRect::from_rect(rect, radii),
+            cherenkov::Shadow {
+                sigma: f64::from(shadow.blur),
+                offset: cherenkov::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
+                spread: 0.0,
+                color: colors
+                    .shadow
+                    .working()
+                    .with_alpha(shadow.opacity(base_opacity)),
+            },
         );
     }
 }

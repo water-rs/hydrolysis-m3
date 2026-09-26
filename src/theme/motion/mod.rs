@@ -8,7 +8,7 @@ pub mod tokens;
 
 use core::time::Duration;
 
-use waterui::animation::Animation;
+use waterui::animation::{Animation, Curve, Spring};
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
 use waterui_backend_core::widget::{
@@ -53,8 +53,8 @@ pub const fn interaction() -> InteractionMotion {
         hover_exit: material_standard(RIPPLE_STATE_LAYER_FADE),
         focus_enter: material_standard(RIPPLE_STATE_LAYER_FADE),
         focus_exit: material_standard(RIPPLE_STATE_LAYER_FADE),
-        press_fade_in: Animation::linear(RIPPLE_OPACITY_IN),
-        press_fade_out: Animation::linear(RIPPLE_OPACITY_OUT),
+        press_fade_in: Animation::Curve(Curve::linear(RIPPLE_OPACITY_IN)),
+        press_fade_out: Animation::Curve(Curve::linear(RIPPLE_OPACITY_OUT)),
         press_grow: material_standard(RIPPLE_RADIUS_IN),
         minimum_press_duration: RIPPLE_RADIUS_IN,
         touch_delay: RIPPLE_TOUCH_DELAY,
@@ -64,27 +64,27 @@ pub const fn interaction() -> InteractionMotion {
 /// material-web drives both progress indicators with CSS `ease-in-out`-family
 /// curves of its own rather than M3 easing tokens, and the indeterminate cycles
 /// are keyframe loop lengths, not durations from the scale.
-const PROGRESS_LINEAR_DETERMINATE: (f32, f32, f32, f32) = (0.4, 0.0, 0.6, 1.0);
-const PROGRESS_CIRCULAR_DETERMINATE: (f32, f32, f32, f32) = (0.0, 0.0, 0.2, 1.0);
+const PROGRESS_LINEAR_DETERMINATE: (f64, f64, f64, f64) = (0.4, 0.0, 0.6, 1.0);
+const PROGRESS_CIRCULAR_DETERMINATE: (f64, f64, f64, f64) = (0.0, 0.0, 0.2, 1.0);
 const PROGRESS_LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_secs(2);
 const PROGRESS_CIRCULAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(5_332);
 
 pub fn progress() -> ProgressMotion {
     ProgressMotion {
-        linear_determinate: Animation::bezier(
+        linear_determinate: Animation::Curve(Curve::bezier(
             duration::MEDIUM_1,
             PROGRESS_LINEAR_DETERMINATE.0,
             PROGRESS_LINEAR_DETERMINATE.1,
             PROGRESS_LINEAR_DETERMINATE.2,
             PROGRESS_LINEAR_DETERMINATE.3,
-        ),
-        circular_determinate: Animation::bezier(
+        )),
+        circular_determinate: Animation::Curve(Curve::bezier(
             duration::LONG_2,
             PROGRESS_CIRCULAR_DETERMINATE.0,
             PROGRESS_CIRCULAR_DETERMINATE.1,
             PROGRESS_CIRCULAR_DETERMINATE.2,
             PROGRESS_CIRCULAR_DETERMINATE.3,
-        ),
+        )),
         linear_indeterminate_cycle: PROGRESS_LINEAR_INDETERMINATE_CYCLE,
         circular_indeterminate_cycle: PROGRESS_CIRCULAR_INDETERMINATE_CYCLE,
         loading_cycle: crate::controls::progress::loading_cycle(),
@@ -108,10 +108,15 @@ pub const fn text_caret() -> TextCaretMotion {
 /// muddy midpoint (M3 fade-through).
 const NAVIGATION_FADE_THROUGH_THRESHOLD: f32 = 0.35;
 
+/// The emphasized easing over the long-1 duration, as a Cherenkov curve.
+const fn navigation_transition() -> Curve {
+    let easing = easing::EMPHASIZED;
+    Curve::bezier(duration::LONG_1, easing.x1, easing.y1, easing.x2, easing.y2)
+}
+
 pub const fn navigation() -> NavigationMotion {
     NavigationMotion {
-        transition_duration: duration::LONG_1,
-        transition_easing: easing::EMPHASIZED,
+        transition: navigation_transition(),
         shared_axis_slide_distance: NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE,
         fade_through_threshold: NAVIGATION_FADE_THROUGH_THRESHOLD,
     }
@@ -161,8 +166,8 @@ pub fn navigation_drawer_scrim(
         opened,
         closed_value,
         opened_value,
-        Animation::linear(duration::LONG_2),
-        Animation::linear(duration::SHORT_4),
+        Animation::Curve(Curve::linear(duration::LONG_2)),
+        Animation::Curve(Curve::linear(duration::SHORT_4)),
     )
 }
 
@@ -179,16 +184,16 @@ pub const fn tooltip() -> Animation {
 }
 
 /// `MotionSchemeKeyTokens.FastSpatial` — `spring(dampingRatio = 0.9,
-/// stiffness = 1400)` in `StandardMotionTokens`. `WaterUI` springs take the raw
-/// damping coefficient c = 2ζ√k with unit mass: 2 · 0.9 · √1400 ≈ 67.35.
-pub const fn fast_spatial() -> Animation {
-    Animation::spring(1400.0, 67.35)
+/// stiffness = 1400)` in `StandardMotionTokens`. Cherenkov springs take the
+/// period and damping ratio with unit mass: T = 2π / √1400 ≈ 0.168 s, ζ = 0.9.
+pub fn fast_spatial() -> Animation {
+    Animation::Spring(Spring::from_physics(1400.0, 2.0 * 0.9 * 1400f64.sqrt()))
 }
 
 /// `MotionSchemeKeyTokens.DefaultEffects` — `spring(dampingRatio = 1.0,
-/// stiffness = 1600)` in `StandardMotionTokens`. c = 2 · 1.0 · √1600 = 80.
-pub const fn default_effects() -> Animation {
-    Animation::spring(1600.0, 80.0)
+/// stiffness = 1600)` in `StandardMotionTokens`: T = 2π / 40 ≈ 0.157 s, ζ = 1.
+pub fn default_effects() -> Animation {
+    Animation::Spring(Spring::from_physics(1600.0, 80.0))
 }
 
 #[derive(Clone)]
@@ -215,18 +220,14 @@ impl Signal for DialogProperty {
     fn watch(&self, watcher: impl Fn(Context<Self::Output>) + 'static) -> Self::Guard {
         let closed_value = self.closed_value;
         let opened_value = self.opened_value;
-        let opening = self.opening.clone();
-        let closing = self.closing.clone();
+        let opening = self.opening;
+        let closing = self.closing;
         self.opened.watch(move |context| {
             let opened = *context.value();
             watcher(
                 context
                     .map(|opened| if opened { opened_value } else { closed_value })
-                    .with(if opened {
-                        opening.clone()
-                    } else {
-                        closing.clone()
-                    }),
+                    .with(if opened { opening } else { closing }),
             );
         })
     }
@@ -273,16 +274,16 @@ pub fn dialog_opacity(
         opened,
         closed_value,
         opened_value,
-        Animation::linear(duration::MEDIUM_4),
-        Animation::linear(duration::SHORT_4),
+        Animation::Curve(Curve::linear(duration::MEDIUM_4)),
+        Animation::Curve(Curve::linear(duration::SHORT_4)),
     )
 }
 
 pub const fn radio_selection() -> RadioSelectionMotion {
     RadioSelectionMotion {
         inner_grow: motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2),
-        inner_opacity: Animation::linear(duration::SHORT_1),
-        outer_color: Animation::linear(duration::SHORT_1),
+        inner_opacity: Animation::Curve(Curve::linear(duration::SHORT_1)),
+        outer_color: Animation::Curve(Curve::linear(duration::SHORT_1)),
     }
 }
 
@@ -297,7 +298,7 @@ mod tests {
     use core::time::Duration;
     use std::cell::RefCell;
     use std::rc::Rc;
-    use waterui::animation::Animation;
+    use waterui::animation::{Animation, Curve};
     use waterui::{Binding, Signal, SignalExt as _};
 
     /// Collect the (value, animation) pairs a motion signal emits, so a test can
@@ -351,11 +352,11 @@ mod tests {
         );
         assert_eq!(
             motion_spec.press_fade_in,
-            Animation::linear(RIPPLE_OPACITY_IN)
+            Animation::Curve(Curve::linear(RIPPLE_OPACITY_IN))
         );
         assert_eq!(
             motion_spec.press_fade_out,
-            Animation::linear(RIPPLE_OPACITY_OUT)
+            Animation::Curve(Curve::linear(RIPPLE_OPACITY_OUT))
         );
     }
 
@@ -407,8 +408,8 @@ mod tests {
         assert_eq!(
             dialog.as_slice(),
             &[
-                (1.0, Animation::linear(duration::MEDIUM_4)),
-                (0.0, Animation::linear(duration::SHORT_4)),
+                (1.0, Animation::Curve(Curve::linear(duration::MEDIUM_4))),
+                (0.0, Animation::Curve(Curve::linear(duration::SHORT_4))),
             ]
         );
 
@@ -420,8 +421,8 @@ mod tests {
         assert_eq!(
             scrim.as_slice(),
             &[
-                (0.4, Animation::linear(duration::LONG_2)),
-                (0.0, Animation::linear(duration::SHORT_4)),
+                (0.4, Animation::Curve(Curve::linear(duration::LONG_2))),
+                (0.0, Animation::Curve(Curve::linear(duration::SHORT_4))),
             ]
         );
     }
@@ -464,11 +465,11 @@ mod tests {
         );
         assert_eq!(
             motion_spec.inner_opacity,
-            Animation::linear(duration::SHORT_1)
+            Animation::Curve(Curve::linear(duration::SHORT_1))
         );
         assert_eq!(
             motion_spec.outer_color,
-            Animation::linear(duration::SHORT_1)
+            Animation::Curve(Curve::linear(duration::SHORT_1))
         );
     }
 
@@ -478,9 +479,17 @@ mod tests {
     fn navigation_uses_an_emphasized_long_transition() {
         let motion_spec = navigation();
 
-        assert_eq!(motion_spec.transition_duration, duration::LONG_1);
-        assert_eq!(motion_spec.transition_easing, easing::EMPHASIZED);
-        assert!(motion_spec.transition_duration > duration::SHORT_4);
+        let easing = easing::EMPHASIZED;
+        assert_eq!(motion_spec.transition.duration, duration::LONG_1);
+        assert_eq!(
+            motion_spec.transition.p1,
+            cherenkov::kurbo::Point::new(easing.x1, easing.y1)
+        );
+        assert_eq!(
+            motion_spec.transition.p2,
+            cherenkov::kurbo::Point::new(easing.x2, easing.y2)
+        );
+        assert!(motion_spec.transition.duration > duration::SHORT_4);
     }
 
     /// The caret spends equal time visible and hidden.

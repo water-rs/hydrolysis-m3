@@ -1,3 +1,4 @@
+use crate::NavigationMetrics;
 use crate::dimensions::{
     NAVIGATION_BACK_BUTTON_LEADING_INSET, NAVIGATION_BACK_BUTTON_SIZE,
     NAVIGATION_BACK_BUTTON_TOP_INSET, NAVIGATION_BAR_AUTOMATIC_HEIGHT,
@@ -9,8 +10,8 @@ use crate::dimensions::{
 };
 use crate::icon_paths::{self, IconGrid};
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DrawContext, NavigationMetrics};
-use vello::kurbo::{Point, Rect};
+use cherenkov::kurbo::{Point, Rect};
+use cherenkov::{Draw as _, Paint, Recorder};
 
 pub const fn metrics() -> NavigationMetrics {
     NavigationMetrics {
@@ -34,15 +35,15 @@ pub const fn metrics() -> NavigationMetrics {
     }
 }
 
-pub fn draw_bar(draw: &mut dyn DrawContext, bounds: Rect, background: &Brush) {
-    draw.fill_rect(bounds, background);
+pub fn draw_bar(draw: &mut Recorder, bounds: Rect, background: &Paint) {
+    draw.fill(bounds, background.clone());
 }
 
-pub fn draw_bar_separator(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
-    draw.fill_rect(bounds, &Brush::from(colors.outline_variant.peniko()));
+pub fn draw_bar_separator(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.fill(bounds, colors.outline_variant.working());
 }
 
-pub fn draw_back_button(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+pub fn draw_back_button(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     // The navigation slot is a standard icon button: no container, just the
     // 24dp `arrow_back` glyph in on-surface, centered in the touch target.
     let center = Point::new(
@@ -50,10 +51,7 @@ pub fn draw_back_button(colors: &MaterialColorScheme, draw: &mut dyn DrawContext
         bounds.height().mul_add(0.5, bounds.y0),
     );
     let grid = IconGrid::centered(center, icon_paths::icon_grid_size());
-    draw.fill_path(
-        &icon_paths::arrow_back(grid),
-        &Brush::from(colors.on_surface.peniko()),
-    );
+    draw.fill(icon_paths::arrow_back(grid), colors.on_surface.working());
 }
 
 #[cfg(test)]

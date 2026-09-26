@@ -9,9 +9,46 @@
 //!
 //! Values mirror the M3 motion token reference.
 
+use cherenkov::curve_value;
 use core::time::Duration;
-use waterui::animation::Animation;
-use waterui_core::EasingCurve;
+use num_traits::ToPrimitive as _;
+use waterui::animation::{Animation, Curve};
+
+/// A cubic-bezier easing token: the shape of a curve, before a duration
+/// token gives it a length.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Easing {
+    /// The first control point.
+    pub x1: f64,
+    /// The first control point.
+    pub y1: f64,
+    /// The second control point.
+    pub x2: f64,
+    /// The second control point.
+    pub y2: f64,
+}
+
+impl Easing {
+    /// An easing from cubic-bezier control points.
+    #[must_use]
+    pub const fn bezier(x1: f64, y1: f64, x2: f64, y2: f64) -> Self {
+        Self { x1, y1, x2, y2 }
+    }
+
+    /// Evaluates the curve at the normalised time `t` in `[0, 1]`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the eased value cannot be represented as `f32`, which a
+    /// cubic bezier on the unit square never produces.
+    #[must_use]
+    pub fn ease(self, t: f32) -> f32 {
+        let curve = Curve::bezier(Duration::from_secs(1), self.x1, self.y1, self.x2, self.y2);
+        curve_value(&curve, f64::from(t.clamp(0.0, 1.0)))
+            .to_f32()
+            .expect("eased progress must be representable as f32")
+    }
+}
 
 /// The M3 duration scale.
 ///
@@ -65,55 +102,46 @@ pub mod duration {
 /// large containers. Each has an accelerate variant for elements leaving the
 /// screen and a decelerate variant for elements entering it.
 pub mod easing {
-    use waterui_core::EasingCurve;
+    use super::Easing;
 
     /// No easing.
     ///
     /// M3 uses it for pure opacity changes, where an eased fade reads as a
     /// flicker.
-    pub const LINEAR: EasingCurve = EasingCurve::bezier(0.0, 0.0, 1.0, 1.0);
+    pub const LINEAR: Easing = Easing::bezier(0.0, 0.0, 1.0, 1.0);
 
     /// Ordinary in-place motion for small components.
-    pub const STANDARD: EasingCurve = EasingCurve::bezier(0.2, 0.0, 0.0, 1.0);
+    pub const STANDARD: Easing = Easing::bezier(0.2, 0.0, 0.0, 1.0);
     /// Standard motion for an element leaving the screen.
-    pub const STANDARD_ACCELERATE: EasingCurve = EasingCurve::bezier(0.3, 0.0, 1.0, 1.0);
+    pub const STANDARD_ACCELERATE: Easing = Easing::bezier(0.3, 0.0, 1.0, 1.0);
     /// Standard motion for an element entering the screen.
-    pub const STANDARD_DECELERATE: EasingCurve = EasingCurve::bezier(0.0, 0.0, 0.0, 1.0);
+    pub const STANDARD_DECELERATE: Easing = Easing::bezier(0.0, 0.0, 0.0, 1.0);
 
     /// Motion that carries the eye across the screen.
     ///
     /// M3's emphasized curve is a two-segment path that a single cubic bezier
     /// cannot express; the reference implementations approximate it with
     /// [`STANDARD`], and so do we.
-    pub const EMPHASIZED: EasingCurve = STANDARD;
+    pub const EMPHASIZED: Easing = STANDARD;
     /// Emphasized motion for an element leaving the screen.
-    pub const EMPHASIZED_ACCELERATE: EasingCurve = EasingCurve::bezier(0.3, 0.0, 0.8, 0.15);
+    pub const EMPHASIZED_ACCELERATE: Easing = Easing::bezier(0.3, 0.0, 0.8, 0.15);
     /// Emphasized motion for an element entering the screen.
-    pub const EMPHASIZED_DECELERATE: EasingCurve = EasingCurve::bezier(0.05, 0.7, 0.1, 1.0);
+    pub const EMPHASIZED_DECELERATE: Easing = Easing::bezier(0.05, 0.7, 0.1, 1.0);
 }
 
 /// Pair an easing token with a duration token.
-///
-/// # Panics
-///
-/// Panics if `easing` is not a cubic bezier. Every M3 easing token is one, so
-/// this cannot fire for a token from [`easing`].
 #[must_use]
-pub const fn motion(easing: EasingCurve, duration: Duration) -> Animation {
-    match easing {
-        EasingCurve::CubicBezier(x1, y1, x2, y2) => Animation::bezier(duration, x1, y1, x2, y2),
-        EasingCurve::Spring { .. } => {
-            panic!("Material motion easing tokens are cubic-bezier curves")
-        }
-    }
+pub const fn motion(easing: Easing, duration: Duration) -> Animation {
+    Animation::Curve(Curve::bezier(
+        duration, easing.x1, easing.y1, easing.x2, easing.y2,
+    ))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{duration, easing, motion};
+    use super::{Easing, duration, easing, motion};
     use core::time::Duration;
-    use waterui::animation::Animation;
-    use waterui_core::EasingCurve;
+    use waterui::animation::{Animation, Curve};
 
     /// Pins the duration scale to the M3 specification. Every component timing
     /// that claims to be a token is built from this table, so this is the one
@@ -146,34 +174,34 @@ mod tests {
     /// Pins the easing set to the M3 specification.
     #[test]
     fn easing_set_matches_the_material_3_specification() {
-        assert_eq!(easing::LINEAR, EasingCurve::bezier(0.0, 0.0, 1.0, 1.0));
-        assert_eq!(easing::STANDARD, EasingCurve::bezier(0.2, 0.0, 0.0, 1.0));
+        assert_eq!(easing::LINEAR, Easing::bezier(0.0, 0.0, 1.0, 1.0));
+        assert_eq!(easing::STANDARD, Easing::bezier(0.2, 0.0, 0.0, 1.0));
         assert_eq!(
             easing::STANDARD_ACCELERATE,
-            EasingCurve::bezier(0.3, 0.0, 1.0, 1.0)
+            Easing::bezier(0.3, 0.0, 1.0, 1.0)
         );
         assert_eq!(
             easing::STANDARD_DECELERATE,
-            EasingCurve::bezier(0.0, 0.0, 0.0, 1.0)
+            Easing::bezier(0.0, 0.0, 0.0, 1.0)
         );
         assert_eq!(easing::EMPHASIZED, easing::STANDARD);
         assert_eq!(
             easing::EMPHASIZED_ACCELERATE,
-            EasingCurve::bezier(0.3, 0.0, 0.8, 0.15)
+            Easing::bezier(0.3, 0.0, 0.8, 0.15)
         );
         assert_eq!(
             easing::EMPHASIZED_DECELERATE,
-            EasingCurve::bezier(0.05, 0.7, 0.1, 1.0)
+            Easing::bezier(0.05, 0.7, 0.1, 1.0)
         );
     }
 
-    /// The linear token and [`Animation::linear`] must describe the same curve,
+    /// The linear token and [`Curve::linear`] must describe the same curve,
     /// so a motion written either way is interchangeable.
     #[test]
-    fn linear_token_agrees_with_the_linear_animation_constructor() {
+    fn linear_token_agrees_with_the_linear_curve_constructor() {
         assert_eq!(
             motion(easing::LINEAR, duration::SHORT_4),
-            Animation::linear(duration::SHORT_4)
+            Animation::Curve(Curve::linear(duration::SHORT_4))
         );
     }
 }

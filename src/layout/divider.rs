@@ -1,13 +1,14 @@
+use crate::DividerMetrics;
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DividerMetrics, DrawContext};
-use vello::kurbo::Rect;
+use cherenkov::kurbo::Rect;
+use cherenkov::{Draw as _, Recorder};
 
 pub const fn metrics() -> DividerMetrics {
     DividerMetrics::new(crate::dimensions::DIVIDER_THICKNESS)
 }
 
-pub fn draw(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
-    draw.fill_rect(bounds, &Brush::from(colors.outline_variant.peniko()));
+pub fn draw(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.fill(bounds, colors.outline_variant.working());
 }
 
 #[cfg(test)]
