@@ -9,17 +9,21 @@
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
+use vello::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
 use waterui::component::hstack;
+use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
 use waterui::layout::padding::EdgeInsets;
+use waterui::prelude::dynamic::watch;
+use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, boxed_action};
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
-use crate::semantics::interaction_style;
+use crate::semantics::interaction_style_with_radii;
 
 /// `SplitButtonSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -36,6 +40,11 @@ const TRAILING_ICON_SIZE: f32 = 22.0;
 /// `SplitButtonSmallTokens.InnerCornerCornerSize`, `CornerValueExtraSmall`:
 /// the radius on the two corners either side of the seam.
 const INNER_CORNER_RADIUS: f32 = 4.0;
+/// `SplitButtonSmallTokens.PressedInnerCornerCornerSize`,
+/// `CornerValueMedium`: the seam corners soften while a half is held. (The
+/// token's hovered shape matches it; waterui views carry no hover signal, so
+/// only the pressed half of that anatomy is reachable.)
+const PRESSED_INNER_CORNER_RADIUS: f32 = 12.0;
 
 /// The outer corners are `CornerFull`, which on this container is half its
 /// height.
@@ -188,13 +197,26 @@ where
         let mut trailing_action = self.trailing_action;
         let outer = normalized(OUTER_CORNER_RADIUS);
         let inner = normalized(INNER_CORNER_RADIUS);
+        let pressed_inner = normalized(PRESSED_INNER_CORNER_RADIUS);
 
-        // Round on the outside, tucked in against the seam.
-        let leading_shape = UnevenRoundedRectangle::new(outer, inner, outer, inner);
-        let trailing_shape = UnevenRoundedRectangle::new(inner, outer, inner, outer);
+        // Round on the outside, tucked in against the seam, softening to
+        // CornerValueMedium while the half is held.
+        let leading_pressed = binding(false);
+        let leading_shape = leading_pressed.map(move |pressed| {
+            let seam = if pressed { pressed_inner } else { inner };
+            UnevenRoundedRectangle::new(outer, seam, outer, seam)
+        });
+        let leading_pressed_gesture = leading_pressed;
+        let trailing_pressed = binding(false);
+        let trailing_shape = trailing_pressed.map(move |pressed| {
+            let seam = if pressed { pressed_inner } else { inner };
+            UnevenRoundedRectangle::new(seam, outer, seam, outer)
+        });
+        let trailing_pressed_gesture = trailing_pressed;
 
         let leading = self
             .label
+            .font(crate::theme::typography::label_large())
             .foreground(Tokens::content_color())
             .padding_with(EdgeInsets::new(
                 0.0,
@@ -203,12 +225,32 @@ where
                 LEADING_BUTTON_TRAILING_SPACE,
             ))
             .height(CONTAINER_HEIGHT)
-            .background(leading_shape.fill(Tokens::container_color()))
+            .background(ReactiveSplitShape {
+                shape: leading_shape,
+                color: Tokens::container_color(),
+            })
+            .gesture(DragGesture::new(0.0), move |env: Environment| {
+                let phase = env
+                    .get::<DragEvent>()
+                    .expect("split button gesture is missing its DragEvent")
+                    .phase;
+                leading_pressed_gesture.set(matches!(
+                    phase,
+                    GesturePhase::Started | GesturePhase::Updated
+                ));
+            })
             .on_tap(move |env: Environment| action(&env))
             .a11y_role(AccessibilityRole::Button)
-            .install(interaction_style(
+            // The state layer traces the resting corners; the per-state radius
+            // morph has no surface on `InteractionStyle`.
+            .install(interaction_style_with_radii(
                 Tokens::content_color(),
-                f64::from(OUTER_CORNER_RADIUS),
+                RoundedRectRadii::new(
+                    f64::from(OUTER_CORNER_RADIUS),
+                    f64::from(INNER_CORNER_RADIUS),
+                    f64::from(INNER_CORNER_RADIUS),
+                    f64::from(OUTER_CORNER_RADIUS),
+                ),
             ));
 
         let chevron = ChevronIcon {
@@ -223,14 +265,32 @@ where
                 TRAILING_BUTTON_SPACE,
             ))
             .height(CONTAINER_HEIGHT)
-            .background(trailing_shape.fill(Tokens::container_color()))
+            .background(ReactiveSplitShape {
+                shape: trailing_shape,
+                color: Tokens::container_color(),
+            })
+            .gesture(DragGesture::new(0.0), move |env: Environment| {
+                let phase = env
+                    .get::<DragEvent>()
+                    .expect("split button gesture is missing its DragEvent")
+                    .phase;
+                trailing_pressed_gesture.set(matches!(
+                    phase,
+                    GesturePhase::Started | GesturePhase::Updated
+                ));
+            })
             .on_tap(move |env: Environment| trailing_action(&env))
             .a11y_label(self.trailing_accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_style_with_radii(
                 Tokens::content_color(),
-                f64::from(OUTER_CORNER_RADIUS),
+                RoundedRectRadii::new(
+                    f64::from(INNER_CORNER_RADIUS),
+                    f64::from(OUTER_CORNER_RADIUS),
+                    f64::from(OUTER_CORNER_RADIUS),
+                    f64::from(INNER_CORNER_RADIUS),
+                ),
             ));
 
         hstack((leading, trailing)).spacing(BETWEEN_SPACE)
@@ -266,6 +326,23 @@ impl View for ChevronIcon {
             )
             .close();
         FilledShape::new(path, self.color).size(self.size, self.size)
+    }
+}
+
+/// One half's container, whose seam corners follow its pressed state.
+#[derive(Debug)]
+struct ReactiveSplitShape<S> {
+    shape: S,
+    color: Color,
+}
+
+impl<S> View for ReactiveSplitShape<S>
+where
+    S: waterui::Signal<Output = UnevenRoundedRectangle> + 'static,
+{
+    fn body(self, _env: &Environment) -> impl View {
+        let color = self.color;
+        watch(self.shape, move |shape| shape.fill(color.clone()))
     }
 }
 

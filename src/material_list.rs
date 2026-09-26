@@ -21,8 +21,10 @@ const LIST_CONTAINER_TOP_SPACE: f32 = 8.0;
 const LIST_CONTAINER_BOTTOM_SPACE: f32 = 8.0;
 const LIST_ITEM_TWO_LINE_CONTAINER_HEIGHT: f32 = 72.0;
 const LIST_ITEM_SLOT_GAP: f32 = 16.0;
-const LIST_ITEM_LEADING_ICON_SIZE: f32 = 24.0;
-const LIST_ITEM_TRAILING_ICON_SIZE: f32 = 24.0;
+/// `md.comp.list.list-item.leading-icon.expressive.size`.
+const LIST_ITEM_LEADING_ICON_SIZE: f32 = 20.0;
+/// `md.comp.list.list-item.trailing-icon.expressive.size`.
+const LIST_ITEM_TRAILING_ICON_SIZE: f32 = 20.0;
 
 /// A Material Design 3 list.
 pub struct MaterialList<Content> {
@@ -214,7 +216,10 @@ impl MaterialListItem {
         match self.action {
             Some(action) => AnyView::new(
                 item.on_tap(move |env: Environment| action.call(&env))
-                    .install(interaction_style(OnSurface, 0.0)),
+                    // md.comp.list.list-item.container.expressive.shape =
+                    // corner-extra-small (8px) at rest; the per-state morphs
+                    // to medium/large have no surface on `InteractionStyle`.
+                    .install(interaction_style(OnSurface, 8.0)),
             ),
             None => AnyView::new(item),
         }
@@ -262,7 +267,7 @@ mod tests {
         assert_eq!(LIST_ONE_LINE_ROW_HEIGHT, 56.0);
         assert_eq!(LIST_ITEM_TWO_LINE_CONTAINER_HEIGHT, 72.0);
         assert_eq!(LIST_VERTICAL_INSET, 10.0);
-        assert_eq!(LIST_ITEM_LEADING_ICON_SIZE, 24.0);
-        assert_eq!(LIST_ITEM_TRAILING_ICON_SIZE, 24.0);
+        assert_eq!(LIST_ITEM_LEADING_ICON_SIZE, 20.0);
+        assert_eq!(LIST_ITEM_TRAILING_ICON_SIZE, 20.0);
     }
 }

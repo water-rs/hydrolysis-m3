@@ -12,6 +12,7 @@ use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, PickerMetrics, RadioIndicatorState, WidgetInteractionState};
 use num_traits::ToPrimitive;
+use vello::kurbo::RoundedRectRadii;
 use waterui_form::picker::PickerStyle;
 
 pub fn metrics(style: PickerStyle) -> PickerMetrics {
@@ -102,7 +103,15 @@ pub fn draw_state_layer(
     bounds: vello::kurbo::Rect,
     state: WidgetInteractionState,
 ) {
-    state_layer::draw_bounded(draw, bounds, 4.0.into(), colors.on_surface.peniko(), state);
+    // md.comp.filled-select menu field: container shape is
+    // corner-extra-small-top — 4dp on top, square below the active indicator.
+    state_layer::draw_bounded(
+        draw,
+        bounds,
+        RoundedRectRadii::new(4.0, 4.0, 0.0, 0.0),
+        colors.on_surface.peniko(),
+        state,
+    );
 }
 
 pub fn draw_popup(
@@ -152,7 +161,7 @@ pub fn draw_popup_row_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
     row_rect: vello::kurbo::Rect,
-    selected: bool,
+    _selected: bool,
     state: WidgetInteractionState,
 ) {
     let inset = vello::kurbo::Rect::new(
@@ -161,17 +170,10 @@ pub fn draw_popup_row_state_layer(
         row_rect.x1 - 2.0,
         row_rect.y1 - 1.0,
     );
-    state_layer::draw_bounded(
-        draw,
-        inset,
-        0.0.into(),
-        if selected {
-            colors.on_secondary_container.peniko()
-        } else {
-            colors.on_surface.peniko()
-        },
-        state,
-    );
+    // md.comp.filled-select.menu.item.selected.container.color =
+    // surface-container-highest, so a selected row takes on-surface like
+    // every other row.
+    state_layer::draw_bounded(draw, inset, 0.0.into(), colors.on_surface.peniko(), state);
 }
 
 pub fn draw_separator(
@@ -179,7 +181,8 @@ pub fn draw_separator(
     draw: &mut dyn DrawContext,
     separator: vello::kurbo::Rect,
 ) {
-    draw.fill_rect(separator, &Brush::from(colors.outline_variant.peniko()));
+    // md.comp.filled-select.menu.divider.color = surface-variant.
+    draw.fill_rect(separator, &Brush::from(colors.surface_variant.peniko()));
 }
 
 pub fn draw_radio_indicator(
@@ -596,7 +599,7 @@ mod tests {
             draw.rect_fills,
             vec![
                 colors.surface_container_highest.peniko(),
-                colors.outline_variant.peniko(),
+                colors.surface_variant.peniko(),
             ]
         );
     }

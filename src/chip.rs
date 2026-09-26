@@ -14,7 +14,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction, boxed_action};
 
 use crate::color::{
-    OnSecondaryContainer, OnSurface, OnSurfaceVariant, Outline, SecondaryContainer, Surface,
+    OnSecondaryContainer, OnSurface, OnSurfaceVariant, OutlineVariant, SecondaryContainer,
 };
 use crate::icons::CheckmarkIcon;
 use crate::semantics::{conditional_color, interaction_style, label_plain_text};
@@ -116,9 +116,14 @@ where
                 ASSIST_CHIP_LEADING_SPACE,
                 ASSIST_CHIP_TRAILING_SPACE,
             ))
-            .background(FixedRoundedRectangle::new(ASSIST_CHIP_CONTAINER_SHAPE).fill(Surface))
+            // flat chips publish no container color — the background is
+            // transparent (md.comp.assist-chip.flat has no container.color).
+            .background(
+                FixedRoundedRectangle::new(ASSIST_CHIP_CONTAINER_SHAPE).fill(Color::transparent()),
+            )
+            // md.comp.assist-chip.flat.outline.color = outline-variant.
             .border_with(
-                Border::new(Outline, ASSIST_CHIP_OUTLINE_WIDTH)
+                Border::new(OutlineVariant, ASSIST_CHIP_OUTLINE_WIDTH)
                     .corner_radius(ASSIST_CHIP_CONTAINER_SHAPE),
             )
             .on_tap(move |env: Environment| action(&env))
@@ -277,11 +282,19 @@ where
             OnSecondaryContainer,
             OnSurfaceVariant,
         );
-        let background = conditional_color(self.selected.clone(), SecondaryContainer, Surface);
+        // md.comp.filter-chip.flat.selected.container.color =
+        // secondary-container; the unselected flat chip has no container.
+        let background = conditional_color(
+            self.selected.clone(),
+            SecondaryContainer,
+            Color::transparent(),
+        );
+        // md.comp.filter-chip.flat.unselected.outline.color = outline-variant;
+        // .flat.selected.outline.width = 0.
         let outline = conditional_color(
             self.selected.clone(),
-            Outline.with_opacity(FILTER_CHIP_SELECTED_OUTLINE_WIDTH),
-            Outline,
+            OutlineVariant.with_opacity(FILTER_CHIP_SELECTED_OUTLINE_WIDTH),
+            OutlineVariant,
         );
         let state_layer_color = conditional_color(
             self.selected.clone(),
@@ -379,9 +392,13 @@ where
             INPUT_CHIP_LEADING_SPACE,
             INPUT_CHIP_WITH_TRAILING_ICON_TRAILING_SPACE,
         ))
-        .background(FixedRoundedRectangle::new(INPUT_CHIP_CONTAINER_SHAPE).fill(Surface))
+        // The unselected input chip publishes no container color; its outline
+        // is outline-variant (md.comp.input-chip.flat.unselected.outline.color).
+        .background(
+            FixedRoundedRectangle::new(INPUT_CHIP_CONTAINER_SHAPE).fill(Color::transparent()),
+        )
         .border_with(
-            Border::new(Outline, INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH)
+            Border::new(OutlineVariant, INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH)
                 .corner_radius(INPUT_CHIP_CONTAINER_SHAPE),
         )
     }

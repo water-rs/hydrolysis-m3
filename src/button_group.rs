@@ -8,6 +8,7 @@
 
 use core::fmt::{self, Debug};
 
+use vello::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
 use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
@@ -26,7 +27,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, boxed_action};
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
-use crate::semantics::{conditional_color, interaction_style};
+use crate::semantics::{conditional_color, interaction_style_with_radii};
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -97,6 +98,20 @@ impl SegmentPosition {
             Self::Leading => (OUTER_CORNER_RADIUS, inner),
             Self::Middle => (inner, inner),
             Self::Trailing => (inner, OUTER_CORNER_RADIUS),
+        }
+    }
+
+    /// The resting state-layer corners, in `RoundedRectRadii` order
+    /// (top-left, top-right, bottom-right, bottom-left): outer corners are
+    /// `CornerFull`, seam corners `InnerCornerCornerSize`.
+    fn resting_radii(self) -> RoundedRectRadii {
+        let outer = f64::from(OUTER_CORNER_RADIUS);
+        let inner = f64::from(INNER_CORNER_RADIUS);
+        match self {
+            Self::Only => RoundedRectRadii::from(outer),
+            Self::Leading => RoundedRectRadii::new(outer, inner, inner, outer),
+            Self::Middle => RoundedRectRadii::from(inner),
+            Self::Trailing => RoundedRectRadii::new(inner, outer, outer, inner),
         }
     }
 }
@@ -245,7 +260,13 @@ impl View for ConnectedButtonGroup {
                     .on_tap(move |env: Environment| action(&env))
                     .a11y_role(AccessibilityRole::Button)
                     .a11y_state_signal(accessibility_state)
-                    .install(interaction_style(content, f64::from(OUTER_CORNER_RADIUS)))
+                    // The state layer traces the segment's resting shape; the
+                    // selected/pressed corner morph has no per-state radii
+                    // surface on `InteractionStyle`.
+                    .install(interaction_style_with_radii(
+                        content,
+                        position.resting_radii(),
+                    ))
             })
             .collect::<Vec<_>>();
 

@@ -1,8 +1,8 @@
 use crate::dimensions::{
     SLIDER_HANDLE_HEIGHT, SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_HORIZONTAL_INSET,
     SLIDER_HORIZONTAL_SPACING, SLIDER_MIN_TRACK_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH,
-    SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT, SLIDER_TRACK_INSIDE_CORNER_SIZE,
-    SLIDER_VERTICAL_SPACING,
+    SLIDER_STOP_INDICATOR_END_SPACE, SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT,
+    SLIDER_TRACK_INSIDE_CORNER_SIZE, SLIDER_VERTICAL_SPACING,
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, SliderMetrics, WidgetInteractionState};
@@ -73,12 +73,16 @@ pub fn draw_track(
         );
     }
 
-    // Stop indicator: a dot at the track's far end, hidden once the handle
-    // reaches it so the two never overlap.
-    let indicator_center = vello::kurbo::Point::new(
-        track_rect.x1 - SLIDER_HANDLE_PADDING - SLIDER_STOP_INDICATOR_SIZE / 2.0,
-        track_rect.y0 + track_rect.height() / 2.0,
-    );
+    // Stop indicator: a single dot at the track's trailing end,
+    // `stop-indicator.trailing-space = 4` from the end edge, hidden where the
+    // handle's track segment reaches it. A single-value slider has no leading
+    // dot: `stop-indicator.trailing-space` is the only edge token and Compose
+    // `SliderDefaults.TrackStopIndicatorSize` documents the dot "at the end of
+    // the track" (MDC-Android exposes the size through the shared slider attr
+    // `trackStopIndicatorSize`).
+    let track_mid_y = track_rect.y0 + track_rect.height() / 2.0;
+    let dot_offset = SLIDER_STOP_INDICATOR_END_SPACE + SLIDER_STOP_INDICATOR_SIZE / 2.0;
+    let indicator_center = vello::kurbo::Point::new(track_rect.x1 - dot_offset, track_mid_y);
     if indicator_center.x > inactive_start {
         draw.fill_circle(
             indicator_center,
@@ -121,6 +125,15 @@ pub fn draw_thumb(
         );
         return;
     }
+    // md.comp.slider.handle.elevation = level1 (the disabled handle is level0,
+    // handled above).
+    crate::elevation::draw_shadows(
+        draw,
+        bounds,
+        (width / 2.0).into(),
+        crate::elevation::MaterialElevationLevel::LEVEL1,
+        colors,
+    );
     draw.fill_rounded_rect(
         bounds,
         (width / 2.0).into(),
@@ -128,19 +141,26 @@ pub fn draw_thumb(
     );
 }
 
-/// The Expressive slider handle has no state layer.
-///
-/// `SliderTokens` carries no `StateLayerSize`: the feedback is the handle
-/// itself narrowing from `HandleWidth` to `PressedHandleWidth` under the
-/// finger. Drawing a ripple here would put a circle around a bar that Material
-/// never shows.
-pub const fn draw_thumb_state_layer(
-    _colors: &MaterialColorScheme,
-    _draw: &mut dyn DrawContext,
-    _center: vello::kurbo::Point,
+/// md.comp.slider.state-layer.size = 40: a 20dp-radius halo around the handle,
+/// primary, gated on the standard hover/focus/pressed opacities. The disabled
+/// handle takes no layer.
+pub fn draw_thumb_state_layer(
+    colors: &MaterialColorScheme,
+    draw: &mut dyn DrawContext,
+    center: vello::kurbo::Point,
     _radius: f64,
-    _state: WidgetInteractionState,
+    state: WidgetInteractionState,
 ) {
+    if state.disabled {
+        return;
+    }
+    crate::theme::state_layer::draw_unbounded_circle(
+        draw,
+        center,
+        20.0,
+        colors.primary.peniko(),
+        state,
+    );
 }
 
 #[cfg(test)]

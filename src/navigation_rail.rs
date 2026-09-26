@@ -19,9 +19,9 @@ use waterui_core::handler::{Handler, boxed_action};
 use waterui_core::view::TupleViews;
 
 use crate::color::{
-    OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer, Surface,
+    OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, Surface,
 };
-use crate::semantics::{conditional_color, interaction_style};
+use crate::semantics::{conditional_color, conditional_font, interaction_style};
 use crate::theme::typography;
 
 /// `NavigationRailCollapsedTokens.ContainerWidth`.
@@ -47,6 +47,9 @@ const ITEM_ICON_SIZE: f32 = 24.0;
 const ACTIVE_INDICATOR_HORIZONTAL_SPACE: f32 = 16.0;
 /// `NavigationRailBaselineItemTokens.ActiveIndicatorIconLabelSpace`.
 const ACTIVE_INDICATOR_ICON_LABEL_SPACE: f32 = 8.0;
+/// `m3_comp_nav_rail_item_horizontal_active_indicator_height`: the expanded
+/// item's indicator pill is 56dp tall inside the 64dp item.
+const EXPANDED_ACTIVE_INDICATOR_HEIGHT: f32 = 56.0;
 /// `NavigationRailVerticalItemTokens.ActiveIndicatorWidth` — the collapsed
 /// item's pill.
 const COLLAPSED_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
@@ -249,19 +252,32 @@ where
             OnSecondaryContainer,
             OnSurfaceVariant,
         );
-        let label_color = conditional_color(self.selected.clone(), OnSurface, OnSurfaceVariant);
-        let state_layer_color =
-            conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
+        // md.comp.nav-rail.item.active.label-text.color = secondary.
+        let label_color = conditional_color(self.selected.clone(), Secondary, OnSurfaceVariant);
+        // md.comp.nav-rail.item.*.state-layer.color: on-secondary-container
+        // for the active and inactive items alike.
+        let state_layer_color = OnSecondaryContainer;
+        // The expanded item's label is label-large; the collapsed one is
+        // label-medium — prominent when active in both.
+        let (plain, prominent) = if self.layout.is_expanded() {
+            (
+                typography::label_large(),
+                typography::label_large_prominent(),
+            )
+        } else {
+            (
+                typography::label_medium(),
+                typography::label_medium_prominent(),
+            )
+        };
+        let label_font = conditional_font(self.selected, prominent, plain);
 
         let icon = self
             .icon
             .foreground(icon_color)
             .width(ITEM_ICON_SIZE)
             .height(ITEM_ICON_SIZE);
-        let label = self
-            .label
-            .font(typography::label_medium())
-            .foreground(label_color);
+        let label = self.label.font(label_font).foreground(label_color);
 
         // Expanded lays the label beside the icon inside one pill; collapsed
         // stacks it beneath, so only the icon sits on the active indicator.
@@ -274,12 +290,14 @@ where
                     ACTIVE_INDICATOR_HORIZONTAL_SPACE,
                     ACTIVE_INDICATOR_HORIZONTAL_SPACE,
                 ))
-                .height(ITEM_HEIGHT)
+                // The indicator pill is 56dp tall; the item itself is 64dp.
+                .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
                 .background(Capsule.fill(indicator_color))
                 .install(interaction_style(
                     state_layer_color,
-                    f64::from(ITEM_HEIGHT / 2.0),
+                    f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
                 ))
+                .height(ITEM_HEIGHT)
                 .anyview()
         } else {
             waterui::component::vstack((
@@ -340,8 +358,9 @@ mod tests {
         COLLAPSED_ACTIVE_INDICATOR_HEIGHT, COLLAPSED_ACTIVE_INDICATOR_WIDTH,
         COLLAPSED_CONTAINER_WIDTH, COLLAPSED_ICON_LABEL_SPACE, COLLAPSED_ITEM_HEIGHT,
         COLLAPSED_ITEM_VERTICAL_SPACE, COLLAPSED_NARROW_CONTAINER_WIDTH,
-        EXPANDED_CONTAINER_WIDTH_MAXIMUM, EXPANDED_CONTAINER_WIDTH_MINIMUM, ITEM_HEIGHT,
-        ITEM_ICON_SIZE, ITEM_VERTICAL_SPACE, NavigationRailLayout, TOP_SPACE,
+        EXPANDED_ACTIVE_INDICATOR_HEIGHT, EXPANDED_CONTAINER_WIDTH_MAXIMUM,
+        EXPANDED_CONTAINER_WIDTH_MINIMUM, ITEM_HEIGHT, ITEM_ICON_SIZE, ITEM_VERTICAL_SPACE,
+        NavigationRailLayout, TOP_SPACE,
     };
 
     /// Values from `NavigationRailCollapsedTokens`, `NavigationRailExpandedTokens`
@@ -359,6 +378,8 @@ mod tests {
         assert_eq!(ITEM_ICON_SIZE, 24.0);
         assert_eq!(ACTIVE_INDICATOR_HORIZONTAL_SPACE, 16.0);
         assert_eq!(ACTIVE_INDICATOR_ICON_LABEL_SPACE, 8.0);
+        // m3_comp_nav_rail_item_horizontal_active_indicator_height = 56.
+        assert_eq!(EXPANDED_ACTIVE_INDICATOR_HEIGHT, 56.0);
     }
 
     /// `NavigationRailVerticalItemTokens` and the item metrics Compose derives

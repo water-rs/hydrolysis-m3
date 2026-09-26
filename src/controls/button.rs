@@ -1,7 +1,8 @@
 use crate::dimensions::{
     BUTTON_LINK_HORIZONTAL_PADDING, BUTTON_LINK_UNDERLINE_BOTTOM_INSET,
     BUTTON_LINK_UNDERLINE_THICKNESS, BUTTON_LINK_VERTICAL_PADDING, BUTTON_MIN_WIDTH,
-    BUTTON_TEXT_VERTICAL_PADDING, button_size_tokens,
+    BUTTON_TEXT_VERTICAL_PADDING, SHAPE_CORNER_LARGE, SHAPE_CORNER_MEDIUM, SHAPE_CORNER_SMALL,
+    button_size_tokens,
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
@@ -54,10 +55,12 @@ pub fn label_color(colors: &MaterialColorScheme, style: ButtonStyle, disabled: b
             standard: colors.on_surface_variant.view_color(),
         }),
         ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
-        ButtonStyle::Bordered
-        | ButtonStyle::Plain
-        | ButtonStyle::Link
-        | ButtonStyle::Borderless => colors.primary.view_color(),
+        // md.comp.button.outlined.label-text.color
+        ButtonStyle::Bordered => colors.on_surface_variant.view_color(),
+        // md.comp.button.text.label-text.color
+        ButtonStyle::Plain | ButtonStyle::Link | ButtonStyle::Borderless => {
+            colors.primary.view_color()
+        }
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     }
 }
@@ -95,6 +98,61 @@ fn container_radius(bounds: vello::kurbo::Rect) -> f64 {
     bounds.height() / 2.0
 }
 
+/// `md.comp.button.<size>.pressed.container.shape`, reached through the
+/// container's resting height because the draw callback does not carry a
+/// `ButtonSize`: corner-small up to 40dp, corner-medium to 56, corner-large
+/// beyond (a stretched button behaves as large).
+fn pressed_corner_radius(height: f64) -> f64 {
+    if height <= BUTTON_EXTRA_SMALL_HEIGHT_BAND {
+        SHAPE_CORNER_SMALL
+    } else if height <= BUTTON_MEDIUM_HEIGHT_BAND {
+        SHAPE_CORNER_MEDIUM
+    } else {
+        SHAPE_CORNER_LARGE
+    }
+}
+
+/// `md.comp.button.<size>.outlined.outline-width`: 1dp through medium, 2dp at
+/// large, 3dp at extra-large.
+fn outline_width(height: f64) -> f64 {
+    if height <= BUTTON_MEDIUM_HEIGHT_BAND {
+        1.0
+    } else if height <= BUTTON_LARGE_HEIGHT_BAND {
+        2.0
+    } else {
+        3.0
+    }
+}
+
+const BUTTON_EXTRA_SMALL_HEIGHT_BAND: f64 = 40.0;
+const BUTTON_MEDIUM_HEIGHT_BAND: f64 = 56.0;
+const BUTTON_LARGE_HEIGHT_BAND: f64 = 96.0;
+
+/// How far the most recent press has grown, which the corner morph follows —
+/// the same driving signal the stepper's seam corners use.
+fn press_progress(state: WidgetInteractionState) -> f64 {
+    f64::from(
+        state
+            .press_waves
+            .latest()
+            .map_or(0.0, |wave| wave.progress)
+            .clamp(0.0, 1.0),
+    )
+}
+
+/// The container's radius in `state`: resting `CornerFull`, morphing to
+/// `PressedContainerShape` as the press grows.
+fn container_radii(
+    bounds: vello::kurbo::Rect,
+    state: WidgetInteractionState,
+) -> vello::kurbo::RoundedRectRadii {
+    let resting = container_radius(bounds);
+    let pressed = pressed_corner_radius(bounds.height());
+    (pressed - resting)
+        .mul_add(press_progress(state), resting)
+        .into()
+}
+
 pub fn draw_chrome(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
@@ -102,32 +160,27 @@ pub fn draw_chrome(
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
-    // MD3 disabled button: filled/tonal containers drop to on-surface at 12%,
-    // the outlined border drops to on-surface at 12%, and the link underline
-    // follows the disabled label (on-surface at 38%). Text buttons have no
-    // container to dim.
+    // MD3 disabled button: the filled container drops to on-surface at the
+    // token's 10% (`md.comp.button.filled.disabled.container.opacity`), and
+    // the link underline follows the disabled label (on-surface at 38%). The
+    // outlined border is outline-variant in every state, disabled included
+    // (`md.comp.button.outlined.disabled.outline.color`). Text buttons have
+    // no container to dim.
     match style {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
             let fill = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
+                colors.on_surface.peniko().multiply_alpha(0.1)
             } else {
                 colors.primary.peniko()
             };
-            draw.fill_rounded_rect(bounds, container_radius(bounds).into(), &Brush::from(fill));
+            draw.fill_rounded_rect(bounds, container_radii(bounds, state), &Brush::from(fill));
         }
         ButtonStyle::Bordered => {
-            let border = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
-            } else if state.focus_visible {
-                colors.primary.peniko()
-            } else {
-                colors.outline.peniko()
-            };
             draw.stroke_rounded_rect(
                 bounds,
-                container_radius(bounds).into(),
-                &Brush::from(border),
-                1.0,
+                container_radii(bounds, state),
+                &Brush::from(colors.outline_variant.peniko()),
+                outline_width(bounds.height()),
             );
         }
         ButtonStyle::Link => {
@@ -156,15 +209,16 @@ pub fn draw_state_layer(
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
+    // md.comp.button.filled.*.state-layer.color = on-primary;
+    // md.comp.button.outlined.*.state-layer.color = on-surface-variant;
+    // md.comp.button.text.*.state-layer.color = primary.
     let color = match style {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
-        ButtonStyle::Bordered
-        | ButtonStyle::Link
-        | ButtonStyle::Plain
-        | ButtonStyle::Borderless => colors.primary.peniko(),
+        ButtonStyle::Bordered => colors.on_surface_variant.peniko(),
+        ButtonStyle::Link | ButtonStyle::Plain | ButtonStyle::Borderless => colors.primary.peniko(),
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
-    state_layer::draw_bounded(draw, bounds, container_radius(bounds).into(), color, state);
+    state_layer::draw_bounded(draw, bounds, container_radii(bounds, state), color, state);
 }
 
 #[cfg(test)]
@@ -194,11 +248,12 @@ mod tests {
     fn button_size_scale_matches_compose_button_size_tokens() {
         // ButtonXSmallTokens
         assert_eq!(BUTTON_EXTRA_SMALL.container_height, 32.0);
-        assert_eq!(BUTTON_EXTRA_SMALL.horizontal_space, 16.0);
+        assert_eq!(BUTTON_EXTRA_SMALL.horizontal_space, 12.0);
         assert_eq!(BUTTON_EXTRA_SMALL.icon_size, 20.0);
         assert_eq!(BUTTON_EXTRA_SMALL.icon_label_space, 8.0);
         // ButtonSmallTokens
         assert_eq!(BUTTON_SMALL.container_height, 40.0);
+        assert_eq!(BUTTON_SMALL.horizontal_space, 16.0);
         assert_eq!(BUTTON_SMALL.icon_size, 20.0);
         // ButtonMediumTokens
         assert_eq!(BUTTON_MEDIUM.container_height, 56.0);
@@ -215,6 +270,7 @@ mod tests {
         assert_eq!(BUTTON_EXTRA_LARGE.horizontal_space, 64.0);
         assert_eq!(BUTTON_EXTRA_LARGE.icon_size, 40.0);
         assert_eq!(BUTTON_EXTRA_LARGE.icon_label_space, 16.0);
+        assert_eq!(BUTTON_EXTRA_LARGE.outline_width, 3.0);
 
         // The scale is monotonic in every dimension it changes.
         let scale = [
@@ -277,9 +333,8 @@ mod tests {
         }
         // ButtonDefaults.MinWidth
         assert_eq!(BUTTON_MIN_WIDTH, 58.0);
-        // BaselineButtonTokens.LeadingSpace / TrailingSpace, which is what
-        // `ButtonDefaults.ContentPadding` uses for the default button.
-        assert_eq!(BUTTON_SMALL.horizontal_space, 24.0);
+        // md.comp.button.small.leading-space / trailing-space.
+        assert_eq!(BUTTON_SMALL.horizontal_space, 16.0);
         // ButtonDefaults.ContentPadding vertical
         assert_eq!(BUTTON_TEXT_VERTICAL_PADDING, 8.0);
     }
@@ -339,8 +394,9 @@ mod tests {
     }
 
     #[test]
-    fn disabled_outlined_button_uses_disabled_border() {
-        // MD3 disabled outlined button: the border drops to on-surface at 12%.
+    fn disabled_outlined_button_keeps_outline_variant_border() {
+        // md.comp.button.outlined.disabled.outline.color: the border stays
+        // outline-variant rather than dimming to on-surface.
         let colors = MaterialColorScheme::baseline_light();
         let mut draw = RecordingDrawContext::default();
 
@@ -358,7 +414,7 @@ mod tests {
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert!(matches!(
             &draw.rounded_strokes[0].2,
-            Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_container()
+            Brush::Solid(color) if *color == colors.outline_variant.peniko()
         ));
     }
 
@@ -457,7 +513,9 @@ mod tests {
     }
 
     #[test]
-    fn outlined_button_uses_latest_material_outline_role() {
+    fn outlined_button_uses_outline_variant_at_its_size_width() {
+        // md.comp.button.outlined.outline.color = outline-variant;
+        // md.comp.button.small.outlined.outline-width = 1.
         let colors = MaterialColorScheme::baseline_light();
         let mut draw = RecordingDrawContext::default();
 
@@ -472,8 +530,51 @@ mod tests {
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert!(matches!(
             &draw.rounded_strokes[0].2,
-            Brush::Solid(color) if *color == colors.outline.peniko()
+            Brush::Solid(color) if *color == colors.outline_variant.peniko()
         ));
         assert_eq!(draw.rounded_strokes[0].3, 1.0);
+
+        // md.comp.button.xlarge.outlined.outline-width = 3.
+        let mut draw = RecordingDrawContext::default();
+        draw_chrome(
+            &colors,
+            &mut draw,
+            Rect::new(0.0, 0.0, 240.0, BUTTON_EXTRA_LARGE.container_height),
+            ButtonStyle::Bordered,
+            crate::WidgetInteractionState::NONE,
+        );
+        assert_eq!(draw.rounded_strokes[0].3, 3.0);
+    }
+
+    /// A press morphs the capsule toward the size band's
+    /// `PressedContainerShape` — corner-small for small, corner-large for
+    /// extra-large.
+    #[test]
+    fn pressed_button_morphs_its_corners() {
+        use waterui_backend_core::widget::{PressWave, PressWaves};
+        let colors = MaterialColorScheme::baseline_light();
+        let mut draw = RecordingDrawContext::default();
+
+        let mut waves = PressWaves::EMPTY;
+        waves.push(PressWave {
+            origin: None,
+            progress: 1.0,
+            opacity: 0.1,
+        });
+        draw_chrome(
+            &colors,
+            &mut draw,
+            Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+            ButtonStyle::BorderedProminent,
+            crate::WidgetInteractionState {
+                pressed: true,
+                press_waves: waves,
+                ..crate::WidgetInteractionState::NONE
+            },
+        );
+
+        let radii = draw.rounded_fills[0].1;
+        // md.comp.button.small.pressed.container.shape = corner-small (8).
+        assert!((radii.top_left - 8.0).abs() < 0.01);
     }
 }

@@ -100,12 +100,32 @@ pub fn draw_field(
     }
 }
 
+/// md.comp.filled-text-field: the only resting state layer is the hover tint
+/// — on-surface at `md.sys.state.hovered.state-layer.opacity` — clipped to the
+/// container's top-rounded shape. Focus expresses itself through the active
+/// indicator and focus ring; there is no focus or pressed state layer.
 pub fn draw_state_layer(
-    _colors: &MaterialColorScheme,
-    _draw: &mut dyn DrawContext,
-    _bounds: Rect,
-    _state: WidgetInteractionState,
+    colors: &MaterialColorScheme,
+    draw: &mut dyn DrawContext,
+    bounds: Rect,
+    state: WidgetInteractionState,
 ) {
+    if state.disabled || !state.hovered {
+        return;
+    }
+    let radii = RoundedRectRadii::new(
+        INPUT_FILLED_CONTAINER_TOP_RADIUS,
+        INPUT_FILLED_CONTAINER_TOP_RADIUS,
+        0.0,
+        0.0,
+    );
+    draw.push_rounded_layer(
+        crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY,
+        bounds,
+        radii,
+    );
+    draw.fill_rounded_rect(bounds, radii, &Brush::from(colors.on_surface.peniko()));
+    draw.pop_layer();
 }
 
 #[cfg(test)]

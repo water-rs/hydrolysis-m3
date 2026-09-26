@@ -29,7 +29,8 @@ pub fn draw_bar(
     } else {
         Rect::new(bounds.x0, bounds.y0, bounds.x1, bounds.y0 + 1.0)
     };
-    draw.fill_rect(separator, &Brush::from(colors.outline_variant.peniko()));
+    // md.comp.primary-navigation-tab.divider.color = surface-variant.
+    draw.fill_rect(separator, &Brush::from(colors.surface_variant.peniko()));
 }
 
 pub fn draw_highlight(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {

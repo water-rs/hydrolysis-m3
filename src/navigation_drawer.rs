@@ -17,10 +17,11 @@ use waterui_core::handler::{Handler, SharedAction, boxed_action};
 
 use crate::ModalInteraction;
 use crate::color::{
-    OnSecondaryContainer, OnSurfaceVariant, Scrim, SecondaryContainer, Surface, SurfaceContainerLow,
+    OnSecondaryContainer, OnSurface, OnSurfaceVariant, Scrim, SecondaryContainer, Surface,
+    SurfaceContainerLow,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{conditional_color, interaction_style, label_plain_text};
+use crate::semantics::{conditional_color, conditional_font, interaction_style, label_plain_text};
 use crate::theme::{motion, typography};
 
 const NAVIGATION_DRAWER_CONTAINER_WIDTH: f32 = 360.0;
@@ -297,19 +298,37 @@ where
             SecondaryContainer,
             SecondaryContainer.with_opacity(0.0),
         );
+        // md.comp.navigation-drawer: active items take on-secondary-container;
+        // inactive items take on-surface on hover/focus and
+        // on-secondary-container on pressed. `InteractionStyle` cannot split
+        // pressed from hover/focus, so the hover/focus value wins.
         let state_layer_color =
-            conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
+            conditional_color(self.selected.clone(), OnSecondaryContainer, OnSurface);
 
-        drawer_item_content(self.label, self.icon, foreground.into(), background.into())
-            .on_tap(move |env: Environment| action(&env))
-            .a11y_label(accessibility_label)
-            .a11y_role(AccessibilityRole::Button)
-            .a11y_state_signal(accessibility_state)
-            .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
-                state_layer_color,
-                f64::from(NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE),
-            ))
+        // md.comp.navigation-drawer.active.label-text.weight =
+        // label-large-weight-prominent.
+        let label_font = conditional_font(
+            self.selected.clone(),
+            typography::label_large_prominent(),
+            typography::label_large(),
+        );
+
+        drawer_item_content(
+            self.label,
+            self.icon,
+            foreground.into(),
+            background.into(),
+            label_font,
+        )
+        .on_tap(move |env: Environment| action(&env))
+        .a11y_label(accessibility_label)
+        .a11y_role(AccessibilityRole::Button)
+        .a11y_state_signal(accessibility_state)
+        .a11y_children(AccessibilityChildren::ExcludeDescendants)
+        .install(interaction_style(
+            state_layer_color,
+            f64::from(NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE),
+        ))
     }
 }
 
@@ -318,12 +337,13 @@ fn drawer_item_content(
     icon: impl View,
     foreground: Color,
     background: Color,
+    label_font: waterui::text::font::Font,
 ) -> impl View {
     waterui::component::hstack((
         icon.foreground(foreground.clone())
             .width(NAVIGATION_DRAWER_ITEM_ICON_SIZE)
             .height(NAVIGATION_DRAWER_ITEM_ICON_SIZE),
-        label.font(typography::label_large()).foreground(foreground),
+        label.font(label_font).foreground(foreground),
         waterui::component::spacer(),
     ))
     .spacing(NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE)

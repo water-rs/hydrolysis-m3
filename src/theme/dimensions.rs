@@ -33,7 +33,7 @@ pub struct ButtonSizeTokens {
 /// `ButtonXSmallTokens`.
 pub const BUTTON_EXTRA_SMALL: ButtonSizeTokens = ButtonSizeTokens {
     container_height: 32.0,
-    horizontal_space: 16.0,
+    horizontal_space: 12.0, // md.comp.button.xsmall.leading-space / trailing-space
     icon_size: 20.0,
     icon_label_space: 8.0,
     square_corner_radius: SHAPE_CORNER_MEDIUM,
@@ -41,11 +41,10 @@ pub const BUTTON_EXTRA_SMALL: ButtonSizeTokens = ButtonSizeTokens {
     outline_width: 1.0,
 };
 
-/// `ButtonSmallTokens`, the default size. Its horizontal space comes from
-/// `BaselineButtonTokens`, which is what `ButtonDefaults.ContentPadding` uses.
+/// `ButtonSmallTokens`, the default size.
 pub const BUTTON_SMALL: ButtonSizeTokens = ButtonSizeTokens {
     container_height: 40.0,
-    horizontal_space: 24.0,
+    horizontal_space: 16.0, // md.comp.button.small.leading-space / trailing-space
     icon_size: 20.0,
     icon_label_space: 8.0,
     square_corner_radius: SHAPE_CORNER_MEDIUM,
@@ -83,7 +82,7 @@ pub const BUTTON_EXTRA_LARGE: ButtonSizeTokens = ButtonSizeTokens {
     icon_label_space: 16.0,
     square_corner_radius: SHAPE_CORNER_EXTRA_LARGE,
     pressed_corner_radius: SHAPE_CORNER_LARGE,
-    outline_width: 2.0,
+    outline_width: 3.0, // md.comp.button.xlarge.outlined.outline-width
 };
 
 /// The token set for `size`.
@@ -209,8 +208,11 @@ pub const SLIDER_HANDLE_HEIGHT: f64 = 44.0;
 /// `SliderTokens.ActiveHandlePadding`: the gap the track leaves on each side of
 /// the handle, so the bar never runs into it.
 pub const SLIDER_HANDLE_PADDING: f64 = 6.0;
-/// `SliderTokens.StopIndicatorSize`: the dot marking the track's far end.
+/// `SliderTokens.StopIndicatorSize`: the dots marking the track's ends.
 pub const SLIDER_STOP_INDICATOR_SIZE: f64 = 4.0;
+/// `md.comp.slider.stop-indicator.trailing-space`: the inset between a stop
+/// indicator and the track end it marks (the leading dot mirrors it).
+pub const SLIDER_STOP_INDICATOR_END_SPACE: f64 = 4.0;
 /// The corner radius on the track ends that face the handle gap. Only the
 /// outer ends take the full stadium radius (`trackHeight / 2`).
 pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;

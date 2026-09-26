@@ -133,6 +133,16 @@ pub fn draw_switch(
             progress,
         )
     };
+    // md.comp.switch.handle.elevation = level1; the disabled handle is level0.
+    if !state.disabled {
+        crate::elevation::draw_shadows(
+            draw,
+            Rect::from_center_size(thumb_center, (handle_size, handle_size)),
+            handle_radius.into(),
+            crate::elevation::MaterialElevationLevel::LEVEL1,
+            colors,
+        );
+    }
     draw.fill_circle(thumb_center, handle_radius, &Brush::from(thumb_color));
 
     // the default checked icon: a 16dp checkmark on the thumb, colored
