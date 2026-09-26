@@ -46,13 +46,18 @@ pub struct IconButtonSizeTokens {
 /// How large an icon button is drawn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum IconButtonSize {
-    /// The standard icon button: a 40dp state layer inside the 48dp target.
+    /// `md.comp.icon-button.xsmall`: a 32dp state layer inside the 48dp
+    /// minimum touch target.
+    ExtraSmall,
+    /// `md.comp.icon-button.small`: a 40dp state layer inside the 48dp target.
     #[default]
     Small,
-    /// `MediumIconButtonTokens`.
+    /// `md.comp.icon-button.medium`.
     Medium,
-    /// `LargeIconButtonTokens`.
+    /// `md.comp.icon-button.large`.
     Large,
+    /// `md.comp.icon-button.xlarge`.
+    ExtraLarge,
 }
 
 impl IconButtonSize {
@@ -60,13 +65,20 @@ impl IconButtonSize {
     #[must_use]
     pub const fn tokens(self) -> IconButtonSizeTokens {
         match self {
+            Self::ExtraSmall => IconButtonSizeTokens {
+                // md.comp.icon-button.xsmall.container.size = 32
+                container: ICON_BUTTON_TOUCH_TARGET_SIZE,
+                state_layer: 32.0,
+                icon: 20.0,
+                outline_width: ICON_BUTTON_OUTLINE_WIDTH,
+            },
             Self::Small => IconButtonSizeTokens {
                 container: ICON_BUTTON_TOUCH_TARGET_SIZE,
                 state_layer: ICON_BUTTON_STATE_LAYER_SIZE,
                 icon: ICON_BUTTON_ICON_SIZE,
                 outline_width: ICON_BUTTON_OUTLINE_WIDTH,
             },
-            // MediumIconButtonTokens. At this size the container *is* the
+            // md.comp.icon-button.medium. At this size the container *is* the
             // state layer — it is already well past the 48dp minimum.
             Self::Medium => IconButtonSizeTokens {
                 container: 56.0,
@@ -74,12 +86,19 @@ impl IconButtonSize {
                 icon: 24.0,
                 outline_width: 1.0,
             },
-            // LargeIconButtonTokens.
+            // md.comp.icon-button.large.
             Self::Large => IconButtonSizeTokens {
                 container: 96.0,
                 state_layer: 96.0,
                 icon: 32.0,
                 outline_width: 2.0,
+            },
+            // md.comp.icon-button.xlarge.
+            Self::ExtraLarge => IconButtonSizeTokens {
+                container: 136.0,
+                state_layer: 136.0,
+                icon: 40.0,
+                outline_width: 3.0,
             },
         }
     }
@@ -122,7 +141,12 @@ pub fn metrics(style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
 /// The rect the icon-button state layer draws in: centred in the layout
 /// bounds at the size tokens give it — 40dp inside the 48dp small touch
 /// target, and the full bounds once the container is the touch target
-/// itself (medium and large).
+/// itself (medium and larger).
+///
+/// A semantic extra-small icon button reserves the same 48dp target, so its
+/// bounds are indistinguishable from a small's and it draws the small 40dp
+/// layer; the 32dp layer is reachable only through the composed `IconButton`
+/// view, which carries its size.
 fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
     let side = if bounds.height() > f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE) {
         bounds.height()
@@ -153,29 +177,27 @@ pub fn draw_chrome(
     state: crate::WidgetInteractionState,
 ) {
     let layer = state_layer_rect(bounds);
-    let radii = (layer.height() / 2.0).into();
+    let radii = container_radii(layer, state);
     match style {
         ButtonStyle::BorderedProminent => {
+            // md.comp.icon-button.filled.container.color = primary;
+            // md.comp.icon-button.filled.disabled.container.opacity = 0.1.
             let fill = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
+                colors.on_surface.peniko().multiply_alpha(0.1)
             } else {
                 colors.primary.peniko()
             };
             draw.fill_rounded_rect(layer, radii, &crate::Brush::from(fill));
         }
         ButtonStyle::Bordered => {
-            let border = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
-            } else if state.focus_visible {
-                colors.primary.peniko()
-            } else {
-                colors.outline.peniko()
-            };
+            // md.comp.icon-button.outlined.outline.color = outline-variant in
+            // every state, disabled included
+            // (md.comp.icon-button.outlined.disabled.outline.color).
             draw.stroke_rounded_rect(
                 layer,
                 radii,
-                &crate::Brush::from(border),
-                f64::from(ICON_BUTTON_OUTLINE_WIDTH),
+                &crate::Brush::from(colors.outline_variant.peniko()),
+                outline_width(layer.height()),
             );
         }
         // Standard and link icon buttons carry no container; `Automatic`
@@ -203,32 +225,79 @@ pub fn draw_state_layer(
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
+    // md.comp.icon-button.filled.*.state-layer.color = on-primary;
+    // standard and outlined both use on-surface-variant
+    // (md.comp.icon-button.{standard,outlined}.*.state-layer.color).
     let color = match style {
         ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
         ButtonStyle::Automatic
         | ButtonStyle::Bordered
         | ButtonStyle::Plain
         | ButtonStyle::Borderless
-        | ButtonStyle::Link => colors.primary.peniko(),
+        | ButtonStyle::Link => colors.on_surface_variant.peniko(),
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     let layer = state_layer_rect(bounds);
     crate::theme::state_layer::draw_bounded(
         draw,
         layer,
-        (layer.height() / 2.0).into(),
+        container_radii(layer, state),
         color,
         state,
     );
 }
 
+/// `md.comp.icon-button.<size>.pressed.container.shape`, reached through the
+/// state layer's side because the draw callback does not carry an
+/// `IconButtonSize`: corner-small up to 40dp, corner-medium to 56,
+/// corner-large beyond.
+fn pressed_corner_radius(side: f64) -> f64 {
+    if side <= f64::from(ICON_BUTTON_STATE_LAYER_SIZE) {
+        8.0 // md.sys.shape.corner-small
+    } else if side <= 56.0 {
+        12.0 // md.sys.shape.corner-medium
+    } else {
+        16.0 // md.sys.shape.corner-large
+    }
+}
+
+/// `md.comp.icon-button.<size>.outlined.outline-width`: 1dp through medium,
+/// 2dp at large, 3dp at xlarge.
+fn outline_width(side: f64) -> f64 {
+    if side <= 56.0 {
+        1.0
+    } else if side <= 96.0 {
+        2.0
+    } else {
+        3.0
+    }
+}
+
+/// The state-layer circle's corner radii in `state`: resting corner-full,
+/// morphing to the size band's pressed shape as the press grows.
+fn container_radii(
+    layer: vello::kurbo::Rect,
+    state: crate::WidgetInteractionState,
+) -> vello::kurbo::RoundedRectRadii {
+    let resting = layer.height() / 2.0;
+    let pressed = pressed_corner_radius(layer.height());
+    let progress = f64::from(
+        state
+            .press_waves
+            .latest()
+            .map_or(0.0, |wave| wave.progress)
+            .clamp(0.0, 1.0),
+    );
+    (pressed - resting).mul_add(progress, resting).into()
+}
+
 const fn icon_button_size(size: ButtonSize) -> IconButtonSize {
     match size {
-        // The icon-button scale has no extra-small or extra-large token set:
-        // both ends clamp to the nearest defined size.
-        ButtonSize::ExtraSmall | ButtonSize::Small => IconButtonSize::Small,
+        ButtonSize::ExtraSmall => IconButtonSize::ExtraSmall,
+        ButtonSize::Small => IconButtonSize::Small,
         ButtonSize::Medium => IconButtonSize::Medium,
-        ButtonSize::Large | ButtonSize::ExtraLarge => IconButtonSize::Large,
+        ButtonSize::Large => IconButtonSize::Large,
+        ButtonSize::ExtraLarge => IconButtonSize::ExtraLarge,
         _ => panic!("hydrolysis ButtonSize variant is not implemented"),
     }
 }
@@ -548,11 +617,17 @@ mod tests {
         assert_eq!(link.min_height, 0.0);
     }
 
-    /// `MediumIconButtonTokens` and `LargeIconButtonTokens`. Past the small
-    /// size the container has outgrown the 48dp minimum, so the state layer
-    /// fills it rather than sitting inside a larger touch target.
+    /// `md.comp.icon-button.{xsmall..xlarge}`. Past the small size the
+    /// container has outgrown the 48dp minimum, so the state layer fills it
+    /// rather than sitting inside a larger touch target.
     #[test]
     fn icon_button_size_scale_matches_compose_icon_button_tokens() {
+        let extra_small = IconButtonSize::ExtraSmall.tokens();
+        assert_eq!(extra_small.container, 48.0);
+        assert_eq!(extra_small.state_layer, 32.0);
+        assert_eq!(extra_small.icon, 20.0);
+        assert_eq!(extra_small.outline_width, 1.0);
+
         let small = IconButtonSize::Small.tokens();
         assert_eq!(small.container, 48.0);
         assert_eq!(small.state_layer, 40.0);
@@ -568,9 +643,14 @@ mod tests {
         assert_eq!(large.icon, 32.0);
         assert_eq!(large.outline_width, 2.0);
 
+        let extra_large = IconButtonSize::ExtraLarge.tokens();
+        assert_eq!(extra_large.container, 136.0);
+        assert_eq!(extra_large.icon, 40.0);
+        assert_eq!(extra_large.outline_width, 3.0);
+
         // Every size clears the 48dp minimum touch target, and no state layer
         // ever spills outside the box that receives the taps.
-        for size in [small, medium, large] {
+        for size in [extra_small, small, medium, large, extra_large] {
             assert!(size.container >= 48.0);
             assert!(size.state_layer <= size.container);
             assert!(size.icon < size.state_layer);

@@ -50,12 +50,14 @@ impl FabSizeTokens {
 /// How large a floating action button is drawn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum FabSize {
-    /// `FabBaselineTokens`: the standard 56dp FAB.
+    /// `md.comp.fab.small`: the 40dp FAB.
+    Small,
+    /// `md.comp.fab`: the standard 56dp FAB.
     #[default]
     Baseline,
-    /// `FabMediumTokens`.
+    /// `md.comp.fab.medium`.
     Medium,
-    /// `FabLargeTokens`.
+    /// `md.comp.fab.large`.
     Large,
 }
 
@@ -64,7 +66,13 @@ impl FabSize {
     #[must_use]
     pub const fn tokens(self) -> FabSizeTokens {
         match self {
-            // FabBaselineTokens: CornerLarge
+            // md.comp.fab.small: CornerMedium
+            Self::Small => FabSizeTokens {
+                container: 40.0,
+                icon: 24.0,
+                corner_radius: 12.0,
+            },
+            // md.comp.fab: CornerLarge
             Self::Baseline => FabSizeTokens {
                 container: 56.0,
                 icon: 24.0,
@@ -93,7 +101,10 @@ const EXTENDED_FAB_HEIGHT: f32 = 56.0;
 const EXTENDED_FAB_MINIMUM_WIDTH: f32 = 80.0;
 const EXTENDED_FAB_SHAPE: f32 = 16.0;
 const EXTENDED_FAB_CLIP_RADIUS: f32 = EXTENDED_FAB_SHAPE / EXTENDED_FAB_HEIGHT;
+/// Text-only leading space (Compose `ExtendedFabTextPadding`); the token's
+/// 16dp `extended-fab.leading-space` is for the with-icon layout.
 const EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON: f32 = 20.0;
+/// `md.comp.extended-fab.trailing-space`.
 const EXTENDED_FAB_TRAILING_SPACE: f32 = 20.0;
 
 /// Color token set for a FAB variant.
@@ -457,11 +468,17 @@ mod tests {
         EXTENDED_FAB_SHAPE, EXTENDED_FAB_TRAILING_SPACE, FabSize,
     };
 
-    /// `FabBaselineTokens`, `FabMediumTokens` and `FabLargeTokens`. The corner
-    /// shape grows with the container — `CornerLarge`, `CornerLargeIncreased`,
-    /// `CornerExtraLarge` — so a larger FAB is not simply a scaled-up one.
+    /// `md.comp.fab.{small,medium,large}` and `md.comp.fab`. The corner
+    /// shape grows with the container — `CornerMedium`, `CornerLarge`,
+    /// `CornerLargeIncreased`, `CornerExtraLarge` — so a larger FAB is not
+    /// simply a scaled-up one.
     #[test]
     fn fab_sizes_match_compose_fab_tokens() {
+        let small = FabSize::Small.tokens();
+        assert_eq!(small.container, 40.0);
+        assert_eq!(small.icon, 24.0);
+        assert_eq!(small.corner_radius, 12.0);
+
         let baseline = FabSize::Baseline.tokens();
         assert_eq!(baseline.container, 56.0);
         assert_eq!(baseline.icon, 24.0);
@@ -480,7 +497,7 @@ mod tests {
         assert_eq!(large.corner_radius, 28.0);
 
         // The icon stays centred at every size.
-        for size in [baseline, medium, large] {
+        for size in [small, baseline, medium, large] {
             assert!((size.icon_padding().mul_add(2.0, size.icon) - size.container).abs() < 1e-6);
             assert!(size.clip_radius() > 0.0 && size.clip_radius() < 0.5);
         }
