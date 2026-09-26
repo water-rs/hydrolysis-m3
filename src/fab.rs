@@ -48,10 +48,15 @@ impl FabSizeTokens {
 }
 
 /// How large a floating action button is drawn.
+///
+/// Material 3 Expressive offers FAB (56dp), medium FAB (80dp, the recommended
+/// default), and large FAB (96dp). The M3 small FAB (40dp,
+/// `md.comp.fab.small`) is deprecated: the MDC-Android
+/// `FloatingActionButton.md` docs mark it deprecated and
+/// `floatingactionbutton/res/values/attrs.xml` retires the `fabSize` enum
+/// (auto/normal/mini) that selected it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum FabSize {
-    /// `md.comp.fab.small`: the 40dp FAB.
-    Small,
     /// `md.comp.fab`: the standard 56dp FAB.
     #[default]
     Baseline,
@@ -66,12 +71,6 @@ impl FabSize {
     #[must_use]
     pub const fn tokens(self) -> FabSizeTokens {
         match self {
-            // md.comp.fab.small: CornerMedium
-            Self::Small => FabSizeTokens {
-                container: 40.0,
-                icon: 24.0,
-                corner_radius: 12.0,
-            },
             // md.comp.fab: CornerLarge
             Self::Baseline => FabSizeTokens {
                 container: 56.0,
@@ -117,6 +116,10 @@ pub trait FabVariantTokens: Default + 'static {
 }
 
 /// Surface FAB color tokens.
+///
+/// M3 Expressive no longer recommends the surface FAB, but the
+/// `md.comp.fab-surface` token set and MDC-Android
+/// `FloatingActionButton.Surface` styles still ship, so the variant remains.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SurfaceFab;
 
@@ -468,17 +471,13 @@ mod tests {
         EXTENDED_FAB_SHAPE, EXTENDED_FAB_TRAILING_SPACE, FabSize,
     };
 
-    /// `md.comp.fab.{small,medium,large}` and `md.comp.fab`. The corner
-    /// shape grows with the container — `CornerMedium`, `CornerLarge`,
-    /// `CornerLargeIncreased`, `CornerExtraLarge` — so a larger FAB is not
-    /// simply a scaled-up one.
+    /// `md.comp.fab`, `md.comp.fab.medium`, `md.comp.fab.large`. The corner
+    /// shape grows with the container — `CornerLarge`, `CornerLargeIncreased`,
+    /// `CornerExtraLarge` — so a larger FAB is not simply a scaled-up one.
+    /// `md.comp.fab.small` (40dp) is intentionally absent: the small FAB is
+    /// deprecated in M3 Expressive.
     #[test]
     fn fab_sizes_match_compose_fab_tokens() {
-        let small = FabSize::Small.tokens();
-        assert_eq!(small.container, 40.0);
-        assert_eq!(small.icon, 24.0);
-        assert_eq!(small.corner_radius, 12.0);
-
         let baseline = FabSize::Baseline.tokens();
         assert_eq!(baseline.container, 56.0);
         assert_eq!(baseline.icon, 24.0);
@@ -497,7 +496,7 @@ mod tests {
         assert_eq!(large.corner_radius, 28.0);
 
         // The icon stays centred at every size.
-        for size in [small, baseline, medium, large] {
+        for size in [baseline, medium, large] {
             assert!((size.icon_padding().mul_add(2.0, size.icon) - size.container).abs() < 1e-6);
             assert!(size.clip_radius() > 0.0 && size.clip_radius() < 0.5);
         }

@@ -73,28 +73,15 @@ pub fn draw_track(
         );
     }
 
-    // Stop indicators: a dot at each end of the track,
+    // Stop indicator: a single dot at the track's trailing end,
     // `stop-indicator.trailing-space = 4` from the end edge, hidden where the
-    // handle's track segment no longer reaches it. The leading dot sits in the
-    // active segment (on-primary), the trailing one in the inactive segment
-    // (on-secondary-container); disabled, they read inverse-on-surface and
-    // on-surface at 38% respectively.
+    // handle's track segment reaches it. A single-value slider has no leading
+    // dot: `stop-indicator.trailing-space` is the only edge token and Compose
+    // `SliderDefaults.TrackStopIndicatorSize` documents the dot "at the end of
+    // the track" (MDC-Android exposes the size through the shared slider attr
+    // `trackStopIndicatorSize`).
     let track_mid_y = track_rect.y0 + track_rect.height() / 2.0;
     let dot_offset = SLIDER_STOP_INDICATOR_END_SPACE + SLIDER_STOP_INDICATOR_SIZE / 2.0;
-    let leading_center = vello::kurbo::Point::new(track_rect.x0 + dot_offset, track_mid_y);
-    if leading_center.x < active_end {
-        draw.fill_circle(
-            leading_center,
-            SLIDER_STOP_INDICATOR_SIZE / 2.0,
-            &Brush::from(if state.disabled {
-                // md.comp.slider.disabled.active.stop-indicator.container.color
-                // = inverse-on-surface at stop-indicator.container.opacity 0.38.
-                colors.inverse_on_surface.peniko().multiply_alpha(0.38)
-            } else {
-                colors.on_primary.peniko()
-            }),
-        );
-    }
     let indicator_center = vello::kurbo::Point::new(track_rect.x1 - dot_offset, track_mid_y);
     if indicator_center.x > inactive_start {
         draw.fill_circle(

@@ -19,7 +19,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/theme/dimensions.rs:47 | `BUTTON_SMALL.horizontal_space` 16.0 | 16 | `md.comp.button.small.leading-space`/`trailing-space` | fixed |
 | src/theme/dimensions.rs:85 | `BUTTON_EXTRA_LARGE.outline_width` 3.0 | 3 | `md.comp.button.xlarge.outlined.outline-width` | fixed |
 | src/theme/dimensions.rs:203-215 | handle 4×44, pad 6, dot 4 | 4/44/6/4 | `md.comp.slider.handle.{width,height}` / `stop-indicator.*` | conforms |
-| src/theme/dimensions.rs:215 | `SLIDER_STOP_INDICATOR_END_SPACE` 4.0 | 4 | `md.comp.slider.stop-indicator.trailing-space`/`leading-space` | fixed (added) |
+| src/theme/dimensions.rs:215 | `SLIDER_STOP_INDICATOR_END_SPACE` 4.0 | 4 | `md.comp.slider.stop-indicator.trailing-space` | fixed (added) |
 | src/theme/typography.rs:46-96 | label small/medium/large; +`label_medium_prominent`, `label_large_prominent` (Bold weight) | label scale incl. `prominent` weights | `md.sys.typescale.label-*` | conforms (helpers added for `*.label-text.weight` tokens) |
 | src/theme/motion/* | spring/duration scheme | — | `md.sys.motion.*` | conforms |
 | src/semantics.rs | `conditional_font` added (mirrors `conditional_color`) | — | supports `*.active.label-text.weight` | fixed (added) |
@@ -52,7 +52,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 
 | file:line | our value | spec value | token name | status |
 |---|---|---|---|---|
-| src/fab.rs:53-75 | sizes small 40/corner-12/icon-24, standard 56/corner-16, medium 80, large 96 | small added | `md.comp.fab{,.small,.medium,.large}.container.*` | fixed (added `FabSize::Small`) |
+| src/fab.rs:53-95 | sizes FAB 56/corner-16/icon-24, medium 80/corner-20/icon-28, large 96/corner-28/icon-36 | 56/80/96 | `md.comp.fab{,.medium,.large}.container.*` | fixed; `md.comp.fab.small` (40dp) dropped — deprecated in M3 Expressive (MDC-Android `FloatingActionButton.md`: "Deprecated small FAB size"; `floatingactionbutton/attrs.xml:28` retires `fabSize`); `SurfaceFab` kept (`md.comp.fab-surface` + MDC styles still ship, though Expressive no longer recommends it) |
 | src/fab.rs | container primary-container, icon on-primary-container | same | `md.comp.fab.container.color` / `icon.color` | conforms |
 | src/fab.rs | container elevation level3, hover level4 | level3; hover L4 | `md.comp.fab.{container,hover.container}.elevation` | partially: resting L3 conforms; hover→L4 blocked (no per-state elevation on `FloatingStyle`) |
 | src/fab_menu.rs:236-254 | items h56, corner-full, level0, primary-container/on-primary-container, icon 24, label large | level3→level0 | `md.comp.fab-menu.menu-item.*` | fixed |
@@ -102,7 +102,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/controls/picker.rs:340-349 | segmented layer on-secondary-container (selected) | on-secondary-container | `md.comp.segmented-button.selected.*.state-layer.color` | conforms |
 | src/controls/progress.rs | track/active-indicator heights, gap, shapes per expressive progress | same | `md.comp.{linear,circular}-progress-indicator.*` | conforms |
 | src/controls/slider.rs:147 | handle elevation level1 (disabled level0) | was level0 | `md.comp.slider.handle.elevation` / `disabled.handle.elevation` | fixed |
-| src/controls/slider.rs:83-103 | stop dots at both track ends, offset = trailing/leading-space 4 + r2; leading on-primary (disabled inverse-on-surface@0.38), trailing on-secondary-container | leading dot added | `md.comp.slider.{leading,trailing}.stop-indicator.*` | fixed |
+| src/controls/slider.rs:83-103 | single stop dot at the track's trailing end, offset = trailing-space 4 + r2, on-secondary-container | trailing only | `md.comp.slider.{stop-indicator.trailing-space,inactive.stop-indicator.container.color}` | fixed — leading dot removed: no `leading-space`/`leading stop-indicator` token exists; Compose `SliderDefaults.TrackStopIndicatorSize` is "at the end of the track" and the M3 accessibility page places the dot at the end of the inactive track; MDC-Android's `trackStopIndicatorSize` doc says "edges" but is one attr shared across Slider/RangeSlider/CenteredSlider |
 | src/controls/slider.rs:160-170 | unbounded 40dp halo, primary, hover/focus/press opacities | new | `md.comp.slider.state-layer.size/color` | fixed |
 | src/controls/slider.rs | track 16h, handle 4×44, gap 6 | same | `md.comp.slider.*` | conforms |
 | src/controls/slider size variants + value label | — | small/medium/large, value indicator | `md.comp.slider.*-size` / `value-indicator.*` | blocked: single-size `MaterialSliderStyle` only; no value-label surface in waterui slider |
@@ -182,10 +182,10 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 
 - `src/controls/button.rs` unit tests: disabled filled container opacity 0.1; outlined outline-variant + banded widths; pressed corner morph.
 - `src/icon_button.rs` unit tests: xs/xl size map, outline width table.
-- `src/fab.rs` unit test: `FabSize::Small` 40×40/corner 12/icon 24.
+- `src/fab.rs` unit test: `FabSize` = Baseline 56/Medium 80/Large 96 only (no `Small`).
 - `src/controls/picker.rs`: `menu_selected_row_and_divider_use_filled_select_tokens` → surface-variant divider.
 - `src/navigation_bar.rs`: indicator width 56.
 - `src/navigation_rail.rs`: expanded indicator height 56.
 - `src/material_list.rs`: icon sizes 20.
-- `src/controls/slider.rs`: handle-level shadow + dual stop dots + halo assertions.
+- `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions.
 - Visual acceptance tests (`*_visual.rs`, ignored by default) regenerate their PNGs under the new tokens; they are opt-in rendering comparisons, not CI assertions.
