@@ -1,5 +1,7 @@
 //! Material Design 3 icon buttons composed from `WaterUI` primitives.
 
+use cherenkov::Draw as _;
+use cherenkov::kurbo::{RoundedRect, RoundedRectRadii, Stroke};
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
@@ -123,14 +125,14 @@ pub fn metrics(style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
 /// bounds at the size tokens give it — 40dp inside the 48dp small touch
 /// target, and the full bounds once the container is the touch target
 /// itself (medium and large).
-fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
+fn state_layer_rect(bounds: cherenkov::kurbo::Rect) -> cherenkov::kurbo::Rect {
     let side = if bounds.height() > f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE) {
         bounds.height()
     } else {
         f64::from(ICON_BUTTON_STATE_LAYER_SIZE)
     };
     let center = bounds.center();
-    vello::kurbo::Rect::from_center_size(center, (side, side))
+    cherenkov::kurbo::Rect::from_center_size(center, (side, side))
 }
 
 /// `WidgetTheme::draw_button_chrome` for an icon-only button.
@@ -147,35 +149,37 @@ fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
 /// Panics on a `ButtonStyle` variant this theme does not implement.
 pub fn draw_chrome(
     colors: &crate::theme::colors::MaterialColorScheme,
-    draw: &mut dyn crate::DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut cherenkov::Recorder,
+    bounds: cherenkov::kurbo::Rect,
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
     let layer = state_layer_rect(bounds);
-    let radii = (layer.height() / 2.0).into();
+    let radii = RoundedRectRadii::from_single_radius(layer.height() / 2.0);
     match style {
         ButtonStyle::BorderedProminent => {
             let fill = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
+                colors.on_surface.working_disabled_container()
             } else {
-                colors.primary.peniko()
+                colors.primary.working()
             };
-            draw.fill_rounded_rect(layer, radii, &crate::Brush::from(fill));
+            draw.fill(
+                RoundedRect::from_rect(layer, radii),
+                crate::Paint::from(fill),
+            );
         }
         ButtonStyle::Bordered => {
             let border = if state.disabled {
-                colors.on_surface.peniko_disabled_container()
+                colors.on_surface.working_disabled_container()
             } else if state.focus_visible {
-                colors.primary.peniko()
+                colors.primary.working()
             } else {
-                colors.outline.peniko()
+                colors.outline.working()
             };
-            draw.stroke_rounded_rect(
-                layer,
-                radii,
-                &crate::Brush::from(border),
-                f64::from(ICON_BUTTON_OUTLINE_WIDTH),
+            draw.stroke(
+                RoundedRect::from_rect(layer, radii),
+                Stroke::new(f64::from(ICON_BUTTON_OUTLINE_WIDTH)),
+                crate::Paint::from(border),
             );
         }
         // Standard and link icon buttons carry no container; `Automatic`
@@ -198,18 +202,18 @@ pub fn draw_chrome(
 /// Panics on a `ButtonStyle` variant this theme does not implement.
 pub fn draw_state_layer(
     colors: &crate::theme::colors::MaterialColorScheme,
-    draw: &mut dyn crate::DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut cherenkov::Recorder,
+    bounds: cherenkov::kurbo::Rect,
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
     let color = match style {
-        ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
+        ButtonStyle::BorderedProminent => colors.on_primary.working(),
         ButtonStyle::Automatic
         | ButtonStyle::Bordered
         | ButtonStyle::Plain
         | ButtonStyle::Borderless
-        | ButtonStyle::Link => colors.primary.peniko(),
+        | ButtonStyle::Link => colors.primary.working(),
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     let layer = state_layer_rect(bounds);
@@ -597,15 +601,15 @@ mod tests {
     fn outlined_icon_button_border_uses_outline_variant() {
         use super::{IconButtonVariantTokens, SelectedOutlinedIconButton};
         use crate::{Material3, theme::colors::MaterialColorScheme};
+        use cherenkov::WorkingColor;
         use hydrolysis::Style as _;
-        use waterui::{Environment, Signal, color::ResolvedColor};
+        use waterui::{Environment, Signal};
 
-        fn assert_resolves_to(actual: ResolvedColor, expected: ResolvedColor) {
-            assert_eq!(actual.red.to_bits(), expected.red.to_bits());
-            assert_eq!(actual.green.to_bits(), expected.green.to_bits());
-            assert_eq!(actual.blue.to_bits(), expected.blue.to_bits());
-            assert_eq!(actual.headroom.to_bits(), expected.headroom.to_bits());
-            assert_eq!(actual.opacity.to_bits(), expected.opacity.to_bits());
+        fn assert_resolves_to(actual: WorkingColor, expected: WorkingColor) {
+            assert_eq!(
+                actual.components.map(f32::to_bits),
+                expected.components.map(f32::to_bits)
+            );
         }
 
         let scheme = MaterialColorScheme::baseline_light();
@@ -618,7 +622,7 @@ mod tests {
         ] {
             assert_resolves_to(
                 color.resolve(&env).snapshot(),
-                scheme.outline_variant.resolved(),
+                scheme.outline_variant.working(),
             );
         }
     }

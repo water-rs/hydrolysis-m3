@@ -24,7 +24,7 @@
 //! `MaterialShapes.kt`'s `customPolygon`, whose repetition and mirroring
 //! [`RoundedPolygon::repeated`] reproduces.
 
-use vello::kurbo::{BezPath, Point, Vec2};
+use cherenkov::kurbo::{BezPath, Point, Vec2};
 
 /// How many angles each shape is sampled at. The outlines are smooth and the
 /// indicator is drawn small, so this is well past the point of visible facets.
@@ -415,7 +415,7 @@ fn append_arc(path: &mut BezPath, centre: Point, start: Point, end: Point) {
     // Wrap the sweep into -PI..=PI so the arc takes the short way round.
     let raw = end_angle - start_angle;
     let sweep = core::f64::consts::TAU.mul_add(-(raw / core::f64::consts::TAU).round(), raw);
-    let arc = vello::kurbo::Arc::new(centre, (radius, radius), start_angle, sweep, 0.0);
+    let arc = cherenkov::kurbo::Arc::new(centre, (radius, radius), start_angle, sweep, 0.0);
     arc.to_cubic_beziers(ARC_TOLERANCE, |p1, p2, p3| {
         path.curve_to(p1, p2, p3);
     });
@@ -425,8 +425,8 @@ fn append_arc(path: &mut BezPath, centre: Point, start: Point, end: Point) {
 fn flatten(path: &BezPath) -> Vec<Point> {
     const TOLERANCE: f64 = 0.001;
     let mut points = Vec::new();
-    vello::kurbo::flatten(path.iter(), TOLERANCE, |element| match element {
-        vello::kurbo::PathEl::MoveTo(point) | vello::kurbo::PathEl::LineTo(point) => {
+    cherenkov::kurbo::flatten(path.iter(), TOLERANCE, |element| match element {
+        cherenkov::kurbo::PathEl::MoveTo(point) | cherenkov::kurbo::PathEl::LineTo(point) => {
             points.push(point);
         }
         _ => {}

@@ -14,8 +14,10 @@ use crate::dimensions::{
 use crate::icon_paths::{IconGrid, add, remove};
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
-use crate::{Brush, DrawContext, StepperEnd, StepperMetrics, WidgetInteractionState};
-use vello::kurbo::{Rect, RoundedRectRadii};
+use crate::{StepperEnd, StepperMetrics, WidgetInteractionState};
+use cherenkov::kurbo::RoundedRect;
+use cherenkov::kurbo::{Rect, RoundedRectRadii};
+use cherenkov::{Draw as _, Recorder};
 
 pub const fn metrics() -> StepperMetrics {
     StepperMetrics::new(
@@ -56,34 +58,30 @@ fn press_progress(state: WidgetInteractionState) -> f64 {
 
 pub fn draw_button(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     end: StepperEnd,
     state: WidgetInteractionState,
 ) {
-    draw.fill_rounded_rect(
-        bounds,
-        radii(bounds, end, press_progress(state)),
-        &Brush::from(colors.surface_container.peniko()),
+    draw.fill(
+        RoundedRect::from_rect(bounds, radii(bounds, end, press_progress(state))),
+        colors.surface_container.working(),
     );
 }
 
-pub fn draw_decrement_icon(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+pub fn draw_decrement_icon(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     let grid = IconGrid::centered(bounds.center(), STEPPER_ICON_SIZE);
-    draw.fill_path(
-        &remove(grid),
-        &Brush::from(colors.on_surface_variant.peniko()),
-    );
+    draw.fill(remove(grid), colors.on_surface_variant.working());
 }
 
-pub fn draw_increment_icon(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+pub fn draw_increment_icon(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     let grid = IconGrid::centered(bounds.center(), STEPPER_ICON_SIZE);
-    draw.fill_path(&add(grid), &Brush::from(colors.on_surface_variant.peniko()));
+    draw.fill(add(grid), colors.on_surface_variant.working());
 }
 
 pub fn draw_button_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     end: StepperEnd,
     state: WidgetInteractionState,
@@ -92,7 +90,7 @@ pub fn draw_button_state_layer(
         draw,
         bounds,
         radii(bounds, end, press_progress(state)),
-        colors.on_surface_variant.peniko(),
+        colors.on_surface_variant.working(),
         state,
     );
 }
@@ -106,7 +104,7 @@ mod tests {
         STEPPER_BUTTON_SPACING, STEPPER_ICON_SIZE, STEPPER_INNER_CORNER_RADIUS,
         STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
     };
-    use vello::kurbo::Rect;
+    use cherenkov::kurbo::Rect;
 
     #[test]
     fn stepper_uses_material_icon_button_tokens() {

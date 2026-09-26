@@ -1,6 +1,7 @@
-use crate::{Brush, DrawContext, PressWave, PressWaves, WidgetInteractionState};
-use vello::kurbo::{Point, Rect, RoundedRectRadii};
-use vello::peniko::Color;
+use crate::{PressWave, PressWaves, WidgetInteractionState};
+use cherenkov::kurbo::{Circle, RoundedRect};
+use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
+use cherenkov::{Draw as _, Paint, Recorder, WorkingColor};
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
 /// targets still produce a ripple at least this wide.
@@ -90,10 +91,10 @@ fn ripple_kinematics(target: Point, diameter: f64, wave: PressWave) -> (Point, f
 /// from rapid re-presses composite naturally (Material semantics: older waves keep
 /// fading while the newest grows).
 fn fill_waves(
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     target: Point,
     diameter: f64,
-    color: Color,
+    color: WorkingColor,
     waves: PressWaves,
 ) {
     for wave in waves.iter() {
@@ -101,31 +102,32 @@ fn fill_waves(
             continue;
         }
         let (center, radius) = ripple_kinematics(target, diameter, wave);
-        let brush = Brush::from(color.with_alpha(wave.opacity.clamp(0.0, 1.0)));
-        draw.fill_circle(center, radius, &brush);
+        let brush = Paint::from(color.with_alpha(wave.opacity.clamp(0.0, 1.0)));
+        draw.fill(Circle::new(center, radius), brush);
     }
 }
 
 /// Draws the resting state layer (hover/focus tint) into `bounds`.
 fn draw_state_tint_rounded(
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     radii: RoundedRectRadii,
-    color: Color,
+    color: WorkingColor,
     state_opacity: f32,
 ) {
     if state_opacity > 0.0 {
-        draw.push_rounded_layer(state_opacity, bounds, radii);
-        draw.fill_rounded_rect(bounds, radii, &Brush::from(color));
-        draw.pop_layer();
+        draw.fill(
+            RoundedRect::from_rect(bounds, radii),
+            color.with_alpha(color.components[3] * state_opacity),
+        );
     }
 }
 
 pub fn draw_bounded(
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     radii: RoundedRectRadii,
-    color: Color,
+    color: WorkingColor,
     state: WidgetInteractionState,
 ) {
     draw_state_tint_rounded(
@@ -145,23 +147,24 @@ pub fn draw_bounded(
     // animated geometry: the retained tree re-encodes the scene every frame
     // while press animations run, so each wave's sampled progress/origin
     // drives its growth and drift directly.
-    draw.push_rounded_layer(1.0, bounds, radii);
-    fill_waves(draw, bounds.center(), ripple_diameter(bounds), color, waves);
-    draw.pop_layer();
+    draw.clip(RoundedRect::from_rect(bounds, radii), |draw| {
+        fill_waves(draw, bounds.center(), ripple_diameter(bounds), color, waves);
+    });
 }
 
 pub fn draw_unbounded_circle(
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     center: Point,
     radius: f64,
-    color: Color,
+    color: WorkingColor,
     state: WidgetInteractionState,
 ) {
     let state_opacity = resolved_state_layer_opacity(state);
     if state_opacity > 0.0 {
-        draw.push_layer(state_opacity, None);
-        draw.fill_circle(center, radius, &Brush::from(color));
-        draw.pop_layer();
+        draw.fill(
+            Circle::new(center, radius),
+            color.with_alpha(color.components[3] * state_opacity),
+        );
     }
 
     let waves = resolved_press_waves(state);
@@ -171,23 +174,16 @@ pub fn draw_unbounded_circle(
     // An unbounded halo caps the wave at exactly `radius` — not the disc's
     // diagonal and not the bounded-ripple minimum diameter — so the wave
     // target is the requested diameter directly.
-    draw.push_layer(1.0, None);
     fill_waves(draw, center, radius * 2.0, color, waves);
-    draw.pop_layer();
 }
 
 #[cfg(test)]
 mod tests {
     use super::{PRESSED_STATE_LAYER_OPACITY, RIPPLE_MINIMUM_DIAMETER, ripple_diameter};
-    use crate::{
-        Brush, DrawContext, PressWave, PressWaves, WidgetInteractionState, theme::state_layer,
-    };
+    use crate::{PressWave, PressWaves, WidgetInteractionState, theme::state_layer};
+    use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
+    use cherenkov::{Command, Content, Draw as _, Paint, Recorder, ShapeData, WorkingColor};
     use std::path::Path;
-    use vello::kurbo::{Affine, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii};
-    use vello::peniko::Color;
-    use waterui_graphics::{
-        GpuContext, GpuFrame, GpuRuntime, GpuSurface, GpuView, OffscreenRenderConfig, OffscreenSize,
-    };
 
     #[test]
     fn material_ripple_diameter_spans_diagonal_with_minimum() {
@@ -219,21 +215,19 @@ mod tests {
         // center, at a radius between the initial fraction and full size.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
         let origin = Point::new(10.0, 12.0);
-        let mut recorder = RecordingDrawContext::default();
+        let mut recorder = Recorder::new();
         state_layer::draw_bounded(
             &mut recorder,
             bounds,
             8.0.into(),
-            Color::new([1.0, 1.0, 1.0, 1.0]),
+            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             pressed_state(&[PressWave {
                 origin: Some(origin),
                 progress: 0.5,
                 opacity: 0.12,
             }]),
         );
-        let circle = recorder
-            .single_circle()
-            .expect("mid-press ripple must fill a solid circle");
+        let circle = single_circle(recorder).expect("mid-press ripple must fill a solid circle");
         assert_eq!(
             circle.center,
             Point::new(30.0, 16.0),
@@ -251,21 +245,19 @@ mod tests {
         // At full progress the ripple covers the target: a solid circle (no
         // soft-edge gradient) centered in bounds at the full ripple diameter.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
-        let mut recorder = RecordingDrawContext::default();
+        let mut recorder = Recorder::new();
         state_layer::draw_bounded(
             &mut recorder,
             bounds,
             8.0.into(),
-            Color::new([1.0, 1.0, 1.0, 1.0]),
+            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             pressed_state(&[PressWave {
                 origin: Some(Point::new(10.0, 12.0)),
                 progress: 1.0,
                 opacity: 0.12,
             }]),
         );
-        let circle = recorder
-            .single_circle()
-            .expect("press ripple must fill a solid circle");
+        let circle = single_circle(recorder).expect("press ripple must fill a solid circle");
         assert_eq!(circle.center, Point::new(50.0, 20.0), "circle is centered");
         assert!(
             (circle.radius - ripple_diameter(bounds) * 0.5).abs() < 1e-6,
@@ -283,21 +275,19 @@ mod tests {
         // converges to the halo radius itself, not the disc's diagonal.
         let center = Point::new(50.0, 30.0);
         let radius = 20.0;
-        let mut recorder = RecordingDrawContext::default();
+        let mut recorder = Recorder::new();
         state_layer::draw_unbounded_circle(
             &mut recorder,
             center,
             radius,
-            Color::new([1.0, 1.0, 1.0, 1.0]),
+            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             pressed_state(&[PressWave {
                 origin: None,
                 progress: 1.0,
                 opacity: 0.12,
             }]),
         );
-        let circle = recorder
-            .single_circle()
-            .expect("press ripple must fill a solid circle");
+        let circle = single_circle(recorder).expect("press ripple must fill a solid circle");
         assert_eq!(circle.center, center, "wave converges on the halo center");
         assert!(
             (circle.radius - radius).abs() < 1e-6,
@@ -313,12 +303,12 @@ mod tests {
         // while the fresh wave grows from its own press point — both are
         // filled the same frame, oldest first.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
-        let mut recorder = RecordingDrawContext::default();
+        let mut recorder = Recorder::new();
         state_layer::draw_bounded(
             &mut recorder,
             bounds,
             8.0.into(),
-            Color::new([1.0, 1.0, 1.0, 1.0]),
+            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             pressed_state(&[
                 PressWave {
                     origin: Some(Point::new(10.0, 12.0)),
@@ -332,7 +322,7 @@ mod tests {
                 },
             ]),
         );
-        let circles = &recorder.filled_circles;
+        let circles = filled_circles(recorder);
         assert_eq!(circles.len(), 2, "both waves must be filled");
         assert_eq!(
             circles[0].center,
@@ -361,20 +351,18 @@ mod tests {
         // previews, tests) still renders a press layer: one centered,
         // full-coverage wave at the MD3 pressed token.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
-        let mut recorder = RecordingDrawContext::default();
+        let mut recorder = Recorder::new();
         state_layer::draw_bounded(
             &mut recorder,
             bounds,
             8.0.into(),
-            Color::new([1.0, 1.0, 1.0, 1.0]),
+            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             WidgetInteractionState {
                 pressed: true,
                 ..WidgetInteractionState::NONE
             },
         );
-        let circle = recorder
-            .single_circle()
-            .expect("static pressed state must fill a press layer");
+        let circle = single_circle(recorder).expect("static pressed state must fill a press layer");
         assert_eq!(circle.center, Point::new(50.0, 20.0));
         assert!(
             matches!(
@@ -399,305 +387,91 @@ mod tests {
         brush: RecordedBrush,
     }
 
-    #[derive(Default)]
-    struct RecordingDrawContext {
-        filled_circles: Vec<RecordedCircle>,
-    }
-
-    impl RecordingDrawContext {
-        fn record_brush(brush: &Brush) -> RecordedBrush {
-            match brush {
-                Brush::Solid(color) => RecordedBrush::Solid(color.components[3]),
-                Brush::Gradient(_) => RecordedBrush::Gradient,
-            }
-        }
-
-        fn single_circle(&self) -> Option<RecordedCircle> {
-            assert!(
-                self.filled_circles.len() <= 1,
-                "expected at most one filled circle, recorded {}",
-                self.filled_circles.len()
-            );
-            self.filled_circles.first().copied()
+    fn record_brush(brush: &Paint) -> RecordedBrush {
+        match brush {
+            Paint::Solid(color) => RecordedBrush::Solid(color.components[3]),
+            _ => RecordedBrush::Gradient,
         }
     }
 
-    impl DrawContext for RecordingDrawContext {
-        fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
-        fn fill_rounded_rect(&mut self, _rect: Rect, _radii: RoundedRectRadii, _brush: &Brush) {}
-        fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
-        fn stroke_rounded_rect(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _brush: &Brush,
-            _width: f64,
-        ) {
-        }
-        fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, _width: f64) {}
-        fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {}
-        fn fill_circle(&mut self, center: Point, radius: f64, brush: &Brush) {
-            self.filled_circles.push(RecordedCircle {
-                center,
-                radius,
-                brush: Self::record_brush(brush),
-            });
-        }
-        fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
-        fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
-        fn draw_shadow(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
-            _blur: f64,
-            _color: Color,
-        ) {
-        }
-        fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
-        fn push_rounded_layer(&mut self, _alpha: f32, _clip: Rect, _radii: RoundedRectRadii) {}
-        fn pop_layer(&mut self) {}
-        fn push_transform(&mut self, _affine: Affine) {}
-        fn pop_transform(&mut self) {}
+    /// The solid circles the recorder filled, in draw order.
+    fn filled_circles(recorder: Recorder) -> Vec<RecordedCircle> {
+        let mut content: Content = recorder.finish();
+        content
+            .snapshot()
+            .commands()
+            .iter()
+            .filter_map(|command| match command {
+                Command::Fill {
+                    shape: ShapeData::Circle(circle),
+                    paint,
+                } => Some(RecordedCircle {
+                    center: circle.center,
+                    radius: circle.radius,
+                    brush: record_brush(paint),
+                }),
+                _ => None,
+            })
+            .collect()
     }
 
-    struct VelloTestDrawContext<'a> {
-        scene: &'a mut vello::Scene,
+    fn single_circle(recorder: Recorder) -> Option<RecordedCircle> {
+        let circles = filled_circles(recorder);
+        assert!(
+            circles.len() <= 1,
+            "expected at most one filled circle, recorded {}",
+            circles.len()
+        );
+        circles.first().copied()
     }
 
-    impl VelloTestDrawContext<'_> {
-        fn fill_shape(&mut self, shape: &impl vello::kurbo::Shape, brush: &Brush) {
-            match brush {
-                Brush::Solid(color) => self.scene.fill(
-                    vello::peniko::Fill::NonZero,
-                    Affine::IDENTITY,
-                    color,
-                    None,
-                    shape,
-                ),
-                Brush::Gradient(gradient) => self.scene.fill(
-                    vello::peniko::Fill::NonZero,
-                    Affine::IDENTITY,
-                    gradient,
-                    None,
-                    shape,
-                ),
-            }
-        }
-
-        fn stroke_shape(&mut self, shape: &impl vello::kurbo::Shape, brush: &Brush, width: f64) {
-            let stroke = vello::kurbo::Stroke::new(width);
-            match brush {
-                Brush::Solid(color) => {
-                    self.scene
-                        .stroke(&stroke, Affine::IDENTITY, color, None, shape);
-                }
-                Brush::Gradient(gradient) => {
-                    self.scene
-                        .stroke(&stroke, Affine::IDENTITY, gradient, None, shape);
-                }
-            }
-        }
-    }
-
-    impl DrawContext for VelloTestDrawContext<'_> {
-        fn fill_rect(&mut self, rect: Rect, brush: &Brush) {
-            self.fill_shape(&rect, brush);
-        }
-
-        fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
-            self.fill_shape(&RoundedRect::from_rect(rect, radii), brush);
-        }
-
-        fn stroke_rect(&mut self, rect: Rect, brush: &Brush, width: f64) {
-            self.stroke_shape(&rect, brush, width);
-        }
-
-        fn stroke_rounded_rect(
-            &mut self,
-            rect: Rect,
-            radii: RoundedRectRadii,
-            brush: &Brush,
-            width: f64,
-        ) {
-            self.stroke_shape(&RoundedRect::from_rect(rect, radii), brush, width);
-        }
-
-        fn stroke_line(&mut self, from: Point, to: Point, brush: &Brush, width: f64) {
-            self.stroke_shape(&Line::new(from, to), brush, width);
-        }
-
-        fn stroke_circle(&mut self, center: Point, radius: f64, brush: &Brush, width: f64) {
-            self.stroke_shape(&Circle::new(center, radius), brush, width);
-        }
-
-        fn fill_circle(&mut self, center: Point, radius: f64, brush: &Brush) {
-            self.fill_shape(&Circle::new(center, radius), brush);
-        }
-
-        fn fill_path(&mut self, path: &BezPath, brush: &Brush) {
-            self.fill_shape(path, brush);
-        }
-
-        fn stroke_path(&mut self, path: &BezPath, brush: &Brush, width: f64) {
-            self.stroke_shape(path, brush, width);
-        }
-
-        fn draw_shadow(
-            &mut self,
-            rect: Rect,
-            radii: RoundedRectRadii,
-            offset: vello::kurbo::Vec2,
-            blur: f64,
-            color: Color,
-        ) {
-            let radius = radii
-                .as_single_radius()
-                .expect("vello blurred shadows require uniform corner radii");
-            self.scene.draw_blurred_rounded_rect(
-                Affine::IDENTITY,
-                rect + offset,
-                color,
-                radius,
-                blur.max(0.0),
-            );
-        }
-
-        fn push_layer(&mut self, alpha: f32, clip: Option<&Rect>) {
-            let clip = clip
-                .copied()
-                .unwrap_or(Rect::new(-1.0e9, -1.0e9, 1.0e9, 1.0e9));
-            self.scene.push_layer(
-                vello::peniko::Fill::NonZero,
-                vello::peniko::BlendMode::default(),
-                alpha,
-                Affine::IDENTITY,
-                &clip,
-            );
-        }
-
-        fn push_rounded_layer(&mut self, alpha: f32, clip: Rect, radii: RoundedRectRadii) {
-            let clip = RoundedRect::from_rect(clip, radii);
-            self.scene.push_layer(
-                vello::peniko::Fill::NonZero,
-                vello::peniko::BlendMode::default(),
-                alpha,
-                Affine::IDENTITY,
-                &clip,
-            );
-        }
-
-        fn pop_layer(&mut self) {
-            self.scene.pop_layer();
-        }
-
-        fn push_transform(&mut self, _affine: Affine) {
-            panic!("ripple visual test does not use transforms");
-        }
-
-        fn pop_transform(&mut self) {
-            panic!("ripple visual test does not use transforms");
-        }
-    }
-
-    struct RippleVisualRenderer {
-        renderer: Option<vello::Renderer>,
-        scene: vello::Scene,
-    }
-
-    impl RippleVisualRenderer {
-        fn new() -> Self {
-            Self {
-                renderer: None,
-                scene: vello::Scene::new(),
-            }
-        }
-    }
-
-    impl GpuView for RippleVisualRenderer {
-        #[expect(
-            clippy::future_not_send,
-            reason = "GpuView runs on the render thread; this future borrows the non-Send `GpuContext`/`Environment`"
-        )]
-        async fn setup(&mut self, ctx: &GpuContext<'_>, _env: &mut waterui_core::Environment) {
-            self.renderer = Some(
-                vello::Renderer::new(
-                    ctx.device,
-                    vello::RendererOptions {
-                        use_cpu: false,
-                        antialiasing_support: vello::AaSupport::area_only(),
-                        num_init_threads: std::num::NonZeroUsize::new(1),
-                        pipeline_cache: None,
-                    },
-                )
-                .expect("failed to create ripple visual vello renderer"),
-            );
-        }
-
-        fn render(&mut self, frame: &mut GpuFrame) {
-            self.scene.reset();
-            let bounds = Rect::new(24.0, 24.0, 216.0, 96.0);
-            let mut draw = VelloTestDrawContext {
-                scene: &mut self.scene,
-            };
-            draw.fill_rounded_rect(
-                bounds,
-                20.0.into(),
-                &Brush::from(Color::new([0.40, 0.31, 0.64, 1.0])),
-            );
-            let mut press_waves = PressWaves::EMPTY;
-            press_waves.push(PressWave {
-                origin: Some(Point::new(56.0, 48.0)),
-                progress: 0.72,
-                opacity: 0.30,
-            });
-            state_layer::draw_bounded(
-                &mut draw,
-                bounds,
-                20.0.into(),
-                Color::new([1.0, 1.0, 1.0, 1.0]),
-                WidgetInteractionState {
-                    pressed: true,
-                    press_waves,
-                    ..WidgetInteractionState::NONE
-                },
-            );
-
-            self.renderer
-                .as_mut()
-                .expect("ripple visual renderer was not set up")
-                .render_to_texture(
-                    frame.device,
-                    frame.queue,
-                    &self.scene,
-                    &frame.view,
-                    &vello::RenderParams {
-                        base_color: Color::WHITE,
-                        width: frame.width,
-                        height: frame.height,
-                        antialiasing_method: vello::AaConfig::Area,
-                    },
-                )
-                .expect("ripple visual vello render failed");
-        }
-    }
     #[test]
     #[ignore = "writes a visual acceptance PNG for direct image review"]
     fn material_ripple_visual_snapshot() {
-        let mut env = waterui_core::Environment::new();
-        let runtime = pollster::block_on(GpuRuntime::new())
-            .expect("ripple visual test requires a high-performance GPU");
-        let output = pollster::block_on(
-            GpuSurface::new(RippleVisualRenderer::new()).render_offscreen(
-                &runtime,
-                OffscreenRenderConfig::new(
-                    OffscreenSize::try_from_pixels(240, 120).expect("static size must be valid"),
-                )
-                .format(vello::wgpu::TextureFormat::Rgba8Unorm),
-                &mut env,
-            ),
-        )
-        .expect("ripple visual offscreen render failed");
+        use hydrolysis::SurfaceProvider as _;
+
+        let surface = hydrolysis::OffscreenSurface::new(240, 120);
+        let bounds = Rect::new(24.0, 24.0, 216.0, 96.0);
+        let picture = cherenkov::Picture::record(|draw| {
+            draw.fill(
+                RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(20.0)),
+                WorkingColor::new([0.40, 0.31, 0.64, 1.0]),
+            );
+        });
+        let mut recorder = Recorder::new();
+        let mut press_waves = PressWaves::EMPTY;
+        press_waves.push(PressWave {
+            origin: Some(Point::new(56.0, 48.0)),
+            progress: 0.72,
+            opacity: 0.30,
+        });
+        state_layer::draw_bounded(
+            &mut recorder,
+            bounds,
+            20.0.into(),
+            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+            WidgetInteractionState {
+                pressed: true,
+                press_waves,
+                ..WidgetInteractionState::NONE
+            },
+        );
+        let ripple = recorder.finish().into_picture();
+
+        let target = surface.surface();
+        target.clear_color(WorkingColor::WHITE);
+        target.update(|tx| {
+            tx[target.root()].content(cherenkov::Picture::record(|draw| {
+                draw.picture(&picture, cherenkov::kurbo::Affine::IDENTITY);
+                draw.picture(&ripple, cherenkov::kurbo::Affine::IDENTITY);
+            }));
+        });
+        surface
+            .engine()
+            .render(cherenkov::FrameTime::at(std::time::Instant::now()))
+            .expect("ripple visual render failed");
+        let rgba8 = surface.readback_rgba8();
+
         let output_path = Path::new("target/hydrolysis-m3-visual/material-ripple-solid.png");
         std::fs::create_dir_all(
             output_path
@@ -705,8 +479,9 @@ mod tests {
                 .expect("ripple visual output path must have parent"),
         )
         .expect("failed to create ripple visual output directory");
-        output
-            .save_png(output_path)
+        image::RgbaImage::from_raw(240, 120, rgba8)
+            .expect("readback must be 240x120 RGBA8")
+            .save(output_path)
             .expect("failed to save ripple visual output");
     }
 }

@@ -1,3 +1,4 @@
+use crate::TextContextMenuMetrics;
 use crate::dimensions::{
     TEXT_CONTEXT_MENU_CONTAINER_SHAPE, TEXT_CONTEXT_MENU_HORIZONTAL_PADDING,
     TEXT_CONTEXT_MENU_MAX_WIDTH, TEXT_CONTEXT_MENU_MIN_WIDTH, TEXT_CONTEXT_MENU_ROW_HEIGHT,
@@ -6,9 +7,10 @@ use crate::dimensions::{
 };
 use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DrawContext, TextContextMenuMetrics};
+use cherenkov::kurbo::RoundedRect;
+use cherenkov::{Draw as _, Recorder};
 
-use vello::kurbo::{Rect, RoundedRectRadii};
+use cherenkov::kurbo::{Rect, RoundedRectRadii};
 
 pub const fn text_context_metrics() -> TextContextMenuMetrics {
     TextContextMenuMetrics {
@@ -24,27 +26,22 @@ pub const fn text_context_metrics() -> TextContextMenuMetrics {
     }
 }
 
-pub fn draw_text_context_panel(
-    colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: Rect,
-) {
+pub fn draw_text_context_panel(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     let radii = RoundedRectRadii::from_single_radius(TEXT_CONTEXT_MENU_CONTAINER_SHAPE);
     // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`.
     crate::elevation::draw_shadows(draw, bounds, radii, MaterialElevationLevel::LEVEL2, colors);
-    draw.fill_rounded_rect(
-        bounds,
-        radii,
-        &Brush::from(colors.surface_container.peniko()),
+    draw.fill(
+        RoundedRect::from_rect(bounds, radii),
+        colors.surface_container.working(),
     );
 }
 
 pub fn draw_text_context_separator(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
 ) {
-    draw.fill_rect(bounds, &Brush::from(colors.outline_variant.peniko()));
+    draw.fill(bounds, colors.outline_variant.working());
 }
 
 #[cfg(test)]

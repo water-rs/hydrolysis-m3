@@ -10,7 +10,9 @@ use crate::dimensions::{
 use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
-use crate::{Brush, DrawContext, PickerMetrics, RadioIndicatorState, WidgetInteractionState};
+use crate::{PickerMetrics, RadioIndicatorState, WidgetInteractionState};
+use cherenkov::kurbo::{Circle, Line, RoundedRect, RoundedRectRadii, Stroke};
+use cherenkov::{Draw as _, Recorder, WorkingColor};
 use num_traits::ToPrimitive;
 use waterui_form::picker::PickerStyle;
 
@@ -79,36 +81,42 @@ const fn segmented_metrics() -> PickerMetrics {
 
 pub fn draw_indicator(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
 ) {
     let center_x = PICKER_INDICATOR_SPACE.mul_add(-0.5, bounds.x1 - PICKER_HORIZONTAL_INSET);
     let center_y = bounds.height().mul_add(0.5, bounds.y0);
-    let chevron = vello::kurbo::BezPath::from_vec(vec![
-        vello::kurbo::PathEl::MoveTo(vello::kurbo::Point::new(center_x - 4.0, center_y - 2.0)),
-        vello::kurbo::PathEl::LineTo(vello::kurbo::Point::new(center_x, center_y + 2.0)),
-        vello::kurbo::PathEl::LineTo(vello::kurbo::Point::new(center_x + 4.0, center_y - 2.0)),
+    let chevron = cherenkov::kurbo::BezPath::from_vec(vec![
+        cherenkov::kurbo::PathEl::MoveTo(cherenkov::kurbo::Point::new(
+            center_x - 4.0,
+            center_y - 2.0,
+        )),
+        cherenkov::kurbo::PathEl::LineTo(cherenkov::kurbo::Point::new(center_x, center_y + 2.0)),
+        cherenkov::kurbo::PathEl::LineTo(cherenkov::kurbo::Point::new(
+            center_x + 4.0,
+            center_y - 2.0,
+        )),
     ]);
-    draw.stroke_path(
-        &chevron,
-        &Brush::from(colors.on_surface_variant.peniko()),
-        1.5,
+    draw.stroke(
+        chevron,
+        Stroke::new(1.5),
+        colors.on_surface_variant.working(),
     );
 }
 
 pub fn draw_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
     state: WidgetInteractionState,
 ) {
-    state_layer::draw_bounded(draw, bounds, 4.0.into(), colors.on_surface.peniko(), state);
+    state_layer::draw_bounded(draw, bounds, 4.0.into(), colors.on_surface.working(), state);
 }
 
 pub fn draw_popup(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    popup_rect: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    popup_rect: cherenkov::kurbo::Rect,
 ) {
     let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
     // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
@@ -120,42 +128,38 @@ pub fn draw_popup(
         MaterialElevationLevel::LEVEL2,
         colors,
     );
-    draw.fill_rounded_rect(
-        popup_rect,
-        radii,
-        &Brush::from(colors.surface_container.peniko()),
+    draw.fill(
+        RoundedRect::from_rect(popup_rect, radii),
+        colors.surface_container.working(),
     );
 }
 
 pub fn draw_popup_row_background(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    row_rect: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    row_rect: cherenkov::kurbo::Rect,
     selected: bool,
 ) {
     if !selected {
         return;
     }
-    let inset = vello::kurbo::Rect::new(
+    let inset = cherenkov::kurbo::Rect::new(
         row_rect.x0 + 2.0,
         row_rect.y0 + 1.0,
         row_rect.x1 - 2.0,
         row_rect.y1 - 1.0,
     );
-    draw.fill_rect(
-        inset,
-        &Brush::from(colors.surface_container_highest.peniko()),
-    );
+    draw.fill(inset, colors.surface_container_highest.working());
 }
 
 pub fn draw_popup_row_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    row_rect: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    row_rect: cherenkov::kurbo::Rect,
     selected: bool,
     state: WidgetInteractionState,
 ) {
-    let inset = vello::kurbo::Rect::new(
+    let inset = cherenkov::kurbo::Rect::new(
         row_rect.x0 + 2.0,
         row_rect.y0 + 1.0,
         row_rect.x1 - 2.0,
@@ -166,9 +170,9 @@ pub fn draw_popup_row_state_layer(
         inset,
         0.0.into(),
         if selected {
-            colors.on_secondary_container.peniko()
+            colors.on_secondary_container.working()
         } else {
-            colors.on_surface.peniko()
+            colors.on_surface.working()
         },
         state,
     );
@@ -176,16 +180,16 @@ pub fn draw_popup_row_state_layer(
 
 pub fn draw_separator(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    separator: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    separator: cherenkov::kurbo::Rect,
 ) {
-    draw.fill_rect(separator, &Brush::from(colors.outline_variant.peniko()));
+    draw.fill(separator, colors.outline_variant.working());
 }
 
 pub fn draw_radio_indicator(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    draw: &mut Recorder,
+    center: cherenkov::kurbo::Point,
     radius: f64,
     state: RadioIndicatorState,
 ) {
@@ -193,52 +197,32 @@ pub fn draw_radio_indicator(
     let inner_scale = state.inner_scale.clamp(0.0, 1.0);
     let inner_opacity = state.inner_opacity.clamp(0.0, 1.0);
     let outer_ring_center_radius = radius - PICKER_RADIO_OUTER_RING_WIDTH / 2.0;
-    draw.stroke_circle(
-        center,
-        outer_ring_center_radius,
-        &Brush::from(blend_role_color(
+    draw.stroke(
+        Circle::new(center, outer_ring_center_radius),
+        Stroke::new(PICKER_RADIO_OUTER_RING_WIDTH),
+        blend_role_color(
             colors.on_surface_variant,
             colors.primary,
             outer_selected_progress,
-        )),
-        PICKER_RADIO_OUTER_RING_WIDTH,
+        ),
     );
     let inner_radius = PICKER_RADIO_INNER_DOT_RADIUS * f64::from(inner_scale);
     if inner_radius > 0.0 && inner_opacity > 0.0 {
-        draw.fill_circle(
-            center,
-            inner_radius,
-            &Brush::from(colors.primary.peniko().with_alpha(inner_opacity)),
+        draw.fill(
+            Circle::new(center, inner_radius),
+            colors.primary.working().with_alpha(inner_opacity),
         );
     }
 }
 
-fn blend_role_color(
-    from: MaterialRoleColor,
-    to: MaterialRoleColor,
-    progress: f32,
-) -> vello::peniko::Color {
-    let progress = progress.clamp(0.0, 1.0);
-    let from = from.argb();
-    let to = to.argb();
-    vello::peniko::Color::new([
-        blend_channel(from.red(), to.red(), progress),
-        blend_channel(from.green(), to.green(), progress),
-        blend_channel(from.blue(), to.blue(), progress),
-        blend_channel(from.alpha(), to.alpha(), progress),
-    ])
-}
-
-fn blend_channel(from: u8, to: u8, progress: f32) -> f32 {
-    let from = f32::from(from) / 255.0;
-    let to = f32::from(to) / 255.0;
-    from.mul_add(1.0 - progress, to * progress)
+fn blend_role_color(from: MaterialRoleColor, to: MaterialRoleColor, progress: f32) -> WorkingColor {
+    crate::lerp_color(from.working(), to.working(), progress)
 }
 
 pub fn draw_radio_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    draw: &mut Recorder,
+    center: cherenkov::kurbo::Point,
     _radius: f64,
     selected: bool,
     state: WidgetInteractionState,
@@ -248,9 +232,9 @@ pub fn draw_radio_state_layer(
         center,
         20.0,
         if selected {
-            colors.primary.peniko()
+            colors.primary.working()
         } else {
-            colors.on_surface.peniko()
+            colors.on_surface.working()
         },
         state,
     );
@@ -269,15 +253,17 @@ pub fn segmented_label_color(
 
 pub fn draw_segmented_container(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
     segment_count: usize,
 ) {
-    draw.stroke_rounded_rect(
-        bounds,
-        PICKER_SEGMENTED_CONTAINER_RADIUS.into(),
-        &Brush::from(colors.outline.peniko()),
-        PICKER_SEGMENTED_OUTLINE_WIDTH,
+    draw.stroke(
+        RoundedRect::from_rect(
+            bounds,
+            RoundedRectRadii::from_single_radius(PICKER_SEGMENTED_CONTAINER_RADIUS),
+        ),
+        Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH),
+        colors.outline.working(),
     );
     if segment_count <= 1 {
         return;
@@ -293,11 +279,13 @@ pub fn draw_segmented_container(
                 .expect("picker segment index must be representable as f64"),
             bounds.x0,
         );
-        draw.stroke_line(
-            vello::kurbo::Point::new(x, bounds.y0),
-            vello::kurbo::Point::new(x, bounds.y1),
-            &Brush::from(colors.outline.peniko()),
-            PICKER_SEGMENTED_OUTLINE_WIDTH,
+        draw.stroke(
+            Line::new(
+                cherenkov::kurbo::Point::new(x, bounds.y0),
+                cherenkov::kurbo::Point::new(x, bounds.y1),
+            ),
+            Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH),
+            colors.outline.working(),
         );
     }
 }
@@ -306,20 +294,20 @@ pub fn draw_segmented_container(
 /// outside edge of each end segment takes the group's full rounding — the
 /// first item rounds its leading corners, the last its trailing corners, and
 /// middle items stay square against the separator strokes.
-const fn segment_radii(is_first: bool, is_last: bool) -> vello::kurbo::RoundedRectRadii {
+const fn segment_radii(is_first: bool, is_last: bool) -> cherenkov::kurbo::RoundedRectRadii {
     let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
     match (is_first, is_last) {
-        (true, true) => vello::kurbo::RoundedRectRadii::new(radius, radius, radius, radius),
-        (true, false) => vello::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
-        (false, true) => vello::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
-        (false, false) => vello::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
+        (true, true) => cherenkov::kurbo::RoundedRectRadii::new(radius, radius, radius, radius),
+        (true, false) => cherenkov::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
+        (false, true) => cherenkov::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
+        (false, false) => cherenkov::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
     }
 }
 
 pub fn draw_segmented_segment(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
     selected: bool,
     is_first: bool,
     is_last: bool,
@@ -327,17 +315,16 @@ pub fn draw_segmented_segment(
     if !selected {
         return;
     }
-    draw.fill_rounded_rect(
-        bounds,
-        segment_radii(is_first, is_last),
-        &Brush::from(colors.secondary_container.peniko()),
+    draw.fill(
+        RoundedRect::from_rect(bounds, segment_radii(is_first, is_last)),
+        colors.secondary_container.working(),
     );
 }
 
 pub fn draw_segmented_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
     selected: bool,
     is_first: bool,
     is_last: bool,
@@ -348,9 +335,9 @@ pub fn draw_segmented_state_layer(
         bounds,
         segment_radii(is_first, is_last),
         if selected {
-            colors.on_secondary_container.peniko()
+            colors.on_secondary_container.working()
         } else {
-            colors.on_surface.peniko()
+            colors.on_surface.working()
         },
         state,
     );
@@ -358,8 +345,8 @@ pub fn draw_segmented_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
-    use vello::peniko::Color;
+    use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
+    use cherenkov::{Command, Paint, Recorder, ShapeData, WorkingColor as Color};
 
     use super::{
         MaterialColorScheme, RadioIndicatorState, blend_role_color, draw_popup_row_background,
@@ -372,10 +359,10 @@ mod tests {
         PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
         PICKER_SEGMENTED_MIN_HEIGHT,
     };
-    use crate::{Brush, DrawContext};
 
+    /// The solid-colour commands a theme draw recorded, sorted by shape.
     #[derive(Default)]
-    struct RecordingDrawContext {
+    struct Recorded {
         circle_fills: Vec<(f64, Color)>,
         circle_strokes: Vec<(f64, f64, Color)>,
         rect_fills: Vec<Color>,
@@ -385,79 +372,63 @@ mod tests {
         shadows: Vec<(f64, f64, Color)>,
     }
 
-    impl DrawContext for RecordingDrawContext {
-        fn fill_rect(&mut self, _rect: Rect, brush: &Brush) {
-            let Brush::Solid(color) = brush else {
-                panic!("Material picker token fills must be solid colors");
-            };
-            self.rect_fills.push(*color);
+    fn solid(paint: &Paint) -> Color {
+        let Paint::Solid(color) = paint else {
+            panic!("Material picker token paints must be solid colors");
+        };
+        *color
+    }
+
+    impl Recorded {
+        fn from(source: Recorder) -> Self {
+            let mut content = source.finish();
+            let mut recorded = Self::default();
+            for command in content.snapshot().commands() {
+                match command {
+                    Command::Fill { shape, paint } => match shape {
+                        ShapeData::Circle(circle) => {
+                            recorded.circle_fills.push((circle.radius, solid(paint)));
+                        }
+                        ShapeData::Rect(_) => recorded.rect_fills.push(solid(paint)),
+                        ShapeData::RoundedRect(rounded) => {
+                            recorded.rounded_fills.push((rounded.radii(), solid(paint)));
+                        }
+                        _ => {}
+                    },
+                    Command::Stroke {
+                        shape,
+                        stroke,
+                        paint,
+                    } => match shape {
+                        ShapeData::Circle(circle) => {
+                            recorded.circle_strokes.push((
+                                circle.radius,
+                                stroke.width,
+                                solid(paint),
+                            ));
+                        }
+                        ShapeData::RoundedRect(rounded) => {
+                            recorded.rounded_strokes.push((
+                                rounded.radii(),
+                                solid(paint),
+                                stroke.width,
+                            ));
+                        }
+                        ShapeData::Line(_) => {
+                            recorded.line_strokes.push((solid(paint), stroke.width));
+                        }
+                        _ => {}
+                    },
+                    Command::Shadow { shadow, .. } => {
+                        recorded
+                            .shadows
+                            .push((shadow.sigma, shadow.offset.y, shadow.color));
+                    }
+                    _ => {}
+                }
+            }
+            recorded
         }
-
-        fn fill_rounded_rect(&mut self, _rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
-            let Brush::Solid(color) = brush else {
-                panic!("Material picker token fills must be solid colors");
-            };
-            self.rounded_fills.push((radii, *color));
-        }
-
-        fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
-
-        fn stroke_rounded_rect(
-            &mut self,
-            _rect: Rect,
-            radii: RoundedRectRadii,
-            brush: &Brush,
-            width: f64,
-        ) {
-            let Brush::Solid(color) = brush else {
-                panic!("Material picker token strokes must be solid colors");
-            };
-            self.rounded_strokes.push((radii, *color, width));
-        }
-
-        fn stroke_line(&mut self, _from: Point, _to: Point, brush: &Brush, width: f64) {
-            let Brush::Solid(color) = brush else {
-                panic!("Material picker token strokes must be solid colors");
-            };
-            self.line_strokes.push((*color, width));
-        }
-
-        fn stroke_circle(&mut self, _center: Point, radius: f64, brush: &Brush, width: f64) {
-            let Brush::Solid(color) = brush else {
-                panic!("Material picker token circle strokes must be solid colors");
-            };
-            self.circle_strokes.push((radius, width, *color));
-        }
-
-        fn fill_circle(&mut self, _center: Point, radius: f64, brush: &Brush) {
-            let Brush::Solid(color) = brush else {
-                panic!("Material picker token circle fills must be solid colors");
-            };
-            self.circle_fills.push((radius, *color));
-        }
-
-        fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
-
-        fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
-
-        fn draw_shadow(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            offset: vello::kurbo::Vec2,
-            blur: f64,
-            color: Color,
-        ) {
-            self.shadows.push((blur, offset.y, color));
-        }
-
-        fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
-
-        fn pop_layer(&mut self) {}
-
-        fn push_transform(&mut self, _affine: Affine) {}
-
-        fn pop_transform(&mut self) {}
     }
 
     #[test]
@@ -483,7 +454,7 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let center = Point::new(10.0, 10.0);
 
-        let mut unselected = RecordingDrawContext::default();
+        let mut unselected = Recorder::new();
         draw_radio_indicator(
             &colors,
             &mut unselected,
@@ -497,7 +468,7 @@ mod tests {
             },
         );
 
-        let mut selected = RecordingDrawContext::default();
+        let mut selected = Recorder::new();
         draw_radio_indicator(
             &colors,
             &mut selected,
@@ -511,23 +482,27 @@ mod tests {
             },
         );
 
+        let unselected = Recorded::from(unselected);
+
+        let selected = Recorded::from(selected);
+
         assert_eq!(unselected.circle_fills, Vec::<(f64, Color)>::new());
         assert_eq!(
             unselected.circle_strokes,
-            vec![(9.0, 2.0, colors.on_surface_variant.peniko())]
+            vec![(9.0, 2.0, colors.on_surface_variant.working())]
         );
         assert_eq!(
             selected.circle_strokes,
-            vec![(9.0, 2.0, colors.primary.peniko())]
+            vec![(9.0, 2.0, colors.primary.working())]
         );
-        assert_eq!(selected.circle_fills, vec![(6.0, colors.primary.peniko())]);
+        assert_eq!(selected.circle_fills, vec![(6.0, colors.primary.working())]);
     }
 
     #[test]
     fn radio_indicator_inner_dot_scales_and_fades() {
         let colors = MaterialColorScheme::baseline_light();
         let center = Point::new(10.0, 10.0);
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_radio_indicator(
             &colors,
@@ -542,6 +517,8 @@ mod tests {
             },
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(draw.circle_fills.len(), 1);
         assert!(
             PICKER_RADIO_INNER_DOT_RADIUS
@@ -551,7 +528,7 @@ mod tests {
         );
         assert_eq!(
             draw.circle_fills[0].1,
-            colors.primary.peniko().with_alpha(0.25)
+            colors.primary.working().with_alpha(0.25)
         );
     }
 
@@ -559,7 +536,7 @@ mod tests {
     fn radio_indicator_outer_ring_color_interpolates() {
         let colors = MaterialColorScheme::baseline_light();
         let center = Point::new(10.0, 10.0);
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_radio_indicator(
             &colors,
@@ -574,6 +551,8 @@ mod tests {
             },
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(
             draw.circle_strokes,
             vec![(
@@ -587,16 +566,18 @@ mod tests {
     #[test]
     fn menu_selected_row_and_divider_use_filled_select_tokens() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_popup_row_background(&colors, &mut draw, Rect::new(0.0, 0.0, 120.0, 48.0), true);
         draw_separator(&colors, &mut draw, Rect::new(0.0, 48.0, 120.0, 49.0));
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(
             draw.rect_fills,
             vec![
-                colors.surface_container_highest.peniko(),
-                colors.outline_variant.peniko(),
+                colors.surface_container_highest.working(),
+                colors.outline_variant.working(),
             ]
         );
     }
@@ -645,7 +626,7 @@ mod tests {
     #[test]
     fn segmented_container_and_selected_segment_use_material_tokens() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_segmented_segment(
             &colors,
@@ -657,21 +638,23 @@ mod tests {
         );
         draw_segmented_container(&colors, &mut draw, Rect::new(0.0, 0.0, 240.0, 40.0), 3);
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(
             draw.rounded_fills,
             vec![(
                 RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
-                colors.secondary_container.peniko()
+                colors.secondary_container.working()
             )]
         );
         assert_eq!(draw.rounded_strokes.len(), 1);
-        assert_eq!(draw.rounded_strokes[0].1, colors.outline.peniko());
+        assert_eq!(draw.rounded_strokes[0].1, colors.outline.working());
         assert_eq!(draw.rounded_strokes[0].2, 1.0);
         assert_eq!(
             draw.line_strokes,
             vec![
-                (colors.outline.peniko(), 1.0),
-                (colors.outline.peniko(), 1.0)
+                (colors.outline.working(), 1.0),
+                (colors.outline.working(), 1.0)
             ]
         );
     }
@@ -683,9 +666,11 @@ mod tests {
         use super::draw_popup;
 
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_popup(&colors, &mut draw, Rect::new(0.0, 0.0, 112.0, 96.0));
+
+        let draw = Recorded::from(draw);
 
         assert_eq!(draw.shadows.len(), 2, "key then ambient shadow");
         let (key_blur, key_y, _) = draw.shadows[0];

@@ -5,7 +5,9 @@ use crate::dimensions::{
     SLIDER_VERTICAL_SPACING,
 };
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DrawContext, SliderMetrics, WidgetInteractionState};
+use crate::{SliderMetrics, WidgetInteractionState};
+use cherenkov::kurbo::{Circle, RoundedRect, RoundedRectRadii};
+use cherenkov::{Draw as _, Recorder};
 
 pub const fn metrics() -> SliderMetrics {
     SliderMetrics::new(
@@ -27,20 +29,23 @@ pub const fn metrics() -> SliderMetrics {
 /// side — so the handle reads as sitting *in* the track rather than on top of it.
 pub fn draw_track(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    track_rect: vello::kurbo::Rect,
-    fill_rect: vello::kurbo::Rect,
+    draw: &mut Recorder,
+    track_rect: cherenkov::kurbo::Rect,
+    fill_rect: cherenkov::kurbo::Rect,
     state: WidgetInteractionState,
 ) {
     // MD3 disabled slider: the inactive track drops to on-surface at 12% and
     // the active track to on-surface at 38%.
     let (track_color, fill_color) = if state.disabled {
         (
-            colors.on_surface.peniko_disabled_container(),
-            colors.on_surface.peniko_disabled_content(),
+            colors.on_surface.working_disabled_container(),
+            colors.on_surface.working_disabled_content(),
         )
     } else {
-        (colors.secondary_container.peniko(), colors.primary.peniko())
+        (
+            colors.secondary_container.working(),
+            colors.primary.working(),
+        )
     };
     let outside = SLIDER_TRACK_HEIGHT / 2.0;
     let inside = SLIDER_TRACK_INSIDE_CORNER_SIZE;
@@ -56,46 +61,59 @@ pub fn draw_track(
     // Inactive remainder, starting clear of the handle.
     let inactive_start = fill_rect.x1 + gap;
     if inactive_start < track_rect.x1 - outside {
-        draw.fill_rounded_rect(
-            vello::kurbo::Rect::new(inactive_start, track_rect.y0, track_rect.x1, track_rect.y1),
-            vello::kurbo::RoundedRectRadii::new(inside, outside, outside, inside),
-            &Brush::from(track_color),
+        draw.fill(
+            RoundedRect::from_rect(
+                cherenkov::kurbo::Rect::new(
+                    inactive_start,
+                    track_rect.y0,
+                    track_rect.x1,
+                    track_rect.y1,
+                ),
+                cherenkov::kurbo::RoundedRectRadii::new(inside, outside, outside, inside),
+            ),
+            track_color,
         );
     }
 
     // Active portion, stopping clear of the handle.
     let active_end = fill_rect.x1 - gap;
     if active_end > track_rect.x0 + outside {
-        draw.fill_rounded_rect(
-            vello::kurbo::Rect::new(track_rect.x0, track_rect.y0, active_end, track_rect.y1),
-            vello::kurbo::RoundedRectRadii::new(outside, inside, inside, outside),
-            &Brush::from(fill_color),
+        draw.fill(
+            RoundedRect::from_rect(
+                cherenkov::kurbo::Rect::new(
+                    track_rect.x0,
+                    track_rect.y0,
+                    active_end,
+                    track_rect.y1,
+                ),
+                cherenkov::kurbo::RoundedRectRadii::new(outside, inside, inside, outside),
+            ),
+            fill_color,
         );
     }
 
     // Stop indicator: a dot at the track's far end, hidden once the handle
     // reaches it so the two never overlap.
-    let indicator_center = vello::kurbo::Point::new(
+    let indicator_center = cherenkov::kurbo::Point::new(
         track_rect.x1 - SLIDER_HANDLE_PADDING - SLIDER_STOP_INDICATOR_SIZE / 2.0,
         track_rect.y0 + track_rect.height() / 2.0,
     );
     if indicator_center.x > inactive_start {
-        draw.fill_circle(
-            indicator_center,
-            SLIDER_STOP_INDICATOR_SIZE / 2.0,
-            &Brush::from(if state.disabled {
-                colors.on_surface.peniko_disabled_content()
+        draw.fill(
+            Circle::new(indicator_center, SLIDER_STOP_INDICATOR_SIZE / 2.0),
+            if state.disabled {
+                colors.on_surface.working_disabled_content()
             } else {
-                colors.on_secondary_container.peniko()
-            }),
+                colors.on_secondary_container.working()
+            },
         );
     }
 }
 
 pub fn draw_thumb(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    draw: &mut Recorder,
+    center: cherenkov::kurbo::Point,
     _radius: f64,
     state: WidgetInteractionState,
 ) {
@@ -104,27 +122,24 @@ pub fn draw_thumb(
     } else {
         SLIDER_HANDLE_WIDTH
     };
-    let bounds = vello::kurbo::Rect::from_center_size(center, (width, SLIDER_HANDLE_HEIGHT));
+    let bounds = cherenkov::kurbo::Rect::from_center_size(center, (width, SLIDER_HANDLE_HEIGHT));
     // MD3 disabled slider handle: on-surface at 38% over an opaque surface
     // underlay, so content behind the semi-transparent handle cannot bleed
     // through (the reference implementation paints the handle over the background role).
     if state.disabled {
-        draw.fill_rounded_rect(
-            bounds,
-            (width / 2.0).into(),
-            &Brush::from(colors.background.peniko()),
+        draw.fill(
+            RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(width / 2.0)),
+            colors.background.working(),
         );
-        draw.fill_rounded_rect(
-            bounds,
-            (width / 2.0).into(),
-            &Brush::from(colors.on_surface.peniko_disabled_content()),
+        draw.fill(
+            RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(width / 2.0)),
+            colors.on_surface.working_disabled_content(),
         );
         return;
     }
-    draw.fill_rounded_rect(
-        bounds,
-        (width / 2.0).into(),
-        &Brush::from(colors.primary.peniko()),
+    draw.fill(
+        RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(width / 2.0)),
+        colors.primary.working(),
     );
 }
 
@@ -136,8 +151,8 @@ pub fn draw_thumb(
 /// never shows.
 pub const fn draw_thumb_state_layer(
     _colors: &MaterialColorScheme,
-    _draw: &mut dyn DrawContext,
-    _center: vello::kurbo::Point,
+    _draw: &mut Recorder,
+    _center: cherenkov::kurbo::Point,
     _radius: f64,
     _state: WidgetInteractionState,
 ) {
@@ -145,68 +160,15 @@ pub const fn draw_thumb_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use crate::test_support::Recorded;
+    use cherenkov::kurbo::{Point, Rect};
+    use cherenkov::{Paint, Recorder};
 
     use super::{MaterialColorScheme, WidgetInteractionState, draw_thumb, draw_track, metrics};
     use crate::dimensions::{
         SLIDER_HANDLE_HEIGHT, SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH,
         SLIDER_PRESSED_HANDLE_WIDTH, SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT,
     };
-    use crate::{Brush, DrawContext};
-
-    #[derive(Default)]
-    struct RecordingDrawContext {
-        rounded_fills: Vec<(Rect, RoundedRectRadii, Brush)>,
-        circle_fills: usize,
-    }
-
-    impl DrawContext for RecordingDrawContext {
-        fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
-
-        fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
-            self.rounded_fills.push((rect, radii, brush.clone()));
-        }
-
-        fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
-
-        fn stroke_rounded_rect(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _brush: &Brush,
-            _width: f64,
-        ) {
-        }
-
-        fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, _width: f64) {}
-
-        fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {}
-
-        fn fill_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush) {
-            self.circle_fills += 1;
-        }
-
-        fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
-
-        fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
-        fn draw_shadow(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
-            _blur: f64,
-            _color: vello::peniko::Color,
-        ) {
-        }
-
-        fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
-
-        fn pop_layer(&mut self) {}
-
-        fn push_transform(&mut self, _affine: Affine) {}
-
-        fn pop_transform(&mut self) {}
-    }
 
     /// Values from `androidx.compose.material3.tokens.SliderTokens`.
     #[test]
@@ -232,7 +194,7 @@ mod tests {
     /// The Expressive handle is a bar: 4dp wide and 44dp tall, not a circle.
     #[test]
     fn slider_thumb_draws_the_expressive_bar_handle() {
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_thumb(
             &MaterialColorScheme::baseline_light(),
             &mut draw,
@@ -241,7 +203,9 @@ mod tests {
             WidgetInteractionState::NONE,
         );
 
-        assert_eq!(draw.circle_fills, 0);
+        let draw = Recorded::from(draw);
+
+        assert_eq!(draw.circle_fills.len(), 0);
         assert_eq!(draw.rounded_fills.len(), 1);
         assert_eq!(draw.rounded_fills[0].0.width(), SLIDER_HANDLE_WIDTH);
         assert_eq!(draw.rounded_fills[0].0.height(), SLIDER_HANDLE_HEIGHT);
@@ -250,7 +214,7 @@ mod tests {
     /// Pressing narrows the handle rather than growing a state layer.
     #[test]
     fn slider_pressed_thumb_narrows() {
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_thumb(
             &MaterialColorScheme::baseline_light(),
             &mut draw,
@@ -261,6 +225,8 @@ mod tests {
                 ..WidgetInteractionState::NONE
             },
         );
+
+        let draw = Recorded::from(draw);
 
         assert_eq!(draw.rounded_fills.len(), 1);
         assert_eq!(draw.rounded_fills[0].0.width(), SLIDER_PRESSED_HANDLE_WIDTH);
@@ -278,7 +244,7 @@ mod tests {
             ..WidgetInteractionState::NONE
         };
 
-        let mut track = RecordingDrawContext::default();
+        let mut track = Recorder::new();
         draw_track(
             &colors,
             &mut track,
@@ -286,16 +252,17 @@ mod tests {
             Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
             disabled,
         );
+        let track = Recorded::from(track);
         assert!(matches!(
             &track.rounded_fills[0].2,
-            Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_container()
+            Paint::Solid(color) if *color == colors.on_surface.working_disabled_container()
         ));
         assert!(matches!(
             &track.rounded_fills[1].2,
-            Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_content()
+            Paint::Solid(color) if *color == colors.on_surface.working_disabled_content()
         ));
 
-        let mut thumb = RecordingDrawContext::default();
+        let mut thumb = Recorder::new();
         draw_thumb(
             &colors,
             &mut thumb,
@@ -303,6 +270,7 @@ mod tests {
             SLIDER_HANDLE_HEIGHT / 2.0,
             disabled,
         );
+        let thumb = Recorded::from(thumb);
         assert_eq!(
             thumb.rounded_fills.len(),
             2,
@@ -310,18 +278,18 @@ mod tests {
         );
         assert!(matches!(
             &thumb.rounded_fills[0].2,
-            Brush::Solid(color) if *color == colors.background.peniko()
+            Paint::Solid(color) if *color == colors.background.working()
         ));
         assert!(matches!(
             &thumb.rounded_fills[1].2,
-            Brush::Solid(color) if *color == colors.on_surface.peniko_disabled_content()
+            Paint::Solid(color) if *color == colors.on_surface.working_disabled_content()
         ));
     }
 
     #[test]
     fn slider_track_uses_material_role_colors() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_track(
             &colors,
             &mut draw,
@@ -330,14 +298,16 @@ mod tests {
             WidgetInteractionState::NONE,
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(draw.rounded_fills.len(), 2);
         assert!(matches!(
             &draw.rounded_fills[0].2,
-            Brush::Solid(color) if *color == colors.secondary_container.peniko()
+            Paint::Solid(color) if *color == colors.secondary_container.working()
         ));
         assert!(matches!(
             &draw.rounded_fills[1].2,
-            Brush::Solid(color) if *color == colors.primary.peniko()
+            Paint::Solid(color) if *color == colors.primary.working()
         ));
         // The track is split around the handle: each bar stops half a handle
         // width plus `ActiveHandlePadding` short of the value position.
@@ -351,7 +321,7 @@ mod tests {
     #[test]
     fn slider_track_gap_corners_use_the_inside_corner_size() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_track(
             &colors,
             &mut draw,
@@ -365,6 +335,7 @@ mod tests {
         // rounded_fills[0] is the inactive remainder: inside corner on the
         // leading (gap) edge, stadium on the trailing edge.
         // rounded_fills[1] is the active bar: stadium leading, inside trailing.
+        let draw = Recorded::from(draw);
         assert_eq!(draw.rounded_fills.len(), 2);
         let inactive_radii = draw.rounded_fills[0].1;
         assert_eq!(inactive_radii.top_left, inside);
@@ -382,7 +353,7 @@ mod tests {
     #[test]
     fn slider_track_gap_follows_the_pressed_handle_width() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_track(
             &colors,
             &mut draw,
@@ -395,6 +366,7 @@ mod tests {
         );
 
         let gap = SLIDER_PRESSED_HANDLE_WIDTH / 2.0 + SLIDER_HANDLE_PADDING;
+        let draw = Recorded::from(draw);
         assert_eq!(draw.rounded_fills[1].0.x1, 72.0 - gap);
         assert_eq!(draw.rounded_fills[0].0.x0, 72.0 + gap);
     }

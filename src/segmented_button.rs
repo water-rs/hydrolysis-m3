@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Debug};
 
-use vello::kurbo::RoundedRectRadii;
+use cherenkov::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::border::Border;
 use waterui::component::hstack;

@@ -8,13 +8,12 @@
 use core::cell::Cell;
 use std::rc::Rc;
 
-use vello::kurbo::{Affine, BezPath, Cap, Join, Point, Stroke};
-use vello::peniko::{Brush, Color};
-use waterui::color::ResolvedColor;
+use cherenkov::kurbo::{BezPath, Cap, Join, Point, Stroke};
+use cherenkov::{Draw as _, WorkingColor};
 use waterui::{Environment, View, ViewExt as _};
 use waterui_core::Signal;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::{Scene2D, SceneContent, SceneInvalidator, SceneView};
+use waterui_graphics::{Scene, SceneContent, SceneInvalidator, SceneView};
 
 /// The miter limit Material icon strokes are authored against.
 const MITER_LIMIT: f64 = 10.0;
@@ -46,7 +45,7 @@ impl<ColorToken> CheckmarkIcon<ColorToken> {
 
 impl<ColorToken> View for CheckmarkIcon<ColorToken>
 where
-    ColorToken: Resolvable<Resolved = ResolvedColor> + 'static,
+    ColorToken: Resolvable<Resolved = WorkingColor> + 'static,
 {
     fn body(self, env: &Environment) -> impl View {
         SceneView::new(CheckmarkContent {
@@ -76,10 +75,11 @@ struct CheckmarkContent<S: Signal> {
 
 impl<S> SceneContent for CheckmarkContent<S>
 where
-    S: Signal<Output = ResolvedColor> + 'static,
+    S: Signal<Output = WorkingColor> + 'static,
     S::Guard: 'static,
 {
-    fn build_scene(&mut self, scene: &mut dyn Scene2D, width: f32, _height: f32) -> bool {
+    fn record(&mut self, scene: &mut Scene<'_>) -> bool {
+        let width = scene.width();
         self.pending_redraw.set(false);
         let pending_redraw = Rc::clone(&self.pending_redraw);
         let invalidator = self.invalidator.clone();
@@ -101,8 +101,12 @@ where
             .with_caps(Cap::Round)
             .with_join(Join::Round)
             .with_miter_limit(MITER_LIMIT);
-        let brush = Brush::Solid(to_peniko(self.stroke.snapshot()));
-        scene.stroke(&stroke, Affine::IDENTITY, &brush, None, &path);
+        let color = self.stroke.snapshot();
+        scene.recorder().stroke(
+            path,
+            stroke,
+            WorkingColor::new(color.components).with_alpha(color.components[3].clamp(0.0, 1.0)),
+        );
 
         self.pending_redraw.replace(false)
     }
@@ -116,15 +120,4 @@ where
 /// path builder takes.
 fn point(x: f32, y: f32) -> Point {
     Point::new(f64::from(x), f64::from(y))
-}
-
-/// Converts a resolved theme colour into the scene's paint.
-fn to_peniko(color: ResolvedColor) -> Color {
-    let srgb = color.to_srgb_with_headroom();
-    Color::new([
-        srgb.red,
-        srgb.green,
-        srgb.blue,
-        color.opacity.clamp(0.0, 1.0),
-    ])
 }

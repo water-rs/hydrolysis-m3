@@ -5,10 +5,11 @@ use crate::dimensions::{
     INPUT_LABEL_HEIGHT,
 };
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DrawContext, InputFieldMetrics, WidgetInteractionState};
+use crate::{InputFieldMetrics, WidgetInteractionState};
+use cherenkov::kurbo::{Line, RoundedRect, Stroke};
+use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
+use cherenkov::{Draw as _, Paint, Recorder, WorkingColor};
 use material_color_utils::utils::color_utils::Argb;
-use vello::kurbo::{Point, Rect, RoundedRectRadii};
-use vello::peniko::Color as PenikoColor;
 use waterui_graphics::color::Color;
 
 const INPUT_SELECTION_ALPHA: f32 = 0.28;
@@ -27,19 +28,19 @@ pub fn placeholder_color(colors: &MaterialColorScheme) -> Color {
     colors.on_surface_variant.view_color()
 }
 
-pub fn selection_brush(colors: &MaterialColorScheme) -> Brush {
-    Brush::from(role_with_alpha(
+pub fn selection_brush(colors: &MaterialColorScheme) -> Paint {
+    Paint::from(role_with_alpha(
         colors.primary.argb(),
         INPUT_SELECTION_ALPHA,
     ))
 }
 
-pub fn caret_brush(colors: &MaterialColorScheme, opacity: f32) -> Brush {
-    Brush::from(role_with_alpha(colors.primary.argb(), opacity))
+pub fn caret_brush(colors: &MaterialColorScheme, opacity: f32) -> Paint {
+    Paint::from(role_with_alpha(colors.primary.argb(), opacity))
 }
 
-fn role_with_alpha(color: Argb, alpha: f32) -> PenikoColor {
-    PenikoColor::new([
+fn role_with_alpha(color: Argb, alpha: f32) -> WorkingColor {
+    WorkingColor::new([
         f32::from(color.red()) / 255.0,
         f32::from(color.green()) / 255.0,
         f32::from(color.blue()) / 255.0,
@@ -49,38 +50,42 @@ fn role_with_alpha(color: Argb, alpha: f32) -> PenikoColor {
 
 pub fn draw_field(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     state: WidgetInteractionState,
 ) {
     let container_color = if state.disabled {
         role_with_alpha(colors.on_surface.argb(), 0.04)
     } else {
-        colors.surface_container_highest.peniko()
+        colors.surface_container_highest.working()
     };
-    draw.fill_rounded_rect(
-        bounds,
-        RoundedRectRadii::new(
-            INPUT_FILLED_CONTAINER_TOP_RADIUS,
-            INPUT_FILLED_CONTAINER_TOP_RADIUS,
-            0.0,
-            0.0,
+    draw.fill(
+        RoundedRect::from_rect(
+            bounds,
+            RoundedRectRadii::new(
+                INPUT_FILLED_CONTAINER_TOP_RADIUS,
+                INPUT_FILLED_CONTAINER_TOP_RADIUS,
+                0.0,
+                0.0,
+            ),
         ),
-        &Brush::from(container_color),
+        container_color,
     );
     let baseline_color = if state.disabled {
         role_with_alpha(colors.on_surface.argb(), 0.38)
     } else if state.hovered {
-        colors.on_surface.peniko()
+        colors.on_surface.working()
     } else {
-        colors.on_surface_variant.peniko()
+        colors.on_surface_variant.working()
     };
     let baseline_y = bounds.y1 - INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT / 2.0;
-    draw.stroke_line(
-        Point::new(bounds.x0, baseline_y),
-        Point::new(bounds.x1, baseline_y),
-        &Brush::from(baseline_color),
-        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT,
+    draw.stroke(
+        Line::new(
+            Point::new(bounds.x0, baseline_y),
+            Point::new(bounds.x1, baseline_y),
+        ),
+        Stroke::new(INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT),
+        baseline_color,
     );
     let focus_alpha = if state.focus_progress > 0.0 {
         state.focus_progress
@@ -91,18 +96,20 @@ pub fn draw_field(
     };
     if focus_alpha > 0.0 {
         let focus_y = bounds.y1 - INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT / 2.0;
-        draw.stroke_line(
-            Point::new(bounds.x0, focus_y),
-            Point::new(bounds.x1, focus_y),
-            &Brush::from(role_with_alpha(colors.primary.argb(), focus_alpha)),
-            INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
+        draw.stroke(
+            Line::new(
+                Point::new(bounds.x0, focus_y),
+                Point::new(bounds.x1, focus_y),
+            ),
+            Stroke::new(INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT),
+            role_with_alpha(colors.primary.argb(), focus_alpha),
         );
     }
 }
 
-pub fn draw_state_layer(
+pub const fn draw_state_layer(
     _colors: &MaterialColorScheme,
-    _draw: &mut dyn DrawContext,
+    _draw: &mut Recorder,
     _bounds: Rect,
     _state: WidgetInteractionState,
 ) {
@@ -110,7 +117,9 @@ pub fn draw_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use crate::test_support::Recorded;
+    use cherenkov::kurbo::{Rect, RoundedRectRadii};
+    use cherenkov::{Paint, Recorder};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, caret_brush, draw_field, metrics,
@@ -120,61 +129,6 @@ mod tests {
         INPUT_FIELD_MIN_HEIGHT, INPUT_FIELD_MIN_WIDTH, INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT,
         INPUT_FILLED_CONTAINER_TOP_RADIUS, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
     };
-    use crate::{Brush, DrawContext};
-
-    #[derive(Default)]
-    struct RecordingDrawContext {
-        rounded_radii: Option<RoundedRectRadii>,
-        stroke_width: Option<f64>,
-    }
-
-    impl DrawContext for RecordingDrawContext {
-        fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
-
-        fn fill_rounded_rect(&mut self, _rect: Rect, radii: RoundedRectRadii, _brush: &Brush) {
-            self.rounded_radii = Some(radii);
-        }
-
-        fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
-
-        fn stroke_rounded_rect(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _brush: &Brush,
-            _width: f64,
-        ) {
-        }
-
-        fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, width: f64) {
-            self.stroke_width = Some(width);
-        }
-
-        fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {}
-
-        fn fill_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush) {}
-
-        fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
-
-        fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
-        fn draw_shadow(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
-            _blur: f64,
-            _color: vello::peniko::Color,
-        ) {
-        }
-
-        fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
-
-        fn pop_layer(&mut self) {}
-
-        fn push_transform(&mut self, _affine: Affine) {}
-
-        fn pop_transform(&mut self) {}
-    }
 
     #[test]
     fn filled_text_field_metrics_match_compose_filled_text_field_tokens() {
@@ -191,7 +145,7 @@ mod tests {
     #[test]
     fn filled_text_field_uses_top_only_container_shape() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_field(
             &colors,
             &mut draw,
@@ -199,8 +153,10 @@ mod tests {
             WidgetInteractionState::NONE,
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(
-            draw.rounded_radii,
+            draw.rounded_fills.last().map(|(_, radii, _)| *radii),
             Some(RoundedRectRadii::new(
                 INPUT_FILLED_CONTAINER_TOP_RADIUS,
                 INPUT_FILLED_CONTAINER_TOP_RADIUS,
@@ -209,7 +165,7 @@ mod tests {
             ))
         );
         assert_eq!(
-            draw.stroke_width,
+            draw.line_strokes.last().map(|(_, _, width)| *width),
             Some(INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT)
         );
     }
@@ -217,7 +173,7 @@ mod tests {
     #[test]
     fn filled_text_field_focus_indicator_matches_compose_filled_text_field_tokens() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_field(
             &colors,
             &mut draw,
@@ -229,8 +185,10 @@ mod tests {
             },
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(
-            draw.stroke_width,
+            draw.line_strokes.last().map(|(_, _, width)| *width),
             Some(INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT)
         );
     }
@@ -239,10 +197,10 @@ mod tests {
     fn filled_text_field_caret_and_selection_use_primary_role() {
         let colors = MaterialColorScheme::baseline_light();
 
-        let Brush::Solid(selection) = selection_brush(&colors) else {
+        let Paint::Solid(selection) = selection_brush(&colors) else {
             panic!("Material text selection must be a solid primary color layer");
         };
-        let Brush::Solid(caret) = caret_brush(&colors, 0.5) else {
+        let Paint::Solid(caret) = caret_brush(&colors, 0.5) else {
             panic!("Material text caret must be a solid primary color layer");
         };
         let primary = colors.primary.argb();

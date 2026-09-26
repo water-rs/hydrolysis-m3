@@ -1,3 +1,4 @@
+use cherenkov::WorkingColor;
 use material_color_utils::{
     MaterializedScheme,
     dynamic::{
@@ -7,8 +8,7 @@ use material_color_utils::{
     theme_from_color,
     utils::color_utils::Argb,
 };
-use vello::peniko::Color;
-use waterui_graphics::color::{Color as WaterColor, ResolvedColor, Srgb};
+use waterui_graphics::color::{Color as WaterColor, Srgb};
 
 const fn role(red: u8, green: u8, blue: u8) -> MaterialRoleColor {
     MaterialRoleColor::new(Argb::from_rgb(red, green, blue))
@@ -251,16 +251,10 @@ impl MaterialRoleColor {
         self.0
     }
 
-    /// Convert the role color to the Vello brush color type.
+    /// Convert the role color to Cherenkov's working colour.
     #[must_use]
-    pub fn peniko(self) -> Color {
-        let color = self.0;
-        Color::new([
-            f32::from(color.red()) / 255.0,
-            f32::from(color.green()) / 255.0,
-            f32::from(color.blue()) / 255.0,
-            f32::from(color.alpha()) / 255.0,
-        ])
+    pub fn working(self) -> WorkingColor {
+        self.srgb().into()
     }
 
     /// Convert the role color to `WaterUI`'s sRGB color type.
@@ -268,12 +262,6 @@ impl MaterialRoleColor {
     pub const fn srgb(self) -> Srgb {
         let color = self.0;
         Srgb::new_u8(color.red(), color.green(), color.blue())
-    }
-
-    /// Convert the role color to a resolved `WaterUI` color.
-    #[must_use]
-    pub fn resolved(self) -> ResolvedColor {
-        ResolvedColor::from(self.srgb())
     }
 
     /// Convert the role color to a `WaterUI` view color.
@@ -284,14 +272,14 @@ impl MaterialRoleColor {
 
     /// This role at the MD3 disabled-container opacity (12%).
     #[must_use]
-    pub fn peniko_disabled_container(self) -> Color {
-        self.peniko().with_alpha(DISABLED_CONTAINER_OPACITY)
+    pub fn working_disabled_container(self) -> WorkingColor {
+        self.working().with_alpha(DISABLED_CONTAINER_OPACITY)
     }
 
     /// This role at the MD3 disabled-content opacity (38%).
     #[must_use]
-    pub fn peniko_disabled_content(self) -> Color {
-        self.peniko().with_alpha(DISABLED_CONTENT_OPACITY)
+    pub fn working_disabled_content(self) -> WorkingColor {
+        self.working().with_alpha(DISABLED_CONTENT_OPACITY)
     }
 }
 

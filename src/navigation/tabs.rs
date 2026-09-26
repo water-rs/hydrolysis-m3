@@ -4,8 +4,10 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
-use crate::{Brush, DrawContext, TabsMetrics, WidgetInteractionState};
-use vello::kurbo::{Rect, RoundedRectRadii};
+use crate::{TabsMetrics, WidgetInteractionState};
+use cherenkov::kurbo::RoundedRect;
+use cherenkov::kurbo::{Rect, RoundedRectRadii};
+use cherenkov::{Draw as _, Recorder};
 
 pub const fn metrics() -> TabsMetrics {
     TabsMetrics::new(
@@ -17,37 +19,34 @@ pub const fn metrics() -> TabsMetrics {
     )
 }
 
-pub fn draw_bar(
-    colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: Rect,
-    top_edge: bool,
-) {
-    draw.fill_rect(bounds, &Brush::from(colors.surface.peniko()));
+pub fn draw_bar(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect, top_edge: bool) {
+    draw.fill(bounds, colors.surface.working());
     let separator = if top_edge {
         Rect::new(bounds.x0, bounds.y1 - 1.0, bounds.x1, bounds.y1)
     } else {
         Rect::new(bounds.x0, bounds.y0, bounds.x1, bounds.y0 + 1.0)
     };
-    draw.fill_rect(separator, &Brush::from(colors.outline_variant.peniko()));
+    draw.fill(separator, colors.outline_variant.working());
 }
 
-pub fn draw_highlight(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
-    draw.fill_rounded_rect(
-        bounds,
-        RoundedRectRadii::new(
-            TABS_ACTIVE_INDICATOR_RADIUS,
-            TABS_ACTIVE_INDICATOR_RADIUS,
-            0.0,
-            0.0,
+pub fn draw_highlight(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.fill(
+        RoundedRect::from_rect(
+            bounds,
+            RoundedRectRadii::new(
+                TABS_ACTIVE_INDICATOR_RADIUS,
+                TABS_ACTIVE_INDICATOR_RADIUS,
+                0.0,
+                0.0,
+            ),
         ),
-        &Brush::from(colors.primary.peniko()),
+        colors.primary.working(),
     );
 }
 
 pub fn draw_button_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     selected: bool,
     state: WidgetInteractionState,
@@ -57,9 +56,9 @@ pub fn draw_button_state_layer(
         bounds,
         0.0.into(),
         if selected || state.pressed {
-            colors.primary.peniko()
+            colors.primary.working()
         } else {
-            colors.on_surface.peniko()
+            colors.on_surface.working()
         },
         state,
     );
