@@ -44,7 +44,8 @@ pub fn draw_text_context_separator(
     draw: &mut dyn DrawContext,
     bounds: Rect,
 ) {
-    draw.fill_rect(bounds, &Brush::from(colors.outline_variant.peniko()));
+    // md.comp.menu.divider.color = surface-variant.
+    draw.fill_rect(bounds, &Brush::from(colors.surface_variant.peniko()));
 }
 
 #[cfg(test)]

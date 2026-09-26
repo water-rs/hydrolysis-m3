@@ -28,8 +28,6 @@ const SWIPE_ICON_EDGE_INSET: f64 = 16.0;
 /// Scale the glyph starts at, growing to full size as the swipe reaches its
 /// dismiss threshold.
 const SWIPE_ICON_MIN_SCALE: f64 = 0.7;
-/// Opacity of the key shadow cast by a lifted row.
-const LIFT_SHADOW_ALPHA: f32 = 0.19;
 
 pub const fn metrics() -> ListMetrics {
     ListMetrics::new(
@@ -140,28 +138,34 @@ pub fn draw_swipe_dismiss_background(
     );
 }
 
-/// Lifted treatment for a row being dragged to a new position: Material raises
-/// the item to a surface-container tone and casts the level-3 key shadow.
+/// Lifted treatment for a row being dragged to a new position:
+/// `md.comp.list.reorder.list-item` — a tertiary-container item at
+/// corner-large casting the dragged item's level-4 elevation.
 pub fn draw_row_lifted(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
     bounds: Rect,
-    elevation: f64,
+    _elevation: f64,
 ) {
-    let shadow = Rect::new(
-        bounds.x0,
-        elevation.mul_add(0.5, bounds.y0),
-        bounds.x1,
-        elevation.mul_add(0.5, bounds.y1),
+    let radii = crate::dimensions::SHAPE_CORNER_LARGE;
+    crate::elevation::draw_shadows(
+        draw,
+        bounds,
+        radii.into(),
+        crate::elevation::MaterialElevationLevel::LEVEL4,
+        colors,
     );
-    draw.fill_rect(
-        shadow,
-        &Brush::from(colors.shadow.peniko().multiply_alpha(LIFT_SHADOW_ALPHA)),
+    draw.fill_rounded_rect(
+        bounds,
+        radii.into(),
+        &Brush::from(colors.tertiary_container.peniko()),
     );
-    draw.fill_rect(bounds, &Brush::from(colors.surface_container_high.peniko()));
 }
 
-pub fn draw_separator(_colors: &MaterialColorScheme, _draw: &mut dyn DrawContext, _bounds: Rect) {}
+/// `md.comp.list.divider`: outline at 1px. `bounds` is the divider rect.
+pub fn draw_separator(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
+    draw.fill_rect(bounds, &Brush::from(colors.outline.peniko()));
+}
 
 /// Material draws an icon button's state layer as a circle, so the layer is
 /// inscribed in `bounds` rather than filling it — stretching it across a wide,
