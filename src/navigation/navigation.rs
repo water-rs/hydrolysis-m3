@@ -38,8 +38,14 @@ pub fn draw_bar(draw: &mut dyn DrawContext, bounds: Rect, background: &Brush) {
     draw.fill_rect(bounds, background);
 }
 
-pub fn draw_bar_separator(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {
-    draw.fill_rect(bounds, &Brush::from(colors.outline_variant.peniko()));
+pub fn draw_bar_separator(
+    _colors: &MaterialColorScheme,
+    _draw: &mut dyn DrawContext,
+    _bounds: Rect,
+) {
+    // The M3 app-bar tokens define no divider: `md.comp.app-bar` has no
+    // divider/outline member, so a separator under the bar is not part of
+    // the specification.
 }
 
 pub fn draw_back_button(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, bounds: Rect) {

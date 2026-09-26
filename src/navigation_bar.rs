@@ -16,7 +16,7 @@ use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, SurfaceContainer,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{conditional_color, interaction_style, label_plain_text};
+use crate::semantics::{conditional_color, conditional_font, interaction_style, label_plain_text};
 use crate::theme::typography;
 
 /// `NavigationBarTokens.ContainerHeight`. Compose's 80dp value is
@@ -27,7 +27,9 @@ const NAVIGATION_BAR_ITEM_TOP_PADDING: f32 = 4.0;
 const NAVIGATION_BAR_ITEM_BOTTOM_PADDING: f32 = 8.0;
 const NAVIGATION_BAR_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_BAR_ICON_SLOT_HEIGHT: f32 = 32.0;
-const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 64.0;
+/// `m3_comp_nav_bar_item_vertical_active_indicator_width` — the Expressive
+/// indicator is 56dp wide, not the 64dp of the classic spec.
+const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
 const NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
 const NAVIGATION_BAR_LABEL_TOP_SPACE: f32 = 4.0;
 
@@ -141,8 +143,15 @@ where
             OnSurfaceVariant,
         );
         let label_color = conditional_color(self.selected.clone(), Secondary, OnSurfaceVariant);
-        let state_layer_color =
-            conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
+        // md.comp.nav-bar.item.*.{hovered,focused,pressed}.state-layer.color:
+        // on-secondary-container for the active and inactive items alike.
+        let state_layer_color = OnSecondaryContainer;
+        // The active label is label-medium at the prominent (bold) weight.
+        let label_font = conditional_font(
+            self.selected,
+            typography::label_medium_prominent(),
+            typography::label_medium(),
+        );
 
         navigation_tab_content(
             self.label,
@@ -150,6 +159,7 @@ where
             indicator_color.into(),
             icon_color.into(),
             label_color.into(),
+            label_font,
         )
         // Padding applies inside the fixed item height: the 32dp indicator
         // slot starts `TOP_PADDING` below the item top and the label sits
@@ -194,6 +204,7 @@ fn navigation_tab_content(
     indicator_color: Color,
     icon_color: Color,
     label_color: Color,
+    label_font: waterui::text::font::Font,
 ) -> impl View {
     let icon_slot = icon
         .foreground(icon_color)
@@ -211,10 +222,7 @@ fn navigation_tab_content(
         icon_container
             .width(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH)
             .height(NAVIGATION_BAR_ICON_SLOT_HEIGHT),
-        label
-            .font(typography::label_medium())
-            .foreground(label_color)
-            .height(16.0),
+        label.font(label_font).foreground(label_color).height(16.0),
     ))
     .spacing(NAVIGATION_BAR_LABEL_TOP_SPACE)
 }
@@ -252,7 +260,8 @@ mod tests {
     fn navigation_bar_tokens_match_compose_navigation_bar_tokens() {
         assert_eq!(NAVIGATION_BAR_CONTAINER_HEIGHT, 64.0);
         assert_eq!(NAVIGATION_BAR_ITEM_MIN_WIDTH, 48.0);
-        assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH, 64.0);
+        // md.comp.nav-bar.item.vertical.active-indicator.width = 56.
+        assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH, 56.0);
         assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT, 32.0);
         assert_eq!(NAVIGATION_BAR_ICON_SIZE, 24.0);
         assert_eq!(NAVIGATION_BAR_LABEL_TOP_SPACE, 4.0);
