@@ -1,4 +1,4 @@
-//! Right-clicking anything in a debug build offers to inspect it.
+//! Right-clicking a view's context menu offers to inspect it in a debug build.
 //!
 //! Reached the way a user reaches it: press the secondary button and read the
 //! menu. The menu opens in its own window, so this also exercises the harness
@@ -8,9 +8,10 @@ use hydrolysis_m3::Material3;
 use waterui::prelude::*;
 use waterui_testing::ui as test_ui;
 
-/// A plain view, with no context menu of its own, still offers to be inspected.
+/// A plain view opens no menu at all: hydrolysis extends a menu a view already
+/// declared — it never creates one on a bare secondary press.
 #[core::prelude::v1::test]
-fn right_clicking_offers_to_inspect_the_element() {
+fn right_clicking_a_plain_view_opens_no_menu() {
     let mut app = test_ui()
         .viewport(320, 200)
         .theme(Material3::defaults())
@@ -20,7 +21,7 @@ fn right_clicking_offers_to_inspect_the_element() {
 
     app.secondary_click_at(40.0, 30.0);
 
-    app.query().label("Inspect element").assert_exists();
+    app.query().label("Inspect element").assert_not_exists();
 }
 
 /// An application's own menu keeps its items: the inspector entry is appended

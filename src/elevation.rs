@@ -1,5 +1,6 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
+use waterui::shape::FixedRoundedRectangle;
 use waterui::style::{FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
 
@@ -130,7 +131,7 @@ impl ElevationTokens {
             Shadow.with_opacity(self.key.opacity(KEY_OPACITY)).into(),
             Vector::new(0.0, self.key.y),
             self.key.blur,
-            corner_radius,
+            FixedRoundedRectangle::new(corner_radius),
         )
     }
 
@@ -141,7 +142,7 @@ impl ElevationTokens {
                 .into(),
             Vector::new(0.0, self.ambient.y),
             self.ambient.blur,
-            corner_radius,
+            FixedRoundedRectangle::new(corner_radius),
         )
     }
 }
