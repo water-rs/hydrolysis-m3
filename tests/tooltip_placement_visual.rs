@@ -99,6 +99,21 @@ fn tooltip_tab_strip_captures() {
             ))
             .spacing(0.0)
         });
-        capture_hover(&mut app, "New tab", &format!("tab-strip-{scheme}"), "after");
+        // The `+` icon button emits no a11y node while a long-press gesture
+        // observes it (water-rs/hydrolysis#266 —
+        // long-press claiming regression), so hover it by coordinates:
+        // it sits one hstack gap to the right of "Tab 2".
+        let tab2 = app
+            .query()
+            .role(Role::LABEL)
+            .label("Tab 2")
+            .single()
+            .bounds();
+        app.hover_at(
+            tab2.x() + tab2.width() + 8.0 + 20.0,
+            tab2.height().mul_add(0.5, tab2.y()),
+        );
+        app.pump_for(Duration::from_millis(400));
+        app.capture_snapshot("tooltip-placement", format!("tab-strip-{scheme}"), "after");
     }
 }

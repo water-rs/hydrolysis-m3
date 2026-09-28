@@ -6,6 +6,7 @@ use core::time::Duration;
 use waterui::accessibility::AccessibilityRole;
 use waterui::layout::padding::EdgeInsets;
 use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
+use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Signal, SignalExt as _};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
@@ -13,7 +14,7 @@ use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_backend_core::widget::InteractionFocusBinding;
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{Handler, SharedAction};
 
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
@@ -150,7 +151,7 @@ impl TooltipVisibility {
 impl<Target, Popup> View for TooltipAnchor<Target, Popup>
 where
     Target: View + 'static,
-    Popup: View + 'static,
+    Popup: View + Clone + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let target_enter = self.visibility.clone();
@@ -162,6 +163,8 @@ where
         let focus_binding = InteractionFocusBinding::new(&focused)
             .escape_action(SharedAction::new(move |_: Environment| escape.dismiss()));
         let open = self.visibility.open.clone();
+        // `is_presented` → scale drives both directions: when `open` goes false
+        // the backend keeps the overlay drawn until this transition finishes.
         let popup_scale = open
             .map(|open| if open { 1.0 } else { 0.0 })
             .with(motion::tooltip());
@@ -169,21 +172,27 @@ where
         // sit below and flip above — `place_anchored_overlay` resolves the
         // flip against the window bounds and `Clamp::Window` keeps the popup
         // inside it, which a layout inside the anchor cannot see.
-        let popup_anchor = if self.rich {
-            Anchor::TOP_LEFT
+        let requested_edge = if self.rich {
+            AnchorEdge::Bottom
         } else {
-            Anchor::new(0.5, 1.0)
+            AnchorEdge::Top
         };
-        let popup = self
-            .popup
-            .scale_from(popup_scale.clone(), popup_scale, popup_anchor);
+        // `placed` is written back with the edge the overlay actually landed
+        // on, so the scale transition always grows out of the edge touching
+        // the anchor — after a flip, the opposite edge from the requested one.
+        let placed = Binding::container(requested_edge);
+        let rich = self.rich;
+        let popup = self.popup;
+        let popup = watch(placed.distinct(), move |edge| {
+            popup.clone().scale_from(
+                popup_scale.clone(),
+                popup_scale.clone(),
+                tooltip_scale_origin(edge, rich),
+            )
+        });
         let overlay = AnchoredOverlay::new(&open, popup)
-            .edge(if self.rich {
-                AnchorEdge::Bottom
-            } else {
-                AnchorEdge::Top
-            })
-            .alignment(if self.rich {
+            .edge(requested_edge)
+            .alignment(if rich {
                 EdgeAlignment::Start
             } else {
                 EdgeAlignment::Center
@@ -192,7 +201,8 @@ where
             .flip(true)
             .clamp(Clamp::Window {
                 margin: TOOLTIP_WINDOW_MARGIN,
-            });
+            })
+            .placed_edge(&placed);
 
         self.target
             .on_hover_enter(move || target_enter.set_target_hovered(true))
@@ -206,7 +216,37 @@ where
     }
 }
 
+/// The transform origin a tooltip scales in and out of — the popup edge
+/// touching the anchor, so it grows out of, and shrinks back into, its target
+/// whichever side `place_anchored_overlay` put it on.
+const fn tooltip_scale_origin(placed: AnchorEdge, rich: bool) -> Anchor {
+    let x = match placed {
+        AnchorEdge::Leading => 1.0,
+        AnchorEdge::Trailing => 0.0,
+        _ => {
+            if rich {
+                0.0
+            } else {
+                0.5
+            }
+        }
+    };
+    let y = match placed {
+        AnchorEdge::Top => 1.0,
+        AnchorEdge::Bottom => 0.0,
+        _ => {
+            if rich {
+                0.0
+            } else {
+                0.5
+            }
+        }
+    };
+    Anchor::new(x, y)
+}
+
 /// A Material Design 3 plain tooltip.
+#[derive(Clone)]
 pub struct PlainTooltip {
     supporting_text: Label,
     accessibility_label: Str,
@@ -270,14 +310,15 @@ impl View for PlainTooltip {
 }
 
 /// A Material Design 3 rich tooltip.
-pub struct RichTooltip<Action = fn(&Environment)> {
+#[derive(Clone)]
+pub struct RichTooltip {
     subhead: Label,
     supporting_text: Label,
     accessibility_label: Str,
-    action: Option<(Label, Action)>,
+    action: Option<(Label, SharedAction)>,
 }
 
-impl<Action> Debug for RichTooltip<Action> {
+impl Debug for RichTooltip {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RichTooltip")
             .field("subhead", &self.subhead)
@@ -286,7 +327,7 @@ impl<Action> Debug for RichTooltip<Action> {
     }
 }
 
-impl RichTooltip<fn(&Environment)> {
+impl RichTooltip {
     /// Creates a rich tooltip with a subhead and supporting text.
     #[must_use]
     pub fn new(subhead: impl IntoLabel, supporting_text: impl IntoLabel) -> Self {
@@ -302,22 +343,18 @@ impl RichTooltip<fn(&Environment)> {
     }
 }
 
-impl<Action> RichTooltip<Action> {
+impl RichTooltip {
     /// Adds a Material rich tooltip action.
     #[must_use]
-    pub fn action<F, Args>(
-        self,
-        label: impl IntoLabel,
-        action: F,
-    ) -> RichTooltip<impl FnMut(&Environment)>
+    pub fn action<F, Args>(self, label: impl IntoLabel, action: F) -> Self
     where
         F: Handler<Args, ()> + 'static,
     {
-        RichTooltip {
+        Self {
             subhead: self.subhead,
             supporting_text: self.supporting_text,
             accessibility_label: self.accessibility_label,
-            action: Some((label.into_label(), boxed_action(action))),
+            action: Some((label.into_label(), SharedAction::new(action))),
         }
     }
 
@@ -336,10 +373,7 @@ impl<Action> RichTooltip<Action> {
     }
 }
 
-impl<Action> View for RichTooltip<Action>
-where
-    Action: FnMut(&Environment) + 'static,
-{
+impl View for RichTooltip {
     fn body(self, _env: &Environment) -> impl View {
         let content = waterui::component::vstack((
             self.subhead
@@ -370,11 +404,8 @@ where
     }
 }
 
-fn rich_tooltip_action<Action>(action: Option<(Label, Action)>) -> impl View
-where
-    Action: FnMut(&Environment) + 'static,
-{
-    let Some((label, mut action)) = action else {
+fn rich_tooltip_action(action: Option<(Label, SharedAction)>) -> impl View {
+    let Some((label, action)) = action else {
         return waterui::component::hstack(((),)).anyview();
     };
     let accessibility_label = label_plain_text(&label);
@@ -389,7 +420,7 @@ where
             0.0,
             0.0,
         ))
-        .on_tap(move |env: Environment| action(&env))
+        .on_tap(move |env: Environment| action.call(&env))
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .install(interaction_style(Primary, 20.0))
@@ -404,10 +435,7 @@ pub fn plain_tooltip(supporting_text: impl IntoLabel) -> PlainTooltip {
 
 /// Creates a Material Design 3 rich tooltip.
 #[must_use]
-pub fn rich_tooltip(
-    subhead: impl IntoLabel,
-    supporting_text: impl IntoLabel,
-) -> RichTooltip<fn(&Environment)> {
+pub fn rich_tooltip(subhead: impl IntoLabel, supporting_text: impl IntoLabel) -> RichTooltip {
     RichTooltip::new(subhead, supporting_text)
 }
 
