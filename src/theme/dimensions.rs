@@ -262,6 +262,22 @@ pub const TABS_BUTTON_MIN_WIDTH: f64 = 48.0;
 pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
 pub const TABS_ACTIVE_INDICATOR_HEIGHT: f64 = 3.0;
 pub const TABS_ACTIVE_INDICATOR_RADIUS: f64 = 3.0;
+/// `md.comp.nav-bar.container.height`: the horizontal-item bar is the M3
+/// navigation bar.
+pub const NAV_BAR_HEIGHT: f64 = 64.0;
+/// `md.comp.nav-bar.item.horizontal.active-indicator.height`.
+pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT: f64 = 40.0;
+/// `md.comp.nav-bar.item.active-indicator.shape` = corner-full.
+pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS: f64 = 20.0;
+/// `md.comp.nav-bar.item.vertical.icon-label-space`: the gap between a
+/// vertical item's icon and its label.
+pub const NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE: f64 = 4.0;
+/// `md.comp.nav-bar.item.horizontal.icon-label-space`: the gap between a
+/// horizontal item's icon and its label inside the indicator.
+pub const NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE: f64 = 4.0;
+/// The M3 medium window width class boundary: at and above it the
+/// navigation bar uses horizontal items.
+pub const MEDIUM_WINDOW_WIDTH: f64 = 600.0;
 pub const LIST_ONE_LINE_ROW_HEIGHT: f64 = 56.0;
 pub const LIST_HORIZONTAL_INSET: f64 = 16.0;
 pub const LIST_VERTICAL_INSET: f64 = 10.0;

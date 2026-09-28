@@ -64,8 +64,9 @@ pub use waterui_backend_core::widget::{
     ListRowMetrics, ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction,
     NavigationMetrics, NavigationMotion, PickerMetrics, PressWave, PressWaves,
     ProgressIndicatorStyle, ProgressMetrics, ProgressMotion, RadioIndicatorState,
-    RadioSelectionMotion, SliderMetrics, StepperEnd, StepperMetrics, TableMetrics, TabsMetrics,
-    TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState, WidgetTheme,
+    RadioSelectionMotion, SliderMetrics, StepperEnd, StepperMetrics, TabItemLayout, TableMetrics,
+    TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState,
+    WidgetTheme,
 };
 use waterui_controls::button::{ButtonSize, ButtonStyle};
 use waterui_controls::toggle::ToggleStyle;
@@ -881,16 +882,21 @@ impl WidgetTheme for Material3 {
         navigation_chrome::draw_back_button(&self.colors(), draw, bounds);
     }
 
-    fn tabs_metrics(&self) -> TabsMetrics {
-        tabs::metrics()
+    fn tabs_item_layout(&self, bar_width: f64, item_count: usize) -> TabItemLayout {
+        let _ = item_count;
+        tabs::item_layout(bar_width)
+    }
+
+    fn tabs_metrics(&self, layout: TabItemLayout) -> TabsMetrics {
+        tabs::metrics(layout)
     }
 
     fn draw_tabs_bar(&self, draw: &mut dyn DrawContext, bounds: Rect, top_edge: bool) {
         tabs::draw_bar(&self.colors(), draw, bounds, top_edge);
     }
 
-    fn draw_tabs_highlight(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        tabs::draw_highlight(&self.colors(), draw, bounds);
+    fn draw_tabs_highlight(&self, draw: &mut dyn DrawContext, bounds: Rect, layout: TabItemLayout) {
+        tabs::draw_highlight(&self.colors(), draw, bounds, layout);
     }
 
     fn draw_tabs_button_state_layer(
@@ -899,8 +905,9 @@ impl WidgetTheme for Material3 {
         bounds: Rect,
         selected: bool,
         state: WidgetInteractionState,
+        layout: TabItemLayout,
     ) {
-        tabs::draw_button_state_layer(&self.colors(), draw, bounds, selected, state);
+        tabs::draw_button_state_layer(&self.colors(), draw, bounds, selected, state, layout);
     }
 
     fn draw_scroll_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {

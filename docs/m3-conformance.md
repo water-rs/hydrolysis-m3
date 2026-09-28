@@ -173,7 +173,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 3. **Per-state content/outline color on `InteractionStyle`** — nav-drawer inactive pressed layer (on-secondary-container) vs hover/focus (on-surface); chip focus outline color.
 4. **Hover signal on individual split-button halves** — pressed inner-corner morph implemented via drag bindings; the hovered-corner morph has no signal source.
 5. **`selected` flag on `MaterialListItem` / plain-button APIs** — `md.comp.list.list-item.selected.container.color` and selected state layers unreachable.
-6. **Horizontal navigation-bar item variant** — `md.comp.nav-bar.item.horizontal.*` (h40 full-width indicator) has no layout slot.
+6. ~~**Horizontal navigation-bar item variant**~~ — implemented: `tabs_item_layout` returns `Horizontal` at the 600dp medium window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container (64dp bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp) values, and `draw_tabs_highlight` draws the secondary-container corner-full capsule spanning the item.
 7. **Slider size variants and value indicator** — `md.comp.slider.{small,large}.*` and `md.comp.slider.value-indicator.*`; the style is single-size and there is no value-label surface.
 8. **App-bar scrolled state** — `md.comp.app-bar.scrolled.container.elevation/color` needs a scroll-position signal.
 9. **Focus indicator ring** — `md.comp.focus-indicator.*` (secondary, 3px, offset) needs a focus-ring draw callback that does not exist.
@@ -185,6 +185,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 - `src/fab.rs` unit test: `FabSize` = Baseline 56/Medium 80/Large 96 only (no `Small`).
 - `src/controls/picker.rs`: `menu_selected_row_and_divider_use_filled_select_tokens` → surface-variant divider.
 - `src/navigation_bar.rs`: indicator width 56.
+- `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values.
 - `src/navigation_rail.rs`: expanded indicator height 56.
 - `src/material_list.rs`: icon sizes 20.
 - `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions.
