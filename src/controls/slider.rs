@@ -1,21 +1,31 @@
 use crate::dimensions::{
-    SLIDER_HANDLE_HEIGHT, SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_HORIZONTAL_INSET,
-    SLIDER_HORIZONTAL_SPACING, SLIDER_MIN_TRACK_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH,
-    SLIDER_STOP_INDICATOR_END_SPACE, SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT,
-    SLIDER_TRACK_INSIDE_CORNER_SIZE, SLIDER_VERTICAL_SPACING,
+    SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_HORIZONTAL_INSET, SLIDER_HORIZONTAL_SPACING,
+    SLIDER_MIN_TRACK_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH, SLIDER_STOP_INDICATOR_END_SPACE,
+    SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_INSIDE_CORNER_SIZE,
+    SLIDER_VALUE_INDICATOR_BOTTOM_SPACE, SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING,
+    SLIDER_VALUE_INDICATOR_MIN_HEIGHT, SLIDER_VALUE_INDICATOR_MIN_WIDTH,
+    SLIDER_VALUE_INDICATOR_VERTICAL_PADDING, SLIDER_VERTICAL_SPACING, slider_size_tokens,
 };
 use crate::theme::colors::MaterialColorScheme;
-use crate::{Brush, DrawContext, SliderMetrics, WidgetInteractionState};
+use crate::{
+    Brush, DrawContext, SliderMetrics, SliderValueIndicatorMetrics, WidgetInteractionState,
+};
+use waterui::text::font::Font;
+use waterui_controls::ControlSize;
+use waterui_graphics::color::Color;
 
-pub const fn metrics() -> SliderMetrics {
+/// `md.comp.slider.<size>.*`: the Expressive slider's track and handle grow
+/// with the control size.
+pub const fn metrics(size: ControlSize) -> SliderMetrics {
+    let tokens = slider_size_tokens(size);
     SliderMetrics::new(
         SLIDER_HORIZONTAL_INSET,
         SLIDER_HORIZONTAL_SPACING,
         SLIDER_VERTICAL_SPACING,
         SLIDER_MIN_TRACK_WIDTH,
-        SLIDER_TRACK_HEIGHT,
+        tokens.track_height,
         SLIDER_HANDLE_WIDTH,
-        SLIDER_HANDLE_HEIGHT,
+        tokens.handle_height,
     )
 }
 
@@ -30,6 +40,7 @@ pub fn draw_track(
     draw: &mut dyn DrawContext,
     track_rect: vello::kurbo::Rect,
     fill_rect: vello::kurbo::Rect,
+    size: ControlSize,
     state: WidgetInteractionState,
 ) {
     // MD3 disabled slider: the inactive track drops to on-surface at 12% and
@@ -42,7 +53,10 @@ pub fn draw_track(
     } else {
         (colors.secondary_container.peniko(), colors.primary.peniko())
     };
-    let outside = SLIDER_TRACK_HEIGHT / 2.0;
+    // The outer corners take the size's shape token rather than the stadium
+    // cap: `*-track-shape-{leading,trailing}` is not track_height / 2 above
+    // x-small.
+    let outside = slider_size_tokens(size).track_corner;
     let inside = SLIDER_TRACK_INSIDE_CORNER_SIZE;
     // The gap clears the handle's edge, not its centre, and it follows the
     // live handle width so pressing (a narrower handle) shrinks it.
@@ -101,6 +115,7 @@ pub fn draw_thumb(
     draw: &mut dyn DrawContext,
     center: vello::kurbo::Point,
     _radius: f64,
+    size: ControlSize,
     state: WidgetInteractionState,
 ) {
     let width = if state.pressed || state.focus_visible {
@@ -108,7 +123,8 @@ pub fn draw_thumb(
     } else {
         SLIDER_HANDLE_WIDTH
     };
-    let bounds = vello::kurbo::Rect::from_center_size(center, (width, SLIDER_HANDLE_HEIGHT));
+    let handle_height = slider_size_tokens(size).handle_height;
+    let bounds = vello::kurbo::Rect::from_center_size(center, (width, handle_height));
     // MD3 disabled slider handle: on-surface at 38% over an opaque surface
     // underlay, so content behind the semi-transparent handle cannot bleed
     // through (the reference implementation paints the handle over the background role).
@@ -149,6 +165,7 @@ pub fn draw_thumb_state_layer(
     draw: &mut dyn DrawContext,
     center: vello::kurbo::Point,
     _radius: f64,
+    _size: ControlSize,
     state: WidgetInteractionState,
 ) {
     if state.disabled {
@@ -163,16 +180,61 @@ pub fn draw_thumb_state_layer(
     );
 }
 
+/// `md.comp.slider.value-indicator.*` per m3.material.io/components/sliders/specs:
+/// `active.bottom-space` is the gap to the handle's top edge, and the
+/// `label.container` tokens fix the bubble at 44 high and at least 48 wide —
+/// the renderer grows the width from the label's measure past 48.
+pub const fn value_indicator_metrics() -> SliderValueIndicatorMetrics {
+    SliderValueIndicatorMetrics::new(
+        SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING,
+        SLIDER_VALUE_INDICATOR_VERTICAL_PADDING,
+        SLIDER_VALUE_INDICATOR_BOTTOM_SPACE,
+        SLIDER_VALUE_INDICATOR_MIN_WIDTH,
+        SLIDER_VALUE_INDICATOR_MIN_HEIGHT,
+    )
+}
+
+/// `md.comp.slider.value-indicator.label.label-text.color`: inverse-on-surface.
+pub fn value_indicator_color(colors: &MaterialColorScheme) -> Color {
+    colors.inverse_on_surface.view_color()
+}
+
+/// `md.comp.slider.value-indicator.label.label-text.*`.
+pub fn value_indicator_font() -> Font {
+    crate::theme::typography::slider_value_indicator_label()
+}
+
+/// `md.comp.slider.value-indicator.container.color` (inverse-surface) on a
+/// stadium bubble.
+pub fn draw_value_indicator(
+    colors: &MaterialColorScheme,
+    draw: &mut dyn DrawContext,
+    bounds: vello::kurbo::Rect,
+) {
+    draw.fill_rounded_rect(
+        bounds,
+        (bounds.height() / 2.0).into(),
+        &Brush::from(colors.inverse_surface.peniko()),
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
 
-    use super::{MaterialColorScheme, WidgetInteractionState, draw_thumb, draw_track, metrics};
+    use super::{
+        MaterialColorScheme, WidgetInteractionState, draw_thumb, draw_track, draw_value_indicator,
+        metrics, value_indicator_metrics,
+    };
     use crate::dimensions::{
-        SLIDER_HANDLE_HEIGHT, SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH,
-        SLIDER_PRESSED_HANDLE_WIDTH, SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_HEIGHT,
+        SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH,
+        SLIDER_STOP_INDICATOR_SIZE, SLIDER_VALUE_INDICATOR_BOTTOM_SPACE,
+        SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING, SLIDER_VALUE_INDICATOR_MIN_HEIGHT,
+        SLIDER_VALUE_INDICATOR_MIN_WIDTH, SLIDER_VALUE_INDICATOR_VERTICAL_PADDING,
+        slider_size_tokens,
     };
     use crate::{Brush, DrawContext};
+    use waterui_controls::ControlSize;
 
     #[derive(Default)]
     struct RecordingDrawContext {
@@ -228,22 +290,29 @@ mod tests {
         fn pop_transform(&mut self) {}
     }
 
-    /// Values from `androidx.compose.material3.tokens.SliderTokens`.
+    /// `md.comp.slider.<size>.*`: the track and handle height follow the
+    /// control size; the width constants are size-invariant.
     #[test]
-    fn slider_metrics_match_compose_slider_tokens() {
-        let metrics = metrics();
-
-        assert_eq!(metrics.track_height, SLIDER_TRACK_HEIGHT);
-        assert_eq!(metrics.handle_width, SLIDER_HANDLE_WIDTH);
-        assert_eq!(metrics.handle_height, SLIDER_HANDLE_HEIGHT);
-        // InactiveTrackHeight / ActiveTrackHeight
-        assert_eq!(SLIDER_TRACK_HEIGHT, 16.0);
-        // HandleWidth / HandleHeight
+    fn slider_metrics_match_the_size_token_tables() {
+        for (size, track_height, handle_height, corner) in [
+            (ControlSize::ExtraSmall, 16.0, 44.0, 8.0),
+            (ControlSize::Small, 24.0, 44.0, 8.0),
+            (ControlSize::Medium, 40.0, 52.0, 12.0),
+            (ControlSize::Large, 56.0, 68.0, 16.0),
+            (ControlSize::ExtraLarge, 96.0, 108.0, 28.0),
+        ] {
+            let m = metrics(size);
+            let tokens = slider_size_tokens(size);
+            assert_eq!(m.track_height, tokens.track_height);
+            assert_eq!(m.track_height, track_height);
+            assert_eq!(m.handle_width, SLIDER_HANDLE_WIDTH);
+            assert_eq!(m.handle_height, handle_height);
+            assert_eq!(tokens.handle_height, handle_height);
+            assert_eq!(tokens.track_corner, corner);
+        }
+        // HandleWidth / PressedHandleWidth / ActiveHandlePadding
         assert_eq!(SLIDER_HANDLE_WIDTH, 4.0);
-        assert_eq!(SLIDER_HANDLE_HEIGHT, 44.0);
-        // PressedHandleWidth
         assert_eq!(SLIDER_PRESSED_HANDLE_WIDTH, 2.0);
-        // ActiveHandlePadding
         assert_eq!(SLIDER_HANDLE_PADDING, 6.0);
         // StopIndicatorSize
         assert_eq!(SLIDER_STOP_INDICATOR_SIZE, 4.0);
@@ -257,14 +326,15 @@ mod tests {
             &MaterialColorScheme::baseline_light(),
             &mut draw,
             Point::new(64.0, 48.0),
-            SLIDER_HANDLE_HEIGHT / 2.0,
+            22.0,
+            ControlSize::ExtraSmall,
             WidgetInteractionState::NONE,
         );
 
         assert_eq!(draw.circle_fills, 0);
         assert_eq!(draw.rounded_fills.len(), 1);
         assert_eq!(draw.rounded_fills[0].0.width(), SLIDER_HANDLE_WIDTH);
-        assert_eq!(draw.rounded_fills[0].0.height(), SLIDER_HANDLE_HEIGHT);
+        assert_eq!(draw.rounded_fills[0].0.height(), 44.0);
     }
 
     /// Pressing narrows the handle rather than growing a state layer.
@@ -275,7 +345,8 @@ mod tests {
             &MaterialColorScheme::baseline_light(),
             &mut draw,
             Point::new(64.0, 48.0),
-            SLIDER_HANDLE_HEIGHT / 2.0,
+            22.0,
+            ControlSize::ExtraSmall,
             WidgetInteractionState {
                 pressed: true,
                 ..WidgetInteractionState::NONE
@@ -284,7 +355,7 @@ mod tests {
 
         assert_eq!(draw.rounded_fills.len(), 1);
         assert_eq!(draw.rounded_fills[0].0.width(), SLIDER_PRESSED_HANDLE_WIDTH);
-        assert_eq!(draw.rounded_fills[0].0.height(), SLIDER_HANDLE_HEIGHT);
+        assert_eq!(draw.rounded_fills[0].0.height(), 44.0);
     }
 
     #[test]
@@ -302,8 +373,9 @@ mod tests {
         draw_track(
             &colors,
             &mut track,
-            Rect::new(0.0, 0.0, 120.0, SLIDER_TRACK_HEIGHT),
-            Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
+            Rect::new(0.0, 0.0, 120.0, 16.0),
+            Rect::new(0.0, 0.0, 72.0, 16.0),
+            ControlSize::ExtraSmall,
             disabled,
         );
         assert!(matches!(
@@ -320,7 +392,8 @@ mod tests {
             &colors,
             &mut thumb,
             Point::new(64.0, 48.0),
-            SLIDER_HANDLE_HEIGHT / 2.0,
+            22.0,
+            ControlSize::ExtraSmall,
             disabled,
         );
         assert_eq!(
@@ -345,8 +418,9 @@ mod tests {
         draw_track(
             &colors,
             &mut draw,
-            Rect::new(0.0, 0.0, 120.0, SLIDER_TRACK_HEIGHT),
-            Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
+            Rect::new(0.0, 0.0, 120.0, 16.0),
+            Rect::new(0.0, 0.0, 72.0, 16.0),
+            ControlSize::ExtraSmall,
             WidgetInteractionState::NONE,
         );
 
@@ -375,12 +449,13 @@ mod tests {
         draw_track(
             &colors,
             &mut draw,
-            Rect::new(0.0, 0.0, 120.0, SLIDER_TRACK_HEIGHT),
-            Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
+            Rect::new(0.0, 0.0, 120.0, 16.0),
+            Rect::new(0.0, 0.0, 72.0, 16.0),
+            ControlSize::ExtraSmall,
             WidgetInteractionState::NONE,
         );
 
-        let outside = SLIDER_TRACK_HEIGHT / 2.0;
+        let outside = slider_size_tokens(ControlSize::ExtraSmall).track_corner;
         let inside = 2.0;
         // rounded_fills[0] is the inactive remainder: inside corner on the
         // leading (gap) edge, stadium on the trailing edge.
@@ -406,8 +481,9 @@ mod tests {
         draw_track(
             &colors,
             &mut draw,
-            Rect::new(0.0, 0.0, 120.0, SLIDER_TRACK_HEIGHT),
-            Rect::new(0.0, 0.0, 72.0, SLIDER_TRACK_HEIGHT),
+            Rect::new(0.0, 0.0, 120.0, 16.0),
+            Rect::new(0.0, 0.0, 72.0, 16.0),
+            ControlSize::ExtraSmall,
             WidgetInteractionState {
                 pressed: true,
                 ..WidgetInteractionState::NONE
@@ -417,5 +493,36 @@ mod tests {
         let gap = SLIDER_PRESSED_HANDLE_WIDTH / 2.0 + SLIDER_HANDLE_PADDING;
         assert_eq!(draw.rounded_fills[1].0.x1, 72.0 - gap);
         assert_eq!(draw.rounded_fills[0].0.x0, 72.0 + gap);
+    }
+    /// `md.comp.slider.value-indicator.*`: stadium bubble at inverse-surface,
+    /// bottom-space 12 from the handle top.
+    #[test]
+    fn value_indicator_uses_the_inverse_surface_tokens() {
+        let colors = MaterialColorScheme::baseline_light();
+        let m = value_indicator_metrics();
+        assert_eq!(m.thumb_gap, SLIDER_VALUE_INDICATOR_BOTTOM_SPACE);
+        assert_eq!(m.padding_x, SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING);
+        assert_eq!(m.padding_y, SLIDER_VALUE_INDICATOR_VERTICAL_PADDING);
+        assert_eq!(SLIDER_VALUE_INDICATOR_BOTTOM_SPACE, 12.0);
+        // `md.comp.slider.value-indicator.label.container.{height,min-width}`:
+        // 44 high, never narrower than 48.
+        assert_eq!(m.min_height, SLIDER_VALUE_INDICATOR_MIN_HEIGHT);
+        assert_eq!(m.min_width, SLIDER_VALUE_INDICATOR_MIN_WIDTH);
+        assert_eq!(m.min_height, 44.0);
+        assert_eq!(m.min_width, 48.0);
+
+        let mut draw = RecordingDrawContext::default();
+        let bounds = Rect::new(10.0, 20.0, 50.0, 48.0);
+        draw_value_indicator(&colors, &mut draw, bounds);
+        assert_eq!(draw.rounded_fills.len(), 1);
+        assert_eq!(draw.rounded_fills[0].0, bounds);
+        assert_eq!(
+            draw.rounded_fills[0].1,
+            RoundedRectRadii::from_single_radius(14.0)
+        );
+        assert!(matches!(
+            &draw.rounded_fills[0].2,
+            Brush::Solid(color) if *color == colors.inverse_surface.peniko()
+        ));
     }
 }

@@ -87,15 +87,15 @@ pub const BUTTON_EXTRA_LARGE: ButtonSizeTokens = ButtonSizeTokens {
 
 /// The token set for `size`.
 #[must_use]
-pub const fn button_size_tokens(size: waterui_controls::button::ButtonSize) -> ButtonSizeTokens {
-    use waterui_controls::button::ButtonSize;
+pub const fn button_size_tokens(size: waterui_controls::ControlSize) -> ButtonSizeTokens {
+    use waterui_controls::ControlSize;
     match size {
-        ButtonSize::ExtraSmall => BUTTON_EXTRA_SMALL,
-        ButtonSize::Small => BUTTON_SMALL,
-        ButtonSize::Medium => BUTTON_MEDIUM,
-        ButtonSize::Large => BUTTON_LARGE,
-        ButtonSize::ExtraLarge => BUTTON_EXTRA_LARGE,
-        _ => panic!("hydrolysis ButtonSize variant is not implemented"),
+        ControlSize::ExtraSmall => BUTTON_EXTRA_SMALL,
+        ControlSize::Small => BUTTON_SMALL,
+        ControlSize::Medium => BUTTON_MEDIUM,
+        ControlSize::Large => BUTTON_LARGE,
+        ControlSize::ExtraLarge => BUTTON_EXTRA_LARGE,
+        _ => panic!("hydrolysis ControlSize variant is not implemented"),
     }
 }
 
@@ -196,15 +196,10 @@ pub const SLIDER_HORIZONTAL_INSET: f64 = 20.0;
 pub const SLIDER_HORIZONTAL_SPACING: f64 = 8.0;
 pub const SLIDER_VERTICAL_SPACING: f64 = 6.0;
 pub const SLIDER_MIN_TRACK_WIDTH: f64 = 72.0;
-/// `SliderTokens.InactiveTrackHeight` / `ActiveTrackHeight`. The Expressive
-/// slider's track is a thick bar, not the 4dp hairline of earlier Material.
-pub const SLIDER_TRACK_HEIGHT: f64 = 16.0;
 /// `SliderTokens.HandleWidth` — a narrow vertical bar, not a circular thumb.
 pub const SLIDER_HANDLE_WIDTH: f64 = 4.0;
 /// `SliderTokens.PressedHandleWidth`: the handle narrows under the finger.
 pub const SLIDER_PRESSED_HANDLE_WIDTH: f64 = 2.0;
-/// `SliderTokens.HandleHeight` — the handle stands taller than the track.
-pub const SLIDER_HANDLE_HEIGHT: f64 = 44.0;
 /// `SliderTokens.ActiveHandlePadding`: the gap the track leaves on each side of
 /// the handle, so the bar never runs into it.
 pub const SLIDER_HANDLE_PADDING: f64 = 6.0;
@@ -213,9 +208,77 @@ pub const SLIDER_STOP_INDICATOR_SIZE: f64 = 4.0;
 /// `md.comp.slider.stop-indicator.trailing-space`: the inset between a stop
 /// indicator and the track end it marks (the leading dot mirrors it).
 pub const SLIDER_STOP_INDICATOR_END_SPACE: f64 = 4.0;
-/// The corner radius on the track ends that face the handle gap. Only the
-/// outer ends take the full stadium radius (`trackHeight / 2`).
+/// The corner radius on the track ends that face the handle gap.
 pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
+
+/// The `md.comp.slider.<size>.*` token set for one control size: track height
+/// and handle height vary with size, and the track's outer corner is a token
+/// of its own rather than half the track height (24 and 40 share the 8/12dp
+/// corner table, not stadium caps).
+pub struct SliderSizeTokens {
+    /// `*-track-height` (active and inactive agree in every size).
+    pub track_height: f64,
+    /// `active-handle-height`.
+    pub handle_height: f64,
+    /// `*-track-shape-{leading,trailing}` corner radius.
+    pub track_corner: f64,
+}
+
+const SLIDER_EXTRA_SMALL_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 16.0,
+    handle_height: 44.0,
+    track_corner: 8.0,
+};
+const SLIDER_SMALL_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 24.0,
+    handle_height: 44.0,
+    track_corner: 8.0,
+};
+const SLIDER_MEDIUM_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 40.0,
+    handle_height: 52.0,
+    track_corner: 12.0,
+};
+const SLIDER_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 56.0,
+    handle_height: 68.0,
+    track_corner: 16.0,
+};
+const SLIDER_EXTRA_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 96.0,
+    handle_height: 108.0,
+    track_corner: 28.0,
+};
+
+/// The `md.comp.slider.<size>.*` token set for `size`.
+#[must_use]
+pub const fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeTokens {
+    use waterui_controls::ControlSize;
+    match size {
+        ControlSize::ExtraSmall => SLIDER_EXTRA_SMALL_TOKENS,
+        ControlSize::Small => SLIDER_SMALL_TOKENS,
+        ControlSize::Medium => SLIDER_MEDIUM_TOKENS,
+        ControlSize::Large => SLIDER_LARGE_TOKENS,
+        ControlSize::ExtraLarge => SLIDER_EXTRA_LARGE_TOKENS,
+        _ => panic!("hydrolysis ControlSize variant is not implemented"),
+    }
+}
+
+/// `md.comp.slider.value-indicator.active.bottom-space`: the gap between the
+/// value indicator and the top of the handle while dragging.
+pub const SLIDER_VALUE_INDICATOR_BOTTOM_SPACE: f64 = 12.0;
+/// No horizontal padding token exists for the value indicator; 12dp matches
+/// the side padding Material gives its other label bubbles.
+pub const SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING: f64 = 12.0;
+/// Same fallback for the vertical direction: padding past the 44dp container
+/// height only ever enlarges the bubble.
+pub const SLIDER_VALUE_INDICATOR_VERTICAL_PADDING: f64 = 4.0;
+/// `md.comp.slider.value-indicator.label.container.height` per the current
+/// spec (44), replacing the deprecated 28dp `md.comp.slider.label.container.height`.
+pub const SLIDER_VALUE_INDICATOR_MIN_HEIGHT: f64 = 44.0;
+/// `md.comp.slider.value-indicator.label.container.min-width`: the bubble
+/// never narrows past 48 and grows for longer labels.
+pub const SLIDER_VALUE_INDICATOR_MIN_WIDTH: f64 = 48.0;
 
 pub const PROGRESS_LINEAR_LABEL_HEIGHT: f64 = 18.0;
 pub const PROGRESS_LINEAR_BAR_TOP_OFFSET: f64 = 10.0;
