@@ -157,7 +157,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/navigation/tabs.rs:33 | tab strip separator surface-variant | was outline | `md.comp.primary-navigation-tab.divider.color` | fixed |
 | src/navigation/navigation.rs | app-bar separator removed | none | `md.comp.app-bar` defines no divider token | fixed (separator now a no-op) |
 | src/toolbar.rs | toolbar row | — | `md.comp.toolbar.*` exists (docked/floating) | no token implemented: file exposes plain row layout, no M3 chrome claimed |
-| app-bar scrolled elevation | — | on-scroll L2 + surface-container | `md.comp.app-bar.scrolled.*` | blocked: no scroll-state signal to `MaterialNavigation` |
+| src/material_navigation.rs | app-bar scrolled container: surface-container once `offset.y > 0`, surface at rest | on-scroll L2 expressed tonally via surface-container | `md.comp.app-bar.scrolled.container.color/elevation` | fixed (`material_scrolled_app_bar` + `ScrollView::report_offset`) |
 
 ## Misc (`src/material_*`, `src/icons.rs`, `src/icon_paths.rs`, `src/lib.rs`)
 
@@ -176,7 +176,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 5. **`selected` flag on `MaterialListItem` / plain-button APIs** — `md.comp.list.list-item.selected.container.color` and selected state layers unreachable.
 6. ~~**Horizontal navigation-bar item variant**~~ — implemented: `tabs_item_layout` returns `Horizontal` at the 600dp medium window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container (64dp bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp) values, and `draw_tabs_highlight` draws the secondary-container corner-full capsule spanning the item.
 7. ~~**Slider size variants and value indicator**~~ — implemented: `slider_metrics(ControlSize)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and `draw_slider_value_indicator` draws the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
-8. **App-bar scrolled state** — `md.comp.app-bar.scrolled.container.elevation/color` needs a scroll-position signal.
+8. ~~**App-bar scrolled state**~~ — fixed: `material_scrolled_app_bar(view, &offset)` binds a `ScrollView::report_offset` binding and drives `md.comp.app-bar.scrolled.container.color` (surface-container, the tonal L2 elevation expression) once `offset.y > 0`.
 9. **Focus indicator ring** — `md.comp.focus-indicator.*` (secondary, 3px, offset) needs a focus-ring draw callback that does not exist.
 
 ## Tests updated
