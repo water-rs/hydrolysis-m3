@@ -3,11 +3,9 @@
 use core::fmt::{self, Debug};
 use core::time::Duration;
 
-use waterui::accessibility::{AccessibilityRole, AccessibilityState};
-use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, SubView, SubviewPlacement, container::FixedContainer,
-    padding::EdgeInsets,
-};
+use waterui::accessibility::AccessibilityRole;
+use waterui::layout::padding::EdgeInsets;
+use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
 use waterui::reactive::{Signal, SignalExt as _};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
@@ -36,8 +34,14 @@ const RICH_TOOLTIP_BOTTOM_PADDING: f32 = 8.0;
 const RICH_TOOLTIP_CONTENT_SPACING: f32 = 4.0;
 const RICH_TOOLTIP_ACTION_TOP_SPACE: f32 = 8.0;
 const RICH_TOOLTIP_ACTION_HEIGHT: f32 = 40.0;
-const PLAIN_TOOLTIP_TARGET_GAP: f32 = 4.0;
-const RICH_TOOLTIP_TARGET_GAP: f32 = 0.0;
+/// `SpacingBetweenTooltipAndAnchor` — Compose Material3 `Tooltip.kt` — the
+/// space between a tooltip and its anchor, both plain and rich.
+const TOOLTIP_ANCHOR_GAP: f32 = 4.0;
+/// `Widget.Material3.Tooltip`'s `android:layout_margin` — the margin
+/// material-components-android keeps between a tooltip and the display
+/// frame (`TooltipDrawable.calculatePointerOffset`), applied as the window
+/// clamp margin.
+const TOOLTIP_WINDOW_MARGIN: f32 = 2.0;
 /// Platform long-press timeout that opens a tooltip from touch input.
 const TOOLTIP_LONG_PRESS_MS: u32 = 500;
 /// How long a non-persistent tooltip stays visible after a long-press.
@@ -158,19 +162,13 @@ where
         let focus_binding = InteractionFocusBinding::new(&focused)
             .escape_action(SharedAction::new(move |_: Environment| escape.dismiss()));
         let open = self.visibility.open.clone();
-        let popup_accessibility = open.map(|open| AccessibilityState::new().hidden(!open));
         let popup_scale = open
             .map(|open| if open { 1.0 } else { 0.0 })
             .with(motion::tooltip());
-        let target = self
-            .target
-            .on_hover_enter(move || target_enter.set_target_hovered(true))
-            .on_hover_exit(move || target_exit.set_target_hovered(false))
-            .on_long_press_gesture(TOOLTIP_LONG_PRESS_MS, move |_: Environment| {
-                long_press.long_press();
-            })
-            .install(focus_binding)
-            .on_change(&focused, move |focused| focus_change.set_focused(focused));
+        // Plain tooltips sit above their anchor and flip below; rich tooltips
+        // sit below and flip above — `place_anchored_overlay` resolves the
+        // flip against the window bounds and `Clamp::Window` keeps the popup
+        // inside it, which a layout inside the anchor cannot see.
         let popup_anchor = if self.rich {
             Anchor::TOP_LEFT
         } else {
@@ -178,64 +176,33 @@ where
         };
         let popup = self
             .popup
-            .scale_from(popup_scale.clone(), popup_scale, popup_anchor)
-            .a11y_state_signal(popup_accessibility)
-            .hittable(open);
-
-        FixedContainer::new(TooltipLayout { rich: self.rich }, (target, popup))
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct TooltipLayout {
-    rich: bool,
-}
-
-impl Layout for TooltipLayout {
-    fn size_that_fits(&self, proposal: ProposalSize, children: &[&dyn SubView]) -> Size {
-        let [target, _popup] = children else {
-            return Size::zero();
-        };
-        target.measure(proposal).size
-    }
-
-    fn place(
-        &self,
-        bounds: Rect,
-        proposal: ProposalSize,
-        children: &[&dyn SubView],
-    ) -> Vec<SubviewPlacement> {
-        let [target, popup] = children else {
-            return Vec::new();
-        };
-        let target_size = target.measure(proposal).size;
-        let target_rect = Rect::new(bounds.origin(), target_size);
-        let popup_proposal = ProposalSize::new(
-            Some(if self.rich {
-                RICH_TOOLTIP_MAX_WIDTH
+            .scale_from(popup_scale.clone(), popup_scale, popup_anchor);
+        let overlay = AnchoredOverlay::new(&open, popup)
+            .edge(if self.rich {
+                AnchorEdge::Bottom
             } else {
-                320.0
-            }),
-            None,
-        );
-        let popup_size = popup.measure(popup_proposal).size;
-        let popup_x = if self.rich {
-            target_rect.x() + target_rect.width() + RICH_TOOLTIP_TARGET_GAP
-        } else {
-            (target_rect.width() - popup_size.width).mul_add(0.5, target_rect.x())
-        };
-        let popup_y = if self.rich {
-            target_rect.y() + target_rect.height() + RICH_TOOLTIP_TARGET_GAP
-        } else {
-            target_rect.y() - popup_size.height - PLAIN_TOOLTIP_TARGET_GAP
-        };
-        vec![
-            SubviewPlacement::new(target_rect, proposal),
-            SubviewPlacement::new(
-                Rect::new(waterui::layout::Point::new(popup_x, popup_y), popup_size),
-                popup_proposal,
-            ),
-        ]
+                AnchorEdge::Top
+            })
+            .alignment(if self.rich {
+                EdgeAlignment::Start
+            } else {
+                EdgeAlignment::Center
+            })
+            .gap(TOOLTIP_ANCHOR_GAP)
+            .flip(true)
+            .clamp(Clamp::Window {
+                margin: TOOLTIP_WINDOW_MARGIN,
+            });
+
+        self.target
+            .on_hover_enter(move || target_enter.set_target_hovered(true))
+            .on_hover_exit(move || target_exit.set_target_hovered(false))
+            .on_long_press_gesture(TOOLTIP_LONG_PRESS_MS, move |_: Environment| {
+                long_press.long_press();
+            })
+            .install(focus_binding)
+            .on_change(&focused, move |focused| focus_change.set_focused(focused))
+            .anchored_overlay(overlay)
     }
 }
 
@@ -448,9 +415,9 @@ pub fn rich_tooltip(
 mod tests {
     use super::{
         PLAIN_TOOLTIP_CONTAINER_HEIGHT, PLAIN_TOOLTIP_CONTAINER_SHAPE, PLAIN_TOOLTIP_LEADING_SPACE,
-        PLAIN_TOOLTIP_TARGET_GAP, PLAIN_TOOLTIP_TOP_SPACE, RICH_TOOLTIP_CONTAINER_SHAPE,
-        RICH_TOOLTIP_HORIZONTAL_PADDING, RICH_TOOLTIP_MAX_WIDTH, RICH_TOOLTIP_TARGET_GAP,
-        TOOLTIP_DISMISS_DURATION, TOOLTIP_LONG_PRESS_MS, TooltipVisibility,
+        PLAIN_TOOLTIP_TOP_SPACE, RICH_TOOLTIP_CONTAINER_SHAPE, RICH_TOOLTIP_HORIZONTAL_PADDING,
+        RICH_TOOLTIP_MAX_WIDTH, TOOLTIP_ANCHOR_GAP, TOOLTIP_DISMISS_DURATION,
+        TOOLTIP_LONG_PRESS_MS, TOOLTIP_WINDOW_MARGIN, TooltipVisibility,
     };
     use core::time::Duration;
     use waterui::reactive::Signal;
@@ -461,7 +428,8 @@ mod tests {
         assert_eq!(PLAIN_TOOLTIP_CONTAINER_SHAPE, 4.0);
         assert_eq!(PLAIN_TOOLTIP_TOP_SPACE, 4.0);
         assert_eq!(PLAIN_TOOLTIP_LEADING_SPACE, 8.0);
-        assert_eq!(PLAIN_TOOLTIP_TARGET_GAP, 4.0);
+        assert_eq!(TOOLTIP_ANCHOR_GAP, 4.0);
+        assert_eq!(TOOLTIP_WINDOW_MARGIN, 2.0);
         assert_eq!(TOOLTIP_LONG_PRESS_MS, 500);
         assert_eq!(TOOLTIP_DISMISS_DURATION, Duration::from_millis(1500));
     }
@@ -507,28 +475,5 @@ mod tests {
         assert_eq!(RICH_TOOLTIP_CONTAINER_SHAPE, 12.0);
         assert_eq!(RICH_TOOLTIP_MAX_WIDTH, 312.0);
         assert_eq!(RICH_TOOLTIP_HORIZONTAL_PADDING, 16.0);
-        assert_eq!(RICH_TOOLTIP_TARGET_GAP, 0.0);
-    }
-    #[test]
-    fn layout_contract_tooltip_preserves_target_and_popup_proposals() {
-        use super::TooltipLayout;
-        use crate::layout_test_support::FixedLeaf;
-        use waterui::layout::{Layout, ProposalSize, Rect, Size};
-        let target = FixedLeaf(Size::new(160.0, 20.0));
-        let popup = FixedLeaf(Size::new(100.0, 30.0));
-        for rich in [false, true] {
-            let layout = TooltipLayout { rich };
-            for width in [None, Some(160.0), None] {
-                let proposal = ProposalSize::new(width, None);
-                let placements =
-                    layout.place(Rect::from_size(target.0), proposal, &[&target, &popup]);
-                assert_eq!(placements[0].proposal, proposal);
-                assert_eq!(placements[0].frame.size(), &target.0);
-                assert_eq!(
-                    placements[1].proposal,
-                    ProposalSize::new(Some(if rich { 312.0 } else { 320.0 }), None)
-                );
-            }
-        }
     }
 }
