@@ -455,7 +455,11 @@ fn anchored_tooltip_view() -> impl View {
 
 #[waterui::test(viewport = (360, 320))]
 fn anchored_material_tooltip_opens_on_keyboard_focus(ui: UiBuilder) {
-    let mut app = ui.theme(Material3::defaults()).mount(anchored_tooltip_view);
+    // The tooltip popup is a window-level anchored overlay, which only the
+    // rendered runtime presents — a semantic mount never shows it.
+    let mut app = ui
+        .theme(Material3::defaults())
+        .mount_offscreen(anchored_tooltip_view);
     app.query()
         .label("Adds this item to your favorites")
         .assert_not_exists();
