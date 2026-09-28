@@ -115,7 +115,7 @@ pub use material_menu::{
 };
 pub use material_navigation::{
     MaterialNavigationView, material_large_top_app_bar, material_navigation_view,
-    material_small_top_app_bar,
+    material_scrolled_app_bar, material_small_top_app_bar,
 };
 pub use material_snackbar::{MaterialSnackbar, material_snackbar};
 pub use material_tabs::{MaterialTab, MaterialTabs, material_tab, material_tabs};
