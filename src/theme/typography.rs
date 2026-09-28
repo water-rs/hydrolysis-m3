@@ -65,6 +65,24 @@ pub fn label_large_prominent() -> Font {
     Font::new(LabelLargeProminent)
 }
 
+/// `md.comp.slider.value-indicator.label.label-text.*` per
+/// m3.material.io/components/sliders/specs: the typescale's label-large
+/// (14/20, weight 500 Medium, tracking 0.1).
+#[derive(Debug, Clone, Copy)]
+pub struct SliderValueIndicatorLabel;
+
+impl Resolvable for SliderValueIndicatorLabel {
+    type Resolved = ResolvedFont;
+
+    fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
+        Computed::constant(font(14.0, FontWeight::Medium, 20.0, 0.1))
+    }
+}
+
+pub fn slider_value_indicator_label() -> Font {
+    Font::new(SliderValueIndicatorLabel)
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct LabelMedium;
 

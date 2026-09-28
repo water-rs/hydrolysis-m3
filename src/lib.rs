@@ -64,11 +64,12 @@ pub use waterui_backend_core::widget::{
     ListRowMetrics, ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction,
     NavigationMetrics, NavigationMotion, PickerMetrics, PressWave, PressWaves,
     ProgressIndicatorStyle, ProgressMetrics, ProgressMotion, RadioIndicatorState,
-    RadioSelectionMotion, SliderMetrics, StepperEnd, StepperMetrics, TabItemLayout, TableMetrics,
-    TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState,
-    WidgetTheme,
+    RadioSelectionMotion, SliderMetrics, SliderValueIndicatorMetrics, StepperEnd, StepperMetrics,
+    TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics,
+    ToggleMetrics, WidgetInteractionState, WidgetTheme,
 };
-use waterui_controls::button::{ButtonSize, ButtonStyle};
+use waterui_controls::ControlSize;
+use waterui_controls::button::ButtonStyle;
 use waterui_controls::toggle::ToggleStyle;
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
@@ -462,11 +463,11 @@ impl WidgetTheme for Material3 {
         theme::motion::navigation()
     }
 
-    fn button_metrics(&self, style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
+    fn button_metrics(&self, style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
         button::metrics(style, size)
     }
 
-    fn icon_button_metrics(&self, style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
+    fn icon_button_metrics(&self, style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
         icon_button::metrics(style, size)
     }
 
@@ -760,8 +761,8 @@ impl WidgetTheme for Material3 {
         );
     }
 
-    fn slider_metrics(&self) -> SliderMetrics {
-        slider::metrics()
+    fn slider_metrics(&self, size: ControlSize) -> SliderMetrics {
+        slider::metrics(size)
     }
 
     fn draw_slider_track(
@@ -769,9 +770,10 @@ impl WidgetTheme for Material3 {
         draw: &mut dyn DrawContext,
         track_rect: Rect,
         fill_rect: Rect,
+        size: ControlSize,
         state: WidgetInteractionState,
     ) {
-        slider::draw_track(&self.colors(), draw, track_rect, fill_rect, state);
+        slider::draw_track(&self.colors(), draw, track_rect, fill_rect, size, state);
     }
 
     fn draw_slider_thumb(
@@ -779,9 +781,10 @@ impl WidgetTheme for Material3 {
         draw: &mut dyn DrawContext,
         center: Point,
         radius: f64,
+        size: ControlSize,
         state: WidgetInteractionState,
     ) {
-        slider::draw_thumb(&self.colors(), draw, center, radius, state);
+        slider::draw_thumb(&self.colors(), draw, center, radius, size, state);
     }
 
     fn draw_slider_thumb_state_layer(
@@ -789,9 +792,26 @@ impl WidgetTheme for Material3 {
         draw: &mut dyn DrawContext,
         center: Point,
         radius: f64,
+        size: ControlSize,
         state: WidgetInteractionState,
     ) {
-        slider::draw_thumb_state_layer(&self.colors(), draw, center, radius, state);
+        slider::draw_thumb_state_layer(&self.colors(), draw, center, radius, size, state);
+    }
+
+    fn slider_value_indicator_metrics(&self) -> SliderValueIndicatorMetrics {
+        slider::value_indicator_metrics()
+    }
+
+    fn slider_value_indicator_color(&self) -> Color {
+        slider::value_indicator_color(&self.colors())
+    }
+
+    fn slider_value_indicator_font(&self) -> Font {
+        slider::value_indicator_font()
+    }
+
+    fn draw_slider_value_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+        slider::draw_value_indicator(&self.colors(), draw, bounds);
     }
 
     fn progress_metrics(&self, style: ProgressIndicatorStyle) -> ProgressMetrics {

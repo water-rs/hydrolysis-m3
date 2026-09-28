@@ -16,7 +16,8 @@ use crate::color::{
     OutlineVariant, Primary, SecondaryContainer,
 };
 use crate::semantics::interaction_style;
-use waterui_controls::button::{ButtonSize, ButtonStyle};
+use waterui_controls::ControlSize;
+use waterui_controls::button::ButtonStyle;
 
 /// `IconButtonTokens.StateLayerSize`: the size of the visible state layer.
 const ICON_BUTTON_STATE_LAYER_SIZE: f32 = 40.0;
@@ -116,10 +117,10 @@ impl IconButtonSize {
 ///
 /// # Panics
 ///
-/// Panics on a `ButtonStyle` or `ButtonSize` variant this theme does not
+/// Panics on a `ButtonStyle` or `ControlSize` variant this theme does not
 /// implement.
 #[must_use]
-pub fn metrics(style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
+pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
     let tokens = icon_button_size(size).tokens();
     match style {
         ButtonStyle::Automatic
@@ -291,14 +292,14 @@ fn container_radii(
     (pressed - resting).mul_add(progress, resting).into()
 }
 
-const fn icon_button_size(size: ButtonSize) -> IconButtonSize {
+const fn icon_button_size(size: ControlSize) -> IconButtonSize {
     match size {
-        ButtonSize::ExtraSmall => IconButtonSize::ExtraSmall,
-        ButtonSize::Small => IconButtonSize::Small,
-        ButtonSize::Medium => IconButtonSize::Medium,
-        ButtonSize::Large => IconButtonSize::Large,
-        ButtonSize::ExtraLarge => IconButtonSize::ExtraLarge,
-        _ => panic!("hydrolysis ButtonSize variant is not implemented"),
+        ControlSize::ExtraSmall => IconButtonSize::ExtraSmall,
+        ControlSize::Small => IconButtonSize::Small,
+        ControlSize::Medium => IconButtonSize::Medium,
+        ControlSize::Large => IconButtonSize::Large,
+        ControlSize::ExtraLarge => IconButtonSize::ExtraLarge,
+        _ => panic!("hydrolysis ControlSize variant is not implemented"),
     }
 }
 
@@ -598,7 +599,8 @@ mod tests {
         ICON_BUTTON_TOUCH_TARGET_SIZE, IconButtonSize, IconButtonVariantTokens, OutlinedIconButton,
         metrics,
     };
-    use waterui_controls::button::{ButtonSize, ButtonStyle};
+    use waterui_controls::ControlSize;
+    use waterui_controls::button::ButtonStyle;
 
     /// A semantic icon-only button lays out at the icon-button touch
     /// target — 48dp at the small size — with no text padding, and the
@@ -606,13 +608,13 @@ mod tests {
     /// minimum box.
     #[test]
     fn icon_button_metrics_lay_out_at_the_touch_target() {
-        let m = metrics(ButtonStyle::Automatic, ButtonSize::Small);
+        let m = metrics(ButtonStyle::Automatic, ControlSize::Small);
         assert_eq!(m.min_width, f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE));
         assert_eq!(m.min_height, f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE));
         assert_eq!(m.padding_x, 0.0);
         assert_eq!(m.padding_y, 0.0);
 
-        let link = metrics(ButtonStyle::Link, ButtonSize::Small);
+        let link = metrics(ButtonStyle::Link, ControlSize::Small);
         assert_eq!(link.min_width, 0.0);
         assert_eq!(link.min_height, 0.0);
     }

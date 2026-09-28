@@ -104,8 +104,9 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/controls/slider.rs:147 | handle elevation level1 (disabled level0) | was level0 | `md.comp.slider.handle.elevation` / `disabled.handle.elevation` | fixed |
 | src/controls/slider.rs:83-103 | single stop dot at the track's trailing end, offset = trailing-space 4 + r2, on-secondary-container | trailing only | `md.comp.slider.{stop-indicator.trailing-space,inactive.stop-indicator.container.color}` | fixed — leading dot removed: no `leading-space`/`leading stop-indicator` token exists; Compose `SliderDefaults.TrackStopIndicatorSize` is "at the end of the track" and the M3 accessibility page places the dot at the end of the inactive track; MDC-Android's `trackStopIndicatorSize` doc says "edges" but is one attr shared across Slider/RangeSlider/CenteredSlider |
 | src/controls/slider.rs:160-170 | unbounded 40dp halo, primary, hover/focus/press opacities | new | `md.comp.slider.state-layer.size/color` | fixed |
-| src/controls/slider.rs | track 16h, handle 4×44, gap 6 | same | `md.comp.slider.*` | conforms |
-| src/controls/slider size variants + value label | — | small/medium/large, value indicator | `md.comp.slider.*-size` / `value-indicator.*` | blocked: single-size `MaterialSliderStyle` only; no value-label surface in waterui slider |
+| src/controls/slider.rs | track 16h, handle 4×44, gap 6 at the default small size | same | `md.comp.slider.small.*` | conforms |
+| src/controls/slider.rs | xsmall/small/medium/large/xlarge tracks 16/24/40/56/96, handle heights 44/44/52/68/108, leading+trailing corners 8/8/12/16/28 | medium handle was 44 | `md.comp.slider.{xsmall,small,medium,large,xlarge}.*` | fixed |
+| src/controls/slider.rs | value indicator: inverse-surface capsule 44 high, ≥48 wide (grows with the label), inverse-on-surface label-large 14/20/500/0.1 text centered, 12dp above the thumb while dragging | container was the deprecated 28-high label container; label was body weight/tracking | `md.comp.slider.value-indicator.*` | fixed |
 | src/controls/toggle.rs:127-142 | thumb shadow level1 enabled / level0 disabled | was none | `md.comp.switch.handle.elevation` / `disabled.handle.elevation` | fixed |
 | src/controls/toggle.rs | track 52×32, handle 16→28 grow, icon 16; handle color primary-container/on-surface-variant on hover+focus+pressed | same | `md.comp.switch.*` | conforms (color gate kept — tokens give same color on all three states) |
 | src/controls/stepper.rs | stepper chrome | — | no M3 stepper component | no token |
@@ -174,7 +175,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 4. **Hover signal on individual split-button halves** — pressed inner-corner morph implemented via drag bindings; the hovered-corner morph has no signal source.
 5. **`selected` flag on `MaterialListItem` / plain-button APIs** — `md.comp.list.list-item.selected.container.color` and selected state layers unreachable.
 6. ~~**Horizontal navigation-bar item variant**~~ — implemented: `tabs_item_layout` returns `Horizontal` at the 600dp medium window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container (64dp bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp) values, and `draw_tabs_highlight` draws the secondary-container corner-full capsule spanning the item.
-7. **Slider size variants and value indicator** — `md.comp.slider.{small,large}.*` and `md.comp.slider.value-indicator.*`; the style is single-size and there is no value-label surface.
+7. ~~**Slider size variants and value indicator**~~ — implemented: `slider_metrics(ControlSize)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and `draw_slider_value_indicator` draws the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
 8. **App-bar scrolled state** — `md.comp.app-bar.scrolled.container.elevation/color` needs a scroll-position signal.
 9. **Focus indicator ring** — `md.comp.focus-indicator.*` (secondary, 3px, offset) needs a focus-ring draw callback that does not exist.
 
@@ -188,5 +189,5 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 - `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values.
 - `src/navigation_rail.rs`: expanded indicator height 56.
 - `src/material_list.rs`: icon sizes 20.
-- `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions.
+- `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions; per-size token tables (`slider_metrics_match_the_size_token_tables`) and the value indicator's inverse-surface tokens.
 - Visual acceptance tests (`*_visual.rs`, ignored by default) regenerate their PNGs under the new tokens; they are opt-in rendering comparisons, not CI assertions.

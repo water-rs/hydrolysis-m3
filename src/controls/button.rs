@@ -7,10 +7,11 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{Brush, ButtonMetrics, DrawContext, WidgetInteractionState};
-use waterui_controls::button::{ButtonSize, ButtonStyle};
+use waterui_controls::ControlSize;
+use waterui_controls::button::ButtonStyle;
 use waterui_graphics::color::Color;
 
-pub fn metrics(style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
+pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
     let tokens = button_size_tokens(size);
     match style {
         ButtonStyle::Automatic
@@ -100,7 +101,7 @@ fn container_radius(bounds: vello::kurbo::Rect) -> f64 {
 
 /// `md.comp.button.<size>.pressed.container.shape`, reached through the
 /// container's resting height because the draw callback does not carry a
-/// `ButtonSize`: corner-small up to 40dp, corner-medium to 56, corner-large
+/// `ControlSize`: corner-small up to 40dp, corner-medium to 56, corner-large
 /// beyond (a stretched button behaves as large).
 fn pressed_corner_radius(height: f64) -> f64 {
     if height <= BUTTON_EXTRA_SMALL_HEIGHT_BAND {
@@ -230,10 +231,11 @@ mod tests {
     };
     use crate::{Brush, DrawContext, MaterialColorScheme};
     use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
-    use waterui_controls::button::{ButtonSize, ButtonStyle};
+    use waterui_controls::ControlSize;
+    use waterui_controls::button::ButtonStyle;
 
     fn assert_button_metrics(style: ButtonStyle, expected_padding_x: f64) {
-        let metrics = metrics(style, ButtonSize::Small);
+        let metrics = metrics(style, ControlSize::Small);
 
         assert_eq!(metrics.padding_x, expected_padding_x);
         assert_eq!(metrics.padding_y, BUTTON_TEXT_VERTICAL_PADDING);
@@ -292,11 +294,11 @@ mod tests {
     #[test]
     fn button_metrics_follow_the_requested_size() {
         for (size, tokens) in [
-            (ButtonSize::ExtraSmall, BUTTON_EXTRA_SMALL),
-            (ButtonSize::Small, BUTTON_SMALL),
-            (ButtonSize::Medium, BUTTON_MEDIUM),
-            (ButtonSize::Large, BUTTON_LARGE),
-            (ButtonSize::ExtraLarge, BUTTON_EXTRA_LARGE),
+            (ControlSize::ExtraSmall, BUTTON_EXTRA_SMALL),
+            (ControlSize::Small, BUTTON_SMALL),
+            (ControlSize::Medium, BUTTON_MEDIUM),
+            (ControlSize::Large, BUTTON_LARGE),
+            (ControlSize::ExtraLarge, BUTTON_EXTRA_LARGE),
         ] {
             let metrics = metrics(ButtonStyle::BorderedProminent, size);
             assert_eq!(metrics.min_height, tokens.container_height, "{size:?}");
