@@ -311,3 +311,57 @@ fn dismissed_tooltip_plays_its_scale_out(ui: UiBuilder<Styled<Material3>>) {
         "after the exit animation nothing of the popup remains"
     );
 }
+
+/// The level-2 elevation shadow must hug the card: pixels further from the
+/// card than the blur's reach equal the scene background — a flat grey slab
+/// (the regression where a `max_width` frame inside `material_elevation`
+/// inflated the shadow's bounds past the painted card) fails this.
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
+fn rich_tooltip_shadow_hugs_the_card(ui: UiBuilder<Styled<Material3>>) {
+    let mut app = ui.mount_offscreen(move || scene(rich_target(), UnitPoint::BOTTOM));
+    app.press_named_key("Tab");
+    let card = app
+        .query()
+        .role(Role::GROUP)
+        .label(RICH_TEXT)
+        .single()
+        .bounds();
+    let snapshot = app.snapshot();
+
+    let bg = pixel_at(&snapshot, 2.0, 2.0);
+    let cy = card.height().mul_add(0.5, card.y());
+    let cx = card.width().mul_add(0.5, card.x());
+    // The combined blur reach of the two level-2 shadows is ~10 pt; sample a
+    // margin well past it on every side of the card.
+    let margin = 16.0;
+    for (x, y) in [
+        (card.x() - margin, cy),
+        (card.x() + card.width() + margin, cy),
+        (cx, card.y() - margin),
+        // Offset from the centre: directly below the card sits the target
+        // the tooltip flipped away from.
+        (card.x() + margin, card.y() + card.height() + margin),
+    ] {
+        assert_eq!(
+            pixel_at(&snapshot, x, y),
+            bg,
+            "pixel ({x:.0}, {y:.0}) outside the card's blur radius must equal \
+             the background — an elevation shadow slab was drawn"
+        );
+    }
+}
+
+/// The pixel at logical `x`, `y` — the capture runs at scale factor 1.0.
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "accessibility bounds are logical pixels and the capture runs at \
+              scale factor 1.0, so truncating them to snapshot indices is the \
+              intended conversion"
+)]
+fn pixel_at(snapshot: &Snapshot, x: f32, y: f32) -> [u8; 4] {
+    let index = (y as usize * snapshot.width as usize + x as usize) * 4;
+    snapshot.rgba8[index..index + 4]
+        .try_into()
+        .expect("rgba pixel")
+}

@@ -391,9 +391,15 @@ impl View for RichTooltip {
             RICH_TOOLTIP_HORIZONTAL_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
-        .background(FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer))
-        .max_width(RICH_TOOLTIP_MAX_WIDTH);
+        .background(
+            FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer),
+        );
 
+        // `max_width` sits outside the elevation: a `Frame` resolves to the
+        // offered extent (up to its cap), so a cap inside `material_elevation`
+        // would inflate the bounds the shadow casts past the painted card.
+        // The a11y scope stays inside the frame so the Group node keeps the
+        // card's bounds rather than the frame's.
         material_elevation(
             MaterialElevationLevel::LEVEL2,
             RICH_TOOLTIP_CONTAINER_SHAPE,
@@ -401,6 +407,7 @@ impl View for RichTooltip {
         )
         .a11y_label(self.accessibility_label)
         .a11y_role(AccessibilityRole::Group)
+        .max_width(RICH_TOOLTIP_MAX_WIDTH)
     }
 }
 
