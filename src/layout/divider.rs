@@ -1,6 +1,6 @@
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DividerMetrics, DrawContext};
-use vello::kurbo::Rect;
+use kurbo::Rect;
 
 pub const fn metrics() -> DividerMetrics {
     DividerMetrics::new(crate::dimensions::DIVIDER_THICKNESS)

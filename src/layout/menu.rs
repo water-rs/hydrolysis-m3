@@ -8,7 +8,7 @@ use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, TextContextMenuMetrics};
 
-use vello::kurbo::{Rect, RoundedRectRadii};
+use kurbo::{Rect, RoundedRectRadii};
 
 pub const fn text_context_metrics() -> TextContextMenuMetrics {
     TextContextMenuMetrics {

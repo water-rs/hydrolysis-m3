@@ -11,8 +11,8 @@ use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, PickerMetrics, RadioIndicatorState, WidgetInteractionState};
+use kurbo::RoundedRectRadii;
 use num_traits::ToPrimitive;
-use vello::kurbo::RoundedRectRadii;
 use waterui_form::picker::PickerStyle;
 
 pub fn metrics(style: PickerStyle) -> PickerMetrics {
@@ -81,14 +81,14 @@ const fn segmented_metrics() -> PickerMetrics {
 pub fn draw_indicator(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
 ) {
     let center_x = PICKER_INDICATOR_SPACE.mul_add(-0.5, bounds.x1 - PICKER_HORIZONTAL_INSET);
     let center_y = bounds.height().mul_add(0.5, bounds.y0);
-    let chevron = vello::kurbo::BezPath::from_vec(vec![
-        vello::kurbo::PathEl::MoveTo(vello::kurbo::Point::new(center_x - 4.0, center_y - 2.0)),
-        vello::kurbo::PathEl::LineTo(vello::kurbo::Point::new(center_x, center_y + 2.0)),
-        vello::kurbo::PathEl::LineTo(vello::kurbo::Point::new(center_x + 4.0, center_y - 2.0)),
+    let chevron = kurbo::BezPath::from_vec(vec![
+        kurbo::PathEl::MoveTo(kurbo::Point::new(center_x - 4.0, center_y - 2.0)),
+        kurbo::PathEl::LineTo(kurbo::Point::new(center_x, center_y + 2.0)),
+        kurbo::PathEl::LineTo(kurbo::Point::new(center_x + 4.0, center_y - 2.0)),
     ]);
     draw.stroke_path(
         &chevron,
@@ -100,7 +100,7 @@ pub fn draw_indicator(
 pub fn draw_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     state: WidgetInteractionState,
 ) {
     // md.comp.filled-select menu field: container shape is
@@ -117,7 +117,7 @@ pub fn draw_state_layer(
 pub fn draw_popup(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    popup_rect: vello::kurbo::Rect,
+    popup_rect: kurbo::Rect,
 ) {
     let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
     // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
@@ -139,13 +139,13 @@ pub fn draw_popup(
 pub fn draw_popup_row_background(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    row_rect: vello::kurbo::Rect,
+    row_rect: kurbo::Rect,
     selected: bool,
 ) {
     if !selected {
         return;
     }
-    let inset = vello::kurbo::Rect::new(
+    let inset = kurbo::Rect::new(
         row_rect.x0 + 2.0,
         row_rect.y0 + 1.0,
         row_rect.x1 - 2.0,
@@ -160,11 +160,11 @@ pub fn draw_popup_row_background(
 pub fn draw_popup_row_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    row_rect: vello::kurbo::Rect,
+    row_rect: kurbo::Rect,
     _selected: bool,
     state: WidgetInteractionState,
 ) {
-    let inset = vello::kurbo::Rect::new(
+    let inset = kurbo::Rect::new(
         row_rect.x0 + 2.0,
         row_rect.y0 + 1.0,
         row_rect.x1 - 2.0,
@@ -179,7 +179,7 @@ pub fn draw_popup_row_state_layer(
 pub fn draw_separator(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    separator: vello::kurbo::Rect,
+    separator: kurbo::Rect,
 ) {
     // md.comp.filled-select.menu.divider.color = surface-variant.
     draw.fill_rect(separator, &Brush::from(colors.surface_variant.peniko()));
@@ -188,7 +188,7 @@ pub fn draw_separator(
 pub fn draw_radio_indicator(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    center: kurbo::Point,
     radius: f64,
     state: RadioIndicatorState,
 ) {
@@ -220,11 +220,11 @@ fn blend_role_color(
     from: MaterialRoleColor,
     to: MaterialRoleColor,
     progress: f32,
-) -> vello::peniko::Color {
+) -> peniko::Color {
     let progress = progress.clamp(0.0, 1.0);
     let from = from.argb();
     let to = to.argb();
-    vello::peniko::Color::new([
+    peniko::Color::new([
         blend_channel(from.red(), to.red(), progress),
         blend_channel(from.green(), to.green(), progress),
         blend_channel(from.blue(), to.blue(), progress),
@@ -241,7 +241,7 @@ fn blend_channel(from: u8, to: u8, progress: f32) -> f32 {
 pub fn draw_radio_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    center: kurbo::Point,
     _radius: f64,
     selected: bool,
     state: WidgetInteractionState,
@@ -273,7 +273,7 @@ pub fn segmented_label_color(
 pub fn draw_segmented_container(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     segment_count: usize,
 ) {
     draw.stroke_rounded_rect(
@@ -297,8 +297,8 @@ pub fn draw_segmented_container(
             bounds.x0,
         );
         draw.stroke_line(
-            vello::kurbo::Point::new(x, bounds.y0),
-            vello::kurbo::Point::new(x, bounds.y1),
+            kurbo::Point::new(x, bounds.y0),
+            kurbo::Point::new(x, bounds.y1),
             &Brush::from(colors.outline.peniko()),
             PICKER_SEGMENTED_OUTLINE_WIDTH,
         );
@@ -309,20 +309,20 @@ pub fn draw_segmented_container(
 /// outside edge of each end segment takes the group's full rounding — the
 /// first item rounds its leading corners, the last its trailing corners, and
 /// middle items stay square against the separator strokes.
-const fn segment_radii(is_first: bool, is_last: bool) -> vello::kurbo::RoundedRectRadii {
+const fn segment_radii(is_first: bool, is_last: bool) -> kurbo::RoundedRectRadii {
     let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
     match (is_first, is_last) {
-        (true, true) => vello::kurbo::RoundedRectRadii::new(radius, radius, radius, radius),
-        (true, false) => vello::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
-        (false, true) => vello::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
-        (false, false) => vello::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
+        (true, true) => kurbo::RoundedRectRadii::new(radius, radius, radius, radius),
+        (true, false) => kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
+        (false, true) => kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
+        (false, false) => kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
     }
 }
 
 pub fn draw_segmented_segment(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     selected: bool,
     is_first: bool,
     is_last: bool,
@@ -340,7 +340,7 @@ pub fn draw_segmented_segment(
 pub fn draw_segmented_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     selected: bool,
     is_first: bool,
     is_last: bool,
@@ -361,8 +361,8 @@ pub fn draw_segmented_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
-    use vello::peniko::Color;
+    use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use peniko::Color;
 
     use super::{
         MaterialColorScheme, RadioIndicatorState, blend_role_color, draw_popup_row_background,
@@ -447,7 +447,7 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            offset: vello::kurbo::Vec2,
+            offset: kurbo::Vec2,
             blur: f64,
             color: Color,
         ) {

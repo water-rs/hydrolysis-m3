@@ -53,7 +53,7 @@ pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
 
-use vello::kurbo::{BezPath, Point, Rect};
+use kurbo::{BezPath, Point, Rect};
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
@@ -513,8 +513,8 @@ impl WidgetTheme for Material3 {
         &self,
         draw: &mut dyn DrawContext,
         bounds: Rect,
-        radii: vello::kurbo::RoundedRectRadii,
-        color: vello::peniko::Color,
+        radii: kurbo::RoundedRectRadii,
+        color: peniko::Color,
         state: WidgetInteractionState,
     ) {
         theme::state_layer::draw_bounded(draw, bounds, radii, color, state);
@@ -1039,15 +1039,11 @@ fn lerp_channel(start: f32, end: f32, t: f32) -> f32 {
     (end - start).mul_add(t, start)
 }
 
-fn lerp_color(
-    start: vello::peniko::Color,
-    end: vello::peniko::Color,
-    t: f32,
-) -> vello::peniko::Color {
+fn lerp_color(start: peniko::Color, end: peniko::Color, t: f32) -> peniko::Color {
     let t = t.clamp(0.0, 1.0);
     let start = start.to_rgba8();
     let end = end.to_rgba8();
-    vello::peniko::Color::new([
+    peniko::Color::new([
         lerp_channel(f32::from(start.r) / 255.0, f32::from(end.r) / 255.0, t),
         lerp_channel(f32::from(start.g) / 255.0, f32::from(end.g) / 255.0, t),
         lerp_channel(f32::from(start.b) / 255.0, f32::from(end.b) / 255.0, t),

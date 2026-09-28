@@ -10,7 +10,7 @@ use crate::dimensions::{
 use crate::icon_paths::{self, IconGrid};
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, NavigationMetrics};
-use vello::kurbo::{Point, Rect};
+use kurbo::{Point, Rect};
 
 pub const fn metrics() -> NavigationMetrics {
     NavigationMetrics {

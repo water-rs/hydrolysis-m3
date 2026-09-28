@@ -15,7 +15,7 @@ use crate::icon_paths::{IconGrid, add, remove};
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, StepperEnd, StepperMetrics, WidgetInteractionState};
-use vello::kurbo::{Rect, RoundedRectRadii};
+use kurbo::{Rect, RoundedRectRadii};
 
 pub const fn metrics() -> StepperMetrics {
     StepperMetrics::new(
@@ -106,7 +106,7 @@ mod tests {
         STEPPER_BUTTON_SPACING, STEPPER_ICON_SIZE, STEPPER_INNER_CORNER_RADIUS,
         STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
     };
-    use vello::kurbo::Rect;
+    use kurbo::Rect;
 
     #[test]
     fn stepper_uses_material_icon_button_tokens() {

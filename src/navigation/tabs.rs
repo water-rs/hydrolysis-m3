@@ -8,7 +8,7 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, TabItemLayout, TabsMetrics, WidgetInteractionState};
-use vello::kurbo::{Rect, RoundedRectRadii};
+use kurbo::{Rect, RoundedRectRadii};
 
 /// Whether the bar shows vertical or horizontal items. The M3 navigation bar
 /// switches to horizontal items at the medium window width class boundary —

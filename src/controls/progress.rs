@@ -10,8 +10,8 @@ use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, ProgressIndicatorStyle, ProgressMetrics, lerp_color};
 use core::f64::consts::FRAC_PI_2;
 use core::time::Duration;
+use kurbo::{BezPath, Point, Rect};
 use num_traits::ToPrimitive;
-use vello::kurbo::{BezPath, Point, Rect};
 use waterui::animation::Animation;
 
 /// `LinearAnimationDuration` in Compose's `ProgressIndicator.kt`.
@@ -154,7 +154,7 @@ pub const fn metrics(style: ProgressIndicatorStyle) -> ProgressMetrics {
 pub fn draw_linear_track(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     active_end: Option<f64>,
 ) {
     let radius = (bounds.height() / 2.0).into();
@@ -164,14 +164,14 @@ pub fn draw_linear_track(
     });
     if start < bounds.x1 {
         draw.fill_rounded_rect(
-            vello::kurbo::Rect::new(start, bounds.y0, bounds.x1, bounds.y1),
+            kurbo::Rect::new(start, bounds.y0, bounds.x1, bounds.y1),
             radius,
             &Brush::from(track_color),
         );
     }
     // The stop indicator only exists on a determinate bar.
     if active_end.is_some() {
-        let center = vello::kurbo::Point::new(
+        let center = kurbo::Point::new(
             bounds.x1 - PROGRESS_LINEAR_STOP_SIZE / 2.0,
             bounds.y0 + bounds.height() / 2.0,
         );
@@ -188,7 +188,7 @@ pub fn draw_linear_track(
 pub fn draw_linear_fill(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
 ) {
     draw.fill_rounded_rect(
         bounds,
@@ -206,19 +206,19 @@ pub fn draw_linear_fill(
 pub fn draw_circular_track(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    center: kurbo::Point,
     radius: f64,
     width: f64,
     active_turns: Option<f64>,
 ) {
     use core::f64::consts::{FRAC_PI_2, TAU};
-    use vello::kurbo::Shape as _;
+    use kurbo::Shape as _;
 
     let brush = Brush::from(colors.surface_container_highest.peniko());
     let Some(active_turns) = active_turns else {
         // Indeterminate: the sweep moves, so the whole ring stays behind it.
         draw.stroke_path(
-            &vello::kurbo::Arc::new(center, (radius, radius), -FRAC_PI_2, TAU, 0.0).into_path(0.1),
+            &kurbo::Arc::new(center, (radius, radius), -FRAC_PI_2, TAU, 0.0).into_path(0.1),
             &brush,
             width,
         );
@@ -237,7 +237,7 @@ pub fn draw_circular_track(
         return;
     }
     draw.stroke_path(
-        &vello::kurbo::Arc::new(
+        &kurbo::Arc::new(
             center,
             (radius, radius),
             -FRAC_PI_2 + active + gap,
@@ -253,7 +253,7 @@ pub fn draw_circular_track(
 pub fn draw_circular_fill(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    path: &vello::kurbo::BezPath,
+    path: &kurbo::BezPath,
     width: f64,
 ) {
     draw.stroke_path(path, &Brush::from(colors.primary.peniko()), width);
@@ -308,7 +308,7 @@ fn draw_indeterminate_bar(
     initial_inset_percent: f64,
     translate_percent: f64,
     scale: f64,
-    color: vello::peniko::Color,
+    color: peniko::Color,
 ) {
     let x = track.width().mul_add(
         (initial_inset_percent + translate_percent) / 100.0,
@@ -366,7 +366,7 @@ fn progress_color(
     elapsed: Duration,
     four_color: bool,
     cycle: Duration,
-) -> vello::peniko::Color {
+) -> peniko::Color {
     if !four_color {
         return colors.primary.peniko();
     }
@@ -380,7 +380,7 @@ fn progress_color(
     sample_color_phase(phase, palette)
 }
 
-fn sample_color_phase(phase: f64, palette: [vello::peniko::Color; 4]) -> vello::peniko::Color {
+fn sample_color_phase(phase: f64, palette: [peniko::Color; 4]) -> peniko::Color {
     match phase {
         p if p < 0.15 => palette[0],
         p if p < 0.25 => lerp_color(palette[0], palette[1], progress_phase((p - 0.15) / 0.10)),
@@ -604,8 +604,8 @@ pub fn draw_loading(
     let scale = LOADING_INDICATOR_SIZE.min(bounds.width().min(bounds.height())) / 2.0;
     let mut path = radii_to_path(&radii, Point::ORIGIN, scale);
     path.apply_affine(
-        vello::kurbo::Affine::translate((centre.x, centre.y))
-            * vello::kurbo::Affine::rotate(loading_rotation(elapsed)),
+        kurbo::Affine::translate((centre.x, centre.y))
+            * kurbo::Affine::rotate(loading_rotation(elapsed)),
     );
     let color = progress_color(colors, elapsed, four_color, LOADING_GLOBAL_ROTATION);
     draw.fill_path(&path, &Brush::from(color));
@@ -672,7 +672,7 @@ mod tests {
     fn indeterminate_segments_draw_with_rounded_caps() {
         use super::{LINEAR_INDETERMINATE_CYCLE, draw_linear_indeterminate};
         use crate::{Brush, DrawContext, MaterialColorScheme};
-        use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+        use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
 
         #[derive(Default)]
         struct RecordingDrawContext {
@@ -712,9 +712,9 @@ mod tests {
                 &mut self,
                 _rect: Rect,
                 _radii: RoundedRectRadii,
-                _offset: vello::kurbo::Vec2,
+                _offset: kurbo::Vec2,
                 _blur: f64,
-                _color: vello::peniko::Color,
+                _color: peniko::Color,
             ) {
             }
 
