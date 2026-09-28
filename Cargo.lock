@@ -1875,7 +1875,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 [[package]]
 name = "hydrolysis"
 version = "0.3.1"
-source = "git+https://github.com/water-rs/hydrolysis?rev=746e9d4a83a7d2bb6cdaa0846b96fc0e9aeaa287#746e9d4a83a7d2bb6cdaa0846b96fc0e9aeaa287"
+source = "git+https://github.com/water-rs/hydrolysis?rev=02d0ca4c2dabfea575aa85c16d12bd85b835c8c1#02d0ca4c2dabfea575aa85c16d12bd85b835c8c1"
 dependencies = [
  "accesskit",
  "async-task",
