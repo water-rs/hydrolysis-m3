@@ -9,7 +9,7 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, ToggleMetrics, WidgetInteractionState, lerp_color};
-use vello::kurbo::{Affine, BezPath, PathEl, Point, Rect};
+use kurbo::{Affine, BezPath, PathEl, Point, Rect};
 use waterui_controls::toggle::ToggleStyle;
 
 pub fn metrics(style: ToggleStyle) -> ToggleMetrics {
@@ -283,7 +283,7 @@ pub fn draw_checkbox_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, draw_checkbox, draw_switch,
@@ -296,17 +296,17 @@ mod tests {
     struct RecordingDrawContext {
         rounded_stroke_count: usize,
         rounded_stroke_widths: Vec<f64>,
-        rounded_stroke_brushes: Vec<vello::peniko::Color>,
+        rounded_stroke_brushes: Vec<peniko::Color>,
         rounded_fill_count: usize,
-        rounded_fill_brushes: Vec<vello::peniko::Color>,
+        rounded_fill_brushes: Vec<peniko::Color>,
         path_stroke_count: usize,
         circle_centers: Vec<Point>,
         circle_radii: Vec<f64>,
-        circle_brushes: Vec<vello::peniko::Color>,
+        circle_brushes: Vec<peniko::Color>,
         transform_depth: usize,
     }
 
-    fn solid(brush: &Brush) -> vello::peniko::Color {
+    fn solid(brush: &Brush) -> peniko::Color {
         match brush {
             Brush::Solid(color) => *color,
             Brush::Gradient(_) => panic!("toggle chrome must use solid brushes"),
@@ -355,9 +355,9 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
+            _offset: kurbo::Vec2,
             _blur: f64,
-            _color: vello::peniko::Color,
+            _color: peniko::Color,
         ) {
         }
 

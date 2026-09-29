@@ -8,8 +8,8 @@
 use core::cell::Cell;
 use std::rc::Rc;
 
-use vello::kurbo::{Affine, BezPath, Cap, Join, Point, Stroke};
-use vello::peniko::{Brush, Color};
+use kurbo::{Affine, BezPath, Cap, Join, Point, Stroke};
+use peniko::{Brush, Color};
 use waterui::color::ResolvedColor;
 use waterui::{Environment, View, ViewExt as _};
 use waterui_core::Signal;

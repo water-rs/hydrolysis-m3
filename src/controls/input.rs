@@ -6,9 +6,9 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, InputFieldMetrics, WidgetInteractionState};
+use kurbo::{Point, Rect, RoundedRectRadii};
 use material_color_utils::utils::color_utils::Argb;
-use vello::kurbo::{Point, Rect, RoundedRectRadii};
-use vello::peniko::Color as PenikoColor;
+use peniko::Color as PenikoColor;
 use waterui_graphics::color::Color;
 
 const INPUT_SELECTION_ALPHA: f32 = 0.28;
@@ -130,7 +130,7 @@ pub fn draw_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, caret_brush, draw_field, metrics,
@@ -181,9 +181,9 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
+            _offset: kurbo::Vec2,
             _blur: f64,
-            _color: vello::peniko::Color,
+            _color: peniko::Color,
         ) {
         }
 

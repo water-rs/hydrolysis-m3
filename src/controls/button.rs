@@ -95,7 +95,7 @@ impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
 /// it off the bounds keeps a large or extra-large button a capsule, and keeps a
 /// button stretched to fill a taller row — a navigation drawer line, say —
 /// rounded to match whatever it is sitting on.
-fn container_radius(bounds: vello::kurbo::Rect) -> f64 {
+fn container_radius(bounds: kurbo::Rect) -> f64 {
     bounds.height() / 2.0
 }
 
@@ -143,10 +143,7 @@ fn press_progress(state: WidgetInteractionState) -> f64 {
 
 /// The container's radius in `state`: resting `CornerFull`, morphing to
 /// `PressedContainerShape` as the press grows.
-fn container_radii(
-    bounds: vello::kurbo::Rect,
-    state: WidgetInteractionState,
-) -> vello::kurbo::RoundedRectRadii {
+fn container_radii(bounds: kurbo::Rect, state: WidgetInteractionState) -> kurbo::RoundedRectRadii {
     let resting = container_radius(bounds);
     let pressed = pressed_corner_radius(bounds.height());
     (pressed - resting)
@@ -157,7 +154,7 @@ fn container_radii(
 pub fn draw_chrome(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
@@ -192,8 +189,8 @@ pub fn draw_chrome(
             };
             let underline_y = (bounds.y1 - BUTTON_LINK_UNDERLINE_BOTTOM_INSET).max(bounds.y0);
             draw.stroke_line(
-                vello::kurbo::Point::new(bounds.x0 + BUTTON_LINK_HORIZONTAL_PADDING, underline_y),
-                vello::kurbo::Point::new(bounds.x1 - BUTTON_LINK_HORIZONTAL_PADDING, underline_y),
+                kurbo::Point::new(bounds.x0 + BUTTON_LINK_HORIZONTAL_PADDING, underline_y),
+                kurbo::Point::new(bounds.x1 - BUTTON_LINK_HORIZONTAL_PADDING, underline_y),
                 &Brush::from(underline),
                 BUTTON_LINK_UNDERLINE_THICKNESS,
             );
@@ -206,7 +203,7 @@ pub fn draw_chrome(
 pub fn draw_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
@@ -230,7 +227,7 @@ mod tests {
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
     use crate::{Brush, DrawContext, MaterialColorScheme};
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
 
@@ -380,9 +377,9 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
+            _offset: kurbo::Vec2,
             _blur: f64,
-            _color: vello::peniko::Color,
+            _color: peniko::Color,
         ) {
         }
 

@@ -38,8 +38,8 @@ pub const fn metrics(size: ControlSize) -> SliderMetrics {
 pub fn draw_track(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    track_rect: vello::kurbo::Rect,
-    fill_rect: vello::kurbo::Rect,
+    track_rect: kurbo::Rect,
+    fill_rect: kurbo::Rect,
     size: ControlSize,
     state: WidgetInteractionState,
 ) {
@@ -71,8 +71,8 @@ pub fn draw_track(
     let inactive_start = fill_rect.x1 + gap;
     if inactive_start < track_rect.x1 - outside {
         draw.fill_rounded_rect(
-            vello::kurbo::Rect::new(inactive_start, track_rect.y0, track_rect.x1, track_rect.y1),
-            vello::kurbo::RoundedRectRadii::new(inside, outside, outside, inside),
+            kurbo::Rect::new(inactive_start, track_rect.y0, track_rect.x1, track_rect.y1),
+            kurbo::RoundedRectRadii::new(inside, outside, outside, inside),
             &Brush::from(track_color),
         );
     }
@@ -81,8 +81,8 @@ pub fn draw_track(
     let active_end = fill_rect.x1 - gap;
     if active_end > track_rect.x0 + outside {
         draw.fill_rounded_rect(
-            vello::kurbo::Rect::new(track_rect.x0, track_rect.y0, active_end, track_rect.y1),
-            vello::kurbo::RoundedRectRadii::new(outside, inside, inside, outside),
+            kurbo::Rect::new(track_rect.x0, track_rect.y0, active_end, track_rect.y1),
+            kurbo::RoundedRectRadii::new(outside, inside, inside, outside),
             &Brush::from(fill_color),
         );
     }
@@ -96,7 +96,7 @@ pub fn draw_track(
     // `trackStopIndicatorSize`).
     let track_mid_y = track_rect.y0 + track_rect.height() / 2.0;
     let dot_offset = SLIDER_STOP_INDICATOR_END_SPACE + SLIDER_STOP_INDICATOR_SIZE / 2.0;
-    let indicator_center = vello::kurbo::Point::new(track_rect.x1 - dot_offset, track_mid_y);
+    let indicator_center = kurbo::Point::new(track_rect.x1 - dot_offset, track_mid_y);
     if indicator_center.x > inactive_start {
         draw.fill_circle(
             indicator_center,
@@ -113,7 +113,7 @@ pub fn draw_track(
 pub fn draw_thumb(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    center: kurbo::Point,
     _radius: f64,
     size: ControlSize,
     state: WidgetInteractionState,
@@ -124,7 +124,7 @@ pub fn draw_thumb(
         SLIDER_HANDLE_WIDTH
     };
     let handle_height = slider_size_tokens(size).handle_height;
-    let bounds = vello::kurbo::Rect::from_center_size(center, (width, handle_height));
+    let bounds = kurbo::Rect::from_center_size(center, (width, handle_height));
     // MD3 disabled slider handle: on-surface at 38% over an opaque surface
     // underlay, so content behind the semi-transparent handle cannot bleed
     // through (the reference implementation paints the handle over the background role).
@@ -163,7 +163,7 @@ pub fn draw_thumb(
 pub fn draw_thumb_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    center: vello::kurbo::Point,
+    center: kurbo::Point,
     _radius: f64,
     _size: ControlSize,
     state: WidgetInteractionState,
@@ -209,7 +209,7 @@ pub fn value_indicator_font() -> Font {
 pub fn draw_value_indicator(
     colors: &MaterialColorScheme,
     draw: &mut dyn DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
 ) {
     draw.fill_rounded_rect(
         bounds,
@@ -220,7 +220,7 @@ pub fn draw_value_indicator(
 
 #[cfg(test)]
 mod tests {
-    use vello::kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, draw_thumb, draw_track, draw_value_indicator,
@@ -275,9 +275,9 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
+            _offset: kurbo::Vec2,
             _blur: f64,
-            _color: vello::peniko::Color,
+            _color: peniko::Color,
         ) {
         }
 

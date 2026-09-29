@@ -7,7 +7,7 @@ use material_color_utils::{
     theme_from_color,
     utils::color_utils::Argb,
 };
-use vello::peniko::Color;
+use peniko::Color;
 use waterui_graphics::color::{Color as WaterColor, ResolvedColor, Srgb};
 
 const fn role(red: u8, green: u8, blue: u8) -> MaterialRoleColor {

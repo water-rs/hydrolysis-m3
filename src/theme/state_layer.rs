@@ -1,6 +1,6 @@
 use crate::{Brush, DrawContext, PressWave, PressWaves, WidgetInteractionState};
-use vello::kurbo::{Point, Rect, RoundedRectRadii};
-use vello::peniko::Color;
+use kurbo::{Point, Rect, RoundedRectRadii};
+use peniko::Color;
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
 /// targets still produce a ripple at least this wide.
@@ -182,9 +182,9 @@ mod tests {
     use crate::{
         Brush, DrawContext, PressWave, PressWaves, WidgetInteractionState, theme::state_layer,
     };
+    use kurbo::{Affine, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii};
+    use peniko::Color;
     use std::path::Path;
-    use vello::kurbo::{Affine, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii};
-    use vello::peniko::Color;
     use waterui_graphics::{
         GpuContext, GpuFrame, GpuRuntime, GpuSurface, GpuView, OffscreenRenderConfig, OffscreenSize,
     };
@@ -449,7 +449,7 @@ mod tests {
             &mut self,
             _rect: Rect,
             _radii: RoundedRectRadii,
-            _offset: vello::kurbo::Vec2,
+            _offset: kurbo::Vec2,
             _blur: f64,
             _color: Color,
         ) {
@@ -466,17 +466,14 @@ mod tests {
     }
 
     impl VelloTestDrawContext<'_> {
-        fn fill_shape(&mut self, shape: &impl vello::kurbo::Shape, brush: &Brush) {
+        fn fill_shape(&mut self, shape: &impl kurbo::Shape, brush: &Brush) {
             match brush {
-                Brush::Solid(color) => self.scene.fill(
-                    vello::peniko::Fill::NonZero,
-                    Affine::IDENTITY,
-                    color,
-                    None,
-                    shape,
-                ),
+                Brush::Solid(color) => {
+                    self.scene
+                        .fill(peniko::Fill::NonZero, Affine::IDENTITY, color, None, shape);
+                }
                 Brush::Gradient(gradient) => self.scene.fill(
-                    vello::peniko::Fill::NonZero,
+                    peniko::Fill::NonZero,
                     Affine::IDENTITY,
                     gradient,
                     None,
@@ -485,8 +482,8 @@ mod tests {
             }
         }
 
-        fn stroke_shape(&mut self, shape: &impl vello::kurbo::Shape, brush: &Brush, width: f64) {
-            let stroke = vello::kurbo::Stroke::new(width);
+        fn stroke_shape(&mut self, shape: &impl kurbo::Shape, brush: &Brush, width: f64) {
+            let stroke = kurbo::Stroke::new(width);
             match brush {
                 Brush::Solid(color) => {
                     self.scene
@@ -547,7 +544,7 @@ mod tests {
             &mut self,
             rect: Rect,
             radii: RoundedRectRadii,
-            offset: vello::kurbo::Vec2,
+            offset: kurbo::Vec2,
             blur: f64,
             color: Color,
         ) {
@@ -568,8 +565,8 @@ mod tests {
                 .copied()
                 .unwrap_or(Rect::new(-1.0e9, -1.0e9, 1.0e9, 1.0e9));
             self.scene.push_layer(
-                vello::peniko::Fill::NonZero,
-                vello::peniko::BlendMode::default(),
+                peniko::Fill::NonZero,
+                peniko::BlendMode::default(),
                 alpha,
                 Affine::IDENTITY,
                 &clip,
@@ -579,8 +576,8 @@ mod tests {
         fn push_rounded_layer(&mut self, alpha: f32, clip: Rect, radii: RoundedRectRadii) {
             let clip = RoundedRect::from_rect(clip, radii);
             self.scene.push_layer(
-                vello::peniko::Fill::NonZero,
-                vello::peniko::BlendMode::default(),
+                peniko::Fill::NonZero,
+                peniko::BlendMode::default(),
                 alpha,
                 Affine::IDENTITY,
                 &clip,

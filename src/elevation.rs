@@ -189,8 +189,8 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
 /// [`DrawContext`]: waterui::backend_core::widget::DrawContext
 pub(crate) fn draw_shadows(
     draw: &mut dyn crate::DrawContext,
-    rect: vello::kurbo::Rect,
-    radii: vello::kurbo::RoundedRectRadii,
+    rect: kurbo::Rect,
+    radii: kurbo::RoundedRectRadii,
     level: MaterialElevationLevel,
     colors: &crate::theme::colors::MaterialColorScheme,
 ) {
@@ -199,7 +199,7 @@ pub(crate) fn draw_shadows(
         draw.draw_shadow(
             rect,
             radii,
-            vello::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
+            kurbo::Vec2::new(0.0, f64::from(shadow.y)),
             f64::from(shadow.blur),
             colors
                 .shadow

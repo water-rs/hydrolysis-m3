@@ -11,7 +11,7 @@ use crate::{
     Brush, DrawContext, ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
     ListTrailingControlMetrics, WidgetInteractionState,
 };
-use vello::kurbo::{Point, Rect};
+use kurbo::{Point, Rect};
 
 /// Size the trailing row affordances draw their icons at (Material's 24dp
 /// icon), centered in the larger hit box the row gives them.
@@ -173,7 +173,7 @@ pub fn draw_separator(colors: &MaterialColorScheme, draw: &mut dyn DrawContext, 
 fn draw_control_state_layer(
     draw: &mut dyn DrawContext,
     bounds: Rect,
-    color: vello::peniko::Color,
+    color: peniko::Color,
     state: WidgetInteractionState,
 ) {
     let diameter = bounds

@@ -1928,8 +1928,10 @@ version = "0.3.1"
 dependencies = [
  "hydrolysis",
  "image",
+ "kurbo",
  "material-color-utils",
  "num-traits",
+ "peniko",
  "pollster 1.0.1",
  "vello",
  "waterkit-core",

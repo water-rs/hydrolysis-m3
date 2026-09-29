@@ -5,7 +5,7 @@
 //! a question for the eye. The PNG shows all seven, plus a morph mid-flight.
 
 use hydrolysis_m3::material_shapes::{material_shape_sequence, morph, radii_to_path};
-use vello::kurbo::Point;
+use kurbo::Point;
 use waterui::layout::Point as CanvasPoint;
 use waterui::prelude::*;
 use waterui_canvas::{Canvas, DrawingContext};
@@ -23,8 +23,8 @@ fn draw_radii(ctx: &mut DrawingContext<'_>, radii: &[f64], centre: Point) {
     let outline = radii_to_path(radii, centre, RADIUS);
     let mut path = ctx.begin_path();
     let mut first = true;
-    vello::kurbo::flatten(outline.iter(), 0.05, |element| match element {
-        vello::kurbo::PathEl::MoveTo(point) | vello::kurbo::PathEl::LineTo(point) => {
+    kurbo::flatten(outline.iter(), 0.05, |element| match element {
+        kurbo::PathEl::MoveTo(point) | kurbo::PathEl::LineTo(point) => {
             let point = CanvasPoint::new(point.x as f32, point.y as f32);
             if first {
                 path.move_to(point);

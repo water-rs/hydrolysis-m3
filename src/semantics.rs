@@ -1,4 +1,4 @@
-use vello::kurbo::RoundedRectRadii;
+use kurbo::RoundedRectRadii;
 use waterui::color::Color;
 use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};

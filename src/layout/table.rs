@@ -4,7 +4,7 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::{Brush, DrawContext, TableMetrics};
-use vello::kurbo::{Point, Rect};
+use kurbo::{Point, Rect};
 
 pub const fn metrics() -> TableMetrics {
     TableMetrics {

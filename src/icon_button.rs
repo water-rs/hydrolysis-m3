@@ -148,14 +148,14 @@ pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
 /// bounds are indistinguishable from a small's and it draws the small 40dp
 /// layer; the 32dp layer is reachable only through the composed `IconButton`
 /// view, which carries its size.
-fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
+fn state_layer_rect(bounds: kurbo::Rect) -> kurbo::Rect {
     let side = if bounds.height() > f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE) {
         bounds.height()
     } else {
         f64::from(ICON_BUTTON_STATE_LAYER_SIZE)
     };
     let center = bounds.center();
-    vello::kurbo::Rect::from_center_size(center, (side, side))
+    kurbo::Rect::from_center_size(center, (side, side))
 }
 
 /// `WidgetTheme::draw_button_chrome` for an icon-only button.
@@ -173,7 +173,7 @@ fn state_layer_rect(bounds: vello::kurbo::Rect) -> vello::kurbo::Rect {
 pub fn draw_chrome(
     colors: &crate::theme::colors::MaterialColorScheme,
     draw: &mut dyn crate::DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
@@ -222,7 +222,7 @@ pub fn draw_chrome(
 pub fn draw_state_layer(
     colors: &crate::theme::colors::MaterialColorScheme,
     draw: &mut dyn crate::DrawContext,
-    bounds: vello::kurbo::Rect,
+    bounds: kurbo::Rect,
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
@@ -277,9 +277,9 @@ fn outline_width(side: f64) -> f64 {
 /// The state-layer circle's corner radii in `state`: resting corner-full,
 /// morphing to the size band's pressed shape as the press grows.
 fn container_radii(
-    layer: vello::kurbo::Rect,
+    layer: kurbo::Rect,
     state: crate::WidgetInteractionState,
-) -> vello::kurbo::RoundedRectRadii {
+) -> kurbo::RoundedRectRadii {
     let resting = layer.height() / 2.0;
     let pressed = pressed_corner_radius(layer.height());
     let progress = f64::from(

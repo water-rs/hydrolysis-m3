@@ -1,4 +1,4 @@
-use vello::kurbo::{Rect, RoundedRectRadii};
+use kurbo::{Rect, RoundedRectRadii};
 use waterui_backend_core::widget::{BadgeMetrics, DrawContext};
 
 use crate::{Brush, theme::colors::MaterialColorScheme};
