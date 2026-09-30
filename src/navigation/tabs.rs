@@ -7,8 +7,10 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
-use crate::{Brush, DrawContext, TabItemLayout, TabsMetrics, WidgetInteractionState};
-use kurbo::{Rect, RoundedRectRadii};
+use crate::{TabItemLayout, TabsMetrics, WidgetInteractionState};
+use cherenkov::kurbo::RoundedRect;
+use cherenkov::kurbo::{Rect, RoundedRectRadii};
+use cherenkov::{Draw as _, Recorder};
 
 /// Whether the bar shows vertical or horizontal items. The M3 navigation bar
 /// switches to horizontal items at the medium window width class boundary —
@@ -46,52 +48,51 @@ pub const fn metrics(layout: TabItemLayout) -> TabsMetrics {
     }
 }
 
-pub fn draw_bar(
-    colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: Rect,
-    top_edge: bool,
-) {
-    draw.fill_rect(bounds, &Brush::from(colors.surface.peniko()));
+pub fn draw_bar(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect, top_edge: bool) {
+    draw.fill(bounds, colors.surface.working());
     let separator = if top_edge {
         Rect::new(bounds.x0, bounds.y1 - 1.0, bounds.x1, bounds.y1)
     } else {
         Rect::new(bounds.x0, bounds.y0, bounds.x1, bounds.y0 + 1.0)
     };
     // md.comp.primary-navigation-tab.divider.color = surface-variant.
-    draw.fill_rect(separator, &Brush::from(colors.surface_variant.peniko()));
+    draw.fill(separator, colors.surface_variant.working());
 }
 
 pub fn draw_highlight(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     layout: TabItemLayout,
 ) {
     match layout {
-        TabItemLayout::Vertical => draw.fill_rounded_rect(
-            bounds,
-            RoundedRectRadii::new(
-                TABS_ACTIVE_INDICATOR_RADIUS,
-                TABS_ACTIVE_INDICATOR_RADIUS,
-                0.0,
-                0.0,
+        TabItemLayout::Vertical => draw.fill(
+            RoundedRect::from_rect(
+                bounds,
+                RoundedRectRadii::new(
+                    TABS_ACTIVE_INDICATOR_RADIUS,
+                    TABS_ACTIVE_INDICATOR_RADIUS,
+                    0.0,
+                    0.0,
+                ),
             ),
-            &Brush::from(colors.primary.peniko()),
+            colors.primary.working(),
         ),
         // md.comp.nav-bar.item.active.indicator.color = secondary-container,
         // shape corner-full: a capsule spanning the item.
-        TabItemLayout::Horizontal => draw.fill_rounded_rect(
-            bounds,
-            RoundedRectRadii::from_single_radius(NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS),
-            &Brush::from(colors.secondary_container.peniko()),
+        TabItemLayout::Horizontal => draw.fill(
+            RoundedRect::from_rect(
+                bounds,
+                RoundedRectRadii::from_single_radius(NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS),
+            ),
+            colors.secondary_container.working(),
         ),
     }
 }
 
 pub fn draw_button_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
+    draw: &mut Recorder,
     bounds: Rect,
     selected: bool,
     state: WidgetInteractionState,
@@ -116,9 +117,9 @@ pub fn draw_button_state_layer(
         bounds,
         radii,
         if selected || state.pressed {
-            colors.primary.peniko()
+            colors.primary.working()
         } else {
-            colors.on_surface.peniko()
+            colors.on_surface.working()
         },
         state,
     );
