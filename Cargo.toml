@@ -24,7 +24,7 @@ waterui-core = "0.5.1"
 waterui-controls = "0.5.1"
 waterui-form = "0.5.1"
 waterui-graphics = { version = "0.5.1", default-features = false }
-cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "bc688ad177f2bba9c3405aa6d7dc1d5b0d8031b9" }
+cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "f59766d0a165e35e2bb1965c4919e45b6895e357" }
 
 [dev-dependencies]
 pollster = "1.0"
