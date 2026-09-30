@@ -4,7 +4,6 @@
 //! Numbers only say each outline closes; whether it is the right silhouette is
 //! a question for the eye. The PNG shows all seven, plus a morph mid-flight.
 
-use cherenkov::WorkingColor;
 use cherenkov::kurbo::Point;
 use hydrolysis_m3::material_shapes::{material_shape_sequence, morph, radii_to_path};
 use waterui::layout::Point as CanvasPoint;
@@ -47,7 +46,7 @@ fn draw_radii(ctx: &mut DrawingContext<'_>, radii: &[f64], centre: Point) {
 fn shapes() -> impl View {
     Canvas::new(|ctx: &mut DrawingContext<'_>| {
         let sequence = material_shape_sequence();
-        ctx.set_fill_style(WorkingColor::new([0.196, 0.184, 0.208, 1.0]));
+        ctx.set_fill_style(waterui::color::Srgb::new(0.196, 0.184, 0.208));
         for (index, radii) in sequence.iter().enumerate() {
             let column = index % 4;
             let row = index / 4;

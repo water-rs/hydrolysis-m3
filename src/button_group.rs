@@ -8,7 +8,7 @@
 
 use core::fmt::{self, Debug};
 
-use kurbo::RoundedRectRadii;
+use cherenkov::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
 use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
