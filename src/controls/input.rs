@@ -126,15 +126,18 @@ pub fn draw_state_layer(
         0.0,
         0.0,
     );
-    draw.clip(cherenkov::kurbo::RoundedRect::from_rect(bounds, radii), |draw| {
-        draw.fill(
-            bounds,
-            colors
-                .on_surface
-                .working()
-                .with_alpha(crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY),
-        );
-    });
+    draw.clip(
+        cherenkov::kurbo::RoundedRect::from_rect(bounds, radii),
+        |draw| {
+            draw.fill(
+                bounds,
+                colors
+                    .on_surface
+                    .working()
+                    .with_alpha(crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY),
+            );
+        },
+    );
 }
 
 #[cfg(test)]

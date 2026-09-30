@@ -145,7 +145,10 @@ fn press_progress(state: WidgetInteractionState) -> f64 {
 
 /// The container's radius in `state`: resting `CornerFull`, morphing to
 /// `PressedContainerShape` as the press grows.
-fn container_radii(bounds: cherenkov::kurbo::Rect, state: WidgetInteractionState) -> cherenkov::kurbo::RoundedRectRadii {
+fn container_radii(
+    bounds: cherenkov::kurbo::Rect,
+    state: WidgetInteractionState,
+) -> cherenkov::kurbo::RoundedRectRadii {
     let resting = container_radius(bounds);
     let pressed = pressed_corner_radius(bounds.height());
     (pressed - resting)
@@ -225,7 +228,9 @@ pub fn draw_state_layer(
     let color = match style {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.working(),
         ButtonStyle::Bordered => colors.on_surface_variant.working(),
-        ButtonStyle::Link | ButtonStyle::Plain | ButtonStyle::Borderless => colors.primary.working(),
+        ButtonStyle::Link | ButtonStyle::Plain | ButtonStyle::Borderless => {
+            colors.primary.working()
+        }
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     state_layer::draw_bounded(draw, bounds, container_radii(bounds, state), color, state);

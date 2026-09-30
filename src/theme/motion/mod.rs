@@ -240,7 +240,11 @@ impl Signal for DialogProperty {
             watcher(
                 context
                     .map(|opened| if opened { opened_value } else { closed_value })
-                    .with(if opened { opening.clone() } else { closing.clone() }),
+                    .with(if opened {
+                        opening.clone()
+                    } else {
+                        closing.clone()
+                    }),
             );
         })
     }

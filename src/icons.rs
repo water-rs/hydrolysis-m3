@@ -13,7 +13,7 @@ use cherenkov::{Draw as _, Recorder, WorkingColor};
 use waterui::{Environment, View, ViewExt as _};
 use waterui_core::Signal;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::{SceneContent, SceneInvalidator, SceneResources, SceneView};
+use waterui_graphics::{RecordingResources, SceneContent, SceneInvalidator, SceneView};
 
 /// The miter limit Material icon strokes are authored against.
 const MITER_LIMIT: f64 = 10.0;
@@ -81,7 +81,7 @@ where
     fn build_scene(
         &mut self,
         recorder: &mut Recorder,
-        _resources: &SceneResources,
+        _resources: &mut RecordingResources<'_>,
         width: f32,
         _height: f32,
     ) -> bool {
