@@ -11,7 +11,7 @@ use crate::{
     ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
     ListTrailingControlMetrics, WidgetInteractionState,
 };
-use cherenkov::kurbo::{Point, Rect};
+use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
 use cherenkov::{Draw as _, Recorder, WorkingColor};
 
 /// Size the trailing row affordances draw their icons at (Material's 24dp
@@ -154,13 +154,15 @@ pub fn draw_row_lifted(
         colors,
     );
     draw.fill(
-        shadow,
-        colors.shadow.working().with_alpha(LIFT_SHADOW_ALPHA),
+        RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(radii)),
+        colors.tertiary_container.working(),
     );
-    draw.fill(bounds, colors.surface_container_high.working());
 }
 
-pub const fn draw_separator(_colors: &MaterialColorScheme, _draw: &mut Recorder, _bounds: Rect) {}
+/// `md.comp.list.divider`: outline at 1px. `bounds` is the divider rect.
+pub fn draw_separator(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
+    draw.fill(bounds, colors.outline.working());
+}
 
 /// Material draws an icon button's state layer as a circle, so the layer is
 /// inscribed in `bounds` rather than filling it — stretching it across a wide,

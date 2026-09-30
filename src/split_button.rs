@@ -9,7 +9,7 @@
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
-use kurbo::RoundedRectRadii;
+use cherenkov::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
 use waterui::component::hstack;

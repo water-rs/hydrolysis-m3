@@ -9,11 +9,11 @@ use core::cell::Cell;
 use std::rc::Rc;
 
 use cherenkov::kurbo::{BezPath, Cap, Join, Point, Stroke};
-use cherenkov::{Draw as _, WorkingColor};
+use cherenkov::{Draw as _, Recorder, WorkingColor};
 use waterui::{Environment, View, ViewExt as _};
 use waterui_core::Signal;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::{Scene, SceneContent, SceneInvalidator, SceneView};
+use waterui_graphics::{SceneContent, SceneInvalidator, SceneResources, SceneView};
 
 /// The miter limit Material icon strokes are authored against.
 const MITER_LIMIT: f64 = 10.0;
@@ -78,8 +78,13 @@ where
     S: Signal<Output = WorkingColor> + 'static,
     S::Guard: 'static,
 {
-    fn record(&mut self, scene: &mut Scene<'_>) -> bool {
-        let width = scene.width();
+    fn build_scene(
+        &mut self,
+        recorder: &mut Recorder,
+        _resources: &SceneResources,
+        width: f32,
+        _height: f32,
+    ) -> bool {
         self.pending_redraw.set(false);
         let pending_redraw = Rc::clone(&self.pending_redraw);
         let invalidator = self.invalidator.clone();
@@ -102,7 +107,7 @@ where
             .with_join(Join::Round)
             .with_miter_limit(MITER_LIMIT);
         let color = self.stroke.snapshot();
-        scene.recorder().stroke(
+        recorder.stroke(
             path,
             stroke,
             WorkingColor::new(color.components).with_alpha(color.components[3].clamp(0.0, 1.0)),

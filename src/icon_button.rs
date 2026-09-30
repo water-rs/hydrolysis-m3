@@ -1,7 +1,7 @@
 //! Material Design 3 icon buttons composed from `WaterUI` primitives.
 
 use cherenkov::Draw as _;
-use cherenkov::kurbo::{RoundedRect, RoundedRectRadii, Stroke};
+use cherenkov::kurbo::{RoundedRect, Stroke};
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 

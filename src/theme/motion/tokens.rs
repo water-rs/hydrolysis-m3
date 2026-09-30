@@ -9,10 +9,10 @@
 //!
 //! Values mirror the M3 motion token reference.
 
-use cherenkov::curve_value;
+use cherenkov::{Curve, curve_value};
 use core::time::Duration;
 use num_traits::ToPrimitive as _;
-use waterui::animation::{Animation, Curve};
+use waterui::animation::Animation;
 
 /// A cubic-bezier easing token: the shape of a curve, before a duration
 /// token gives it a length.
@@ -132,16 +132,20 @@ pub mod easing {
 /// Pair an easing token with a duration token.
 #[must_use]
 pub const fn motion(easing: Easing, duration: Duration) -> Animation {
-    Animation::Curve(Curve::bezier(
-        duration, easing.x1, easing.y1, easing.x2, easing.y2,
-    ))
+    Animation::Bezier {
+        duration,
+        x1: easing.x1 as f32,
+        y1: easing.y1 as f32,
+        x2: easing.x2 as f32,
+        y2: easing.y2 as f32,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{Easing, duration, easing, motion};
     use core::time::Duration;
-    use waterui::animation::{Animation, Curve};
+    use waterui::animation::Animation;
 
     /// Pins the duration scale to the M3 specification. Every component timing
     /// that claims to be a token is built from this table, so this is the one
@@ -195,13 +199,13 @@ mod tests {
         );
     }
 
-    /// The linear token and [`Curve::linear`] must describe the same curve,
-    /// so a motion written either way is interchangeable.
+    /// The linear token and [`Animation::linear`] must describe the same
+    /// animation, so a motion written either way is interchangeable.
     #[test]
-    fn linear_token_agrees_with_the_linear_curve_constructor() {
+    fn linear_token_agrees_with_the_linear_animation_constructor() {
         assert_eq!(
             motion(easing::LINEAR, duration::SHORT_4),
-            Animation::Curve(Curve::linear(duration::SHORT_4))
+            Animation::linear(duration::SHORT_4)
         );
     }
 }

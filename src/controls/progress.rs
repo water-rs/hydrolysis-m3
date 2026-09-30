@@ -15,8 +15,6 @@ use cherenkov::{Draw as _, Recorder, WorkingColor};
 use core::f64::consts::FRAC_PI_2;
 use core::time::Duration;
 use num_traits::ToPrimitive;
-use cherenkov::kurbo::{BezPath, Point, Rect};
-use waterui::animation::Animation;
 
 /// `LinearAnimationDuration` in Compose's `ProgressIndicator.kt`.
 const LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(1_750);

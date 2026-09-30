@@ -7,7 +7,7 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{ButtonMetrics, WidgetInteractionState};
-use cherenkov::kurbo::{Line, RoundedRect, RoundedRectRadii, Stroke};
+use cherenkov::kurbo::{Line, RoundedRect, Stroke};
 use cherenkov::{Draw as _, Recorder, WorkingColor};
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;

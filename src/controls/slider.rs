@@ -40,6 +40,7 @@ pub fn draw_track(
     draw: &mut Recorder,
     track_rect: cherenkov::kurbo::Rect,
     fill_rect: cherenkov::kurbo::Rect,
+    size: ControlSize,
     state: WidgetInteractionState,
 ) {
     // MD3 disabled slider: the inactive track drops to on-surface at 12% and
@@ -235,8 +236,9 @@ pub fn draw_value_indicator(
 #[cfg(test)]
 mod tests {
     use crate::test_support::Recorded;
-    use cherenkov::kurbo::{Point, Rect};
+    use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
     use cherenkov::{Paint, Recorder};
+    use waterui_controls::ControlSize;
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, draw_thumb, draw_track, draw_value_indicator,

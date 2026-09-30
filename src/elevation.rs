@@ -1,6 +1,7 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
 use cherenkov::Draw as _;
+use waterui::shape::FixedRoundedRectangle;
 use waterui::style::{FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
 
