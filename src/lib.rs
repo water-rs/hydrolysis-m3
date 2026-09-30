@@ -68,8 +68,8 @@ pub use waterui_backend_core::widget::{
     NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
     ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderMetrics,
     SliderValueIndicatorMetrics, StepperEnd, StepperMetrics, TabItemLayout, TableMetrics,
-    TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics,
-    WidgetInteractionState, WidgetTheme,
+    TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState,
+    WidgetTheme,
 };
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
