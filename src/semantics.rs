@@ -1,4 +1,5 @@
-use kurbo::RoundedRectRadii;
+use cherenkov::WorkingColor;
+use cherenkov::kurbo::RoundedRectRadii;
 use waterui::color::Color;
 use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
@@ -6,7 +7,6 @@ use waterui::{Environment, Signal as _, Str};
 use waterui_backend_core::widget::{ButtonMetrics, InteractionStyle};
 use waterui_controls::label::Label;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::color::ResolvedColor;
 
 pub fn label_plain_text(label: &Label) -> Str {
     label
@@ -60,7 +60,7 @@ pub struct ConditionalColor {
 }
 
 impl Resolvable for ConditionalColor {
-    type Resolved = ResolvedColor;
+    type Resolved = WorkingColor;
 
     fn resolve(&self, env: &Environment) -> impl waterui::Signal<Output = Self::Resolved> {
         zip::zip(
