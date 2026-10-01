@@ -185,9 +185,6 @@ mod tests {
     use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
     use cherenkov::{Command, Content, Draw as _, Paint, Recorder, ShapeData, WorkingColor};
     use std::path::Path;
-    use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
-    use cherenkov::{Command, Content, Draw as _, Paint, Recorder, ShapeData, WorkingColor};
-    use std::path::Path;
     use waterui::interaction::InteractionState;
 
     #[test]
@@ -454,7 +451,7 @@ mod tests {
             20.0.into(),
             WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 press_waves,
                 ..WidgetInteractionState::NONE
             },
