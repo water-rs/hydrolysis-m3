@@ -9,6 +9,7 @@ use crate::{Brush, DrawContext, InputFieldMetrics, WidgetInteractionState};
 use kurbo::{Point, Rect, RoundedRectRadii};
 use material_color_utils::utils::color_utils::Argb;
 use peniko::Color as PenikoColor;
+use waterui::interaction::InteractionState;
 use waterui_graphics::color::Color;
 
 const INPUT_SELECTION_ALPHA: f32 = 0.28;
@@ -53,7 +54,7 @@ pub fn draw_field(
     bounds: Rect,
     state: WidgetInteractionState,
 ) {
-    let container_color = if state.disabled {
+    let container_color = if state.state.contains(InteractionState::DISABLED) {
         role_with_alpha(colors.on_surface.argb(), 0.04)
     } else {
         colors.surface_container_highest.peniko()
@@ -68,9 +69,9 @@ pub fn draw_field(
         ),
         &Brush::from(container_color),
     );
-    let baseline_color = if state.disabled {
+    let baseline_color = if state.state.contains(InteractionState::DISABLED) {
         role_with_alpha(colors.on_surface.argb(), 0.38)
-    } else if state.hovered {
+    } else if state.state.contains(InteractionState::HOVERED) {
         colors.on_surface.peniko()
     } else {
         colors.on_surface_variant.peniko()
@@ -84,7 +85,7 @@ pub fn draw_field(
     );
     let focus_alpha = if state.focus_progress > 0.0 {
         state.focus_progress
-    } else if state.focus_visible {
+    } else if state.state.contains(InteractionState::FOCUSED) {
         1.0
     } else {
         0.0
@@ -110,7 +111,9 @@ pub fn draw_state_layer(
     bounds: Rect,
     state: WidgetInteractionState,
 ) {
-    if state.disabled || !state.hovered {
+    if state.state.contains(InteractionState::DISABLED)
+        || !state.state.contains(InteractionState::HOVERED)
+    {
         return;
     }
     let radii = RoundedRectRadii::new(
@@ -141,6 +144,7 @@ mod tests {
         INPUT_FILLED_CONTAINER_TOP_RADIUS, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
     };
     use crate::{Brush, DrawContext};
+    use waterui::interaction::InteractionState;
 
     #[derive(Default)]
     struct RecordingDrawContext {
@@ -243,7 +247,7 @@ mod tests {
             &mut draw,
             Rect::new(0.0, 0.0, 120.0, 56.0),
             WidgetInteractionState {
-                focus_visible: true,
+                state: InteractionState::FOCUSED,
                 focus_progress: 1.0,
                 ..WidgetInteractionState::NONE
             },

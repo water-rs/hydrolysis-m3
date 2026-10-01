@@ -88,10 +88,11 @@ pub fn draw_button_state_layer(
     end: StepperEnd,
     state: WidgetInteractionState,
 ) {
+    let radii = radii(bounds, end, press_progress(state));
     state_layer::draw_bounded(
         draw,
         bounds,
-        radii(bounds, end, press_progress(state)),
+        radii,
         colors.on_surface_variant.peniko(),
         state,
     );

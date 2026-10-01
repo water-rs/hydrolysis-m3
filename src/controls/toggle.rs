@@ -10,6 +10,7 @@ use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{Brush, DrawContext, ToggleMetrics, WidgetInteractionState, lerp_color};
 use kurbo::{Affine, BezPath, PathEl, Point, Rect};
+use waterui::interaction::InteractionState;
 use waterui_controls::toggle::ToggleStyle;
 
 pub fn metrics(style: ToggleStyle) -> ToggleMetrics {
@@ -70,7 +71,7 @@ pub fn draw_switch(
     // 12% (unchecked) or on-surface at 12% (checked), the outline to
     // on-surface at 12%, the thumb to on-surface at 38% (unchecked) or opaque
     // surface (checked), and the checked icon to on-surface at 38%.
-    let track_color = if state.disabled {
+    let track_color = if state.state.contains(InteractionState::DISABLED) {
         lerp_color(
             colors.surface_container_highest.peniko_disabled_container(),
             colors.on_surface.peniko_disabled_container(),
@@ -83,7 +84,7 @@ pub fn draw_switch(
             progress,
         )
     };
-    let handle_size = if state.pressed {
+    let handle_size = if state.state.contains(InteractionState::PRESSED) {
         TOGGLE_SWITCH_PRESSED_HANDLE_SIZE
     } else {
         crate::lerp_f64(
@@ -102,7 +103,7 @@ pub fn draw_switch(
     if outline_width > 0.01 {
         let inset = outline_width / 2.0;
         let outline_bounds = bounds.inflate(-inset, -inset);
-        let outline_color = if state.disabled {
+        let outline_color = if state.state.contains(InteractionState::DISABLED) {
             colors.on_surface.peniko_disabled_container()
         } else {
             colors.outline.peniko()
@@ -114,13 +115,15 @@ pub fn draw_switch(
             outline_width,
         );
     }
-    let thumb_color = if state.disabled {
+    let thumb_color = if state.state.contains(InteractionState::DISABLED) {
         lerp_color(
             colors.on_surface.peniko_disabled_content(),
             colors.surface.peniko(),
             progress,
         )
-    } else if state.pressed || state.hovered || state.focus_visible {
+    } else if state.state.intersects(
+        InteractionState::PRESSED | InteractionState::HOVERED | InteractionState::FOCUSED,
+    ) {
         if selected {
             colors.primary_container.peniko()
         } else {
@@ -134,7 +137,7 @@ pub fn draw_switch(
         )
     };
     // md.comp.switch.handle.elevation = level1; the disabled handle is level0.
-    if !state.disabled {
+    if !state.state.contains(InteractionState::DISABLED) {
         crate::elevation::draw_shadows(
             draw,
             Rect::from_center_size(thumb_center, (handle_size, handle_size)),
@@ -157,7 +160,7 @@ pub fn draw_switch(
                 TOGGLE_SWITCH_ICON_SIZE * icon_scale,
             ),
         );
-        let icon_color = if state.disabled {
+        let icon_color = if state.state.contains(InteractionState::DISABLED) {
             colors.on_surface.peniko_disabled_content()
         } else {
             colors.on_primary_container.peniko()
@@ -200,7 +203,7 @@ pub fn draw_checkbox(
     if outline_opacity > 0.0 {
         // MD3 disabled checkbox: the unchecked outline drops to on-surface at
         // the 38% disabled-content opacity.
-        let outline_color = if state.disabled {
+        let outline_color = if state.state.contains(InteractionState::DISABLED) {
             colors.on_surface.peniko_disabled_content()
         } else {
             colors.on_surface_variant.peniko()
@@ -223,7 +226,7 @@ pub fn draw_checkbox(
     draw.push_transform(selected_transform);
     // MD3 disabled checkbox (checked): container on-surface at 38%, checkmark
     // in the surface color.
-    let (container_color, check_color) = if state.disabled {
+    let (container_color, check_color) = if state.state.contains(InteractionState::DISABLED) {
         (
             colors.on_surface.peniko_disabled_content(),
             colors.surface.peniko(),
@@ -291,6 +294,7 @@ mod tests {
     };
     use crate::dimensions::{TOGGLE_LABEL_SPACING, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE};
     use crate::{Brush, DrawContext};
+    use waterui::interaction::InteractionState;
 
     #[derive(Default)]
     struct RecordingDrawContext {
@@ -517,7 +521,7 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
         let disabled = WidgetInteractionState {
-            disabled: true,
+            state: InteractionState::DISABLED,
             ..WidgetInteractionState::NONE
         };
 
@@ -574,7 +578,7 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (18.0, 18.0));
         let disabled = WidgetInteractionState {
-            disabled: true,
+            state: InteractionState::DISABLED,
             ..WidgetInteractionState::NONE
         };
 
@@ -608,7 +612,7 @@ mod tests {
             0.0,
             false,
             WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 ..WidgetInteractionState::NONE
             },
         );

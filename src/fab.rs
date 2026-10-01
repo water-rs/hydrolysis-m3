@@ -5,6 +5,7 @@ use core::marker::PhantomData;
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
+use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
 use waterui::style::FloatingStyle;
 use waterui::{Environment, Signal, Str, View, ViewExt as _};
@@ -15,7 +16,7 @@ use crate::color::{
     OnPrimaryContainer, OnSecondaryContainer, OnTertiaryContainer, Primary, PrimaryContainer,
     SecondaryContainer, SurfaceContainerHigh, TertiaryContainer,
 };
-use crate::elevation::{MaterialElevationLevel, apply_to_floating_style};
+use crate::elevation::MaterialElevationLevel;
 use crate::semantics::interaction_style;
 use crate::theme::typography;
 
@@ -445,7 +446,13 @@ where
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };
-    apply_to_floating_style(&mut style, MaterialElevationLevel::LEVEL3);
+    // `md.comp.fab.{container,hover.container}.elevation`: level3 at rest,
+    // level4 hovered — focused and pressed hold level3.
+    crate::elevation::apply_to_floating_style_states(
+        &mut style,
+        MaterialElevationLevel::LEVEL3,
+        [(InteractionState::HOVERED, MaterialElevationLevel::LEVEL4)],
+    );
     style
 }
 

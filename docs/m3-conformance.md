@@ -46,7 +46,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/icon_button.rs:193-195 | outlined border outline-variant in all states | was outline | `md.comp.icon-button.outlined.{outline,disabled.outline}.color` | fixed |
 | src/icon_button.rs:228-230 | layer on-primary (filled) / on-surface-variant (standard, outlined) | same | `md.comp.icon-button.*.state-layer.color` | conforms |
 | src/icon_button.rs:250-264 | pressed corner morph 8/8/12/16/16 | new | `md.comp.icon-button.<size>.pressed.container.shape` | fixed |
-| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | blocked: morph implemented via binding-driven shape; per-state radii on `InteractionStyle` still unavailable for composed styles |
+| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | fixed: `InteractionStyle.state_layer_radii` resolves radii per reported state; the pressed morph itself stays driven by `state.press_waves` |
 
 ## FABs (`src/fab.rs`, `src/fab_menu.rs`)
 
@@ -54,10 +54,10 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 |---|---|---|---|---|
 | src/fab.rs:53-95 | sizes FAB 56/corner-16/icon-24, medium 80/corner-20/icon-28, large 96/corner-28/icon-36 | 56/80/96 | `md.comp.fab{,.medium,.large}.container.*` | fixed; `md.comp.fab.small` (40dp) dropped — deprecated in M3 Expressive (MDC-Android `FloatingActionButton.md`: "Deprecated small FAB size"; `floatingactionbutton/attrs.xml:28` retires `fabSize`); `SurfaceFab` kept (`md.comp.fab-surface` + MDC styles still ship, though Expressive no longer recommends it) |
 | src/fab.rs | container primary-container, icon on-primary-container | same | `md.comp.fab.container.color` / `icon.color` | conforms |
-| src/fab.rs | container elevation level3, hover level4 | level3; hover L4 | `md.comp.fab.{container,hover.container}.elevation` | partially: resting L3 conforms; hover→L4 blocked (no per-state elevation on `FloatingStyle`) |
+| src/fab.rs | container elevation level3, hover level4 | level3; hover L4 | `md.comp.fab.{container,hover.container}.elevation` | fixed (`FloatingStyle.elevation: StateValue<FloatingElevation>` — LEVEL3 resting, `.when(HOVERED, LEVEL4)`) |
 | src/fab_menu.rs:236-254 | items h56, corner-full, level0, primary-container/on-primary-container, icon 24, label large | level3→level0 | `md.comp.fab-menu.menu-item.*` | fixed |
 | src/fab_menu.rs:258-273 | close button 56×56, corner-full, icon 20, level3, primary/on-primary | was primary-container | `md.comp.fab-menu.primary.close-button.*` | fixed |
-| fab-menu item per-state elevation | — | level0 → higher on press | `md.comp.fab-menu.menu-item.*.container.elevation` | blocked: no per-state elevation |
+| fab-menu item per-state elevation | — | level0 → higher on press | `md.comp.fab-menu.menu-item.*.container.elevation` | fixed (rest level0, hover/focus level4, pressed level3 via `StateValue<FloatingElevation>`) |
 
 ## Button group & segmented & split buttons (`src/button_group.rs`, `src/segmented_button.rs`, `src/split_button.rs`, `src/controls/picker.rs`)
 
@@ -68,7 +68,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/split_button.rs:47,200-214 | pressed half softens seam corner to 12 (corner-medium) | new | `md.comp.split-button.*.pressed.inner-corner-radius` | fixed (binding-driven `UnevenRoundedRectangle` morph) |
 | src/split_button.rs:219 | label label-large | label-large | `md.comp.split-button.label-text` | fixed |
 | src/split_button.rs:246-290 | state layer clipped to each half's radii | half-shape | `md.comp.split-button.*.state-layer` | fixed (`interaction_style_with_radii`) |
-| split-button hovered morph | — | inner-corner corner-medium on hover | `md.comp.split-button.*.hovered.*` | blocked: no hover signal per half; pressed morph implemented only |
+| split-button hovered morph | — | inner-corner corner-medium on hover | `md.comp.split-button.*.hovered.*` | fixed: each half reports its own `InteractionState` via `.interaction_state`; seam corners soften to corner-medium while hovered or pressed, and the state-layer radii morph with them |
 
 ## Chips (`src/chip.rs`)
 
@@ -77,7 +77,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/chip.rs:120-124 | flat chips transparent fill, outline-variant border | was elevated/tinted | `md.comp.assist-chip.flat.*` | fixed |
 | src/chip.rs:285-292 | filter selected → secondary-container fill, outline width 0 | was outline kept | `md.comp.filter-chip.flat.selected.*` | fixed |
 | src/chip.rs:396 | input-chip flat outline outline-variant | outline-variant | `md.comp.input-chip.flat.unselected.outline.color` | conforms |
-| chip focus outline | — | per-state outline color | `md.comp.*-chip.flat.focused.outline.color` | blocked: no per-state content/outline color on `InteractionStyle` |
+| chip focus outline | — | per-state outline color | `md.comp.*-chip.flat.focused.outline.color` | fixed: the `InteractionStyle.focus_ring` on every `interaction_style` draws the `md.comp.focus-indicator.*` ring — secondary, 3dp, riding 2dp outside the state layer — which carries the flat-chip focused outline |
 
 ## Dialog, tooltip, drag handle, badge (`src/dialog.rs`, `src/tooltip.rs`, `src/drag_handle.rs`, `src/layout/badge.rs`, `src/material_badge.rs`)
 
@@ -118,10 +118,10 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/material_list.rs:25-27 | leading/trailing icons 20×20 | was 24 | `md.comp.list.list-item.*-icon.expressive.size` | fixed |
 | src/material_list.rs:222 | interactive item layer radius corner-extra-small (8), on-surface | was 0 | `md.comp.list.list-item.container.expressive.shape` + `*.state-layer.color` | fixed |
 | src/material_list.rs | one-line 56 / two-line 72, body-large headline, body-medium supporting, label-small trailing | same | `md.comp.list.list-item.*` | conforms |
-| src/material_list.rs | selected container secondary-container | secondary-container | `md.comp.list.list-item.selected.container.color` | blocked: `MaterialListItem` has no `selected` API |
+| src/material_list.rs | selected container secondary-container | secondary-container | `md.comp.list.list-item.selected.container.color` | fixed: `MaterialListItem::selected(impl IntoComputed<bool>)`; the reported SELECTED bit drives the secondary-container fill and the on-secondary-container state layer |
 | src/layout/list.rs:155-161 | reorder drag: level4 shadow + tertiary-container + corner-large | added | `md.comp.list.reorder.list-item.*` | fixed |
 | src/layout/list.rs:167 | row separator outline 1px | was outline-variant | `md.comp.list.divider.color` | fixed |
-| list-item shape morph by state | — | rest 8 / hover 12 / pressed+focused+dragged 16 | `md.comp.list.list-item.container.*-state.expressive.shape` | blocked: `InteractionStyle` has no per-state corner radius |
+| list-item shape morph by state | — | rest 8 / hover 12 / pressed+focused+dragged 16 | `md.comp.list.list-item.container.*-state.expressive.shape` | fixed: `state_layer_radii` `StateValue` (rest 8, `.when` HOVERED 12, PRESSED/FOCUSED/DRAGGED 16) drives both the selected container fill's corners and the state layer |
 
 ## Menus (`src/layout/menu.rs`, `src/material_menu.rs`)
 
@@ -136,6 +136,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | file:line | our value | spec value | token name | status |
 |---|---|---|---|---|
 | src/layout/card.rs:8-11,63-85 | corner 12; elevated L1 / filled L0 / outlined 1px border | same | `md.comp.{elevated,filled,outlined}-card.*` | conforms |
+| src/material_card.rs | elevated card lifts to level2 while hovered | level2 | `md.comp.elevated-card.hovered.elevation` | fixed: the composer's static shadows are blanked on a scoped `CardTheme` and a `watch`-driven background layer carries L1 at rest, L2 while hovered |
 | src/layout/snackbar.rs:11-29 | 48h single-line, pad 16/12, 288–568w, corner 4, level3 | same | `md.comp.snackbar.*` | conforms |
 | src/layout/snackbar.rs | container inverse-surface, label inverse-on-surface, action inverse-primary | same | `md.comp.snackbar.*` | conforms |
 | src/layout/divider.rs:10 | divider outline-variant 1px | outline-variant | `md.comp.divider.color` | conforms |
@@ -153,7 +154,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/navigation_rail.rs:255-259 | active label secondary; layer on-secondary-container both states | was primary/on-surface | `md.comp.nav-rail.item.*` | fixed |
 | src/navigation_rail.rs:40-63,294-300 | expanded item 64h with 56h horizontal indicator; collapsed 56h item + 56×32 pill; expanded label label-large(-prominent) | was 32h pill | `md.comp.nav-rail.{collapsed,expanded}.*` | fixed |
 | src/navigation_drawer.rs:301-308 | active layer on-secondary-container; inactive layer on-surface; active label label-large-prominent | added prominent weight | `md.comp.navigation-drawer.*` | fixed |
-| src/navigation_drawer.rs | inactive pressed layer on-secondary-container (vs on-surface for hover/focus) | split per state | `md.comp.navigation-drawer.inactive.*.state-layer.color` | partially: on-surface used for all inactive states — `InteractionStyle` cannot split hover/focus from pressed color |
+| src/navigation_drawer.rs | inactive pressed layer on-secondary-container (vs on-surface for hover/focus) | split per state | `md.comp.navigation-drawer.inactive.*.state-layer.color` | fixed: `.interaction_state` report + `conditional_color` — inactive pressed takes on-secondary-container, hover/focus on-surface |
 | src/navigation/tabs.rs:33 | tab strip separator surface-variant | was outline | `md.comp.primary-navigation-tab.divider.color` | fixed |
 | src/navigation/navigation.rs | app-bar separator removed | none | `md.comp.app-bar` defines no divider token | fixed (separator now a no-op) |
 | src/toolbar.rs | toolbar row | — | `md.comp.toolbar.*` exists (docked/floating) | no token implemented: file exposes plain row layout, no M3 chrome claimed |
@@ -169,15 +170,18 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 
 ## Blocked on missing waterui capabilities (reported, not approximated)
 
-1. **Per-state corner radius on `InteractionStyle`** — needed for list-item shape morph (8→12→16 by hover/pressed/focused/dragged) and any composed per-state shape on segmented/icon-button containers. Currently only the resting radius can be installed.
-2. **Per-state elevation on `FloatingStyle`** — FAB hover L3→L4, fab-menu item states, and `md.comp.elevated-card.hovered.elevation`.
-3. **Per-state content/outline color on `InteractionStyle`** — nav-drawer inactive pressed layer (on-secondary-container) vs hover/focus (on-surface); chip focus outline color.
-4. **Hover signal on individual split-button halves** — pressed inner-corner morph implemented via drag bindings; the hovered-corner morph has no signal source.
-5. **`selected` flag on `MaterialListItem` / plain-button APIs** — `md.comp.list.list-item.selected.container.color` and selected state layers unreachable.
-6. ~~**Horizontal navigation-bar item variant**~~ — implemented: `tabs_item_layout` returns `Horizontal` at the 600dp medium window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container (64dp bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp) values, and `draw_tabs_highlight` draws the secondary-container corner-full capsule spanning the item.
-7. ~~**Slider size variants and value indicator**~~ — implemented: `slider_metrics(ControlSize)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and `draw_slider_value_indicator` draws the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
-8. ~~**App-bar scrolled state**~~ — fixed: `material_scrolled_app_bar(view, &offset)` binds a `ScrollView::report_offset` binding and drives `md.comp.app-bar.scrolled.container.color` (surface-container, the tonal L2 elevation expression) once `offset.y > 0`.
-9. **Focus indicator ring** — `md.comp.focus-indicator.*` (secondary, 3px, offset) needs a focus-ring draw callback that does not exist.
+Former items 1–5 and 9 are implemented through the per-state interaction
+styling API (`InteractionState`/`StateValue`, `.interaction_state`,
+`.selected`, `InteractionStyle.state_layer_radii`/`label_color`/`focus_ring`,
+`FloatingStyle.elevation: StateValue<FloatingElevation>`). Item 6 is
+implemented too: `tabs_item_layout` returns `Horizontal` at the 600dp medium
+window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container
+(64dp bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp)
+values, and `draw_tabs_highlight` draws the secondary-container corner-full
+capsule spanning the item.
+
+1. ~~**Slider size variants and value indicator**~~ — implemented: `slider_metrics(ControlSize)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and `draw_slider_value_indicator` draws the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
+2. ~~**App-bar scrolled state**~~ — fixed: `material_scrolled_app_bar(view, &offset)` binds a `ScrollView::report_offset` binding and drives `md.comp.app-bar.scrolled.container.color` (surface-container, the tonal L2 elevation expression) once `offset.y > 0`.
 
 ## Tests updated
 
