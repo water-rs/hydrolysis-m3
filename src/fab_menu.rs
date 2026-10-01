@@ -7,6 +7,7 @@
 //! button that produced it.
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
+use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::{Binding, Computed, SignalExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
@@ -236,8 +237,7 @@ impl View for FloatingActionButtonMenu {
 /// The menu-item pill chrome: `md.comp.fab-menu.primary-container
 /// .list-item.container.color = primary-container` at
 /// `md.comp.fab-menu.menu-item.container.elevation = level0`, fully rounded.
-/// (The spec's hover/focused/pressed elevation bumps — level4/level3 — have no
-/// per-state elevation surface in `FloatingStyle`.)
+/// Hover and keyboard focus rise to level4, a press to level3.
 fn item_style() -> waterui::style::FloatingStyle {
     let mut style = waterui::style::FloatingStyle {
         container_color: PrimaryContainer.into(),
@@ -251,7 +251,15 @@ fn item_style() -> waterui::style::FloatingStyle {
         disabled_content_opacity: 0.38,
         ..waterui::style::FloatingStyle::default()
     };
-    crate::elevation::apply_to_floating_style(&mut style, MaterialElevationLevel::LEVEL0);
+    crate::elevation::apply_to_floating_style_states(
+        &mut style,
+        MaterialElevationLevel::LEVEL0,
+        [
+            (InteractionState::HOVERED, MaterialElevationLevel::LEVEL4),
+            (InteractionState::FOCUSED, MaterialElevationLevel::LEVEL4),
+            (InteractionState::PRESSED, MaterialElevationLevel::LEVEL3),
+        ],
+    );
     style
 }
 

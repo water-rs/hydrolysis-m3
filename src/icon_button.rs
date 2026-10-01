@@ -239,11 +239,14 @@ pub fn draw_state_layer(
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     let layer = state_layer_rect(bounds);
-    crate::theme::state_layer::draw_bounded(
+    let radii = container_radii(layer, state);
+    crate::theme::state_layer::draw_bounded(draw, layer, radii, color, state);
+    // `md.comp.focus-indicator.*` — secondary ring on keyboard focus.
+    crate::theme::state_layer::draw_focus_indicator(
         draw,
         layer,
-        container_radii(layer, state),
-        color,
+        radii,
+        colors.secondary.peniko(),
         state,
     );
 }

@@ -13,12 +13,12 @@ use kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
 use waterui::component::hstack;
-use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
+use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::padding::EdgeInsets;
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
-use waterui::{Environment, Str, View, ViewExt as _};
+use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, boxed_action};
 
@@ -41,9 +41,8 @@ const TRAILING_ICON_SIZE: f32 = 22.0;
 /// the radius on the two corners either side of the seam.
 const INNER_CORNER_RADIUS: f32 = 4.0;
 /// `SplitButtonSmallTokens.PressedInnerCornerCornerSize`,
-/// `CornerValueMedium`: the seam corners soften while a half is held. (The
-/// token's hovered shape matches it; waterui views carry no hover signal, so
-/// only the pressed half of that anatomy is reachable.)
+/// `CornerValueMedium`: the seam corners soften while a half is hovered or
+/// held — the hovered token's shape matches it.
 const PRESSED_INNER_CORNER_RADIUS: f32 = 12.0;
 
 /// The outer corners are `CornerFull`, which on this container is half its
@@ -197,104 +196,123 @@ where
         let mut trailing_action = self.trailing_action;
         let outer = normalized(OUTER_CORNER_RADIUS);
         let inner = normalized(INNER_CORNER_RADIUS);
-        let pressed_inner = normalized(PRESSED_INNER_CORNER_RADIUS);
+        let soft_inner = normalized(PRESSED_INNER_CORNER_RADIUS);
 
-        // Round on the outside, tucked in against the seam, softening to
-        // CornerValueMedium while the half is held.
-        let leading_pressed = binding(false);
-        let leading_shape = leading_pressed.map(move |pressed| {
-            let seam = if pressed { pressed_inner } else { inner };
+        // Round on the outside, tucked in against the seam. Each half reports
+        // its own state through `.interaction_state`, and
+        // `md.comp.split-button.*.{hovered,pressed}.inner-corner-radius`
+        // (CornerValueMedium) softens its seam corners while it is hovered or
+        // held.
+        let leading_state = binding(InteractionState::empty());
+        let leading_shape = leading_state.map(move |state: InteractionState| {
+            let seam = if state.intersects(InteractionState::HOVERED | InteractionState::PRESSED) {
+                soft_inner
+            } else {
+                inner
+            };
             UnevenRoundedRectangle::new(outer, seam, outer, seam)
         });
-        let leading_pressed_gesture = leading_pressed;
-        let trailing_pressed = binding(false);
-        let trailing_shape = trailing_pressed.map(move |pressed| {
-            let seam = if pressed { pressed_inner } else { inner };
+        let trailing_state = binding(InteractionState::empty());
+        let trailing_shape = trailing_state.map(move |state: InteractionState| {
+            let seam = if state.intersects(InteractionState::HOVERED | InteractionState::PRESSED) {
+                soft_inner
+            } else {
+                inner
+            };
             UnevenRoundedRectangle::new(seam, outer, seam, outer)
         });
-        let trailing_pressed_gesture = trailing_pressed;
 
-        let leading = self
-            .label
-            .font(crate::theme::typography::label_large())
-            .foreground(Tokens::content_color())
-            .padding_with(EdgeInsets::new(
-                0.0,
-                0.0,
-                LEADING_BUTTON_LEADING_SPACE,
-                LEADING_BUTTON_TRAILING_SPACE,
-            ))
-            .height(CONTAINER_HEIGHT)
-            .background(ReactiveSplitShape {
-                shape: leading_shape,
-                color: Tokens::container_color(),
-            })
-            .gesture(DragGesture::new(0.0), move |env: Environment| {
-                let phase = env
-                    .get::<DragEvent>()
-                    .expect("split button gesture is missing its DragEvent")
-                    .phase;
-                leading_pressed_gesture.set(matches!(
-                    phase,
-                    GesturePhase::Started | GesturePhase::Updated
-                ));
-            })
-            .on_tap(move |env: Environment| action(&env))
-            .a11y_role(AccessibilityRole::Button)
-            // The state layer traces the resting corners; the per-state radius
-            // morph has no surface on `InteractionStyle`.
-            .install(interaction_style_with_radii(
-                Tokens::content_color(),
-                RoundedRectRadii::new(
-                    f64::from(OUTER_CORNER_RADIUS),
-                    f64::from(INNER_CORNER_RADIUS),
-                    f64::from(INNER_CORNER_RADIUS),
-                    f64::from(OUTER_CORNER_RADIUS),
-                ),
-            ));
+        let leading = AnyView::new(
+            self.label
+                .font(crate::theme::typography::label_large())
+                .foreground(Tokens::content_color())
+                .padding_with(EdgeInsets::new(
+                    0.0,
+                    0.0,
+                    LEADING_BUTTON_LEADING_SPACE,
+                    LEADING_BUTTON_TRAILING_SPACE,
+                ))
+                .height(CONTAINER_HEIGHT)
+                .background(ReactiveSplitShape {
+                    shape: leading_shape,
+                    color: Tokens::container_color(),
+                })
+                .on_tap(move |env: Environment| action(&env))
+                .a11y_role(AccessibilityRole::Button)
+                .interaction_state(&leading_state)
+                .install(half_style(
+                    Tokens::content_color(),
+                    RoundedRectRadii::new(
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(INNER_CORNER_RADIUS),
+                        f64::from(INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                    ),
+                    RoundedRectRadii::new(
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                    ),
+                )),
+        );
 
         let chevron = ChevronIcon {
             color: Tokens::content_color(),
             size: TRAILING_ICON_SIZE,
         };
-        let trailing = chevron
-            .padding_with(EdgeInsets::new(
-                0.0,
-                0.0,
-                TRAILING_BUTTON_SPACE,
-                TRAILING_BUTTON_SPACE,
-            ))
-            .height(CONTAINER_HEIGHT)
-            .background(ReactiveSplitShape {
-                shape: trailing_shape,
-                color: Tokens::container_color(),
-            })
-            .gesture(DragGesture::new(0.0), move |env: Environment| {
-                let phase = env
-                    .get::<DragEvent>()
-                    .expect("split button gesture is missing its DragEvent")
-                    .phase;
-                trailing_pressed_gesture.set(matches!(
-                    phase,
-                    GesturePhase::Started | GesturePhase::Updated
-                ));
-            })
-            .on_tap(move |env: Environment| trailing_action(&env))
-            .a11y_label(self.trailing_accessibility_label)
-            .a11y_role(AccessibilityRole::Button)
-            .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style_with_radii(
-                Tokens::content_color(),
-                RoundedRectRadii::new(
-                    f64::from(INNER_CORNER_RADIUS),
-                    f64::from(OUTER_CORNER_RADIUS),
-                    f64::from(OUTER_CORNER_RADIUS),
-                    f64::from(INNER_CORNER_RADIUS),
-                ),
-            ));
+        let trailing = AnyView::new(
+            chevron
+                .padding_with(EdgeInsets::new(
+                    0.0,
+                    0.0,
+                    TRAILING_BUTTON_SPACE,
+                    TRAILING_BUTTON_SPACE,
+                ))
+                .height(CONTAINER_HEIGHT)
+                .background(ReactiveSplitShape {
+                    shape: trailing_shape,
+                    color: Tokens::container_color(),
+                })
+                .on_tap(move |env: Environment| trailing_action(&env))
+                .a11y_label(self.trailing_accessibility_label)
+                .a11y_role(AccessibilityRole::Button)
+                .a11y_children(AccessibilityChildren::ExcludeDescendants)
+                .interaction_state(&trailing_state)
+                .install(half_style(
+                    Tokens::content_color(),
+                    RoundedRectRadii::new(
+                        f64::from(INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(INNER_CORNER_RADIUS),
+                    ),
+                    RoundedRectRadii::new(
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                    ),
+                )),
+        );
 
         hstack((leading, trailing)).spacing(BETWEEN_SPACE)
     }
+}
+
+/// One half's `InteractionStyle`: the state layer traces the resting corners
+/// and softens to `CornerValueMedium` on the seam side while the half is
+/// hovered or held.
+fn half_style(
+    state_layer_color: impl Into<Color>,
+    resting: RoundedRectRadii,
+    soft: RoundedRectRadii,
+) -> waterui_backend_core::widget::InteractionStyle {
+    interaction_style_with_radii(state_layer_color, resting).state_layer_radii(
+        StateValue::new(resting)
+            .when(InteractionState::PRESSED, soft)
+            .when(InteractionState::HOVERED, soft),
+    )
 }
 
 /// The trailing half's chevron, sized and tinted by the variant.
