@@ -137,9 +137,6 @@ waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "a66c62af
 # the Cherenkov port line, delivered with this work.
 hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "0d00315ec6f3cb44705c20332923ce3ad30ae076" }
 
-# The cutover hydrolysis is not on any public branch yet; the backend
-# resolves it from the sibling checkout (the deliverable bundles carry both).
-hydrolysis = { path = "../hydrolysis" }
 
 # This is the revision waterui's `feat/cherenkov-cutover-w` root pins
 # (water-rs/waterui#1246); every cherenkov/filtrate name in the graph must
