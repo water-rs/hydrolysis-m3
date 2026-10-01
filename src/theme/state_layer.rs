@@ -627,6 +627,7 @@ mod tests {
                         antialiasing_support: vello::AaSupport::area_only(),
                         num_init_threads: std::num::NonZeroUsize::new(1),
                         pipeline_cache: None,
+                        buffer_sizes: None,
                     },
                 )
                 .expect("failed to create ripple visual vello renderer"),
