@@ -2,6 +2,7 @@
 
 use core::fmt::{self, Debug};
 
+use waterui::accessibility::AccessibilityState;
 use waterui::color::Color;
 use waterui::component::list::{
     List as WaterList, ListContent, ListItem as WaterListItem, ListItemSink,
@@ -10,9 +11,10 @@ use waterui::component::{hstack, spacer, vstack};
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::{HorizontalAlignment, padding::EdgeInsets};
 use waterui::prelude::dynamic::watch;
-use waterui::reactive::{Computed, SignalExt as _, binding, signal::IntoComputed};
+use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
+use waterui_backend_core::widget::InteractionStyle;
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction, boxed_action};
 
@@ -261,22 +263,56 @@ impl MaterialListItem {
         );
         let style = interaction_style(layer_color, 8.0).state_layer_radii(state_layer_radii);
 
-        let selected = self.selected.unwrap_or_else(|| Computed::constant(false));
         match self.action {
-            Some(action) => AnyView::new(
-                item.on_tap(move |env: Environment| action.call(&env))
-                    .selected(selected)
-                    .interaction_state(&state)
-                    .background(container)
-                    .install(style),
-            ),
-            None => AnyView::new(
-                item.selected(selected)
-                    .interaction_state(&state)
-                    .background(container)
-                    .install(style),
-            ),
+            Some(action) => {
+                let mut item = AnyView::new(item.on_tap(move |env: Environment| action.call(&env)));
+                // `Selected` is installed only for an explicit selection: a
+                // selecting `List` inserts the scope per row, and a constant
+                // `false` here would shadow it.
+                if let Some(selected) = self.selected {
+                    item = AnyView::new(item.selected(selected));
+                }
+                AnyView::new(
+                    item.interaction_state(&state)
+                        .background(container)
+                        .install(style),
+                )
+            }
+            None => match self.selected {
+                Some(selected) => Self::selected_item(AnyView::new(item), selected, &state, style),
+                None => AnyView::new(
+                    item.interaction_state(&state)
+                        .background(container)
+                        .install(style),
+                ),
+            },
         }
+    }
+
+    /// A non-interactive item has no control to claim `Selected` or write the
+    /// report, so its selected fill and the selected accessibility trait
+    /// follow the `selected` signal directly.
+    fn selected_item(
+        item: AnyView,
+        selected: Computed<bool>,
+        state: &Binding<InteractionState>,
+        style: InteractionStyle,
+    ) -> AnyView {
+        let a11y = selected.map(|selected| AccessibilityState::new().selected(selected));
+        let fill = watch(zip::zip(state.clone(), selected), |(state, selected)| {
+            let fill = if selected || state.contains(InteractionState::SELECTED) {
+                Color::from(SecondaryContainer)
+            } else {
+                Color::transparent()
+            };
+            FixedRoundedRectangle::new(list_item_corner_radius(state)).fill(fill)
+        });
+        AnyView::new(
+            item.interaction_state(state)
+                .a11y_state_signal(a11y)
+                .background(fill)
+                .install(style),
+        )
     }
 }
 
@@ -336,5 +372,63 @@ mod tests {
         assert_eq!(LIST_VERTICAL_INSET, 10.0);
         assert_eq!(LIST_ITEM_LEADING_ICON_SIZE, 20.0);
         assert_eq!(LIST_ITEM_TRAILING_ICON_SIZE, 20.0);
+    }
+
+    /// A selecting `List` inserts the `Selected` scope per row — the item
+    /// must not shadow it: selecting a row has its press target report
+    /// `InteractionState::SELECTED`.
+    #[test]
+    fn list_selection_reports_selected() {
+        use std::cell::RefCell;
+        use waterui::component::list::{List, ListItem};
+        use waterui::interaction::InteractionState;
+        use waterui::reactive::Signal as _;
+        use waterui::reactive::binding;
+        use waterui::reactive::collection::SignalCollection;
+        use waterui::{AnyView, Environment, ViewExt as _};
+        use waterui_core::handler::AnyViewBuilder;
+        use waterui_core::id::SelfId;
+
+        let report = binding(InteractionState::empty());
+        let selection = binding(None::<u64>);
+        let selection_for_list = selection.clone();
+        let view = RefCell::new(Some(AnyView::new(
+            List::for_each(
+                SignalCollection::new((0..3_u64).map(SelfId::new).collect::<Vec<_>>()),
+                move |row| {
+                    let index = row.into_inner();
+                    ListItem::new(super::material_list_item(format!("Row {index}")).action(|| {}))
+                },
+            )
+            .selection(&selection_for_list)
+            // Rows are the outermost controls under the list's per-row
+            // `Selected` scope, so a report on the list tracks the first
+            // row's interaction state — select it, not a later row.
+            .interaction_state(&report),
+        )));
+        let mut runtime = hydrolysis::HeadlessRuntime::new_for_tests(
+            Environment::new(),
+            AnyViewBuilder::<AnyView>::new(move || {
+                view.borrow_mut()
+                    .take()
+                    .expect("the test view is built once")
+            }),
+            800,
+            600,
+            crate::Material3::default(),
+        );
+        for _ in 0..4 {
+            let _ = runtime.pump(false);
+        }
+        assert!(!report.snapshot().contains(InteractionState::SELECTED));
+
+        selection.set(Some(0));
+        for _ in 0..2 {
+            let _ = runtime.pump(false);
+        }
+        assert!(
+            report.snapshot().contains(InteractionState::SELECTED),
+            "selecting a row must mark it SELECTED"
+        );
     }
 }
