@@ -1,6 +1,7 @@
 use crate::{Brush, DrawContext, PressWave, PressWaves, WidgetInteractionState};
 use kurbo::{Point, Rect, RoundedRectRadii};
 use peniko::Color;
+use waterui::interaction::InteractionState;
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
 /// targets still produce a ripple at least this wide.
@@ -19,11 +20,11 @@ pub const DRAGGED_STATE_LAYER_OPACITY: f32 = 0.16;
 /// animated value when one is in flight, otherwise the MD3 token for the
 /// active boolean state (focus outranks hover).
 fn resolved_state_layer_opacity(state: WidgetInteractionState) -> f32 {
-    if state.focus_visible {
+    if state.state.contains(InteractionState::FOCUSED) {
         state.focus_progress * FOCUS_STATE_LAYER_OPACITY
     } else if state.state_layer_opacity > 0.0 {
         state.state_layer_opacity
-    } else if state.hovered {
+    } else if state.state.contains(InteractionState::HOVERED) {
         HOVER_STATE_LAYER_OPACITY
     } else {
         0.0
@@ -39,7 +40,7 @@ fn resolved_press_waves(state: WidgetInteractionState) -> PressWaves {
         return state.press_waves;
     }
     let mut waves = PressWaves::EMPTY;
-    if state.pressed {
+    if state.state.contains(InteractionState::PRESSED) {
         waves.push(PressWave {
             origin: None,
             progress: 1.0,
@@ -138,7 +139,7 @@ pub fn draw_focus_indicator(
     color: Color,
     state: WidgetInteractionState,
 ) {
-    if !state.focus_visible {
+    if !state.state.contains(InteractionState::FOCUSED) {
         return;
     }
     let grow = FOCUS_INDICATOR_OUTER_OFFSET + FOCUS_INDICATOR_WIDTH / 2.0;
@@ -219,6 +220,7 @@ mod tests {
     use kurbo::{Affine, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii};
     use peniko::Color;
     use std::path::Path;
+    use waterui::interaction::InteractionState;
     use waterui_graphics::{
         GpuContext, GpuFrame, GpuRuntime, GpuSurface, GpuView, OffscreenRenderConfig, OffscreenSize,
     };
@@ -241,7 +243,7 @@ mod tests {
             press_waves.push(*wave);
         }
         WidgetInteractionState {
-            pressed: true,
+            state: InteractionState::PRESSED,
             press_waves,
             ..WidgetInteractionState::NONE
         }
@@ -402,7 +404,7 @@ mod tests {
             8.0.into(),
             Color::new([1.0, 1.0, 1.0, 1.0]),
             WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 ..WidgetInteractionState::NONE
             },
         );
@@ -688,7 +690,7 @@ mod tests {
                 20.0.into(),
                 Color::new([1.0, 1.0, 1.0, 1.0]),
                 WidgetInteractionState {
-                    pressed: true,
+                    state: InteractionState::PRESSED,
                     press_waves,
                     ..WidgetInteractionState::NONE
                 },

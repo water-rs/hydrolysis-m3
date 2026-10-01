@@ -6,6 +6,7 @@ use core::marker::PhantomData;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::border::Border;
 use waterui::color::Color;
+use waterui::interaction::InteractionState;
 use waterui::shape::{Circle, ShapeExt as _};
 use waterui::{Environment, Str, View, ViewExt as _};
 use waterui_core::handler::{Handler, boxed_action};
@@ -183,7 +184,7 @@ pub fn draw_chrome(
         ButtonStyle::BorderedProminent => {
             // md.comp.icon-button.filled.container.color = primary;
             // md.comp.icon-button.filled.disabled.container.opacity = 0.1.
-            let fill = if state.disabled {
+            let fill = if state.state.contains(InteractionState::DISABLED) {
                 colors.on_surface.peniko().multiply_alpha(0.1)
             } else {
                 colors.primary.peniko()
