@@ -39,7 +39,11 @@ pub fn draw_bar(draw: &mut Recorder, bounds: Rect, background: &Paint) {
     draw.fill(bounds, background.clone());
 }
 
-pub fn draw_bar_separator(_colors: &MaterialColorScheme, _draw: &mut Recorder, _bounds: Rect) {
+pub const fn draw_bar_separator(
+    _colors: &MaterialColorScheme,
+    _draw: &mut Recorder,
+    _bounds: Rect,
+) {
     // The M3 app-bar tokens define no divider: `md.comp.app-bar` has no
     // divider/outline member, so a separator under the bar is not part of
     // the specification.

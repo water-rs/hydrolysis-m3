@@ -19,19 +19,19 @@ use waterui::animation::Animation;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Easing {
     /// The first control point.
-    pub x1: f64,
+    pub x1: f32,
     /// The first control point.
-    pub y1: f64,
+    pub y1: f32,
     /// The second control point.
-    pub x2: f64,
+    pub x2: f32,
     /// The second control point.
-    pub y2: f64,
+    pub y2: f32,
 }
 
 impl Easing {
     /// An easing from cubic-bezier control points.
     #[must_use]
-    pub const fn bezier(x1: f64, y1: f64, x2: f64, y2: f64) -> Self {
+    pub const fn bezier(x1: f32, y1: f32, x2: f32, y2: f32) -> Self {
         Self { x1, y1, x2, y2 }
     }
 
@@ -43,7 +43,13 @@ impl Easing {
     /// cubic bezier on the unit square never produces.
     #[must_use]
     pub fn ease(self, t: f32) -> f32 {
-        let curve = Curve::bezier(Duration::from_secs(1), self.x1, self.y1, self.x2, self.y2);
+        let curve = Curve::bezier(
+            Duration::from_secs(1),
+            f64::from(self.x1),
+            f64::from(self.y1),
+            f64::from(self.x2),
+            f64::from(self.y2),
+        );
         curve_value(&curve, f64::from(t.clamp(0.0, 1.0)))
             .to_f32()
             .expect("eased progress must be representable as f32")
@@ -134,10 +140,10 @@ pub mod easing {
 pub const fn motion(easing: Easing, duration: Duration) -> Animation {
     Animation::Bezier {
         duration,
-        x1: easing.x1 as f32,
-        y1: easing.y1 as f32,
-        x2: easing.x2 as f32,
-        y2: easing.y2 as f32,
+        x1: easing.x1,
+        y1: easing.y1,
+        x2: easing.x2,
+        y2: easing.y2,
     }
 }
 
