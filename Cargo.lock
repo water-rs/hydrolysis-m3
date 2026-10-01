@@ -6643,7 +6643,6 @@ source = "git+https://github.com/water-rs/particle?rev=e27ae84666ee58c2ff4adae16
 [[patch.unused]]
 name = "waterui-video-gpu"
 version = "0.4.0"
-source = "git+https://github.com/water-rs/video-gpu?rev=01f3d3fc2907065eff815f623ac7d9e12fa9943b#01f3d3fc2907065eff815f623ac7d9e12fa9943b"
 
 [[patch.unused]]
 name = "xcb"

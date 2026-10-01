@@ -131,7 +131,11 @@ waterui-svg = { git = "https://github.com/water-rs/svg", rev = "d53a94b03236718c
 waterui-barcode = { git = "https://github.com/water-rs/barcode", rev = "4c530503f6e3277f44511f327db463a195482abd" }
 waterui-particle = { git = "https://github.com/water-rs/particle", rev = "e27ae84666ee58c2ff4adae16d9227baf7efc3f2" }
 waterui-map-gpu = { git = "https://github.com/water-rs/map-gpu", rev = "13e199d255a11637e03341e0a947447851eff85e" }
-waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", rev = "01f3d3fc2907065eff815f623ac7d9e12fa9943b" }
+# waterui-video-gpu: no published rev compiles against r8's graphics —
+# w3-r8's own pin (01f3d3fc, video-gpu dev) still uses the retired
+# GpuSurface/GpuView API. The interim local port (wgpu 30, GpuContent)
+# stays until the dedicated port lands.
+waterui-video-gpu = { path = "../video-gpu" }
 waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "eabefc7c37830374e9e669acf369e5196189b654" }
 
 # The cutover hydrolysis is not on any public branch yet; the backend
