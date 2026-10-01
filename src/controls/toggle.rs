@@ -104,26 +104,7 @@ pub fn draw_switch(
         RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(track_radius)),
         track_color,
     );
-    // the unselected outline's border-width animates from 2dp to 0 (not
-    // its opacity), with the border inside the 52x32 box (border-box sizing).
-    let outline_width = TOGGLE_SWITCH_OUTLINE_WIDTH * f64::from(1.0 - progress);
-    if outline_width > 0.01 {
-        let inset = outline_width / 2.0;
-        let outline_bounds = bounds.inflate(-inset, -inset);
-        let outline_color = if state.state.contains(InteractionState::DISABLED) {
-            colors.on_surface.working_disabled_container()
-        } else {
-            colors.outline.working()
-        };
-        draw.stroke(
-            RoundedRect::from_rect(
-                outline_bounds,
-                RoundedRectRadii::from_single_radius(track_radius - inset),
-            ),
-            Stroke::new(outline_width),
-            outline_color,
-        );
-    }
+    draw_switch_outline(colors, draw, bounds, progress, track_radius, &state);
     let thumb_color = if state.state.contains(InteractionState::DISABLED) {
         lerp_color(
             colors.on_surface.working_disabled_content(),
@@ -178,6 +159,36 @@ pub fn draw_switch(
             check_glyph_path(icon_bounds),
             Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
             icon_color.with_alpha(icon_color.components[3] * icon_opacity),
+        );
+    }
+}
+
+// the unselected outline's border-width animates from 2dp to 0 (not
+// its opacity), with the border inside the 52x32 box (border-box sizing).
+fn draw_switch_outline(
+    colors: &MaterialColorScheme,
+    draw: &mut Recorder,
+    bounds: Rect,
+    progress: f32,
+    track_radius: f64,
+    state: &WidgetInteractionState,
+) {
+    let outline_width = TOGGLE_SWITCH_OUTLINE_WIDTH * f64::from(1.0 - progress);
+    if outline_width > 0.01 {
+        let inset = outline_width / 2.0;
+        let outline_bounds = bounds.inflate(-inset, -inset);
+        let outline_color = if state.state.contains(InteractionState::DISABLED) {
+            colors.on_surface.working_disabled_container()
+        } else {
+            colors.outline.working()
+        };
+        draw.stroke(
+            RoundedRect::from_rect(
+                outline_bounds,
+                RoundedRectRadii::from_single_radius(track_radius - inset),
+            ),
+            Stroke::new(outline_width),
+            outline_color,
         );
     }
 }

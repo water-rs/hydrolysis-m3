@@ -148,6 +148,7 @@ mod tests {
     use crate::test_support::Recorded;
     use cherenkov::kurbo::{Rect, RoundedRectRadii};
     use cherenkov::{Paint, Recorder};
+    use waterui::interaction::InteractionState;
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, caret_brush, draw_field, metrics,

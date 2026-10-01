@@ -245,6 +245,7 @@ mod tests {
     use crate::test_support::Recorded;
     use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
     use cherenkov::{Paint, Recorder};
+    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
 
     use super::{
