@@ -242,14 +242,6 @@ pub fn draw_state_layer(
     let layer = state_layer_rect(bounds);
     let radii = container_radii(layer, state);
     crate::theme::state_layer::draw_bounded(draw, layer, radii, color, state);
-    // `md.comp.focus-indicator.*` — secondary ring on keyboard focus.
-    crate::theme::state_layer::draw_focus_indicator(
-        draw,
-        layer,
-        radii,
-        colors.secondary.peniko(),
-        state,
-    );
 }
 
 /// `md.comp.icon-button.<size>.pressed.container.shape`, reached through the

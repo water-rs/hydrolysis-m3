@@ -96,8 +96,6 @@ pub fn draw_button_state_layer(
         colors.on_surface_variant.peniko(),
         state,
     );
-    // `md.comp.focus-indicator.*` — secondary ring on keyboard focus.
-    state_layer::draw_focus_indicator(draw, bounds, radii, colors.secondary.peniko(), state);
 }
 
 #[cfg(test)]

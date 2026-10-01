@@ -219,8 +219,6 @@ pub fn draw_state_layer(
     };
     let radii = container_radii(bounds, state);
     state_layer::draw_bounded(draw, bounds, radii, color, state);
-    // `md.comp.focus-indicator.*` — secondary ring on keyboard focus.
-    state_layer::draw_focus_indicator(draw, bounds, radii, colors.secondary.peniko(), state);
 }
 
 #[cfg(test)]

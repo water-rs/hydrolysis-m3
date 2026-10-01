@@ -123,8 +123,6 @@ pub fn draw_button_state_layer(
         },
         state,
     );
-    // `md.comp.focus-indicator.*` — secondary ring on keyboard focus.
-    state_layer::draw_focus_indicator(draw, bounds, radii, colors.secondary.peniko(), state);
 }
 
 #[cfg(test)]

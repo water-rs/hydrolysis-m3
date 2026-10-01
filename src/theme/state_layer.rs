@@ -122,40 +122,6 @@ fn draw_state_tint_rounded(
     }
 }
 
-/// `md.comp.focus-indicator.outline-width`.
-const FOCUS_INDICATOR_WIDTH: f64 = 3.0;
-/// `md.comp.focus-indicator.outer-offset` — the gap between the control's
-/// edge and the ring's inner edge.
-const FOCUS_INDICATOR_OUTER_OFFSET: f64 = 2.0;
-
-/// Strokes the M3 focus indicator around `bounds` while `state` is
-/// keyboard-focused. The ring's inner edge sits `outer-offset` outside the
-/// bounds, so the stroked rect and its corner radii grow by
-/// `offset + width / 2`.
-pub fn draw_focus_indicator(
-    draw: &mut dyn DrawContext,
-    bounds: Rect,
-    radii: RoundedRectRadii,
-    color: Color,
-    state: WidgetInteractionState,
-) {
-    if !state.state.contains(InteractionState::FOCUSED) {
-        return;
-    }
-    let grow = FOCUS_INDICATOR_OUTER_OFFSET + FOCUS_INDICATOR_WIDTH / 2.0;
-    draw.stroke_rounded_rect(
-        bounds.inflate(grow, grow),
-        RoundedRectRadii::new(
-            radii.top_left + grow,
-            radii.top_right + grow,
-            radii.bottom_right + grow,
-            radii.bottom_left + grow,
-        ),
-        &Brush::from(color),
-        FOCUS_INDICATOR_WIDTH,
-    );
-}
-
 pub fn draw_bounded(
     draw: &mut dyn DrawContext,
     bounds: Rect,
