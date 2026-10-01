@@ -4,9 +4,11 @@ use waterui::color::Color;
 use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
 use waterui::{Environment, Signal as _, Str};
-use waterui_backend_core::widget::{ButtonMetrics, InteractionStyle};
+use waterui_backend_core::widget::{ButtonMetrics, FocusRing, InteractionStyle};
 use waterui_controls::label::Label;
 use waterui_core::resolve::Resolvable;
+
+use crate::color::Secondary;
 
 pub fn label_plain_text(label: &Label) -> Str {
     label
@@ -18,6 +20,16 @@ pub fn label_plain_text(label: &Label) -> Str {
         .to_plain()
 }
 
+/// `md.comp.focus-indicator.*`: the 3dp secondary ring that rides 2dp
+/// outside a keyboard-focused control's state layer.
+pub fn focus_indicator() -> FocusRing {
+    FocusRing {
+        color: Secondary.into(),
+        width: 3.0,
+        offset: 2.0,
+    }
+}
+
 pub fn interaction_style(
     state_layer_color: impl Into<Color>,
     corner_radius: f64,
@@ -27,6 +39,7 @@ pub fn interaction_style(
         state_layer_color,
         RoundedRectRadii::from(corner_radius),
     )
+    .focus_ring(focus_indicator())
 }
 
 pub fn interaction_style_with_radii(
@@ -38,6 +51,7 @@ pub fn interaction_style_with_radii(
         state_layer_color,
         radii,
     )
+    .focus_ring(focus_indicator())
 }
 
 pub fn conditional_color(

@@ -10,6 +10,7 @@ use crate::theme::colors::MaterialColorScheme;
 use crate::{SliderMetrics, SliderValueIndicatorMetrics, WidgetInteractionState};
 use cherenkov::kurbo::{Circle, RoundedRect, RoundedRectRadii};
 use cherenkov::{Draw as _, Recorder};
+use waterui::interaction::InteractionState;
 use waterui::text::font::Font;
 use waterui_controls::ControlSize;
 use waterui_graphics::color::Color;
@@ -45,7 +46,7 @@ pub fn draw_track(
 ) {
     // MD3 disabled slider: the inactive track drops to on-surface at 12% and
     // the active track to on-surface at 38%.
-    let (track_color, fill_color) = if state.disabled {
+    let (track_color, fill_color) = if state.state.contains(InteractionState::DISABLED) {
         (
             colors.on_surface.working_disabled_container(),
             colors.on_surface.working_disabled_content(),
@@ -63,7 +64,10 @@ pub fn draw_track(
     let inside = SLIDER_TRACK_INSIDE_CORNER_SIZE;
     // The gap clears the handle's edge, not its centre, and it follows the
     // live handle width so pressing (a narrower handle) shrinks it.
-    let handle_width = if state.pressed || state.focus_visible {
+    let handle_width = if state
+        .state
+        .intersects(InteractionState::PRESSED | InteractionState::FOCUSED)
+    {
         SLIDER_PRESSED_HANDLE_WIDTH
     } else {
         SLIDER_HANDLE_WIDTH
@@ -117,7 +121,7 @@ pub fn draw_track(
     if indicator_center.x > inactive_start {
         draw.fill(
             Circle::new(indicator_center, SLIDER_STOP_INDICATOR_SIZE / 2.0),
-            if state.disabled {
+            if state.state.contains(InteractionState::DISABLED) {
                 colors.on_surface.working_disabled_content()
             } else {
                 colors.on_secondary_container.working()
@@ -134,7 +138,10 @@ pub fn draw_thumb(
     size: ControlSize,
     state: WidgetInteractionState,
 ) {
-    let width = if state.pressed || state.focus_visible {
+    let width = if state
+        .state
+        .intersects(InteractionState::PRESSED | InteractionState::FOCUSED)
+    {
         SLIDER_PRESSED_HANDLE_WIDTH
     } else {
         SLIDER_HANDLE_WIDTH
@@ -144,7 +151,7 @@ pub fn draw_thumb(
     // MD3 disabled slider handle: on-surface at 38% over an opaque surface
     // underlay, so content behind the semi-transparent handle cannot bleed
     // through (the reference implementation paints the handle over the background role).
-    if state.disabled {
+    if state.state.contains(InteractionState::DISABLED) {
         draw.fill(
             RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(width / 2.0)),
             colors.background.working(),
@@ -181,7 +188,7 @@ pub fn draw_thumb_state_layer(
     _size: ControlSize,
     state: WidgetInteractionState,
 ) {
-    if state.disabled {
+    if state.state.contains(InteractionState::DISABLED) {
         return;
     }
     crate::theme::state_layer::draw_unbounded_circle(
@@ -312,7 +319,7 @@ mod tests {
             22.0,
             ControlSize::ExtraSmall,
             WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 ..WidgetInteractionState::NONE
             },
         );
@@ -331,7 +338,7 @@ mod tests {
         // underlay.
         let colors = MaterialColorScheme::baseline_light();
         let disabled = WidgetInteractionState {
-            disabled: true,
+            state: InteractionState::DISABLED,
             ..WidgetInteractionState::NONE
         };
 
@@ -456,7 +463,7 @@ mod tests {
             Rect::new(0.0, 0.0, 72.0, 16.0),
             ControlSize::ExtraSmall,
             WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 ..WidgetInteractionState::NONE
             },
         );
