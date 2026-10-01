@@ -65,8 +65,8 @@ pub const fn interaction() -> InteractionMotion {
 /// material-web drives both progress indicators with CSS `ease-in-out`-family
 /// curves of its own rather than M3 easing tokens, and the indeterminate cycles
 /// are keyframe loop lengths, not durations from the scale.
-const PROGRESS_LINEAR_DETERMINATE: (f64, f64, f64, f64) = (0.4, 0.0, 0.6, 1.0);
-const PROGRESS_CIRCULAR_DETERMINATE: (f64, f64, f64, f64) = (0.0, 0.0, 0.2, 1.0);
+const PROGRESS_LINEAR_DETERMINATE: (f32, f32, f32, f32) = (0.4, 0.0, 0.6, 1.0);
+const PROGRESS_CIRCULAR_DETERMINATE: (f32, f32, f32, f32) = (0.0, 0.0, 0.2, 1.0);
 const PROGRESS_LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_secs(2);
 const PROGRESS_CIRCULAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(5_332);
 
@@ -74,17 +74,17 @@ pub fn progress() -> ProgressMotion {
     ProgressMotion {
         linear_determinate: Animation::Bezier {
             duration: duration::MEDIUM_1,
-            x1: PROGRESS_LINEAR_DETERMINATE.0 as f32,
-            y1: PROGRESS_LINEAR_DETERMINATE.1 as f32,
-            x2: PROGRESS_LINEAR_DETERMINATE.2 as f32,
-            y2: PROGRESS_LINEAR_DETERMINATE.3 as f32,
+            x1: PROGRESS_LINEAR_DETERMINATE.0,
+            y1: PROGRESS_LINEAR_DETERMINATE.1,
+            x2: PROGRESS_LINEAR_DETERMINATE.2,
+            y2: PROGRESS_LINEAR_DETERMINATE.3,
         },
         circular_determinate: Animation::Bezier {
             duration: duration::LONG_2,
-            x1: PROGRESS_CIRCULAR_DETERMINATE.0 as f32,
-            y1: PROGRESS_CIRCULAR_DETERMINATE.1 as f32,
-            x2: PROGRESS_CIRCULAR_DETERMINATE.2 as f32,
-            y2: PROGRESS_CIRCULAR_DETERMINATE.3 as f32,
+            x1: PROGRESS_CIRCULAR_DETERMINATE.0,
+            y1: PROGRESS_CIRCULAR_DETERMINATE.1,
+            x2: PROGRESS_CIRCULAR_DETERMINATE.2,
+            y2: PROGRESS_CIRCULAR_DETERMINATE.3,
         },
         linear_indeterminate_cycle: PROGRESS_LINEAR_INDETERMINATE_CYCLE,
         circular_indeterminate_cycle: PROGRESS_CIRCULAR_INDETERMINATE_CYCLE,
@@ -112,12 +112,7 @@ const NAVIGATION_FADE_THROUGH_THRESHOLD: f32 = 0.35;
 /// The emphasized easing, as the curve navigation progress samples.
 const fn navigation_transition_easing() -> EasingCurve {
     let easing = easing::EMPHASIZED;
-    EasingCurve::bezier(
-        easing.x1 as f32,
-        easing.y1 as f32,
-        easing.x2 as f32,
-        easing.y2 as f32,
-    )
+    EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2)
 }
 
 pub const fn navigation() -> NavigationMotion {
@@ -202,7 +197,7 @@ pub fn fast_spatial() -> Animation {
 
 /// `MotionSchemeKeyTokens.DefaultEffects` — `spring(dampingRatio = 1.0,
 /// stiffness = 1600)` in `StandardMotionTokens`: damping = 2·1·√1600 = 80.
-pub fn default_effects() -> Animation {
+pub const fn default_effects() -> Animation {
     Animation::Spring {
         stiffness: 1600.0,
         damping: 80.0,
@@ -501,12 +496,7 @@ mod tests {
         assert_eq!(motion_spec.transition_duration, duration::LONG_1);
         assert_eq!(
             motion_spec.transition_easing,
-            EasingCurve::bezier(
-                easing.x1 as f32,
-                easing.y1 as f32,
-                easing.x2 as f32,
-                easing.y2 as f32,
-            )
+            EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2,)
         );
         assert!(motion_spec.transition_duration > duration::SHORT_4);
     }
