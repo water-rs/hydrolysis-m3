@@ -8,7 +8,7 @@ use waterui::accessibility::AccessibilityRole;
 use waterui::color::Color;
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::binding;
-use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
+
 use waterui::widget::{Card as WaterCard, CardStyle, CardTheme};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 
@@ -91,10 +91,11 @@ where
     }
 }
 
-/// `md.comp.elevated-card.hovered.elevation`: an elevated card rests at
-/// level1 and lifts to level2 while hovered. The card composer's static
-/// level1 shadows are blanked on this card's scoped theme and a
-/// hover-driven background layer carries them instead.
+/// `md.comp.elevated-card.*`: an elevated card rests at level1
+/// (`container.elevation`) and lifts to level2 while hovered
+/// (`hovered.elevation`). The card composer's static level1 shadows are
+/// blanked on this card's scoped theme and a hover-driven background layer
+/// carries the shadows instead.
 fn elevated_hover(card: AnyView, env: &Environment) -> AnyView {
     let Some(theme) = env.get::<CardTheme>() else {
         return card;
@@ -114,7 +115,11 @@ fn elevated_hover(card: AnyView, env: &Environment) -> AnyView {
                 Color::transparent(),
             ))
         } else {
-            AnyView::new(FixedRoundedRectangle::new(CARD_CORNER_RADIUS).fill(Color::transparent()))
+            AnyView::new(shadow_layer(
+                MaterialElevationLevel::LEVEL1,
+                CARD_CORNER_RADIUS,
+                Color::transparent(),
+            ))
         }
     });
     AnyView::new(

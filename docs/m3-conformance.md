@@ -136,7 +136,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | file:line | our value | spec value | token name | status |
 |---|---|---|---|---|
 | src/layout/card.rs:8-11,63-85 | corner 12; elevated L1 / filled L0 / outlined 1px border | same | `md.comp.{elevated,filled,outlined}-card.*` | conforms |
-| src/material_card.rs | elevated card lifts to level2 while hovered | level2 | `md.comp.elevated-card.hovered.elevation` | fixed: the composer's static level1 shadows are blanked on a scoped `CardTheme` and a `watch`-driven background layer carries L2 while hovered |
+| src/material_card.rs | elevated card lifts to level2 while hovered | level2 | `md.comp.elevated-card.hovered.elevation` | fixed: the composer's static shadows are blanked on a scoped `CardTheme` and a `watch`-driven background layer carries L1 at rest, L2 while hovered |
 | src/layout/snackbar.rs:11-29 | 48h single-line, pad 16/12, 288–568w, corner 4, level3 | same | `md.comp.snackbar.*` | conforms |
 | src/layout/snackbar.rs | container inverse-surface, label inverse-on-surface, action inverse-primary | same | `md.comp.snackbar.*` | conforms |
 | src/layout/divider.rs:10 | divider outline-variant 1px | outline-variant | `md.comp.divider.color` | conforms |
