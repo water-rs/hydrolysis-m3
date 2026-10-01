@@ -11,6 +11,7 @@ use crate::{TabItemLayout, TabsMetrics, WidgetInteractionState};
 use cherenkov::kurbo::RoundedRect;
 use cherenkov::kurbo::{Rect, RoundedRectRadii};
 use cherenkov::{Draw as _, Recorder};
+use waterui::interaction::InteractionState;
 
 /// Whether the bar shows vertical or horizontal items. The M3 navigation bar
 /// switches to horizontal items at the medium window width class boundary —
@@ -116,7 +117,7 @@ pub fn draw_button_state_layer(
         draw,
         bounds,
         radii,
-        if selected || state.pressed {
+        if selected || state.state.contains(InteractionState::PRESSED) {
             colors.primary.working()
         } else {
             colors.on_surface.working()

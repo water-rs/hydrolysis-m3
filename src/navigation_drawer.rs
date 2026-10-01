@@ -4,12 +4,13 @@ use core::fmt::{self, Debug};
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
+use waterui::interaction::InteractionState;
 use waterui::layout::{
     Layout, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
     container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
-use waterui::reactive::SignalExt as _;
+use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
@@ -300,10 +301,19 @@ where
         );
         // md.comp.navigation-drawer: active items take on-secondary-container;
         // inactive items take on-surface on hover/focus and
-        // on-secondary-container on pressed. `InteractionStyle` cannot split
-        // pressed from hover/focus, so the hover/focus value wins.
-        let state_layer_color =
-            conditional_color(self.selected.clone(), OnSecondaryContainer, OnSurface);
+        // on-secondary-container on pressed — the reported interaction state
+        // splits them.
+        let state = binding(InteractionState::empty());
+        let inactive_layer = conditional_color(
+            state.map(|s: InteractionState| s.contains(InteractionState::PRESSED)),
+            OnSecondaryContainer,
+            OnSurface,
+        );
+        let state_layer_color = conditional_color(
+            self.selected.clone(),
+            OnSecondaryContainer,
+            Color::new(inactive_layer),
+        );
 
         // md.comp.navigation-drawer.active.label-text.weight =
         // label-large-weight-prominent.
@@ -321,6 +331,7 @@ where
             label_font,
         )
         .on_tap(move |env: Environment| action(&env))
+        .interaction_state(&state)
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .a11y_state_signal(accessibility_state)

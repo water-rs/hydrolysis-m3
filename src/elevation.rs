@@ -1,8 +1,9 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
 use cherenkov::Draw as _;
-use waterui::shape::FixedRoundedRectangle;
-use waterui::style::{FloatingStyle, Shadow as ViewShadow, Vector};
+use waterui::interaction::{InteractionState, StateValue};
+use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
+use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
 
 use crate::color::Shadow;
@@ -210,16 +211,55 @@ pub(crate) fn draw_shadows(
     }
 }
 
-pub(crate) fn apply_to_floating_style(style: &mut FloatingStyle, level: MaterialElevationLevel) {
+/// `level`'s two shadows as a [`FloatingElevation`] a `FloatingStyle` can
+/// hold per interaction state.
+fn floating_elevation(level: MaterialElevationLevel) -> FloatingElevation {
     let tokens = ElevationTokens::for_level(level);
-    style.key_shadow_color = Shadow.with_opacity(tokens.key.opacity(KEY_OPACITY)).into();
-    style.key_shadow_offset_y = tokens.key.y;
-    style.key_shadow_radius = tokens.key.blur;
-    style.ambient_shadow_color = Shadow
-        .with_opacity(tokens.ambient.opacity(AMBIENT_OPACITY))
-        .into();
-    style.ambient_shadow_offset_y = tokens.ambient.y;
-    style.ambient_shadow_radius = tokens.ambient.blur;
+    FloatingElevation {
+        key_shadow_color: Shadow.with_opacity(tokens.key.opacity(KEY_OPACITY)).into(),
+        key_shadow_offset_y: tokens.key.y,
+        key_shadow_radius: tokens.key.blur,
+        ambient_shadow_color: Shadow
+            .with_opacity(tokens.ambient.opacity(AMBIENT_OPACITY))
+            .into(),
+        ambient_shadow_offset_y: tokens.ambient.y,
+        ambient_shadow_radius: tokens.ambient.blur,
+    }
+}
+
+/// `level`'s two shadows as a `Shadow`-modified fill for `corner_radius` —
+/// the layer behind a surface that lifts it, so the card composer can redraw
+/// it per reported state.
+pub(crate) fn shadow_layer(
+    level: MaterialElevationLevel,
+    corner_radius: f32,
+    fill: waterui::color::Color,
+) -> impl View {
+    let tokens = ElevationTokens::for_level(level);
+    FixedRoundedRectangle::new(corner_radius)
+        .fill(fill)
+        .shadow(tokens.ambient_shadow(corner_radius))
+        .shadow(tokens.key_shadow(corner_radius))
+}
+
+/// Installs `level` as the style's resting elevation.
+pub(crate) fn apply_to_floating_style(style: &mut FloatingStyle, level: MaterialElevationLevel) {
+    style.elevation = floating_elevation(level).into();
+}
+
+/// Installs `resting` as the resting elevation plus each
+/// `(states, level)` override — a FAB sitting at level3 that rises to
+/// level4 while hovered, say. Overrides resolve in the order given.
+pub(crate) fn apply_to_floating_style_states(
+    style: &mut FloatingStyle,
+    resting: MaterialElevationLevel,
+    overrides: impl IntoIterator<Item = (InteractionState, MaterialElevationLevel)>,
+) {
+    let mut elevation = StateValue::new(floating_elevation(resting));
+    for (states, level) in overrides {
+        elevation = elevation.when(states, floating_elevation(level));
+    }
+    style.elevation = elevation;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

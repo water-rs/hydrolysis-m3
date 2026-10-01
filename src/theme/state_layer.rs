@@ -2,6 +2,7 @@ use crate::{PressWave, PressWaves, WidgetInteractionState};
 use cherenkov::kurbo::{Circle, RoundedRect};
 use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
 use cherenkov::{Draw as _, Paint, Recorder, WorkingColor};
+use waterui::interaction::InteractionState;
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
 /// targets still produce a ripple at least this wide.
@@ -20,11 +21,11 @@ pub const DRAGGED_STATE_LAYER_OPACITY: f32 = 0.16;
 /// animated value when one is in flight, otherwise the MD3 token for the
 /// active boolean state (focus outranks hover).
 fn resolved_state_layer_opacity(state: WidgetInteractionState) -> f32 {
-    if state.focus_visible {
+    if state.state.contains(InteractionState::FOCUSED) {
         state.focus_progress * FOCUS_STATE_LAYER_OPACITY
     } else if state.state_layer_opacity > 0.0 {
         state.state_layer_opacity
-    } else if state.hovered {
+    } else if state.state.contains(InteractionState::HOVERED) {
         HOVER_STATE_LAYER_OPACITY
     } else {
         0.0
@@ -40,7 +41,7 @@ fn resolved_press_waves(state: WidgetInteractionState) -> PressWaves {
         return state.press_waves;
     }
     let mut waves = PressWaves::EMPTY;
-    if state.pressed {
+    if state.state.contains(InteractionState::PRESSED) {
         waves.push(PressWave {
             origin: None,
             progress: 1.0,
@@ -184,6 +185,10 @@ mod tests {
     use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
     use cherenkov::{Command, Content, Draw as _, Paint, Recorder, ShapeData, WorkingColor};
     use std::path::Path;
+    use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
+    use cherenkov::{Command, Content, Draw as _, Paint, Recorder, ShapeData, WorkingColor};
+    use std::path::Path;
+    use waterui::interaction::InteractionState;
 
     #[test]
     fn material_ripple_diameter_spans_diagonal_with_minimum() {
@@ -203,7 +208,7 @@ mod tests {
             press_waves.push(*wave);
         }
         WidgetInteractionState {
-            pressed: true,
+            state: InteractionState::PRESSED,
             press_waves,
             ..WidgetInteractionState::NONE
         }
@@ -358,7 +363,7 @@ mod tests {
             8.0.into(),
             WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
             WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 ..WidgetInteractionState::NONE
             },
         );

@@ -9,6 +9,7 @@ use crate::theme::state_layer;
 use crate::{ButtonMetrics, WidgetInteractionState};
 use cherenkov::kurbo::{Line, RoundedRect, Stroke};
 use cherenkov::{Draw as _, Recorder, WorkingColor};
+use waterui::interaction::InteractionState;
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
 use waterui_graphics::color::Color;
@@ -171,7 +172,7 @@ pub fn draw_chrome(
     // no container to dim.
     match style {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
-            let fill = if state.disabled {
+            let fill = if state.state.contains(InteractionState::DISABLED) {
                 colors.on_surface.working_disabled_container()
             } else {
                 colors.primary.working()
@@ -189,7 +190,7 @@ pub fn draw_chrome(
             );
         }
         ButtonStyle::Link => {
-            let underline = if state.disabled {
+            let underline = if state.state.contains(InteractionState::DISABLED) {
                 colors.on_surface.working_disabled_content()
             } else {
                 colors.primary.working()
@@ -233,7 +234,8 @@ pub fn draw_state_layer(
         }
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
-    state_layer::draw_bounded(draw, bounds, container_radii(bounds, state), color, state);
+    let radii = container_radii(bounds, state);
+    state_layer::draw_bounded(draw, bounds, radii, color, state);
 }
 
 #[cfg(test)]
@@ -247,6 +249,7 @@ mod tests {
     use crate::test_support::Recorded;
     use cherenkov::kurbo::Rect;
     use cherenkov::{Paint, Recorder};
+    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
 
@@ -370,7 +373,7 @@ mod tests {
             Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
             ButtonStyle::Bordered,
             crate::WidgetInteractionState {
-                disabled: true,
+                state: InteractionState::DISABLED,
                 ..crate::WidgetInteractionState::NONE
             },
         );
@@ -520,7 +523,7 @@ mod tests {
             Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
             ButtonStyle::BorderedProminent,
             crate::WidgetInteractionState {
-                pressed: true,
+                state: InteractionState::PRESSED,
                 press_waves: waves,
                 ..crate::WidgetInteractionState::NONE
             },
