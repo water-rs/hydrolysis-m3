@@ -135,7 +135,7 @@ waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", rev = "4948
 waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "9c367f5b9c9439d01fad168230b60951d16f783f" }
 # The published hydrolysis 0.3.x predates the cutover; the backend resolves
 # the Cherenkov port line, delivered with this work.
-hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "4cef68ea3d3191a8c6fe272407c733528d5daa4c" }
+hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "1701e3a3ab4f1ae8aab6fe499eedaead94e59ad0" }
 
 
 # This is the revision waterui's `feat/cherenkov-cutover-w` root pins
