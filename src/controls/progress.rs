@@ -238,7 +238,7 @@ pub fn draw_circular_track(
         0.0
     };
     let active = TAU * active_turns.clamp(0.0, 1.0);
-    let sweep = TAU - active - gap * 2.0;
+    let sweep = gap.mul_add(-2.0, TAU - active);
     if sweep <= 0.0 {
         return;
     }

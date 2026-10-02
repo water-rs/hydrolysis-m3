@@ -237,7 +237,7 @@ mod tests {
         );
         let full_radius = ripple_diameter(bounds) * 0.5;
         assert!(
-            (circle.radius - full_radius * 0.7).abs() < 1e-6,
+            full_radius.mul_add(-0.7, circle.radius).abs() < 1e-6,
             "radius is halfway between the 0.4 initial fraction and full size"
         );
     }
@@ -262,7 +262,7 @@ mod tests {
         let circle = single_circle(recorder).expect("press ripple must fill a solid circle");
         assert_eq!(circle.center, Point::new(50.0, 20.0), "circle is centered");
         assert!(
-            (circle.radius - ripple_diameter(bounds) * 0.5).abs() < 1e-6,
+            ripple_diameter(bounds).mul_add(-0.5, circle.radius).abs() < 1e-6,
             "circle radius is half the ripple diameter"
         );
         assert!(
@@ -342,7 +342,7 @@ mod tests {
         );
         let full_radius = ripple_diameter(bounds) * 0.5;
         assert!(
-            (circles[1].radius - full_radius * 0.4).abs() < 1e-6,
+            full_radius.mul_add(-0.4, circles[1].radius).abs() < 1e-6,
             "the fresh wave starts at the initial scale fraction"
         );
     }
