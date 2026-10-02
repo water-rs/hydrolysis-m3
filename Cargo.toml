@@ -24,7 +24,7 @@ waterui-core = "0.5.1"
 waterui-controls = "0.5.1"
 waterui-form = "0.5.1"
 waterui-graphics = { version = "0.5.1", default-features = false }
-cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
+cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
 
 [dev-dependencies]
 pollster = "1.0"
@@ -135,18 +135,38 @@ waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", rev = "ca83
 waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "9c367f5b9c9439d01fad168230b60951d16f783f" }
 # The published hydrolysis 0.3.x predates the cutover; the backend resolves
 # the Cherenkov port line, delivered with this work.
-hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "53c68fa75264590b680dbfba3fe3cdd2796d922e" }
+hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "7da0449b6301f6781fd19a8bcb4c74631f520f51" }
 
 
 # This is the revision waterui's `feat/cherenkov-cutover-w` root pins
 # (water-rs/waterui#1246); every cherenkov/filtrate name in the graph must
 # come from it or a filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
-cherenkov-cpu = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
-cherenkov-gpu = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
-filtrate = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
-filtrate-core = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
-filtrate-derive = { git = "https://github.com/water-rs/cherenkov", rev = "fd1e36660719bcf2ffecda4649c6243812f536ad" }
+cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+cherenkov-cpu = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+cherenkov-gpu = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+filtrate = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+filtrate-core = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+filtrate-derive = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+
+# wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
+# instead of their value and crashes in CGColorSpaceCreateWithName whenever a
+# surface negotiates Extended Display P3 or BT.2100 (gfx-rs/wgpu#10175, fixed on
+# trunk, not yet released for v30). Mirrored from cherenkov's own workspace
+# patch (water-rs/cherenkov#229): `[patch]` in a dependency's manifest does not
+# apply downstream, so without these entries this graph resolves the crashing
+# crates.io build while cherenkov resolves the fork. Drop them once wgpu-hal
+# 30.0.2 ships the backport.
+naga = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+naga-types = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-core = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-core-deps-apple = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-core-deps-emscripten = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-core-deps-wasm = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-core-deps-windows-linux-android = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-hal = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
+wgpu-types = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
 
 waterui-canvas = { git = "https://github.com/water-rs/canvas", rev = "ac4737d276bcf4e7c498938c0842ab1f5848cf9a" }
 waterui-image = { git = "https://github.com/water-rs/image", rev = "27ab17cad98e8b08f50d9df5a66d9ec11529a69f" }

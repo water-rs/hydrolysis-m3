@@ -624,7 +624,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 [[package]]
 name = "cherenkov"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 dependencies = [
  "color",
  "filtrate-core",
@@ -642,7 +642,7 @@ dependencies = [
 [[package]]
 name = "cherenkov-gpu"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 dependencies = [
  "ash",
  "bytemuck",
@@ -676,7 +676,7 @@ dependencies = [
 [[package]]
 name = "cherenkov-shader"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 dependencies = [
  "naga",
  "thiserror 2.0.21",
@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "filtrate"
 version = "0.2.1"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 dependencies = [
  "bytemuck",
  "cherenkov-shader",
@@ -1195,12 +1195,12 @@ dependencies = [
 [[package]]
 name = "filtrate-core"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 
 [[package]]
 name = "filtrate-derive"
 version = "0.1.0"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -1618,7 +1618,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 [[package]]
 name = "hydrolysis"
 version = "0.3.1"
-source = "git+https://github.com/water-rs/hydrolysis?rev=53c68fa75264590b680dbfba3fe3cdd2796d922e#53c68fa75264590b680dbfba3fe3cdd2796d922e"
+source = "git+https://github.com/water-rs/hydrolysis?rev=7da0449b6301f6781fd19a8bcb4c74631f520f51#7da0449b6301f6781fd19a8bcb4c74631f520f51"
 dependencies = [
  "accesskit",
  "android_logger",
@@ -2609,8 +2609,7 @@ dependencies = [
 [[package]]
 name = "naga"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a616d2fb8c89516ac2723a581f69d6c18576046bed761bd6b305e5618e6ae130"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "arrayvec",
  "bit-set 0.10.0",
@@ -2635,8 +2634,7 @@ dependencies = [
 [[package]]
 name = "naga-types"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "590afbf58a6f4f62873cd5cff4468061844bafa1cdf399cc954537c22d768d49"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "hashbrown 0.17.1",
  "indexmap",
@@ -5535,8 +5533,7 @@ checksum = "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88"
 [[package]]
 name = "wgpu"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "527ccdf43dd5b2e8676eed9984ce00e2bbb0a1b85b70c1969dcb6cd2eb55ab9e"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "arrayvec",
  "bitflags 2.13.2",
@@ -5565,8 +5562,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14c018fce9b6270aa203c2fdd56f3cce996713534bd757e4ea58c8560b121f14"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "arrayvec",
  "bit-set 0.10.0",
@@ -5599,8 +5595,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core-deps-apple"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "061f3d319a40d39d00b1ecc2c33b89fe21d4e6fe01859df3500a3a8ecccd6b68"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "wgpu-hal",
 ]
@@ -5608,8 +5603,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core-deps-emscripten"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d98b86cf4abf524a902dd35f18ca6a3f08fc2ae9847c8f10b48e30491b1f0b86"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "wgpu-hal",
 ]
@@ -5617,8 +5611,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core-deps-windows-linux-android"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7586165fd5f6d881cb9ce4bb71f40d6caab2c0f1837e3fc1d9788a197fb6004f"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "wgpu-hal",
 ]
@@ -5626,8 +5619,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6b7fb58561a792bc237628ba0792e332de418fefe145f13b5ed8201e6d52f58"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -5682,8 +5674,7 @@ dependencies = [
 [[package]]
 name = "wgpu-naga-bridge"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2f62e73117bb7a62bfd9c5a5841438a823f6566c6442a808ee269d2d055c081"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "naga",
  "wgpu-types",
@@ -5692,8 +5683,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "30.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99dad6f1fbdbbdb4c278a6508b059d44688f5cebddf78d005a46a31340269286"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 dependencies = [
  "bitflags 2.13.2",
  "bytemuck",
@@ -6535,7 +6525,7 @@ dependencies = [
 [[patch.unused]]
 name = "cherenkov-cpu"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/cherenkov?rev=fd1e36660719bcf2ffecda4649c6243812f536ad#fd1e36660719bcf2ffecda4649c6243812f536ad"
+source = "git+https://github.com/water-rs/cherenkov?rev=522365616cff08d5d2e39bdae4690610593895e6#522365616cff08d5d2e39bdae4690610593895e6"
 
 [[patch.unused]]
 name = "waterkit-audio"
@@ -6606,6 +6596,11 @@ source = "git+https://github.com/water-rs/particle?rev=e27ae84666ee58c2ff4adae16
 name = "waterui-video-gpu"
 version = "0.4.0"
 source = "git+https://github.com/water-rs/video-gpu?rev=ca83630ba2183090749ffcd6be64b945e55e1ce8#ca83630ba2183090749ffcd6be64b945e55e1ce8"
+
+[[patch.unused]]
+name = "wgpu-core-deps-wasm"
+version = "30.0.1"
+source = "git+https://github.com/water-rs/wgpu?rev=4b35d8bc968f6968b3cbae65b6e2e2ee132aa038#4b35d8bc968f6968b3cbae65b6e2e2ee132aa038"
 
 [[patch.unused]]
 name = "xcb"
