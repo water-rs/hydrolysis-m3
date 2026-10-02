@@ -24,7 +24,7 @@ waterui-core = "0.5.1"
 waterui-controls = "0.5.1"
 waterui-form = "0.5.1"
 waterui-graphics = { version = "0.5.1", default-features = false }
-cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
 
 [dev-dependencies]
 pollster = "1.0"
@@ -141,12 +141,12 @@ hydrolysis = { git = "https://github.com/water-rs/hydrolysis", rev = "a833de9935
 # This is the revision waterui's `feat/cherenkov-cutover-w` root pins
 # (water-rs/waterui#1246); every cherenkov/filtrate name in the graph must
 # come from it or a filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
-cherenkov-cpu = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
-cherenkov-gpu = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
-filtrate = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
-filtrate-core = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
-filtrate-derive = { git = "https://github.com/water-rs/cherenkov", rev = "522365616cff08d5d2e39bdae4690610593895e6" }
+cherenkov = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
+cherenkov-cpu = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
+cherenkov-gpu = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
+filtrate = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
+filtrate-core = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
+filtrate-derive = { git = "https://github.com/water-rs/cherenkov", rev = "0ab1a3b100219b84bf76ffc3e1596fe1522fd90f" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
