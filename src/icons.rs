@@ -116,6 +116,16 @@ where
         self.pending_redraw.replace(false)
     }
 
+    // The invalidator and the stroke watch armed on it belong to the engine
+    // that minted them; the replacement engine installs its own via
+    // `set_invalidator`, and the next `build_scene` re-arms the watch
+    // against it. The stroke signal, geometry and the shared redraw flag
+    // are semantic source and stay.
+    fn rebuild_for_engine(&mut self) {
+        self.invalidator = None;
+        self.guard = None;
+    }
+
     fn set_invalidator(&mut self, invalidator: Option<SceneInvalidator>) {
         self.invalidator = invalidator;
     }
