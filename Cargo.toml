@@ -131,7 +131,7 @@ waterui-svg = { git = "https://github.com/water-rs/svg", rev = "d53a94b03236718c
 waterui-barcode = { git = "https://github.com/water-rs/barcode", rev = "4c530503f6e3277f44511f327db463a195482abd" }
 waterui-particle = { git = "https://github.com/water-rs/particle", rev = "e27ae84666ee58c2ff4adae16d9227baf7efc3f2" }
 waterui-map-gpu = { git = "https://github.com/water-rs/map-gpu", rev = "13e199d255a11637e03341e0a947447851eff85e" }
-waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", rev = "ca83630ba2183090749ffcd6be64b945e55e1ce8" }
+waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", rev = "49486aedd4b5a0b38ae27d7a4021b7efb217ca89" }
 waterui-webview = { git = "https://github.com/water-rs/waterui", rev = "9c367f5b9c9439d01fad168230b60951d16f783f" }
 # The published hydrolysis 0.3.x predates the cutover; the backend resolves
 # the Cherenkov port line, delivered with this work.

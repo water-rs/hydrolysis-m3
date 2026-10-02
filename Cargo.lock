@@ -6595,7 +6595,7 @@ source = "git+https://github.com/water-rs/particle?rev=e27ae84666ee58c2ff4adae16
 [[patch.unused]]
 name = "waterui-video-gpu"
 version = "0.4.0"
-source = "git+https://github.com/water-rs/video-gpu?rev=ca83630ba2183090749ffcd6be64b945e55e1ce8#ca83630ba2183090749ffcd6be64b945e55e1ce8"
+source = "git+https://github.com/water-rs/video-gpu?rev=49486aedd4b5a0b38ae27d7a4021b7efb217ca89#49486aedd4b5a0b38ae27d7a4021b7efb217ca89"
 
 [[patch.unused]]
 name = "wgpu-core-deps-wasm"
