@@ -9,6 +9,7 @@ pub mod tokens;
 use core::time::Duration;
 
 use waterui::animation::Animation;
+use waterui::easing::EasingCurve;
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
 use waterui_backend_core::widget::{
@@ -71,20 +72,20 @@ const PROGRESS_CIRCULAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(5_
 
 pub fn progress() -> ProgressMotion {
     ProgressMotion {
-        linear_determinate: Animation::bezier(
-            duration::MEDIUM_1,
-            PROGRESS_LINEAR_DETERMINATE.0,
-            PROGRESS_LINEAR_DETERMINATE.1,
-            PROGRESS_LINEAR_DETERMINATE.2,
-            PROGRESS_LINEAR_DETERMINATE.3,
-        ),
-        circular_determinate: Animation::bezier(
-            duration::LONG_2,
-            PROGRESS_CIRCULAR_DETERMINATE.0,
-            PROGRESS_CIRCULAR_DETERMINATE.1,
-            PROGRESS_CIRCULAR_DETERMINATE.2,
-            PROGRESS_CIRCULAR_DETERMINATE.3,
-        ),
+        linear_determinate: Animation::Bezier {
+            duration: duration::MEDIUM_1,
+            x1: PROGRESS_LINEAR_DETERMINATE.0,
+            y1: PROGRESS_LINEAR_DETERMINATE.1,
+            x2: PROGRESS_LINEAR_DETERMINATE.2,
+            y2: PROGRESS_LINEAR_DETERMINATE.3,
+        },
+        circular_determinate: Animation::Bezier {
+            duration: duration::LONG_2,
+            x1: PROGRESS_CIRCULAR_DETERMINATE.0,
+            y1: PROGRESS_CIRCULAR_DETERMINATE.1,
+            x2: PROGRESS_CIRCULAR_DETERMINATE.2,
+            y2: PROGRESS_CIRCULAR_DETERMINATE.3,
+        },
         linear_indeterminate_cycle: PROGRESS_LINEAR_INDETERMINATE_CYCLE,
         circular_indeterminate_cycle: PROGRESS_CIRCULAR_INDETERMINATE_CYCLE,
         loading_cycle: crate::controls::progress::loading_cycle(),
@@ -108,10 +109,16 @@ pub const fn text_caret() -> TextCaretMotion {
 /// muddy midpoint (M3 fade-through).
 const NAVIGATION_FADE_THROUGH_THRESHOLD: f32 = 0.35;
 
+/// The emphasized easing, as the curve navigation progress samples.
+const fn navigation_transition_easing() -> EasingCurve {
+    let easing = easing::EMPHASIZED;
+    EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2)
+}
+
 pub const fn navigation() -> NavigationMotion {
     NavigationMotion {
         transition_duration: duration::LONG_1,
-        transition_easing: easing::EMPHASIZED,
+        transition_easing: navigation_transition_easing(),
         shared_axis_slide_distance: NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE,
         fade_through_threshold: NAVIGATION_FADE_THROUGH_THRESHOLD,
     }
@@ -179,16 +186,22 @@ pub const fn tooltip() -> Animation {
 }
 
 /// `MotionSchemeKeyTokens.FastSpatial` — `spring(dampingRatio = 0.9,
-/// stiffness = 1400)` in `StandardMotionTokens`. `WaterUI` springs take the raw
-/// damping coefficient c = 2ζ√k with unit mass: 2 · 0.9 · √1400 ≈ 67.35.
-pub const fn fast_spatial() -> Animation {
-    Animation::spring(1400.0, 67.35)
+/// stiffness = 1400)` in `StandardMotionTokens`. Springs take the stiffness and
+/// damping coefficient with unit mass: damping = 2·ζ·√k = 2·0.9·√1400 ≈ 67.4.
+pub fn fast_spatial() -> Animation {
+    Animation::Spring {
+        stiffness: 1400.0,
+        damping: 2.0 * 0.9 * 1400f32.sqrt(),
+    }
 }
 
 /// `MotionSchemeKeyTokens.DefaultEffects` — `spring(dampingRatio = 1.0,
-/// stiffness = 1600)` in `StandardMotionTokens`. c = 2 · 1.0 · √1600 = 80.
+/// stiffness = 1600)` in `StandardMotionTokens`: damping = 2·1·√1600 = 80.
 pub const fn default_effects() -> Animation {
-    Animation::spring(1600.0, 80.0)
+    Animation::Spring {
+        stiffness: 1600.0,
+        damping: 80.0,
+    }
 }
 
 #[derive(Clone)]
@@ -298,6 +311,7 @@ mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
     use waterui::animation::Animation;
+    use waterui::easing::EasingCurve;
     use waterui::{Binding, Signal, SignalExt as _};
 
     /// Collect the (value, animation) pairs a motion signal emits, so a test can
@@ -478,8 +492,12 @@ mod tests {
     fn navigation_uses_an_emphasized_long_transition() {
         let motion_spec = navigation();
 
+        let easing = easing::EMPHASIZED;
         assert_eq!(motion_spec.transition_duration, duration::LONG_1);
-        assert_eq!(motion_spec.transition_easing, easing::EMPHASIZED);
+        assert_eq!(
+            motion_spec.transition_easing,
+            EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2,)
+        );
         assert!(motion_spec.transition_duration > duration::SHORT_4);
     }
 

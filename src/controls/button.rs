@@ -6,7 +6,9 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
-use crate::{Brush, ButtonMetrics, DrawContext, WidgetInteractionState};
+use crate::{ButtonMetrics, WidgetInteractionState};
+use cherenkov::kurbo::{Line, RoundedRect, Stroke};
+use cherenkov::{Draw as _, Recorder, WorkingColor};
 use waterui::interaction::InteractionState;
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
@@ -77,7 +79,7 @@ struct AutomaticLabelColor {
 }
 
 impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
-    type Resolved = waterui_graphics::color::ResolvedColor;
+    type Resolved = WorkingColor;
 
     fn resolve(
         &self,
@@ -96,7 +98,7 @@ impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
 /// it off the bounds keeps a large or extra-large button a capsule, and keeps a
 /// button stretched to fill a taller row — a navigation drawer line, say —
 /// rounded to match whatever it is sitting on.
-fn container_radius(bounds: kurbo::Rect) -> f64 {
+fn container_radius(bounds: cherenkov::kurbo::Rect) -> f64 {
     bounds.height() / 2.0
 }
 
@@ -144,7 +146,10 @@ fn press_progress(state: WidgetInteractionState) -> f64 {
 
 /// The container's radius in `state`: resting `CornerFull`, morphing to
 /// `PressedContainerShape` as the press grows.
-fn container_radii(bounds: kurbo::Rect, state: WidgetInteractionState) -> kurbo::RoundedRectRadii {
+fn container_radii(
+    bounds: cherenkov::kurbo::Rect,
+    state: WidgetInteractionState,
+) -> cherenkov::kurbo::RoundedRectRadii {
     let resting = container_radius(bounds);
     let pressed = pressed_corner_radius(bounds.height());
     (pressed - resting)
@@ -154,8 +159,8 @@ fn container_radii(bounds: kurbo::Rect, state: WidgetInteractionState) -> kurbo:
 
 pub fn draw_chrome(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
@@ -168,32 +173,42 @@ pub fn draw_chrome(
     match style {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
             let fill = if state.state.contains(InteractionState::DISABLED) {
-                colors.on_surface.peniko().multiply_alpha(0.1)
+                colors.on_surface.working_disabled_container()
             } else {
-                colors.primary.peniko()
+                colors.primary.working()
             };
-            draw.fill_rounded_rect(bounds, container_radii(bounds, state), &Brush::from(fill));
+            draw.fill(
+                RoundedRect::from_rect(bounds, container_radii(bounds, state)),
+                fill,
+            );
         }
         ButtonStyle::Bordered => {
-            draw.stroke_rounded_rect(
-                bounds,
-                container_radii(bounds, state),
-                &Brush::from(colors.outline_variant.peniko()),
-                outline_width(bounds.height()),
+            draw.stroke(
+                RoundedRect::from_rect(bounds, container_radii(bounds, state)),
+                Stroke::new(outline_width(bounds.height())),
+                colors.outline_variant.working(),
             );
         }
         ButtonStyle::Link => {
             let underline = if state.state.contains(InteractionState::DISABLED) {
-                colors.on_surface.peniko_disabled_content()
+                colors.on_surface.working_disabled_content()
             } else {
-                colors.primary.peniko()
+                colors.primary.working()
             };
             let underline_y = (bounds.y1 - BUTTON_LINK_UNDERLINE_BOTTOM_INSET).max(bounds.y0);
-            draw.stroke_line(
-                kurbo::Point::new(bounds.x0 + BUTTON_LINK_HORIZONTAL_PADDING, underline_y),
-                kurbo::Point::new(bounds.x1 - BUTTON_LINK_HORIZONTAL_PADDING, underline_y),
-                &Brush::from(underline),
-                BUTTON_LINK_UNDERLINE_THICKNESS,
+            draw.stroke(
+                Line::new(
+                    cherenkov::kurbo::Point::new(
+                        bounds.x0 + BUTTON_LINK_HORIZONTAL_PADDING,
+                        underline_y,
+                    ),
+                    cherenkov::kurbo::Point::new(
+                        bounds.x1 - BUTTON_LINK_HORIZONTAL_PADDING,
+                        underline_y,
+                    ),
+                ),
+                Stroke::new(BUTTON_LINK_UNDERLINE_THICKNESS),
+                underline,
             );
         }
         ButtonStyle::Plain | ButtonStyle::Borderless => {}
@@ -203,8 +218,8 @@ pub fn draw_chrome(
 
 pub fn draw_state_layer(
     colors: &MaterialColorScheme,
-    draw: &mut dyn DrawContext,
-    bounds: kurbo::Rect,
+    draw: &mut Recorder,
+    bounds: cherenkov::kurbo::Rect,
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
@@ -212,9 +227,11 @@ pub fn draw_state_layer(
     // md.comp.button.outlined.*.state-layer.color = on-surface-variant;
     // md.comp.button.text.*.state-layer.color = primary.
     let color = match style {
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.peniko(),
-        ButtonStyle::Bordered => colors.on_surface_variant.peniko(),
-        ButtonStyle::Link | ButtonStyle::Plain | ButtonStyle::Borderless => colors.primary.peniko(),
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.working(),
+        ButtonStyle::Bordered => colors.on_surface_variant.working(),
+        ButtonStyle::Link | ButtonStyle::Plain | ButtonStyle::Borderless => {
+            colors.primary.working()
+        }
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     let radii = container_radii(bounds, state);
@@ -224,12 +241,14 @@ pub fn draw_state_layer(
 #[cfg(test)]
 mod tests {
     use super::{draw_chrome, metrics};
+    use crate::MaterialColorScheme;
     use crate::dimensions::{
         BUTTON_EXTRA_LARGE, BUTTON_EXTRA_SMALL, BUTTON_LARGE, BUTTON_MEDIUM, BUTTON_MIN_WIDTH,
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
-    use crate::{Brush, DrawContext, MaterialColorScheme};
-    use kurbo::{Affine, BezPath, Point, Rect, RoundedRectRadii};
+    use crate::test_support::Recorded;
+    use cherenkov::kurbo::Rect;
+    use cherenkov::{Paint, Recorder};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
@@ -341,66 +360,12 @@ mod tests {
         assert_eq!(BUTTON_TEXT_VERTICAL_PADDING, 8.0);
     }
 
-    #[derive(Default)]
-    struct RecordingDrawContext {
-        rounded_fills: Vec<(Rect, RoundedRectRadii, Brush)>,
-        rounded_strokes: Vec<(Rect, RoundedRectRadii, Brush, f64)>,
-    }
-
-    impl DrawContext for RecordingDrawContext {
-        fn fill_rect(&mut self, _rect: Rect, _brush: &Brush) {}
-
-        fn fill_rounded_rect(&mut self, rect: Rect, radii: RoundedRectRadii, brush: &Brush) {
-            self.rounded_fills.push((rect, radii, brush.clone()));
-        }
-
-        fn stroke_rect(&mut self, _rect: Rect, _brush: &Brush, _width: f64) {}
-
-        fn stroke_rounded_rect(
-            &mut self,
-            rect: Rect,
-            radii: RoundedRectRadii,
-            brush: &Brush,
-            width: f64,
-        ) {
-            self.rounded_strokes
-                .push((rect, radii, brush.clone(), width));
-        }
-
-        fn stroke_line(&mut self, _from: Point, _to: Point, _brush: &Brush, _width: f64) {}
-
-        fn stroke_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush, _width: f64) {}
-
-        fn fill_circle(&mut self, _center: Point, _radius: f64, _brush: &Brush) {}
-
-        fn fill_path(&mut self, _path: &BezPath, _brush: &Brush) {}
-
-        fn stroke_path(&mut self, _path: &BezPath, _brush: &Brush, _width: f64) {}
-        fn draw_shadow(
-            &mut self,
-            _rect: Rect,
-            _radii: RoundedRectRadii,
-            _offset: kurbo::Vec2,
-            _blur: f64,
-            _color: peniko::Color,
-        ) {
-        }
-
-        fn push_layer(&mut self, _alpha: f32, _clip: Option<&Rect>) {}
-
-        fn pop_layer(&mut self) {}
-
-        fn push_transform(&mut self, _affine: Affine) {}
-
-        fn pop_transform(&mut self) {}
-    }
-
     #[test]
     fn disabled_outlined_button_keeps_outline_variant_border() {
         // md.comp.button.outlined.disabled.outline.color: the border stays
         // outline-variant rather than dimming to on-surface.
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_chrome(
             &colors,
@@ -413,10 +378,12 @@ mod tests {
             },
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert!(matches!(
             &draw.rounded_strokes[0].2,
-            Brush::Solid(color) if *color == colors.outline_variant.peniko()
+            Paint::Solid(color) if *color == colors.outline_variant.working()
         ));
     }
 
@@ -439,21 +406,7 @@ mod tests {
                 .with_opacity(crate::theme::colors::DISABLED_CONTENT_OPACITY)
                 .resolve(&waterui_core::Environment::new())
                 .snapshot();
-            assert_eq!(
-                (
-                    resolved.red,
-                    resolved.green,
-                    resolved.blue,
-                    resolved.opacity
-                ),
-                (
-                    expected.red,
-                    expected.green,
-                    expected.blue,
-                    expected.opacity
-                ),
-                "style {style:?}"
-            );
+            assert_eq!(resolved.components, expected.components, "style {style:?}");
         }
     }
 
@@ -470,9 +423,7 @@ mod tests {
         let mut env = waterui_core::Environment::new();
         let filled = color.resolve(&env).snapshot();
         let expected_filled = colors.on_primary.view_color().resolve(&env).snapshot();
-        assert_eq!(filled.red, expected_filled.red);
-        assert_eq!(filled.green, expected_filled.green);
-        assert_eq!(filled.blue, expected_filled.blue);
+        assert_eq!(filled.components[..3], expected_filled.components[..3]);
 
         env.insert(hydrolysis::IconOnlyButtonLabel);
         let standard = color.resolve(&env).snapshot();
@@ -481,9 +432,7 @@ mod tests {
             .view_color()
             .resolve(&env)
             .snapshot();
-        assert_eq!(standard.red, expected_standard.red);
-        assert_eq!(standard.green, expected_standard.green);
-        assert_eq!(standard.blue, expected_standard.blue);
+        assert_eq!(standard.components[..3], expected_standard.components[..3]);
     }
 
     /// `Automatic` is the theme's default button; in M3 that is the filled
@@ -493,7 +442,7 @@ mod tests {
     fn automatic_button_renders_filled() {
         let colors = MaterialColorScheme::baseline_light();
         for style in [ButtonStyle::Automatic, ButtonStyle::BorderedProminent] {
-            let mut draw = RecordingDrawContext::default();
+            let mut draw = Recorder::new();
 
             draw_chrome(
                 &colors,
@@ -503,11 +452,13 @@ mod tests {
                 crate::WidgetInteractionState::NONE,
             );
 
+            let draw = Recorded::from(draw);
+
             assert_eq!(draw.rounded_fills.len(), 1, "style {style:?}");
             assert!(
                 matches!(
                     &draw.rounded_fills[0].2,
-                    Brush::Solid(color) if *color == colors.primary.peniko()
+                    Paint::Solid(color) if *color == colors.primary.working()
                 ),
                 "style {style:?}"
             );
@@ -519,7 +470,7 @@ mod tests {
         // md.comp.button.outlined.outline.color = outline-variant;
         // md.comp.button.small.outlined.outline-width = 1.
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         draw_chrome(
             &colors,
@@ -529,15 +480,17 @@ mod tests {
             crate::WidgetInteractionState::NONE,
         );
 
+        let draw = Recorded::from(draw);
+
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert!(matches!(
             &draw.rounded_strokes[0].2,
-            Brush::Solid(color) if *color == colors.outline_variant.peniko()
+            Paint::Solid(color) if *color == colors.outline_variant.working()
         ));
         assert_eq!(draw.rounded_strokes[0].3, 1.0);
 
         // md.comp.button.xlarge.outlined.outline-width = 3.
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
         draw_chrome(
             &colors,
             &mut draw,
@@ -545,6 +498,7 @@ mod tests {
             ButtonStyle::Bordered,
             crate::WidgetInteractionState::NONE,
         );
+        let draw = Recorded::from(draw);
         assert_eq!(draw.rounded_strokes[0].3, 3.0);
     }
 
@@ -555,7 +509,7 @@ mod tests {
     fn pressed_button_morphs_its_corners() {
         use waterui_backend_core::widget::{PressWave, PressWaves};
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = RecordingDrawContext::default();
+        let mut draw = Recorder::new();
 
         let mut waves = PressWaves::EMPTY;
         waves.push(PressWave {
@@ -574,6 +528,7 @@ mod tests {
                 ..crate::WidgetInteractionState::NONE
             },
         );
+        let draw = Recorded::from(draw);
 
         let radii = draw.rounded_fills[0].1;
         // md.comp.button.small.pressed.container.shape = corner-small (8).

@@ -30,6 +30,8 @@ pub mod navigation_bar;
 pub mod navigation_drawer;
 pub mod navigation_rail;
 pub mod segmented_button;
+#[cfg(test)]
+mod test_support;
 pub mod toolbar;
 pub mod tooltip;
 
@@ -51,22 +53,23 @@ pub(crate) use layout::{badge, card, divider, list, menu, scroll, snackbar, tabl
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
+use cherenkov::{Paint, Recorder, WorkingColor};
 use core::cell::OnceCell;
 
-use kurbo::{BezPath, Point, Rect};
+use cherenkov::kurbo::{BezPath, Point, Rect};
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 pub use waterui_backend_core::widget::{
-    BadgeMetrics, Brush, ButtonMetrics, DividerMetrics, DrawContext, InputFieldMetrics,
-    InteractionFocusBinding, InteractionMotion, InteractionStyle, ListDividerMetrics, ListMetrics,
-    ListRowMetrics, ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction,
-    NavigationMetrics, NavigationMotion, PickerMetrics, PressWave, PressWaves,
-    ProgressIndicatorStyle, ProgressMetrics, ProgressMotion, RadioIndicatorState,
-    RadioSelectionMotion, SliderMetrics, SliderValueIndicatorMetrics, StepperEnd, StepperMetrics,
-    TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics,
-    ToggleMetrics, WidgetInteractionState, WidgetTheme,
+    BadgeMetrics, ButtonMetrics, DividerMetrics, InputFieldMetrics, InteractionFocusBinding,
+    InteractionMotion, InteractionStyle, ListDividerMetrics, ListMetrics, ListRowMetrics,
+    ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
+    NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
+    ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderMetrics,
+    SliderValueIndicatorMetrics, StepperEnd, StepperMetrics, TabItemLayout, TableMetrics,
+    TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState,
+    WidgetTheme,
 };
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
@@ -329,21 +332,21 @@ fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
         .color_scheme(color_scheme)
         .colors(
             ColorSettings::new()
-                .background(colors.background.resolved())
-                .surface(colors.surface.resolved())
-                .surface_variant(colors.surface_variant.resolved())
-                .border(colors.outline.resolved())
-                .foreground(colors.on_surface.resolved())
-                .muted_foreground(colors.on_surface_variant.resolved())
-                .accent(colors.primary.resolved())
-                .accent_foreground(colors.on_primary.resolved())
-                .accent_container(colors.primary_container.resolved())
-                .tertiary(colors.tertiary.resolved())
-                .tertiary_container(colors.tertiary_container.resolved())
-                .selection_container(colors.secondary_container.resolved())
-                .selection_foreground(colors.on_secondary_container.resolved())
-                .error(colors.error.resolved())
-                .error_foreground(colors.on_error.resolved()),
+                .background(colors.background.working())
+                .surface(colors.surface.working())
+                .surface_variant(colors.surface_variant.working())
+                .border(colors.outline.working())
+                .foreground(colors.on_surface.working())
+                .muted_foreground(colors.on_surface_variant.working())
+                .accent(colors.primary.working())
+                .accent_foreground(colors.on_primary.working())
+                .accent_container(colors.primary_container.working())
+                .tertiary(colors.tertiary.working())
+                .tertiary_container(colors.tertiary_container.working())
+                .selection_container(colors.secondary_container.working())
+                .selection_foreground(colors.on_secondary_container.working())
+                .error(colors.error.working())
+                .error_foreground(colors.on_error.working()),
         )
         .install(env);
     theme::typography::defaults(env);
@@ -424,7 +427,7 @@ fn project_color_token<T: 'static>(
     role: fn(MaterialColorScheme) -> MaterialRoleColor,
 ) {
     let signal = scheme
-        .map(move |scheme| role(material_scheme_for_color_scheme(light, dark, scheme)).resolved())
+        .map(move |scheme| role(material_scheme_for_color_scheme(light, dark, scheme)).working())
         .computed();
     waterui_theme::install_color_signal::<T>(env, signal);
 }
@@ -481,7 +484,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_button_chrome(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         style: ButtonStyle,
         icon_only: bool,
@@ -496,7 +499,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_button_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         style: ButtonStyle,
         icon_only: bool,
@@ -511,10 +514,10 @@ impl WidgetTheme for Material3 {
 
     fn draw_interaction_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
-        radii: kurbo::RoundedRectRadii,
-        color: peniko::Color,
+        radii: cherenkov::kurbo::RoundedRectRadii,
+        color: WorkingColor,
         state: WidgetInteractionState,
     ) {
         theme::state_layer::draw_bounded(draw, bounds, radii, color, state);
@@ -530,7 +533,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_toggle_switch(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         progress: f32,
         selected: bool,
@@ -541,7 +544,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_toggle_switch_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         progress: f32,
         selected: bool,
@@ -552,7 +555,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_toggle_checkbox(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         progress: f32,
         state: WidgetInteractionState,
@@ -562,7 +565,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_toggle_checkbox_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         progress: f32,
         state: WidgetInteractionState,
@@ -576,7 +579,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_stepper_button(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         end: StepperEnd,
         state: WidgetInteractionState,
@@ -584,17 +587,17 @@ impl WidgetTheme for Material3 {
         stepper::draw_button(&self.colors(), draw, bounds, end, state);
     }
 
-    fn draw_stepper_decrement_icon(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_stepper_decrement_icon(&self, draw: &mut Recorder, bounds: Rect) {
         stepper::draw_decrement_icon(&self.colors(), draw, bounds);
     }
 
-    fn draw_stepper_increment_icon(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_stepper_increment_icon(&self, draw: &mut Recorder, bounds: Rect) {
         stepper::draw_increment_icon(&self.colors(), draw, bounds);
     }
 
     fn draw_stepper_button_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         end: StepperEnd,
         state: WidgetInteractionState,
@@ -610,26 +613,21 @@ impl WidgetTheme for Material3 {
         input::placeholder_color(&self.colors())
     }
 
-    fn input_selection_brush(&self) -> Brush {
+    fn input_selection_paint(&self) -> Paint {
         input::selection_brush(&self.colors())
     }
 
-    fn input_caret_brush(&self, opacity: f32) -> Brush {
+    fn input_caret_paint(&self, opacity: f32) -> Paint {
         input::caret_brush(&self.colors(), opacity)
     }
 
-    fn draw_input_field(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
+    fn draw_input_field(&self, draw: &mut Recorder, bounds: Rect, state: WidgetInteractionState) {
         input::draw_field(&self.colors(), draw, bounds, state);
     }
 
     fn draw_input_field_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         state: WidgetInteractionState,
     ) {
@@ -640,11 +638,11 @@ impl WidgetTheme for Material3 {
         menu::text_context_metrics()
     }
 
-    fn draw_text_context_menu_panel(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_text_context_menu_panel(&self, draw: &mut Recorder, bounds: Rect) {
         menu::draw_text_context_panel(&self.colors(), draw, bounds);
     }
 
-    fn draw_text_context_menu_separator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_text_context_menu_separator(&self, draw: &mut Recorder, bounds: Rect) {
         menu::draw_text_context_separator(&self.colors(), draw, bounds);
     }
 
@@ -656,26 +654,26 @@ impl WidgetTheme for Material3 {
         theme::motion::radio_selection()
     }
 
-    fn draw_picker_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_picker_indicator(&self, draw: &mut Recorder, bounds: Rect) {
         picker::draw_indicator(&self.colors(), draw, bounds);
     }
 
     fn draw_picker_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         state: WidgetInteractionState,
     ) {
         picker::draw_state_layer(&self.colors(), draw, bounds, state);
     }
 
-    fn draw_picker_popup(&self, draw: &mut dyn DrawContext, popup_rect: Rect) {
+    fn draw_picker_popup(&self, draw: &mut Recorder, popup_rect: Rect) {
         picker::draw_popup(&self.colors(), draw, popup_rect);
     }
 
     fn draw_picker_popup_row_background(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         row_rect: Rect,
         selected: bool,
     ) {
@@ -684,7 +682,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_picker_popup_row_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         row_rect: Rect,
         selected: bool,
         state: WidgetInteractionState,
@@ -692,13 +690,13 @@ impl WidgetTheme for Material3 {
         picker::draw_popup_row_state_layer(&self.colors(), draw, row_rect, selected, state);
     }
 
-    fn draw_picker_separator(&self, draw: &mut dyn DrawContext, separator: Rect) {
+    fn draw_picker_separator(&self, draw: &mut Recorder, separator: Rect) {
         picker::draw_separator(&self.colors(), draw, separator);
     }
 
     fn draw_radio_indicator(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         center: Point,
         radius: f64,
         state: RadioIndicatorState,
@@ -708,7 +706,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_radio_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         center: Point,
         radius: f64,
         selected: bool,
@@ -723,7 +721,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_segmented_picker_container(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         segment_count: usize,
     ) {
@@ -732,7 +730,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_segmented_picker_segment(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         selected: bool,
         is_first: bool,
@@ -743,7 +741,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_segmented_picker_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         selected: bool,
         is_first: bool,
@@ -767,7 +765,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_slider_track(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         track_rect: Rect,
         fill_rect: Rect,
         size: ControlSize,
@@ -778,7 +776,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_slider_thumb(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         center: Point,
         radius: f64,
         size: ControlSize,
@@ -789,7 +787,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_slider_thumb_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         center: Point,
         radius: f64,
         size: ControlSize,
@@ -810,7 +808,7 @@ impl WidgetTheme for Material3 {
         slider::value_indicator_font()
     }
 
-    fn draw_slider_value_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_slider_value_indicator(&self, draw: &mut Recorder, bounds: Rect) {
         slider::draw_value_indicator(&self.colors(), draw, bounds);
     }
 
@@ -820,20 +818,20 @@ impl WidgetTheme for Material3 {
 
     fn draw_progress_linear_track(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         active_end: Option<f64>,
     ) {
         progress::draw_linear_track(&self.colors(), draw, bounds, active_end);
     }
 
-    fn draw_progress_linear_fill(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_progress_linear_fill(&self, draw: &mut Recorder, bounds: Rect) {
         progress::draw_linear_fill(&self.colors(), draw, bounds);
     }
 
     fn draw_progress_linear_indeterminate(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         elapsed: core::time::Duration,
         four_color: bool,
@@ -843,7 +841,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_progress_circular_track(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         center: Point,
         radius: f64,
         width: f64,
@@ -852,13 +850,13 @@ impl WidgetTheme for Material3 {
         progress::draw_circular_track(&self.colors(), draw, center, radius, width, active_turns);
     }
 
-    fn draw_progress_circular_fill(&self, draw: &mut dyn DrawContext, path: &BezPath, width: f64) {
+    fn draw_progress_circular_fill(&self, draw: &mut Recorder, path: &BezPath, width: f64) {
         progress::draw_circular_fill(&self.colors(), draw, path, width);
     }
 
     fn draw_progress_loading(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         elapsed: core::time::Duration,
         four_color: bool,
@@ -868,7 +866,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_progress_circular_indeterminate(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         center: Point,
         radius: f64,
         width: f64,
@@ -890,15 +888,15 @@ impl WidgetTheme for Material3 {
         navigation_chrome::metrics()
     }
 
-    fn draw_navigation_bar(&self, draw: &mut dyn DrawContext, bounds: Rect, background: &Brush) {
+    fn draw_navigation_bar(&self, draw: &mut Recorder, bounds: Rect, background: &Paint) {
         navigation_chrome::draw_bar(draw, bounds, background);
     }
 
-    fn draw_navigation_bar_separator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_navigation_bar_separator(&self, draw: &mut Recorder, bounds: Rect) {
         navigation_chrome::draw_bar_separator(&self.colors(), draw, bounds);
     }
 
-    fn draw_navigation_back_button(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_navigation_back_button(&self, draw: &mut Recorder, bounds: Rect) {
         navigation_chrome::draw_back_button(&self.colors(), draw, bounds);
     }
 
@@ -911,17 +909,17 @@ impl WidgetTheme for Material3 {
         tabs::metrics(layout)
     }
 
-    fn draw_tabs_bar(&self, draw: &mut dyn DrawContext, bounds: Rect, top_edge: bool) {
+    fn draw_tabs_bar(&self, draw: &mut Recorder, bounds: Rect, top_edge: bool) {
         tabs::draw_bar(&self.colors(), draw, bounds, top_edge);
     }
 
-    fn draw_tabs_highlight(&self, draw: &mut dyn DrawContext, bounds: Rect, layout: TabItemLayout) {
+    fn draw_tabs_highlight(&self, draw: &mut Recorder, bounds: Rect, layout: TabItemLayout) {
         tabs::draw_highlight(&self.colors(), draw, bounds, layout);
     }
 
     fn draw_tabs_button_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         selected: bool,
         state: WidgetInteractionState,
@@ -930,7 +928,7 @@ impl WidgetTheme for Material3 {
         tabs::draw_button_state_layer(&self.colors(), draw, bounds, selected, state, layout);
     }
 
-    fn draw_scroll_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_scroll_indicator(&self, draw: &mut Recorder, bounds: Rect) {
         scroll::draw_indicator(&self.colors(), draw, bounds);
     }
 
@@ -938,7 +936,7 @@ impl WidgetTheme for Material3 {
         divider::metrics()
     }
 
-    fn draw_divider(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_divider(&self, draw: &mut Recorder, bounds: Rect) {
         divider::draw(&self.colors(), draw, bounds);
     }
 
@@ -954,11 +952,11 @@ impl WidgetTheme for Material3 {
         theme::typography::label_small()
     }
 
-    fn draw_badge_small(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_badge_small(&self, draw: &mut Recorder, bounds: Rect) {
         badge::draw_small(&self.colors(), draw, bounds);
     }
 
-    fn draw_badge_large(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_badge_large(&self, draw: &mut Recorder, bounds: Rect) {
         badge::draw_large(&self.colors(), draw, bounds);
     }
 
@@ -966,30 +964,30 @@ impl WidgetTheme for Material3 {
         list::metrics()
     }
 
-    fn draw_list_row_background(&self, draw: &mut dyn DrawContext, bounds: Rect, alternate: bool) {
+    fn draw_list_row_background(&self, draw: &mut Recorder, bounds: Rect, alternate: bool) {
         list::draw_row_background(&self.colors(), draw, bounds, alternate);
     }
 
-    fn draw_list_move_control(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_list_move_control(&self, draw: &mut Recorder, bounds: Rect) {
         list::draw_move_control(&self.colors(), draw, bounds);
     }
 
     fn draw_list_move_control_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         state: WidgetInteractionState,
     ) {
         list::draw_move_control_state_layer(&self.colors(), draw, bounds, state);
     }
 
-    fn draw_list_delete_control(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_list_delete_control(&self, draw: &mut Recorder, bounds: Rect) {
         list::draw_delete_control(&self.colors(), draw, bounds);
     }
 
     fn draw_list_delete_control_state_layer(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         state: WidgetInteractionState,
     ) {
@@ -998,7 +996,7 @@ impl WidgetTheme for Material3 {
 
     fn draw_list_swipe_dismiss_background(
         &self,
-        draw: &mut dyn DrawContext,
+        draw: &mut Recorder,
         bounds: Rect,
         progress: f64,
         toward_start: bool,
@@ -1006,11 +1004,11 @@ impl WidgetTheme for Material3 {
         list::draw_swipe_dismiss_background(&self.colors(), draw, bounds, progress, toward_start);
     }
 
-    fn draw_list_row_lifted(&self, draw: &mut dyn DrawContext, bounds: Rect, elevation: f64) {
+    fn draw_list_row_lifted(&self, draw: &mut Recorder, bounds: Rect, elevation: f64) {
         list::draw_row_lifted(&self.colors(), draw, bounds, elevation);
     }
 
-    fn draw_list_separator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_list_separator(&self, draw: &mut Recorder, bounds: Rect) {
         list::draw_separator(&self.colors(), draw, bounds);
     }
 
@@ -1018,19 +1016,19 @@ impl WidgetTheme for Material3 {
         table::metrics()
     }
 
-    fn draw_table_background(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_table_background(&self, draw: &mut Recorder, bounds: Rect) {
         table::draw_background(&self.colors(), draw, bounds);
     }
 
-    fn draw_table_header_background(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_table_header_background(&self, draw: &mut Recorder, bounds: Rect) {
         table::draw_header_background(&self.colors(), draw, bounds);
     }
 
-    fn draw_table_cell_border(&self, draw: &mut dyn DrawContext, bounds: Rect) {
+    fn draw_table_cell_border(&self, draw: &mut Recorder, bounds: Rect) {
         table::draw_cell_border(&self.colors(), draw, bounds);
     }
 
-    fn draw_table_column_separator(&self, draw: &mut dyn DrawContext, from: Point, to: Point) {
+    fn draw_table_column_separator(&self, draw: &mut Recorder, from: Point, to: Point) {
         table::draw_column_separator(&self.colors(), draw, from, to);
     }
 }
@@ -1039,15 +1037,15 @@ fn lerp_channel(start: f32, end: f32, t: f32) -> f32 {
     (end - start).mul_add(t, start)
 }
 
-fn lerp_color(start: peniko::Color, end: peniko::Color, t: f32) -> peniko::Color {
+fn lerp_color(start: WorkingColor, end: WorkingColor, t: f32) -> WorkingColor {
     let t = t.clamp(0.0, 1.0);
-    let start = start.to_rgba8();
-    let end = end.to_rgba8();
-    peniko::Color::new([
-        lerp_channel(f32::from(start.r) / 255.0, f32::from(end.r) / 255.0, t),
-        lerp_channel(f32::from(start.g) / 255.0, f32::from(end.g) / 255.0, t),
-        lerp_channel(f32::from(start.b) / 255.0, f32::from(end.b) / 255.0, t),
-        lerp_channel(f32::from(start.a) / 255.0, f32::from(end.a) / 255.0, t),
+    let [r0, g0, b0, a0] = start.components;
+    let [r1, g1, b1, a1] = end.components;
+    WorkingColor::new([
+        lerp_channel(r0, r1, t),
+        lerp_channel(g0, g1, t),
+        lerp_channel(b0, b1, t),
+        lerp_channel(a0, a1, t),
     ])
 }
 
