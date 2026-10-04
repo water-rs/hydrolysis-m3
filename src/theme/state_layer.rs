@@ -183,7 +183,9 @@ mod tests {
     use super::{PRESSED_STATE_LAYER_OPACITY, RIPPLE_MINIMUM_DIAMETER, ripple_diameter};
     use crate::{PressWave, PressWaves, WidgetInteractionState, theme::state_layer};
     use cherenkov::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
-    use cherenkov::{Command, Content, Draw as _, Paint, Recorder, ShapeData, WorkingColor};
+    use cherenkov::{
+        Command, Content, Draw as _, LayoutSize, Paint, Recorder, ShapeData, WorkingColor,
+    };
     use std::path::Path;
     use waterui::interaction::InteractionState;
 
@@ -217,19 +219,20 @@ mod tests {
         // center, at a radius between the initial fraction and full size.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
         let origin = Point::new(10.0, 12.0);
-        let mut recorder = Recorder::new();
-        state_layer::draw_bounded(
-            &mut recorder,
-            bounds,
-            8.0.into(),
-            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-            pressed_state(&[PressWave {
-                origin: Some(origin),
-                progress: 0.5,
-                opacity: 0.12,
-            }]),
-        );
-        let circle = single_circle(recorder).expect("mid-press ripple must fill a solid circle");
+        let circle = single_circle(|draw| {
+            state_layer::draw_bounded(
+                draw,
+                bounds,
+                8.0.into(),
+                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+                pressed_state(&[PressWave {
+                    origin: Some(origin),
+                    progress: 0.5,
+                    opacity: 0.12,
+                }]),
+            );
+        })
+        .expect("mid-press ripple must fill a solid circle");
         assert_eq!(
             circle.center,
             Point::new(30.0, 16.0),
@@ -247,19 +250,20 @@ mod tests {
         // At full progress the ripple covers the target: a solid circle (no
         // soft-edge gradient) centered in bounds at the full ripple diameter.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
-        let mut recorder = Recorder::new();
-        state_layer::draw_bounded(
-            &mut recorder,
-            bounds,
-            8.0.into(),
-            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-            pressed_state(&[PressWave {
-                origin: Some(Point::new(10.0, 12.0)),
-                progress: 1.0,
-                opacity: 0.12,
-            }]),
-        );
-        let circle = single_circle(recorder).expect("press ripple must fill a solid circle");
+        let circle = single_circle(|draw| {
+            state_layer::draw_bounded(
+                draw,
+                bounds,
+                8.0.into(),
+                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+                pressed_state(&[PressWave {
+                    origin: Some(Point::new(10.0, 12.0)),
+                    progress: 1.0,
+                    opacity: 0.12,
+                }]),
+            );
+        })
+        .expect("press ripple must fill a solid circle");
         assert_eq!(circle.center, Point::new(50.0, 20.0), "circle is centered");
         assert!(
             ripple_diameter(bounds).mul_add(-0.5, circle.radius).abs() < 1e-6,
@@ -277,19 +281,20 @@ mod tests {
         // converges to the halo radius itself, not the disc's diagonal.
         let center = Point::new(50.0, 30.0);
         let radius = 20.0;
-        let mut recorder = Recorder::new();
-        state_layer::draw_unbounded_circle(
-            &mut recorder,
-            center,
-            radius,
-            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-            pressed_state(&[PressWave {
-                origin: None,
-                progress: 1.0,
-                opacity: 0.12,
-            }]),
-        );
-        let circle = single_circle(recorder).expect("press ripple must fill a solid circle");
+        let circle = single_circle(|draw| {
+            state_layer::draw_unbounded_circle(
+                draw,
+                center,
+                radius,
+                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+                pressed_state(&[PressWave {
+                    origin: None,
+                    progress: 1.0,
+                    opacity: 0.12,
+                }]),
+            );
+        })
+        .expect("press ripple must fill a solid circle");
         assert_eq!(circle.center, center, "wave converges on the halo center");
         assert!(
             (circle.radius - radius).abs() < 1e-6,
@@ -305,26 +310,26 @@ mod tests {
         // while the fresh wave grows from its own press point — both are
         // filled the same frame, oldest first.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
-        let mut recorder = Recorder::new();
-        state_layer::draw_bounded(
-            &mut recorder,
-            bounds,
-            8.0.into(),
-            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-            pressed_state(&[
-                PressWave {
-                    origin: Some(Point::new(10.0, 12.0)),
-                    progress: 1.0,
-                    opacity: 0.06,
-                },
-                PressWave {
-                    origin: Some(Point::new(80.0, 30.0)),
-                    progress: 0.0,
-                    opacity: 0.12,
-                },
-            ]),
-        );
-        let circles = filled_circles(recorder);
+        let circles = filled_circles(|draw| {
+            state_layer::draw_bounded(
+                draw,
+                bounds,
+                8.0.into(),
+                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+                pressed_state(&[
+                    PressWave {
+                        origin: Some(Point::new(10.0, 12.0)),
+                        progress: 1.0,
+                        opacity: 0.06,
+                    },
+                    PressWave {
+                        origin: Some(Point::new(80.0, 30.0)),
+                        progress: 0.0,
+                        opacity: 0.12,
+                    },
+                ]),
+            );
+        });
         assert_eq!(circles.len(), 2, "both waves must be filled");
         assert_eq!(
             circles[0].center,
@@ -353,18 +358,19 @@ mod tests {
         // previews, tests) still renders a press layer: one centered,
         // full-coverage wave at the MD3 pressed token.
         let bounds = Rect::new(0.0, 0.0, 100.0, 40.0);
-        let mut recorder = Recorder::new();
-        state_layer::draw_bounded(
-            &mut recorder,
-            bounds,
-            8.0.into(),
-            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-            WidgetInteractionState {
-                state: InteractionState::PRESSED,
-                ..WidgetInteractionState::NONE
-            },
-        );
-        let circle = single_circle(recorder).expect("static pressed state must fill a press layer");
+        let circle = single_circle(|draw| {
+            state_layer::draw_bounded(
+                draw,
+                bounds,
+                8.0.into(),
+                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+                WidgetInteractionState {
+                    state: InteractionState::PRESSED,
+                    ..WidgetInteractionState::NONE
+                },
+            );
+        })
+        .expect("static pressed state must fill a press layer");
         assert_eq!(circle.center, Point::new(50.0, 20.0));
         assert!(
             matches!(
@@ -396,9 +402,9 @@ mod tests {
         }
     }
 
-    /// The solid circles the recorder filled, in draw order.
-    fn filled_circles(recorder: Recorder) -> Vec<RecordedCircle> {
-        let mut content: Content = recorder.finish();
+    /// The solid circles `body` fills on a fresh recorder, in draw order.
+    fn filled_circles(body: impl FnOnce(&mut Recorder)) -> Vec<RecordedCircle> {
+        let mut content = Content::record(&LayoutSize::new(), body);
         content
             .snapshot()
             .commands()
@@ -417,8 +423,8 @@ mod tests {
             .collect()
     }
 
-    fn single_circle(recorder: Recorder) -> Option<RecordedCircle> {
-        let circles = filled_circles(recorder);
+    fn single_circle(body: impl FnOnce(&mut Recorder)) -> Option<RecordedCircle> {
+        let circles = filled_circles(body);
         assert!(
             circles.len() <= 1,
             "expected at most one filled circle, recorded {}",
@@ -438,25 +444,26 @@ mod tests {
                 WorkingColor::new([0.40, 0.31, 0.64, 1.0]),
             );
         });
-        let mut recorder = Recorder::new();
         let mut press_waves = PressWaves::EMPTY;
         press_waves.push(PressWave {
             origin: Some(Point::new(56.0, 48.0)),
             progress: 0.72,
             opacity: 0.30,
         });
-        state_layer::draw_bounded(
-            &mut recorder,
-            bounds,
-            20.0.into(),
-            WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-            WidgetInteractionState {
-                state: InteractionState::PRESSED,
-                press_waves,
-                ..WidgetInteractionState::NONE
-            },
-        );
-        let ripple = recorder.finish().into_picture();
+        let ripple = Content::record(&LayoutSize::new(), |draw| {
+            state_layer::draw_bounded(
+                draw,
+                bounds,
+                20.0.into(),
+                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
+                WidgetInteractionState {
+                    state: InteractionState::PRESSED,
+                    press_waves,
+                    ..WidgetInteractionState::NONE
+                },
+            );
+        })
+        .into_picture();
 
         let target = surface.surface();
         target.clear_color(WorkingColor::WHITE);

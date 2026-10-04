@@ -145,9 +145,9 @@ pub fn draw_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use crate::test_support::Recorded;
+    use crate::test_support::recorded;
+    use cherenkov::Paint;
     use cherenkov::kurbo::{Rect, RoundedRectRadii};
-    use cherenkov::{Paint, Recorder};
     use waterui::interaction::InteractionState;
 
     use super::{
@@ -174,15 +174,14 @@ mod tests {
     #[test]
     fn filled_text_field_uses_top_only_container_shape() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-        draw_field(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, 56.0),
-            WidgetInteractionState::NONE,
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_field(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, 56.0),
+                WidgetInteractionState::NONE,
+            );
+        });
 
         assert_eq!(
             draw.rounded_fills.last().map(|(_, radii, _)| *radii),
@@ -202,19 +201,18 @@ mod tests {
     #[test]
     fn filled_text_field_focus_indicator_matches_compose_filled_text_field_tokens() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-        draw_field(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, 56.0),
-            WidgetInteractionState {
-                state: InteractionState::FOCUSED,
-                focus_progress: 1.0,
-                ..WidgetInteractionState::NONE
-            },
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_field(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, 56.0),
+                WidgetInteractionState {
+                    state: InteractionState::FOCUSED,
+                    focus_progress: 1.0,
+                    ..WidgetInteractionState::NONE
+                },
+            );
+        });
 
         assert_eq!(
             draw.line_strokes.last().map(|(_, _, width)| *width),

@@ -310,9 +310,9 @@ pub fn draw_checkbox_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use crate::test_support::{Recorded, solid};
+    use crate::test_support::{Recorded, recorded, solid};
+    use cherenkov::WorkingColor;
     use cherenkov::kurbo::{Point, Rect};
-    use cherenkov::{Recorder, WorkingColor};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, draw_checkbox, draw_switch,
@@ -335,8 +335,7 @@ mod tests {
     }
 
     impl Chrome {
-        fn from(source: Recorder) -> Self {
-            let recorded = Recorded::from(source);
+        fn from(recorded: &Recorded) -> Self {
             Self {
                 rounded_stroke_count: recorded.rounded_strokes.len(),
                 rounded_stroke_widths: recorded
@@ -380,27 +379,26 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
 
-        let mut unselected = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut unselected,
-            bounds,
-            0.0,
-            false,
-            WidgetInteractionState::NONE,
-        );
-
-        let mut selected = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut selected,
-            bounds,
-            1.0,
-            true,
-            WidgetInteractionState::NONE,
-        );
-        let unselected = Chrome::from(unselected);
-        let selected = Chrome::from(selected);
+        let unselected = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                0.0,
+                false,
+                WidgetInteractionState::NONE,
+            );
+        }));
+        let selected = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                1.0,
+                true,
+                WidgetInteractionState::NONE,
+            );
+        }));
 
         assert_eq!(unselected.rounded_stroke_count, 1);
         assert_eq!(selected.rounded_stroke_count, 0);
@@ -413,17 +411,16 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
 
-        let mut mid = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut mid,
-            bounds,
-            0.5,
-            true,
-            WidgetInteractionState::NONE,
-        );
-
-        let mid = Chrome::from(mid);
+        let mid = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                0.5,
+                true,
+                WidgetInteractionState::NONE,
+            );
+        }));
 
         assert_eq!(mid.rounded_stroke_widths, vec![1.0]);
     }
@@ -437,28 +434,28 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
 
-        let mut unselected = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut unselected,
-            bounds,
-            0.0,
-            false,
-            WidgetInteractionState::NONE,
-        );
-        let unselected = Chrome::from(unselected);
+        let unselected = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                0.0,
+                false,
+                WidgetInteractionState::NONE,
+            );
+        }));
         assert_eq!(unselected.circle_centers, vec![Point::new(16.0, 16.0)]);
 
-        let mut selected = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut selected,
-            bounds,
-            1.0,
-            true,
-            WidgetInteractionState::NONE,
-        );
-        let selected = Chrome::from(selected);
+        let selected = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                1.0,
+                true,
+                WidgetInteractionState::NONE,
+            );
+        }));
         assert_eq!(selected.circle_centers, vec![Point::new(36.0, 16.0)]);
     }
 
@@ -479,31 +476,31 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
 
-        let mut selected = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut selected,
-            bounds,
-            1.0,
-            true,
-            WidgetInteractionState::NONE,
-        );
-        let selected = Chrome::from(selected);
+        let selected = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                1.0,
+                true,
+                WidgetInteractionState::NONE,
+            );
+        }));
         assert_eq!(
             selected.path_stroke_count, 1,
             "checked thumb shows the check glyph"
         );
 
-        let mut unselected = Recorder::new();
-        draw_switch(
-            &colors,
-            &mut unselected,
-            bounds,
-            0.0,
-            false,
-            WidgetInteractionState::NONE,
-        );
-        let unselected = Chrome::from(unselected);
+        let unselected = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                0.0,
+                false,
+                WidgetInteractionState::NONE,
+            );
+        }));
         assert_eq!(
             unselected.path_stroke_count, 0,
             "unselected thumb has no icon"
@@ -530,9 +527,9 @@ mod tests {
             ..WidgetInteractionState::NONE
         };
 
-        let mut unchecked = Recorder::new();
-        draw_switch(&colors, &mut unchecked, bounds, 0.0, false, disabled);
-        let unchecked = Chrome::from(unchecked);
+        let unchecked = Chrome::from(&recorded(|draw| {
+            draw_switch(&colors, draw, bounds, 0.0, false, disabled);
+        }));
         assert_eq!(
             unchecked.rounded_fill_brushes,
             vec![crate::lerp_color(
@@ -559,9 +556,9 @@ mod tests {
             "disabled unchecked thumb drops to on-surface at 38%"
         );
 
-        let mut checked = Recorder::new();
-        draw_switch(&colors, &mut checked, bounds, 1.0, true, disabled);
-        let checked = Chrome::from(checked);
+        let checked = Chrome::from(&recorded(|draw| {
+            draw_switch(&colors, draw, bounds, 1.0, true, disabled);
+        }));
         assert_eq!(
             checked.rounded_fill_brushes,
             vec![crate::lerp_color(
@@ -593,18 +590,18 @@ mod tests {
             ..WidgetInteractionState::NONE
         };
 
-        let mut unchecked = Recorder::new();
-        draw_checkbox(&colors, &mut unchecked, bounds, 0.0, disabled);
-        let unchecked = Chrome::from(unchecked);
+        let unchecked = Chrome::from(&recorded(|draw| {
+            draw_checkbox(&colors, draw, bounds, 0.0, disabled);
+        }));
         assert_eq!(
             unchecked.rounded_stroke_brushes,
             vec![colors.on_surface.working_disabled_content()],
             "disabled unchecked outline drops to on-surface at 38%"
         );
 
-        let mut checked = Recorder::new();
-        draw_checkbox(&colors, &mut checked, bounds, 1.0, disabled);
-        let checked = Chrome::from(checked);
+        let checked = Chrome::from(&recorded(|draw| {
+            draw_checkbox(&colors, draw, bounds, 1.0, disabled);
+        }));
         assert_eq!(
             checked.rounded_fill_brushes,
             vec![colors.on_surface.working_disabled_content()],
@@ -616,21 +613,19 @@ mod tests {
     fn pressed_material_switch_uses_large_handle() {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
-        let mut draw = Recorder::new();
-
-        draw_switch(
-            &colors,
-            &mut draw,
-            bounds,
-            0.0,
-            false,
-            WidgetInteractionState {
-                state: InteractionState::PRESSED,
-                ..WidgetInteractionState::NONE
-            },
-        );
-
-        let draw = Chrome::from(draw);
+        let draw = Chrome::from(&recorded(|draw| {
+            draw_switch(
+                &colors,
+                draw,
+                bounds,
+                0.0,
+                false,
+                WidgetInteractionState {
+                    state: InteractionState::PRESSED,
+                    ..WidgetInteractionState::NONE
+                },
+            );
+        }));
 
         assert_eq!(
             draw.circle_radii,
@@ -643,27 +638,13 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let bounds = Rect::from_origin_size((0.0, 0.0), (18.0, 18.0));
 
-        let mut unselected = Recorder::new();
-        draw_checkbox(
-            &colors,
-            &mut unselected,
-            bounds,
-            0.0,
-            WidgetInteractionState::NONE,
-        );
+        let unselected = Chrome::from(&recorded(|draw| {
+            draw_checkbox(&colors, draw, bounds, 0.0, WidgetInteractionState::NONE);
+        }));
 
-        let mut selected = Recorder::new();
-        draw_checkbox(
-            &colors,
-            &mut selected,
-            bounds,
-            1.0,
-            WidgetInteractionState::NONE,
-        );
-
-        let unselected = Chrome::from(unselected);
-
-        let selected = Chrome::from(selected);
+        let selected = Chrome::from(&recorded(|draw| {
+            draw_checkbox(&colors, draw, bounds, 1.0, WidgetInteractionState::NONE);
+        }));
 
         assert_eq!(unselected.rounded_stroke_count, 1);
         assert_eq!(unselected.rounded_fill_count, 0);

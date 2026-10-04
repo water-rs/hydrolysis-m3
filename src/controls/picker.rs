@@ -348,7 +348,9 @@ pub fn draw_segmented_state_layer(
 #[cfg(test)]
 mod tests {
     use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
-    use cherenkov::{Command, Paint, Recorder, ShapeData, WorkingColor as Color};
+    use cherenkov::{
+        Command, Content, LayoutSize, Paint, Recorder, ShapeData, WorkingColor as Color,
+    };
 
     use super::{
         MaterialColorScheme, RadioIndicatorState, blend_role_color, draw_popup_row_background,
@@ -381,9 +383,14 @@ mod tests {
         *color
     }
 
+    /// Records `body` on a fresh recorder and sorts its commands.
+    fn recorded(body: impl FnOnce(&mut Recorder)) -> Recorded {
+        let mut content = Content::record(&LayoutSize::new(), body);
+        Recorded::from(&mut content)
+    }
+
     impl Recorded {
-        fn from(source: Recorder) -> Self {
-            let mut content = source.finish();
+        fn from(content: &mut Content) -> Self {
             let mut recorded = Self::default();
             for command in content.snapshot().commands() {
                 match command {
@@ -456,37 +463,35 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let center = Point::new(10.0, 10.0);
 
-        let mut unselected = Recorder::new();
-        draw_radio_indicator(
-            &colors,
-            &mut unselected,
-            center,
-            10.0,
-            RadioIndicatorState {
-                selected: false,
-                outer_selected_progress: 0.0,
-                inner_scale: 1.0,
-                inner_opacity: 0.0,
-            },
-        );
+        let unselected = recorded(|draw| {
+            draw_radio_indicator(
+                &colors,
+                draw,
+                center,
+                10.0,
+                RadioIndicatorState {
+                    selected: false,
+                    outer_selected_progress: 0.0,
+                    inner_scale: 1.0,
+                    inner_opacity: 0.0,
+                },
+            );
+        });
 
-        let mut selected = Recorder::new();
-        draw_radio_indicator(
-            &colors,
-            &mut selected,
-            center,
-            10.0,
-            RadioIndicatorState {
-                selected: true,
-                outer_selected_progress: 1.0,
-                inner_scale: 1.0,
-                inner_opacity: 1.0,
-            },
-        );
-
-        let unselected = Recorded::from(unselected);
-
-        let selected = Recorded::from(selected);
+        let selected = recorded(|draw| {
+            draw_radio_indicator(
+                &colors,
+                draw,
+                center,
+                10.0,
+                RadioIndicatorState {
+                    selected: true,
+                    outer_selected_progress: 1.0,
+                    inner_scale: 1.0,
+                    inner_opacity: 1.0,
+                },
+            );
+        });
 
         assert_eq!(unselected.circle_fills, Vec::<(f64, Color)>::new());
         assert_eq!(
@@ -504,22 +509,20 @@ mod tests {
     fn radio_indicator_inner_dot_scales_and_fades() {
         let colors = MaterialColorScheme::baseline_light();
         let center = Point::new(10.0, 10.0);
-        let mut draw = Recorder::new();
-
-        draw_radio_indicator(
-            &colors,
-            &mut draw,
-            center,
-            10.0,
-            RadioIndicatorState {
-                selected: true,
-                outer_selected_progress: 1.0,
-                inner_scale: 0.4,
-                inner_opacity: 0.25,
-            },
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_radio_indicator(
+                &colors,
+                draw,
+                center,
+                10.0,
+                RadioIndicatorState {
+                    selected: true,
+                    outer_selected_progress: 1.0,
+                    inner_scale: 0.4,
+                    inner_opacity: 0.25,
+                },
+            );
+        });
 
         assert_eq!(draw.circle_fills.len(), 1);
         assert!(
@@ -538,22 +541,20 @@ mod tests {
     fn radio_indicator_outer_ring_color_interpolates() {
         let colors = MaterialColorScheme::baseline_light();
         let center = Point::new(10.0, 10.0);
-        let mut draw = Recorder::new();
-
-        draw_radio_indicator(
-            &colors,
-            &mut draw,
-            center,
-            10.0,
-            RadioIndicatorState {
-                selected: true,
-                outer_selected_progress: 0.5,
-                inner_scale: 0.0,
-                inner_opacity: 0.0,
-            },
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_radio_indicator(
+                &colors,
+                draw,
+                center,
+                10.0,
+                RadioIndicatorState {
+                    selected: true,
+                    outer_selected_progress: 0.5,
+                    inner_scale: 0.0,
+                    inner_opacity: 0.0,
+                },
+            );
+        });
 
         assert_eq!(
             draw.circle_strokes,
@@ -568,12 +569,10 @@ mod tests {
     #[test]
     fn menu_selected_row_and_divider_use_filled_select_tokens() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-
-        draw_popup_row_background(&colors, &mut draw, Rect::new(0.0, 0.0, 120.0, 48.0), true);
-        draw_separator(&colors, &mut draw, Rect::new(0.0, 48.0, 120.0, 49.0));
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_popup_row_background(&colors, draw, Rect::new(0.0, 0.0, 120.0, 48.0), true);
+            draw_separator(&colors, draw, Rect::new(0.0, 48.0, 120.0, 49.0));
+        });
 
         assert_eq!(
             draw.rect_fills,
@@ -628,19 +627,17 @@ mod tests {
     #[test]
     fn segmented_container_and_selected_segment_use_material_tokens() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-
-        draw_segmented_segment(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 80.0, 40.0),
-            true,
-            false,
-            false,
-        );
-        draw_segmented_container(&colors, &mut draw, Rect::new(0.0, 0.0, 240.0, 40.0), 3);
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_segmented_segment(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 80.0, 40.0),
+                true,
+                false,
+                false,
+            );
+            draw_segmented_container(&colors, draw, Rect::new(0.0, 0.0, 240.0, 40.0), 3);
+        });
 
         assert_eq!(
             draw.rounded_fills,
@@ -668,11 +665,9 @@ mod tests {
         use super::draw_popup;
 
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-
-        draw_popup(&colors, &mut draw, Rect::new(0.0, 0.0, 112.0, 96.0));
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_popup(&colors, draw, Rect::new(0.0, 0.0, 112.0, 96.0));
+        });
 
         assert_eq!(draw.shadows.len(), 2, "key then ambient shadow");
         let (key_blur, key_y, _) = draw.shadows[0];

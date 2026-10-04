@@ -246,9 +246,9 @@ mod tests {
         BUTTON_EXTRA_LARGE, BUTTON_EXTRA_SMALL, BUTTON_LARGE, BUTTON_MEDIUM, BUTTON_MIN_WIDTH,
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
-    use crate::test_support::Recorded;
+    use crate::test_support::recorded;
+    use cherenkov::Paint;
     use cherenkov::kurbo::Rect;
-    use cherenkov::{Paint, Recorder};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
@@ -365,20 +365,18 @@ mod tests {
         // md.comp.button.outlined.disabled.outline.color: the border stays
         // outline-variant rather than dimming to on-surface.
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-
-        draw_chrome(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-            ButtonStyle::Bordered,
-            crate::WidgetInteractionState {
-                state: InteractionState::DISABLED,
-                ..crate::WidgetInteractionState::NONE
-            },
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_chrome(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+                ButtonStyle::Bordered,
+                crate::WidgetInteractionState {
+                    state: InteractionState::DISABLED,
+                    ..crate::WidgetInteractionState::NONE
+                },
+            );
+        });
 
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert!(matches!(
@@ -442,17 +440,15 @@ mod tests {
     fn automatic_button_renders_filled() {
         let colors = MaterialColorScheme::baseline_light();
         for style in [ButtonStyle::Automatic, ButtonStyle::BorderedProminent] {
-            let mut draw = Recorder::new();
-
-            draw_chrome(
-                &colors,
-                &mut draw,
-                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-                style,
-                crate::WidgetInteractionState::NONE,
-            );
-
-            let draw = Recorded::from(draw);
+            let draw = recorded(|draw| {
+                draw_chrome(
+                    &colors,
+                    draw,
+                    Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+                    style,
+                    crate::WidgetInteractionState::NONE,
+                );
+            });
 
             assert_eq!(draw.rounded_fills.len(), 1, "style {style:?}");
             assert!(
@@ -470,17 +466,15 @@ mod tests {
         // md.comp.button.outlined.outline.color = outline-variant;
         // md.comp.button.small.outlined.outline-width = 1.
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-
-        draw_chrome(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-            ButtonStyle::Bordered,
-            crate::WidgetInteractionState::NONE,
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_chrome(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+                ButtonStyle::Bordered,
+                crate::WidgetInteractionState::NONE,
+            );
+        });
 
         assert_eq!(draw.rounded_strokes.len(), 1);
         assert!(matches!(
@@ -490,15 +484,15 @@ mod tests {
         assert_eq!(draw.rounded_strokes[0].3, 1.0);
 
         // md.comp.button.xlarge.outlined.outline-width = 3.
-        let mut draw = Recorder::new();
-        draw_chrome(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 240.0, BUTTON_EXTRA_LARGE.container_height),
-            ButtonStyle::Bordered,
-            crate::WidgetInteractionState::NONE,
-        );
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_chrome(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 240.0, BUTTON_EXTRA_LARGE.container_height),
+                ButtonStyle::Bordered,
+                crate::WidgetInteractionState::NONE,
+            );
+        });
         assert_eq!(draw.rounded_strokes[0].3, 3.0);
     }
 
@@ -509,26 +503,25 @@ mod tests {
     fn pressed_button_morphs_its_corners() {
         use waterui_backend_core::widget::{PressWave, PressWaves};
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-
         let mut waves = PressWaves::EMPTY;
         waves.push(PressWave {
             origin: None,
             progress: 1.0,
             opacity: 0.1,
         });
-        draw_chrome(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-            ButtonStyle::BorderedProminent,
-            crate::WidgetInteractionState {
-                state: InteractionState::PRESSED,
-                press_waves: waves,
-                ..crate::WidgetInteractionState::NONE
-            },
-        );
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_chrome(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+                ButtonStyle::BorderedProminent,
+                crate::WidgetInteractionState {
+                    state: InteractionState::PRESSED,
+                    press_waves: waves,
+                    ..crate::WidgetInteractionState::NONE
+                },
+            );
+        });
 
         let radii = draw.rounded_fills[0].1;
         // md.comp.button.small.pressed.container.shape = corner-small (8).
