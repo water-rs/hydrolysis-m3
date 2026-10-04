@@ -1,9 +1,13 @@
 //! Inspects what a theme draw recorded: the display list a [`Recorder`]
 //! produced, sorted by command and shape so tests assert on geometry and paint
 //! without a renderer.
+//!
+//! A [`Recorder`] is handed out only inside [`Content::record`], so tests draw
+//! through [`recorded`]: `recorded(|draw| draw_chrome(&colors, draw, …))` is
+//! the whole harness.
 
 use cherenkov::kurbo::{Circle, Line, Rect, RoundedRectRadii};
-use cherenkov::{Command, Paint, Recorder, Shadow, ShapeData, WorkingColor};
+use cherenkov::{Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData, WorkingColor};
 
 /// The commands a theme draw recorded, split by shape.
 #[derive(Debug, Default)]
@@ -23,9 +27,8 @@ pub(crate) struct Recorded {
 }
 
 impl Recorded {
-    /// Finishes `recorder` and sorts its commands.
-    pub(crate) fn from(source: Recorder) -> Self {
-        let mut content = source.finish();
+    /// Snapshots `content` and sorts its commands.
+    pub(crate) fn from(content: &mut Content) -> Self {
         let mut recorded = Self::default();
         for command in content.snapshot().commands() {
             match command {
@@ -78,6 +81,13 @@ impl Recorded {
         }
         recorded
     }
+}
+
+/// Records `body` on a fresh [`Recorder`] and sorts the commands it produced.
+#[allow(clippy::redundant_pub_crate, reason = "test-only module")]
+pub(crate) fn recorded(body: impl FnOnce(&mut Recorder)) -> Recorded {
+    let mut content = Content::record(&LayoutSize::new(), body);
+    Recorded::from(&mut content)
 }
 
 /// The colour of a solid paint.

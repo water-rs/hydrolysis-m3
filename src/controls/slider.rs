@@ -242,9 +242,9 @@ pub fn draw_value_indicator(
 
 #[cfg(test)]
 mod tests {
-    use crate::test_support::Recorded;
+    use crate::test_support::recorded;
+    use cherenkov::Paint;
     use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
-    use cherenkov::{Paint, Recorder};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
 
@@ -291,17 +291,16 @@ mod tests {
     /// The Expressive handle is a bar: 4dp wide and 44dp tall, not a circle.
     #[test]
     fn slider_thumb_draws_the_expressive_bar_handle() {
-        let mut draw = Recorder::new();
-        draw_thumb(
-            &MaterialColorScheme::baseline_light(),
-            &mut draw,
-            Point::new(64.0, 48.0),
-            22.0,
-            ControlSize::ExtraSmall,
-            WidgetInteractionState::NONE,
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_thumb(
+                &MaterialColorScheme::baseline_light(),
+                draw,
+                Point::new(64.0, 48.0),
+                22.0,
+                ControlSize::ExtraSmall,
+                WidgetInteractionState::NONE,
+            );
+        });
 
         assert_eq!(draw.circle_fills.len(), 0);
         assert_eq!(draw.rounded_fills.len(), 1);
@@ -312,20 +311,19 @@ mod tests {
     /// Pressing narrows the handle rather than growing a state layer.
     #[test]
     fn slider_pressed_thumb_narrows() {
-        let mut draw = Recorder::new();
-        draw_thumb(
-            &MaterialColorScheme::baseline_light(),
-            &mut draw,
-            Point::new(64.0, 48.0),
-            22.0,
-            ControlSize::ExtraSmall,
-            WidgetInteractionState {
-                state: InteractionState::PRESSED,
-                ..WidgetInteractionState::NONE
-            },
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_thumb(
+                &MaterialColorScheme::baseline_light(),
+                draw,
+                Point::new(64.0, 48.0),
+                22.0,
+                ControlSize::ExtraSmall,
+                WidgetInteractionState {
+                    state: InteractionState::PRESSED,
+                    ..WidgetInteractionState::NONE
+                },
+            );
+        });
 
         assert_eq!(draw.rounded_fills.len(), 1);
         assert_eq!(draw.rounded_fills[0].0.width(), SLIDER_PRESSED_HANDLE_WIDTH);
@@ -343,16 +341,16 @@ mod tests {
             ..WidgetInteractionState::NONE
         };
 
-        let mut track = Recorder::new();
-        draw_track(
-            &colors,
-            &mut track,
-            Rect::new(0.0, 0.0, 120.0, 16.0),
-            Rect::new(0.0, 0.0, 72.0, 16.0),
-            ControlSize::ExtraSmall,
-            disabled,
-        );
-        let track = Recorded::from(track);
+        let track = recorded(|draw| {
+            draw_track(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, 16.0),
+                Rect::new(0.0, 0.0, 72.0, 16.0),
+                ControlSize::ExtraSmall,
+                disabled,
+            );
+        });
         assert!(matches!(
             &track.rounded_fills[0].2,
             Paint::Solid(color) if *color == colors.on_surface.working_disabled_container()
@@ -362,16 +360,16 @@ mod tests {
             Paint::Solid(color) if *color == colors.on_surface.working_disabled_content()
         ));
 
-        let mut thumb = Recorder::new();
-        draw_thumb(
-            &colors,
-            &mut thumb,
-            Point::new(64.0, 48.0),
-            22.0,
-            ControlSize::ExtraSmall,
-            disabled,
-        );
-        let thumb = Recorded::from(thumb);
+        let thumb = recorded(|draw| {
+            draw_thumb(
+                &colors,
+                draw,
+                Point::new(64.0, 48.0),
+                22.0,
+                ControlSize::ExtraSmall,
+                disabled,
+            );
+        });
         assert_eq!(
             thumb.rounded_fills.len(),
             2,
@@ -390,17 +388,16 @@ mod tests {
     #[test]
     fn slider_track_uses_material_role_colors() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-        draw_track(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, 16.0),
-            Rect::new(0.0, 0.0, 72.0, 16.0),
-            ControlSize::ExtraSmall,
-            WidgetInteractionState::NONE,
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_track(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, 16.0),
+                Rect::new(0.0, 0.0, 72.0, 16.0),
+                ControlSize::ExtraSmall,
+                WidgetInteractionState::NONE,
+            );
+        });
 
         assert_eq!(draw.rounded_fills.len(), 2);
         assert!(matches!(
@@ -423,22 +420,22 @@ mod tests {
     #[test]
     fn slider_track_gap_corners_use_the_inside_corner_size() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-        draw_track(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, 16.0),
-            Rect::new(0.0, 0.0, 72.0, 16.0),
-            ControlSize::ExtraSmall,
-            WidgetInteractionState::NONE,
-        );
+        let draw = recorded(|draw| {
+            draw_track(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, 16.0),
+                Rect::new(0.0, 0.0, 72.0, 16.0),
+                ControlSize::ExtraSmall,
+                WidgetInteractionState::NONE,
+            );
+        });
 
         let outside = slider_size_tokens(ControlSize::ExtraSmall).track_corner;
         let inside = 2.0;
         // rounded_fills[0] is the inactive remainder: inside corner on the
         // leading (gap) edge, stadium on the trailing edge.
         // rounded_fills[1] is the active bar: stadium leading, inside trailing.
-        let draw = Recorded::from(draw);
         assert_eq!(draw.rounded_fills.len(), 2);
         let inactive_radii = draw.rounded_fills[0].1;
         assert_eq!(inactive_radii.top_left, inside);
@@ -456,21 +453,21 @@ mod tests {
     #[test]
     fn slider_track_gap_follows_the_pressed_handle_width() {
         let colors = MaterialColorScheme::baseline_light();
-        let mut draw = Recorder::new();
-        draw_track(
-            &colors,
-            &mut draw,
-            Rect::new(0.0, 0.0, 120.0, 16.0),
-            Rect::new(0.0, 0.0, 72.0, 16.0),
-            ControlSize::ExtraSmall,
-            WidgetInteractionState {
-                state: InteractionState::PRESSED,
-                ..WidgetInteractionState::NONE
-            },
-        );
+        let draw = recorded(|draw| {
+            draw_track(
+                &colors,
+                draw,
+                Rect::new(0.0, 0.0, 120.0, 16.0),
+                Rect::new(0.0, 0.0, 72.0, 16.0),
+                ControlSize::ExtraSmall,
+                WidgetInteractionState {
+                    state: InteractionState::PRESSED,
+                    ..WidgetInteractionState::NONE
+                },
+            );
+        });
 
         let gap = SLIDER_PRESSED_HANDLE_WIDTH / 2.0 + SLIDER_HANDLE_PADDING;
-        let draw = Recorded::from(draw);
         assert_eq!(draw.rounded_fills[1].0.x1, 72.0 - gap);
         assert_eq!(draw.rounded_fills[0].0.x0, 72.0 + gap);
     }
@@ -491,10 +488,10 @@ mod tests {
         assert_eq!(m.min_height, 44.0);
         assert_eq!(m.min_width, 48.0);
 
-        let mut draw = Recorder::new();
         let bounds = Rect::new(10.0, 20.0, 50.0, 48.0);
-        draw_value_indicator(&colors, &mut draw, bounds);
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_value_indicator(&colors, draw, bounds);
+        });
         assert_eq!(draw.rounded_fills.len(), 1);
         assert_eq!(draw.rounded_fills[0].0, bounds);
         assert_eq!(

@@ -698,23 +698,15 @@ mod tests {
     fn indeterminate_segments_draw_with_rounded_caps() {
         use super::{LINEAR_INDETERMINATE_CYCLE, draw_linear_indeterminate};
         use crate::MaterialColorScheme;
-        use crate::test_support::Recorded;
-        use cherenkov::Recorder;
+        use crate::test_support::recorded;
         use cherenkov::kurbo::{Rect, RoundedRectRadii};
 
         let colors = MaterialColorScheme::baseline_light();
         let track = Rect::new(0.0, 0.0, 320.0, 4.0);
-        let mut draw = Recorder::new();
         // Mid-cycle: both segments are on screen with real width.
-        draw_linear_indeterminate(
-            &colors,
-            &mut draw,
-            track,
-            LINEAR_INDETERMINATE_CYCLE / 2,
-            false,
-        );
-
-        let draw = Recorded::from(draw);
+        let draw = recorded(|draw| {
+            draw_linear_indeterminate(&colors, draw, track, LINEAR_INDETERMINATE_CYCLE / 2, false);
+        });
         assert_eq!(draw.rounded_fills.len(), 2);
         for (rect, radii, _) in &draw.rounded_fills {
             assert_eq!(
