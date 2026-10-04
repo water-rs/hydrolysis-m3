@@ -17,19 +17,23 @@ const fn font(
         .with_typography_metrics(line_height, letter_spacing)
 }
 
-fn default<T: 'static>(env: &mut Environment, value: ResolvedFont) {
-    if env.query::<T, Computed<ResolvedFont>>().is_none() {
-        install_font_signal::<T>(env, Computed::constant(value));
-    }
+/// Installs Material's font for role `T` over whatever `env` carries.
+///
+/// The runtime hands a style an environment that already holds the
+/// framework's default fonts and layers the application's own environment
+/// over the style's tokens afterwards, so an unconditional install replaces
+/// the framework default while an application's font for `T` still wins.
+fn install<T: 'static>(env: &mut Environment, value: ResolvedFont) {
+    install_font_signal::<T>(env, Computed::constant(value));
 }
 
 pub fn defaults(env: &mut Environment) {
-    default::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
-    default::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
-    default::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
-    default::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
-    default::<Caption>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
-    default::<Footnote>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
+    install::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
+    install::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
+    install::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
+    install::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
+    install::<Caption>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
+    install::<Footnote>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -292,21 +296,39 @@ mod tests {
     }
 
     #[test]
-    fn material_defaults_preserve_app_font_overrides() {
+    fn material_fonts_replace_framework_defaults_and_yield_to_the_app() {
+        // The runtime's assembly: the framework defaults, the application's
+        // environment over them while the style installs, and the
+        // application's environment over the style's tokens at the end.
+        let mut framework = Environment::new();
+        waterui::theme::Theme::new()
+            .fonts(waterui::theme::FontSettings::default_scale())
+            .install(&mut framework);
         let app_body = ResolvedFont::new(27.0, FontWeight::Bold);
-        let mut env = Environment::new();
+        let mut app = Environment::new();
         waterui::theme::Theme::new()
             .fonts(waterui::theme::FontSettings::new().body(app_body.clone()))
-            .install(&mut env);
+            .install(&mut app);
 
-        defaults(&mut env);
+        let mut styled = Environment::new().layered_on(&framework);
+        defaults(&mut styled);
+        assert_material_font(
+            Body.resolve(&styled).snapshot(),
+            16.0,
+            FontWeight::Normal,
+            24.0,
+            0.5,
+        );
 
-        let resolved_body = Body.resolve(&env).snapshot();
+        let mut styled = app.layered_on(&framework);
+        defaults(&mut styled);
+        let assembled = app.layered_on(&styled);
+        let resolved_body = Body.resolve(&assembled).snapshot();
         assert_eq!(resolved_body.size, app_body.size);
         assert_eq!(resolved_body.weight, app_body.weight);
         assert_eq!(resolved_body.family, app_body.family);
         assert_material_font(
-            Title.resolve(&env).snapshot(),
+            Title.resolve(&assembled).snapshot(),
             22.0,
             FontWeight::Normal,
             28.0,
