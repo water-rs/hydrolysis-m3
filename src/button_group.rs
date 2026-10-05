@@ -8,7 +8,6 @@
 
 use core::fmt::{self, Debug};
 
-use cherenkov::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
 use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
@@ -25,6 +24,7 @@ use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
 use waterui_controls::button::Button;
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, boxed_action};
+use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
 use crate::semantics::{conditional_color, interaction_style_with_radii};

@@ -9,11 +9,11 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{ToggleMetrics, WidgetInteractionState, lerp_color};
-use cherenkov::kurbo::{Affine, BezPath, PathEl, Point, Rect};
-use cherenkov::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
-use cherenkov::{Draw as _, Recorder};
 use waterui::interaction::InteractionState;
 use waterui_controls::toggle::ToggleStyle;
+use waterui_graphics::draw::kurbo::{Affine, BezPath, PathEl, Point, Rect};
+use waterui_graphics::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
+use waterui_graphics::draw::{Draw as _, Recorder};
 
 pub fn metrics(style: ToggleStyle) -> ToggleMetrics {
     match style {
@@ -311,8 +311,8 @@ pub fn draw_checkbox_state_layer(
 #[cfg(test)]
 mod tests {
     use crate::test_support::{Recorded, recorded, solid};
-    use cherenkov::WorkingColor;
-    use cherenkov::kurbo::{Point, Rect};
+    use waterui_graphics::draw::WorkingColor;
+    use waterui_graphics::draw::kurbo::{Point, Rect};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, draw_checkbox, draw_switch,

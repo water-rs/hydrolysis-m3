@@ -1,10 +1,10 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
-use cherenkov::Draw as _;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
+use waterui_graphics::draw::Draw as _;
 
 use crate::color::Shadow;
 
@@ -188,19 +188,19 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
 /// into `draw`. `colors` resolves the `shadow` role — the same role
 /// [`Shadow`] resolves through the environment — at draw time.
 pub(crate) fn draw_shadows(
-    draw: &mut cherenkov::Recorder,
-    rect: cherenkov::kurbo::Rect,
-    radii: cherenkov::kurbo::RoundedRectRadii,
+    draw: &mut waterui_graphics::draw::Recorder,
+    rect: waterui_graphics::draw::kurbo::Rect,
+    radii: waterui_graphics::draw::kurbo::RoundedRectRadii,
     level: MaterialElevationLevel,
     colors: &crate::theme::colors::MaterialColorScheme,
 ) {
     let tokens = ElevationTokens::for_level(level);
     for (shadow, base_opacity) in [(tokens.key, KEY_OPACITY), (tokens.ambient, AMBIENT_OPACITY)] {
         draw.shadow(
-            cherenkov::kurbo::RoundedRect::from_rect(rect, radii),
-            cherenkov::Shadow {
+            waterui_graphics::draw::kurbo::RoundedRect::from_rect(rect, radii),
+            waterui_graphics::draw::Shadow {
                 sigma: f64::from(shadow.blur),
-                offset: cherenkov::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
+                offset: waterui_graphics::draw::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
                 spread: 0.0,
                 color: colors
                     .shadow

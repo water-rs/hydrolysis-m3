@@ -8,12 +8,12 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::{SliderMetrics, SliderValueIndicatorMetrics, WidgetInteractionState};
-use cherenkov::kurbo::{Circle, RoundedRect, RoundedRectRadii};
-use cherenkov::{Draw as _, Recorder};
 use waterui::interaction::InteractionState;
 use waterui::text::font::Font;
 use waterui_controls::ControlSize;
 use waterui_graphics::color::Color;
+use waterui_graphics::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii};
+use waterui_graphics::draw::{Draw as _, Recorder};
 
 /// `md.comp.slider.<size>.*`: the Expressive slider's track and handle grow
 /// with the control size.
@@ -39,8 +39,8 @@ pub const fn metrics(size: ControlSize) -> SliderMetrics {
 pub fn draw_track(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    track_rect: cherenkov::kurbo::Rect,
-    fill_rect: cherenkov::kurbo::Rect,
+    track_rect: waterui_graphics::draw::kurbo::Rect,
+    fill_rect: waterui_graphics::draw::kurbo::Rect,
     size: ControlSize,
     state: WidgetInteractionState,
 ) {
@@ -79,13 +79,15 @@ pub fn draw_track(
     if inactive_start < track_rect.x1 - outside {
         draw.fill(
             RoundedRect::from_rect(
-                cherenkov::kurbo::Rect::new(
+                waterui_graphics::draw::kurbo::Rect::new(
                     inactive_start,
                     track_rect.y0,
                     track_rect.x1,
                     track_rect.y1,
                 ),
-                cherenkov::kurbo::RoundedRectRadii::new(inside, outside, outside, inside),
+                waterui_graphics::draw::kurbo::RoundedRectRadii::new(
+                    inside, outside, outside, inside,
+                ),
             ),
             track_color,
         );
@@ -96,13 +98,15 @@ pub fn draw_track(
     if active_end > track_rect.x0 + outside {
         draw.fill(
             RoundedRect::from_rect(
-                cherenkov::kurbo::Rect::new(
+                waterui_graphics::draw::kurbo::Rect::new(
                     track_rect.x0,
                     track_rect.y0,
                     active_end,
                     track_rect.y1,
                 ),
-                cherenkov::kurbo::RoundedRectRadii::new(outside, inside, inside, outside),
+                waterui_graphics::draw::kurbo::RoundedRectRadii::new(
+                    outside, inside, inside, outside,
+                ),
             ),
             fill_color,
         );
@@ -117,7 +121,8 @@ pub fn draw_track(
     // `trackStopIndicatorSize`).
     let track_mid_y = track_rect.y0 + track_rect.height() / 2.0;
     let dot_offset = SLIDER_STOP_INDICATOR_END_SPACE + SLIDER_STOP_INDICATOR_SIZE / 2.0;
-    let indicator_center = cherenkov::kurbo::Point::new(track_rect.x1 - dot_offset, track_mid_y);
+    let indicator_center =
+        waterui_graphics::draw::kurbo::Point::new(track_rect.x1 - dot_offset, track_mid_y);
     if indicator_center.x > inactive_start {
         draw.fill(
             Circle::new(indicator_center, SLIDER_STOP_INDICATOR_SIZE / 2.0),
@@ -133,7 +138,7 @@ pub fn draw_track(
 pub fn draw_thumb(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    center: cherenkov::kurbo::Point,
+    center: waterui_graphics::draw::kurbo::Point,
     _radius: f64,
     size: ControlSize,
     state: WidgetInteractionState,
@@ -147,7 +152,8 @@ pub fn draw_thumb(
         SLIDER_HANDLE_WIDTH
     };
     let handle_height = slider_size_tokens(size).handle_height;
-    let bounds = cherenkov::kurbo::Rect::from_center_size(center, (width, handle_height));
+    let bounds =
+        waterui_graphics::draw::kurbo::Rect::from_center_size(center, (width, handle_height));
     // MD3 disabled slider handle: on-surface at 38% over an opaque surface
     // underlay, so content behind the semi-transparent handle cannot bleed
     // through (the reference implementation paints the handle over the background role).
@@ -183,7 +189,7 @@ pub fn draw_thumb(
 pub fn draw_thumb_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    center: cherenkov::kurbo::Point,
+    center: waterui_graphics::draw::kurbo::Point,
     _radius: f64,
     _size: ControlSize,
     state: WidgetInteractionState,
@@ -229,7 +235,7 @@ pub fn value_indicator_font() -> Font {
 pub fn draw_value_indicator(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    bounds: waterui_graphics::draw::kurbo::Rect,
 ) {
     draw.fill(
         RoundedRect::from_rect(
@@ -243,10 +249,10 @@ pub fn draw_value_indicator(
 #[cfg(test)]
 mod tests {
     use crate::test_support::recorded;
-    use cherenkov::Paint;
-    use cherenkov::kurbo::{Point, Rect, RoundedRectRadii};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
+    use waterui_graphics::draw::Paint;
+    use waterui_graphics::draw::kurbo::{Point, Rect, RoundedRectRadii};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, draw_thumb, draw_track, draw_value_indicator,

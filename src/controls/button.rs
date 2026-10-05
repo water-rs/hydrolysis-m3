@@ -7,12 +7,12 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{ButtonMetrics, WidgetInteractionState};
-use cherenkov::kurbo::{Line, RoundedRect, Stroke};
-use cherenkov::{Draw as _, Recorder, WorkingColor};
 use waterui::interaction::InteractionState;
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
 use waterui_graphics::color::Color;
+use waterui_graphics::draw::kurbo::{Line, RoundedRect, Stroke};
+use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
 
 pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
     let tokens = button_size_tokens(size);
@@ -98,7 +98,7 @@ impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
 /// it off the bounds keeps a large or extra-large button a capsule, and keeps a
 /// button stretched to fill a taller row — a navigation drawer line, say —
 /// rounded to match whatever it is sitting on.
-fn container_radius(bounds: cherenkov::kurbo::Rect) -> f64 {
+fn container_radius(bounds: waterui_graphics::draw::kurbo::Rect) -> f64 {
     bounds.height() / 2.0
 }
 
@@ -147,9 +147,9 @@ fn press_progress(state: WidgetInteractionState) -> f64 {
 /// The container's radius in `state`: resting `CornerFull`, morphing to
 /// `PressedContainerShape` as the press grows.
 fn container_radii(
-    bounds: cherenkov::kurbo::Rect,
+    bounds: waterui_graphics::draw::kurbo::Rect,
     state: WidgetInteractionState,
-) -> cherenkov::kurbo::RoundedRectRadii {
+) -> waterui_graphics::draw::kurbo::RoundedRectRadii {
     let resting = container_radius(bounds);
     let pressed = pressed_corner_radius(bounds.height());
     (pressed - resting)
@@ -160,7 +160,7 @@ fn container_radii(
 pub fn draw_chrome(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    bounds: waterui_graphics::draw::kurbo::Rect,
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
@@ -198,11 +198,11 @@ pub fn draw_chrome(
             let underline_y = (bounds.y1 - BUTTON_LINK_UNDERLINE_BOTTOM_INSET).max(bounds.y0);
             draw.stroke(
                 Line::new(
-                    cherenkov::kurbo::Point::new(
+                    waterui_graphics::draw::kurbo::Point::new(
                         bounds.x0 + BUTTON_LINK_HORIZONTAL_PADDING,
                         underline_y,
                     ),
-                    cherenkov::kurbo::Point::new(
+                    waterui_graphics::draw::kurbo::Point::new(
                         bounds.x1 - BUTTON_LINK_HORIZONTAL_PADDING,
                         underline_y,
                     ),
@@ -219,7 +219,7 @@ pub fn draw_chrome(
 pub fn draw_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    bounds: waterui_graphics::draw::kurbo::Rect,
     style: ButtonStyle,
     state: WidgetInteractionState,
 ) {
@@ -247,11 +247,11 @@ mod tests {
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
     use crate::test_support::recorded;
-    use cherenkov::Paint;
-    use cherenkov::kurbo::Rect;
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
+    use waterui_graphics::draw::Paint;
+    use waterui_graphics::draw::kurbo::Rect;
 
     fn assert_button_metrics(style: ButtonStyle, expected_padding_x: f64) {
         let metrics = metrics(style, ControlSize::Small);

@@ -1,9 +1,9 @@
 //! Material Design 3 icon buttons composed from `WaterUI` primitives.
 
-use cherenkov::Draw as _;
-use cherenkov::kurbo::{RoundedRect, Stroke};
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
+use waterui_graphics::draw::Draw as _;
+use waterui_graphics::draw::kurbo::{RoundedRect, Stroke};
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::border::Border;
@@ -150,14 +150,16 @@ pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
 /// bounds are indistinguishable from a small's and it draws the small 40dp
 /// layer; the 32dp layer is reachable only through the composed `IconButton`
 /// view, which carries its size.
-fn state_layer_rect(bounds: cherenkov::kurbo::Rect) -> cherenkov::kurbo::Rect {
+fn state_layer_rect(
+    bounds: waterui_graphics::draw::kurbo::Rect,
+) -> waterui_graphics::draw::kurbo::Rect {
     let side = if bounds.height() > f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE) {
         bounds.height()
     } else {
         f64::from(ICON_BUTTON_STATE_LAYER_SIZE)
     };
     let center = bounds.center();
-    cherenkov::kurbo::Rect::from_center_size(center, (side, side))
+    waterui_graphics::draw::kurbo::Rect::from_center_size(center, (side, side))
 }
 
 /// `WidgetTheme::draw_button_chrome` for an icon-only button.
@@ -174,8 +176,8 @@ fn state_layer_rect(bounds: cherenkov::kurbo::Rect) -> cherenkov::kurbo::Rect {
 /// Panics on a `ButtonStyle` variant this theme does not implement.
 pub fn draw_chrome(
     colors: &crate::theme::colors::MaterialColorScheme,
-    draw: &mut cherenkov::Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    draw: &mut waterui_graphics::draw::Recorder,
+    bounds: waterui_graphics::draw::kurbo::Rect,
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
@@ -228,8 +230,8 @@ pub fn draw_chrome(
 /// Panics on a `ButtonStyle` variant this theme does not implement.
 pub fn draw_state_layer(
     colors: &crate::theme::colors::MaterialColorScheme,
-    draw: &mut cherenkov::Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    draw: &mut waterui_graphics::draw::Recorder,
+    bounds: waterui_graphics::draw::kurbo::Rect,
     style: ButtonStyle,
     state: crate::WidgetInteractionState,
 ) {
@@ -279,9 +281,9 @@ fn outline_width(side: f64) -> f64 {
 /// The state-layer circle's corner radii in `state`: resting corner-full,
 /// morphing to the size band's pressed shape as the press grows.
 fn container_radii(
-    layer: cherenkov::kurbo::Rect,
+    layer: waterui_graphics::draw::kurbo::Rect,
     state: crate::WidgetInteractionState,
-) -> cherenkov::kurbo::RoundedRectRadii {
+) -> waterui_graphics::draw::kurbo::RoundedRectRadii {
     let resting = layer.height() / 2.0;
     let pressed = pressed_corner_radius(layer.height());
     let progress = f64::from(
@@ -681,9 +683,9 @@ mod tests {
     fn outlined_icon_button_border_uses_outline_variant() {
         use super::{IconButtonVariantTokens, SelectedOutlinedIconButton};
         use crate::{Material3, theme::colors::MaterialColorScheme};
-        use cherenkov::WorkingColor;
         use hydrolysis::Style as _;
         use waterui::{Environment, Signal};
+        use waterui_graphics::draw::WorkingColor;
 
         fn assert_resolves_to(actual: WorkingColor, expected: WorkingColor) {
             assert_eq!(

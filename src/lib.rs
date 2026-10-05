@@ -53,10 +53,9 @@ pub(crate) use layout::{badge, card, divider, list, menu, scroll, snackbar, tabl
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
-use cherenkov::{Paint, Recorder, WorkingColor};
 use core::cell::OnceCell;
+use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
 
-use cherenkov::kurbo::{BezPath, Point, Rect};
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
@@ -77,6 +76,7 @@ use waterui_controls::toggle::ToggleStyle;
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
+use waterui_graphics::draw::kurbo::{BezPath, Point, Rect};
 
 pub use button_group::{
     ButtonGroup, ConnectedButton, ConnectedButtonGroup, GroupButton, button_group,
@@ -516,7 +516,7 @@ impl WidgetTheme for Material3 {
         &self,
         draw: &mut Recorder,
         bounds: Rect,
-        radii: cherenkov::kurbo::RoundedRectRadii,
+        radii: waterui_graphics::draw::kurbo::RoundedRectRadii,
         color: WorkingColor,
         state: WidgetInteractionState,
     ) {

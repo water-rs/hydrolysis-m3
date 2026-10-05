@@ -4,11 +4,11 @@
 //! Numbers only say each outline closes; whether it is the right silhouette is
 //! a question for the eye. The PNG shows all seven, plus a morph mid-flight.
 
-use cherenkov::kurbo::Point;
 use hydrolysis_m3::material_shapes::{material_shape_sequence, morph, radii_to_path};
 use waterui::layout::Point as CanvasPoint;
 use waterui::prelude::*;
 use waterui_canvas::{Canvas, DrawingContext};
+use waterui_graphics::draw::kurbo::Point;
 use waterui_testing::{OffscreenApp, Styled, UiBuilder};
 
 const CELL: f32 = 72.0;
@@ -23,8 +23,9 @@ fn draw_radii(ctx: &mut DrawingContext<'_>, radii: &[f64], centre: Point) {
     let outline = radii_to_path(radii, centre, RADIUS);
     let mut path = ctx.begin_path();
     let mut first = true;
-    cherenkov::kurbo::flatten(outline.iter(), 0.05, |element| match element {
-        cherenkov::kurbo::PathEl::MoveTo(point) | cherenkov::kurbo::PathEl::LineTo(point) => {
+    waterui_graphics::draw::kurbo::flatten(outline.iter(), 0.05, |element| match element {
+        waterui_graphics::draw::kurbo::PathEl::MoveTo(point)
+        | waterui_graphics::draw::kurbo::PathEl::LineTo(point) => {
             let point = CanvasPoint::new(point.x as f32, point.y as f32);
             if first {
                 path.move_to(point);

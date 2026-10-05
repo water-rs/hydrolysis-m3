@@ -8,11 +8,11 @@
 use core::cell::Cell;
 use std::rc::Rc;
 
-use cherenkov::kurbo::{BezPath, Cap, Join, Point, Stroke};
-use cherenkov::{Draw as _, Recorder, WorkingColor};
 use waterui::{Environment, View, ViewExt as _};
 use waterui_core::Signal;
 use waterui_core::resolve::Resolvable;
+use waterui_graphics::draw::kurbo::{BezPath, Cap, Join, Point, Stroke};
+use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
 use waterui_graphics::{RecordingResources, SceneContent, SceneInvalidator, SceneView};
 
 /// The miter limit Material icon strokes are authored against.

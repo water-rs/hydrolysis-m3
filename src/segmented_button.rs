@@ -2,7 +2,6 @@
 
 use core::fmt::{self, Debug};
 
-use cherenkov::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::border::Border;
 use waterui::component::hstack;
@@ -14,6 +13,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction, boxed_action};
 use waterui_core::interaction::Disabled;
 use waterui_core::view::TupleViews;
+use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;
