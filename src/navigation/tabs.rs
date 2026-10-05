@@ -8,10 +8,10 @@ use crate::dimensions::{
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{TabItemLayout, TabsMetrics, WidgetInteractionState};
-use cherenkov::kurbo::RoundedRect;
-use cherenkov::kurbo::{Rect, RoundedRectRadii};
-use cherenkov::{Draw as _, Recorder};
 use waterui::interaction::InteractionState;
+use waterui_graphics::draw::kurbo::RoundedRect;
+use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
+use waterui_graphics::draw::{Draw as _, Recorder};
 
 /// Whether the bar shows vertical or horizontal items. The M3 navigation bar
 /// switches to horizontal items at the medium window width class boundary —

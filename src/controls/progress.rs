@@ -8,13 +8,13 @@ use crate::dimensions::{
 use crate::material_shapes::{material_shape_sequence, morph, radii_to_path};
 use crate::theme::colors::MaterialColorScheme;
 use crate::{ProgressIndicatorStyle, ProgressMetrics, lerp_color};
-use cherenkov::kurbo::{BezPath, Point, Rect};
-use cherenkov::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
-use cherenkov::{Curve, Paint, curve_value};
-use cherenkov::{Draw as _, Recorder, WorkingColor};
 use core::f64::consts::FRAC_PI_2;
 use core::time::Duration;
 use num_traits::ToPrimitive;
+use waterui_graphics::draw::kurbo::{BezPath, Point, Rect};
+use waterui_graphics::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
+use waterui_graphics::draw::{Curve, Paint, curve_value};
+use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
 
 /// `LinearAnimationDuration` in Compose's `ProgressIndicator.kt`.
 const LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(1_750);
@@ -156,7 +156,7 @@ pub const fn metrics(style: ProgressIndicatorStyle) -> ProgressMetrics {
 pub fn draw_linear_track(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    bounds: waterui_graphics::draw::kurbo::Rect,
     active_end: Option<f64>,
 ) {
     let radius = RoundedRectRadii::from_single_radius(bounds.height() / 2.0);
@@ -167,7 +167,7 @@ pub fn draw_linear_track(
     if start < bounds.x1 {
         draw.fill(
             RoundedRect::from_rect(
-                cherenkov::kurbo::Rect::new(start, bounds.y0, bounds.x1, bounds.y1),
+                waterui_graphics::draw::kurbo::Rect::new(start, bounds.y0, bounds.x1, bounds.y1),
                 radius,
             ),
             track_color,
@@ -175,7 +175,7 @@ pub fn draw_linear_track(
     }
     // The stop indicator only exists on a determinate bar.
     if active_end.is_some() {
-        let center = cherenkov::kurbo::Point::new(
+        let center = waterui_graphics::draw::kurbo::Point::new(
             bounds.x1 - PROGRESS_LINEAR_STOP_SIZE / 2.0,
             bounds.y0 + bounds.height() / 2.0,
         );
@@ -191,7 +191,7 @@ pub fn draw_linear_track(
 pub fn draw_linear_fill(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: cherenkov::kurbo::Rect,
+    bounds: waterui_graphics::draw::kurbo::Rect,
 ) {
     draw.fill(
         RoundedRect::from_rect(
@@ -211,19 +211,19 @@ pub fn draw_linear_fill(
 pub fn draw_circular_track(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    center: cherenkov::kurbo::Point,
+    center: waterui_graphics::draw::kurbo::Point,
     radius: f64,
     width: f64,
     active_turns: Option<f64>,
 ) {
-    use cherenkov::kurbo::Shape as _;
     use core::f64::consts::{FRAC_PI_2, TAU};
+    use waterui_graphics::draw::kurbo::Shape as _;
 
     let brush = Paint::from(colors.surface_container_highest.working());
     let Some(active_turns) = active_turns else {
         // Indeterminate: the sweep moves, so the whole ring stays behind it.
         draw.stroke(
-            cherenkov::kurbo::Arc::new(center, (radius, radius), -FRAC_PI_2, TAU, 0.0)
+            waterui_graphics::draw::kurbo::Arc::new(center, (radius, radius), -FRAC_PI_2, TAU, 0.0)
                 .into_path(0.1),
             Stroke::new(width),
             brush,
@@ -243,7 +243,7 @@ pub fn draw_circular_track(
         return;
     }
     draw.stroke(
-        cherenkov::kurbo::Arc::new(
+        waterui_graphics::draw::kurbo::Arc::new(
             center,
             (radius, radius),
             -FRAC_PI_2 + active + gap,
@@ -259,7 +259,7 @@ pub fn draw_circular_track(
 pub fn draw_circular_fill(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    path: &cherenkov::kurbo::BezPath,
+    path: &waterui_graphics::draw::kurbo::BezPath,
     width: f64,
 ) {
     draw.stroke(
@@ -630,8 +630,8 @@ pub fn draw_loading(
     let scale = LOADING_INDICATOR_SIZE.min(bounds.width().min(bounds.height())) / 2.0;
     let mut path = radii_to_path(&radii, Point::ORIGIN, scale);
     path.apply_affine(
-        cherenkov::kurbo::Affine::translate((centre.x, centre.y))
-            * cherenkov::kurbo::Affine::rotate(loading_rotation(elapsed)),
+        waterui_graphics::draw::kurbo::Affine::translate((centre.x, centre.y))
+            * waterui_graphics::draw::kurbo::Affine::rotate(loading_rotation(elapsed)),
     );
     let color = progress_color(colors, elapsed, four_color, LOADING_GLOBAL_ROTATION);
     draw.fill(path.clone(), color);
@@ -699,7 +699,7 @@ mod tests {
         use super::{LINEAR_INDETERMINATE_CYCLE, draw_linear_indeterminate};
         use crate::MaterialColorScheme;
         use crate::test_support::recorded;
-        use cherenkov::kurbo::{Rect, RoundedRectRadii};
+        use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
 
         let colors = MaterialColorScheme::baseline_light();
         let track = Rect::new(0.0, 0.0, 320.0, 4.0);

@@ -9,7 +9,6 @@
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
-use cherenkov::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
 use waterui::component::hstack;
@@ -21,6 +20,7 @@ use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, boxed_action};
+use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
 use crate::semantics::interaction_style_with_radii;

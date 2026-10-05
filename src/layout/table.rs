@@ -4,9 +4,9 @@ use crate::dimensions::{
     TABLE_MIN_COLUMN_WIDTH, TABLE_OUTLINE_WIDTH, TABLE_ROW_HEIGHT,
 };
 use crate::theme::colors::MaterialColorScheme;
-use cherenkov::kurbo::{Line, Stroke};
-use cherenkov::kurbo::{Point, Rect};
-use cherenkov::{Draw as _, Recorder};
+use waterui_graphics::draw::kurbo::{Line, Stroke};
+use waterui_graphics::draw::kurbo::{Point, Rect};
+use waterui_graphics::draw::{Draw as _, Recorder};
 
 pub const fn metrics() -> TableMetrics {
     TableMetrics {

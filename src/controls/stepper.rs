@@ -15,9 +15,9 @@ use crate::icon_paths::{IconGrid, add, remove};
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{StepperEnd, StepperMetrics, WidgetInteractionState};
-use cherenkov::kurbo::RoundedRect;
-use cherenkov::kurbo::{Rect, RoundedRectRadii};
-use cherenkov::{Draw as _, Recorder};
+use waterui_graphics::draw::kurbo::RoundedRect;
+use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
+use waterui_graphics::draw::{Draw as _, Recorder};
 
 pub const fn metrics() -> StepperMetrics {
     StepperMetrics::new(
@@ -105,7 +105,7 @@ mod tests {
         STEPPER_BUTTON_SPACING, STEPPER_ICON_SIZE, STEPPER_INNER_CORNER_RADIUS,
         STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
     };
-    use cherenkov::kurbo::Rect;
+    use waterui_graphics::draw::kurbo::Rect;
 
     #[test]
     fn stepper_uses_material_icon_button_tokens() {

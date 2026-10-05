@@ -9,10 +9,10 @@
 //!
 //! Values mirror the M3 motion token reference.
 
-use cherenkov::{Curve, curve_value};
 use core::time::Duration;
 use num_traits::ToPrimitive as _;
 use waterui::animation::Animation;
+use waterui_graphics::draw::{Curve, curve_value};
 
 /// A cubic-bezier easing token: the shape of a curve, before a duration
 /// token gives it a length.

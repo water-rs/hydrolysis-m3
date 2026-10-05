@@ -1,4 +1,3 @@
-use cherenkov::WorkingColor;
 use material_color_utils::{
     MaterializedScheme,
     dynamic::{
@@ -9,6 +8,7 @@ use material_color_utils::{
     utils::color_utils::Argb,
 };
 use waterui_graphics::color::{Color as WaterColor, Srgb};
+use waterui_graphics::draw::WorkingColor;
 
 const fn role(red: u8, green: u8, blue: u8) -> MaterialRoleColor {
     MaterialRoleColor::new(Argb::from_rgb(red, green, blue))
@@ -251,7 +251,7 @@ impl MaterialRoleColor {
         self.0
     }
 
-    /// Convert the role color to Cherenkov's working colour.
+    /// Convert the role color to the draw vocabulary's `WorkingColor`.
     #[must_use]
     pub fn working(self) -> WorkingColor {
         self.srgb().into()

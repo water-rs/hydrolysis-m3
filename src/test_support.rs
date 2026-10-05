@@ -6,8 +6,10 @@
 //! through [`recorded`]: `recorded(|draw| draw_chrome(&colors, draw, …))` is
 //! the whole harness.
 
-use cherenkov::kurbo::{Circle, Line, Rect, RoundedRectRadii};
-use cherenkov::{Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData, WorkingColor};
+use waterui_graphics::draw::kurbo::{Circle, Line, Rect, RoundedRectRadii};
+use waterui_graphics::draw::{
+    Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData, WorkingColor,
+};
 
 /// The commands a theme draw recorded, split by shape.
 #[derive(Debug, Default)]

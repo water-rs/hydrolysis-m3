@@ -4,12 +4,12 @@
 //! `hydrolysis_m3::Material3` style and can be used anywhere a `WaterUI`
 //! color is accepted.
 
-use cherenkov::WorkingColor;
 use waterui::View;
 use waterui::color::{Color, WithOpacity};
 use waterui::reactive::{Computed, Signal, SignalExt as _, impl_constant};
 use waterui::theme::{ColorScheme, current_color_scheme};
 use waterui_core::{Environment, resolve::Resolvable};
+use waterui_graphics::draw::WorkingColor;
 
 use crate::theme::colors::{MaterialColorScheme, MaterialColorSchemes, MaterialRoleColor};
 
