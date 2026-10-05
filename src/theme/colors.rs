@@ -251,7 +251,7 @@ impl MaterialRoleColor {
         self.0
     }
 
-    /// Convert the role color to Cherenkov's working colour.
+    /// Convert the role color to the draw vocabulary's `WorkingColor`.
     #[must_use]
     pub fn working(self) -> WorkingColor {
         self.srgb().into()

@@ -36,11 +36,11 @@ waterui-canvas = "0.2.0"
 # nami `Signal::get` was renamed to `snapshot` in 0.11.2/5dc2d92e; waterkit
 # consumers of `Subscribed` need the migrated source too.
 waterkit-core = "0.1.4"
-# The visual acceptance test mounts a GPU scene surface through hydrolysis and
-# stamps its render with `waterui_graphics::cherenkov::FrameTime`, so the test
-# build takes the engine-backed half of the graphics crate even though the
-# theme itself records only.
-waterui-graphics = { version = "0.5.1", features = ["gpu"] }
+# `material_ripple_visual_snapshot` mounts a GPU scene surface through
+# hydrolysis and stamps its render with `waterui_graphics::cherenkov::FrameTime`,
+# so the test build asks for the graphics crate's `cherenkov` feature — the
+# engine re-export only — even though the theme itself records only.
+waterui-graphics = { version = "0.5.1", default-features = false, features = ["cherenkov"] }
 waterui-inspector-app = "0.5.2"
 waterui-navigation = "0.5.1"
 waterui-testing = "0.5.1"
@@ -159,11 +159,11 @@ filtrate-derive = { git = "https://github.com/water-rs/waterui", rev = "0b982961
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
 # surface negotiates Extended Display P3 or BT.2100 (gfx-rs/wgpu#10175, fixed on
-# trunk, not yet released for v30). Mirrored from cherenkov's own workspace
-# patch (water-rs/cherenkov#229): `[patch]` in a dependency's manifest does not
-# apply downstream, so without these entries this graph resolves the crashing
-# crates.io build while cherenkov resolves the fork. Drop them once wgpu-hal
-# 30.0.2 ships the backport.
+# trunk, not yet released for v30). Mirrored from water-rs/waterui's own
+# workspace patch at the pinned revision: `[patch]` in a dependency's manifest
+# does not apply downstream, so without these entries this graph resolves the
+# crashing crates.io build while cherenkov resolves the fork. Drop them once
+# wgpu-hal 30.0.2 ships the backport.
 naga = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
 naga-types = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
 wgpu = { git = "https://github.com/water-rs/wgpu", rev = "4b35d8bc968f6968b3cbae65b6e2e2ee132aa038" }
