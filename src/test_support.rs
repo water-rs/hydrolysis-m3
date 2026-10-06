@@ -74,6 +74,7 @@ impl Recorded {
                 Command::Shadow { shadow, .. } => recorded.shadows.push(*shadow),
                 Command::BeginTransform { .. } => recorded.transforms += 1,
                 Command::Glyphs { .. }
+                | Command::Text { .. }
                 | Command::Image { .. }
                 | Command::Picture { .. }
                 | Command::BeginClip { .. }
