@@ -909,8 +909,12 @@ impl WidgetTheme for Material3 {
         tabs::metrics(layout)
     }
 
-    fn draw_tabs_bar(&self, draw: &mut Recorder, bounds: Rect, top_edge: bool) {
-        tabs::draw_bar(&self.colors(), draw, bounds, top_edge);
+    fn draw_tabs_bar(&self, draw: &mut Recorder, surface: Rect) {
+        tabs::draw_bar(&self.colors(), draw, surface);
+    }
+
+    fn draw_tabs_bar_divider(&self, draw: &mut Recorder, divider: Rect) {
+        tabs::draw_bar_divider(&self.colors(), draw, divider);
     }
 
     fn draw_tabs_highlight(&self, draw: &mut Recorder, bounds: Rect, layout: TabItemLayout) {
