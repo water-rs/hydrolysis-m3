@@ -49,15 +49,13 @@ pub const fn metrics(layout: TabItemLayout) -> TabsMetrics {
     }
 }
 
-pub fn draw_bar(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect, top_edge: bool) {
-    draw.fill(bounds, colors.surface.working());
-    let separator = if top_edge {
-        Rect::new(bounds.x0, bounds.y1 - 1.0, bounds.x1, bounds.y1)
-    } else {
-        Rect::new(bounds.x0, bounds.y0, bounds.x1, bounds.y0 + 1.0)
-    };
+pub fn draw_bar(colors: &MaterialColorScheme, draw: &mut Recorder, surface: Rect) {
+    draw.fill(surface, colors.surface.working());
+}
+
+pub fn draw_bar_divider(colors: &MaterialColorScheme, draw: &mut Recorder, divider: Rect) {
     // md.comp.primary-navigation-tab.divider.color = surface-variant.
-    draw.fill(separator, colors.surface_variant.working());
+    draw.fill(divider, colors.surface_variant.working());
 }
 
 pub fn draw_highlight(
