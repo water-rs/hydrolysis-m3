@@ -164,6 +164,9 @@ pub fn body_medium() -> Font {
     Font::new(BodyMedium)
 }
 
+/// Line height of Material's Body Small role, also the floating label's type.
+pub const BODY_SMALL_LINE_HEIGHT: f32 = 16.0;
+
 #[derive(Debug, Clone, Copy)]
 pub struct BodySmall;
 
@@ -171,7 +174,7 @@ impl Resolvable for BodySmall {
     type Resolved = ResolvedFont;
 
     fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
-        Computed::constant(font(12.0, FontWeight::Normal, 16.0, 0.4))
+        Computed::constant(font(12.0, FontWeight::Normal, BODY_SMALL_LINE_HEIGHT, 0.4))
     }
 }
 
