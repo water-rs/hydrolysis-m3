@@ -1,3 +1,5 @@
+use super::typography::BODY_SMALL_LINE_HEIGHT;
+
 /// `ShapeTokens.CornerSmall`.
 pub const SHAPE_CORNER_SMALL: f64 = 8.0;
 /// `ShapeTokens.CornerMedium`.
@@ -144,7 +146,9 @@ pub const STEPPER_ICON_SIZE: f64 = 24.0;
 pub const STEPPER_INNER_CORNER_RADIUS: f64 = 8.0;
 pub const STEPPER_PRESSED_INNER_CORNER_RADIUS: f64 = 4.0;
 
-pub const INPUT_LABEL_HEIGHT: f64 = 18.0;
+/// The floating label's line box: Material sets the floated label in Body
+/// Small, so the field reserves exactly that role's line height.
+pub const INPUT_LABEL_HEIGHT: f64 = BODY_SMALL_LINE_HEIGHT as f64;
 /// `TextFieldDefaults.MinWidth` — 280dp for both filled and outlined fields.
 pub const INPUT_FIELD_MIN_WIDTH: f64 = 280.0;
 pub const INPUT_FIELD_MIN_HEIGHT: f64 = 56.0;
