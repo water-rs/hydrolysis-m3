@@ -183,14 +183,26 @@ where
         let placed = Binding::container(requested_edge);
         let rich = self.rich;
         let popup = self.popup;
-        let popup = watch(placed.distinct(), move |edge| {
-            popup.clone().scale_from(
-                popup_scale.clone(),
-                popup_scale.clone(),
-                tooltip_scale_origin(edge, rich),
-            )
-        });
-        let overlay = AnchoredOverlay::new(&open, popup)
+        // `AnchoredOverlay` calls its content builder on every presentation:
+        // the scale-in `watch` subtree is rebuilt with it, so a fresh
+        // presentation animates in from scratch rather than reviving the
+        // previous popup's state.
+        let overlay = AnchoredOverlay::new(&open, {
+            let placed = placed.clone();
+            move || {
+                watch(placed.distinct(), {
+                    let popup = popup.clone();
+                    let popup_scale = popup_scale.clone();
+                    move |edge| {
+                        popup.clone().scale_from(
+                            popup_scale.clone(),
+                            popup_scale.clone(),
+                            tooltip_scale_origin(edge, rich),
+                        )
+                    }
+                })
+            }
+        })
             .edge(requested_edge)
             .alignment(if rich {
                 EdgeAlignment::Start
