@@ -19,7 +19,7 @@ use waterui::id::Id;
 use waterui::navigation::NavigationView;
 use waterui::reactive::Signal;
 use waterui::{Binding, Str};
-use waterui_controls::{TextField, button, slider::slider, stepper::stepper, toggle};
+use waterui_controls::{TextField, Toggle, button, slider::slider, stepper::stepper};
 use waterui_core::View;
 use waterui_testing::{
     OffscreenApp, Role, Selector, SemanticApp, Styled, UiBuilder, WaitOptions, WaitResult,
@@ -46,7 +46,9 @@ fn material_controls_view() -> impl View {
     material_shell(
         vstack((
             button("Save").action(|| {}),
-            toggle("Wi-Fi", &enabled),
+            // `toggle()` takes the platform default — a checkbox on macOS —
+            // so the Material switch the assertion names is spelled out.
+            Toggle::new("Wi-Fi", &enabled).switch(),
             slider("Volume", &value),
             stepper("Quantity", &count),
             TextField::new("Project", &name),
