@@ -203,18 +203,18 @@ where
                 })
             }
         })
-            .edge(requested_edge)
-            .alignment(if rich {
-                EdgeAlignment::Start
-            } else {
-                EdgeAlignment::Center
-            })
-            .gap(TOOLTIP_ANCHOR_GAP)
-            .flip(true)
-            .clamp(Clamp::Window {
-                margin: TOOLTIP_WINDOW_MARGIN,
-            })
-            .placed_edge(&placed);
+        .edge(requested_edge)
+        .alignment(if rich {
+            EdgeAlignment::Start
+        } else {
+            EdgeAlignment::Center
+        })
+        .gap(TOOLTIP_ANCHOR_GAP)
+        .flip(true)
+        .clamp(Clamp::Window {
+            margin: TOOLTIP_WINDOW_MARGIN,
+        })
+        .placed_edge(&placed);
 
         self.target
             .on_hover_enter(move || target_enter.set_target_hovered(true))
