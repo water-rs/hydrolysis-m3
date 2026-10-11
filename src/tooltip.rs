@@ -183,26 +183,38 @@ where
         let placed = Binding::container(requested_edge);
         let rich = self.rich;
         let popup = self.popup;
-        let popup = watch(placed.distinct(), move |edge| {
-            popup.clone().scale_from(
-                popup_scale.clone(),
-                popup_scale.clone(),
-                tooltip_scale_origin(edge, rich),
-            )
-        });
-        let overlay = AnchoredOverlay::new(&open, popup)
-            .edge(requested_edge)
-            .alignment(if rich {
-                EdgeAlignment::Start
-            } else {
-                EdgeAlignment::Center
-            })
-            .gap(TOOLTIP_ANCHOR_GAP)
-            .flip(true)
-            .clamp(Clamp::Window {
-                margin: TOOLTIP_WINDOW_MARGIN,
-            })
-            .placed_edge(&placed);
+        // `AnchoredOverlay` calls its content builder on every presentation:
+        // the scale-in `watch` subtree is rebuilt with it, so a fresh
+        // presentation animates in from scratch rather than reviving the
+        // previous popup's state.
+        let overlay = AnchoredOverlay::new(&open, {
+            let placed = placed.clone();
+            move || {
+                watch(placed.distinct(), {
+                    let popup = popup.clone();
+                    let popup_scale = popup_scale.clone();
+                    move |edge| {
+                        popup.clone().scale_from(
+                            popup_scale.clone(),
+                            popup_scale.clone(),
+                            tooltip_scale_origin(edge, rich),
+                        )
+                    }
+                })
+            }
+        })
+        .edge(requested_edge)
+        .alignment(if rich {
+            EdgeAlignment::Start
+        } else {
+            EdgeAlignment::Center
+        })
+        .gap(TOOLTIP_ANCHOR_GAP)
+        .flip(true)
+        .clamp(Clamp::Window {
+            margin: TOOLTIP_WINDOW_MARGIN,
+        })
+        .placed_edge(&placed);
 
         self.target
             .on_hover_enter(move || target_enter.set_target_hovered(true))
