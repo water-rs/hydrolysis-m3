@@ -32,7 +32,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/controls/button.rs:58 | outlined label/icon/layer = on-surface-variant | was primary | `md.comp.button.outlined.{label-text,icon,*.state-layer}.color` | fixed |
 | src/controls/button.rs:60 | text button label/layer = primary | primary | `md.comp.button.text.label-text.color` | conforms |
 | src/controls/button.rs:517-537 | outlined border = outline-variant, width 1/1/1/2/3 per size | was outline, flat 1 | `md.comp.button.outlined.outline.color` + `md.comp.button.<size>.outlined.outline-width` | fixed |
-| src/controls/button.rs:101-115 | pressed corner morph 8/8/12/16/16 per size | new | `md.comp.button.<size>.pressed.container.shape` | fixed (driven by `state.press_waves.latest().progress`) |
+| src/controls/button.rs:101-115 | pressed corner morph 8/8/12/16/16 per size | new | `md.comp.button.<size>.pressed.container.shape` | fixed (driven by `state.press_progress`) |
 | src/controls/button.rs:398-399 | disabled outlined border stays outline-variant | outline-variant | `md.comp.button.outlined.disabled.outline.color` | conforms |
 | container heights | 32/40/48/56/64 | 32/40/48/56/64 | `md.comp.button.<size>.container.height` | conforms |
 | label font | label-large at every size | label-large | `md.comp.button.<size>.label-text` | conforms |
@@ -46,7 +46,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/icon_button.rs:193-195 | outlined border outline-variant in all states | was outline | `md.comp.icon-button.outlined.{outline,disabled.outline}.color` | fixed |
 | src/icon_button.rs:228-230 | layer on-primary (filled) / on-surface-variant (standard, outlined) | same | `md.comp.icon-button.*.state-layer.color` | conforms |
 | src/icon_button.rs:250-264 | pressed corner morph 8/8/12/16/16 | new | `md.comp.icon-button.<size>.pressed.container.shape` | fixed |
-| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | fixed: `InteractionStyle.state_layer_radii` resolves radii per reported state; the pressed morph itself stays driven by `state.press_waves` |
+| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | fixed: `InteractionStyle.state_layer_radii` resolves radii per reported state; the pressed morph itself is driven by `state.press_progress` |
 
 ## FABs (`src/fab.rs`, `src/fab_menu.rs`)
 
