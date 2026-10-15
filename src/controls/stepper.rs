@@ -45,17 +45,6 @@ fn radii(bounds: Rect, end: StepperEnd, press: f64) -> RoundedRectRadii {
     }
 }
 
-/// How far the most recent press has grown, which the corner morph follows.
-fn press_progress(state: WidgetInteractionState) -> f64 {
-    f64::from(
-        state
-            .press_waves
-            .latest()
-            .map_or(0.0, |wave| wave.progress)
-            .clamp(0.0, 1.0),
-    )
-}
-
 pub fn draw_button(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
@@ -64,7 +53,7 @@ pub fn draw_button(
     state: WidgetInteractionState,
 ) {
     draw.fill(
-        RoundedRect::from_rect(bounds, radii(bounds, end, press_progress(state))),
+        RoundedRect::from_rect(bounds, radii(bounds, end, f64::from(state.press_progress))),
         colors.surface_container.working(),
     );
 }
@@ -86,7 +75,7 @@ pub fn draw_button_state_layer(
     end: StepperEnd,
     state: WidgetInteractionState,
 ) {
-    let radii = radii(bounds, end, press_progress(state));
+    let radii = radii(bounds, end, f64::from(state.press_progress));
     state_layer::draw_bounded(
         draw,
         bounds,

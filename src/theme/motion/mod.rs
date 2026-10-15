@@ -43,8 +43,10 @@ const RIPPLE_TOUCH_DELAY: Duration = Duration::from_millis(70);
 /// grows from the press point with standard easing while fading in linearly,
 /// and a release never plays the growth backwards — the wave holds its expanded
 /// shape and only fades out once the expansion has completed, which is why
-/// `minimum_press_duration` equals the grow duration.
-pub const fn interaction() -> InteractionMotion {
+/// `minimum_press_duration` equals the grow duration. The container's pressed
+/// shape morph, by contrast, plays the fast spatial spring in both directions,
+/// so release animates the corners back to resting shape.
+pub fn interaction() -> InteractionMotion {
     InteractionMotion {
         hover_opacity: state_layer::HOVER_STATE_LAYER_OPACITY,
         focus_opacity: state_layer::FOCUS_STATE_LAYER_OPACITY,
@@ -57,6 +59,7 @@ pub const fn interaction() -> InteractionMotion {
         press_fade_in: Animation::linear(RIPPLE_OPACITY_IN),
         press_fade_out: Animation::linear(RIPPLE_OPACITY_OUT),
         press_grow: material_standard(RIPPLE_RADIUS_IN),
+        press_shape: fast_spatial(),
         minimum_press_duration: RIPPLE_RADIUS_IN,
         touch_delay: RIPPLE_TOUCH_DELAY,
     }
@@ -304,7 +307,7 @@ mod tests {
     use super::tokens::{duration, easing, motion};
     use super::{
         RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN, RIPPLE_STATE_LAYER_FADE,
-        dialog_opacity, dialog_transform, interaction, navigation, navigation_drawer,
+        dialog_opacity, dialog_transform, fast_spatial, interaction, navigation, navigation_drawer,
         navigation_drawer_scrim, radio_selection, toggle_value, tooltip,
     };
     use core::time::Duration;
@@ -371,6 +374,9 @@ mod tests {
             motion_spec.press_fade_out,
             Animation::linear(RIPPLE_OPACITY_OUT)
         );
+        // The pressed-shape morph plays the fast spatial spring in both
+        // directions (MotionSchemeKeyTokens.FastSpatial).
+        assert_eq!(motion_spec.press_shape, fast_spatial());
     }
 
     /// A release must not rewind the growth: the fade-out is gated until the

@@ -132,20 +132,10 @@ const BUTTON_EXTRA_SMALL_HEIGHT_BAND: f64 = 40.0;
 const BUTTON_MEDIUM_HEIGHT_BAND: f64 = 56.0;
 const BUTTON_LARGE_HEIGHT_BAND: f64 = 96.0;
 
-/// How far the most recent press has grown, which the corner morph follows —
-/// the same driving signal the stepper's seam corners use.
-fn press_progress(state: WidgetInteractionState) -> f64 {
-    f64::from(
-        state
-            .press_waves
-            .latest()
-            .map_or(0.0, |wave| wave.progress)
-            .clamp(0.0, 1.0),
-    )
-}
-
 /// The container's radius in `state`: resting `CornerFull`, morphing to
-/// `PressedContainerShape` as the press grows.
+/// `PressedContainerShape` as `press_progress` advances. The renderer animates
+/// it in both directions, so a release morphs the corners back rather than
+/// snapping them.
 fn container_radii(
     bounds: waterui_graphics::draw::kurbo::Rect,
     state: WidgetInteractionState,
@@ -153,7 +143,7 @@ fn container_radii(
     let resting = container_radius(bounds);
     let pressed = pressed_corner_radius(bounds.height());
     (pressed - resting)
-        .mul_add(press_progress(state), resting)
+        .mul_add(f64::from(state.press_progress), resting)
         .into()
 }
 
@@ -496,35 +486,36 @@ mod tests {
         assert_eq!(draw.rounded_strokes[0].3, 3.0);
     }
 
-    /// A press morphs the capsule toward the size band's
-    /// `PressedContainerShape` — corner-small for small, corner-large for
-    /// extra-large.
+    /// `press_progress` morphs the capsule toward the size band's
+    /// `PressedContainerShape` — resting `CornerFull` at 0, corner-small
+    /// (8dp) fully pressed on a small button — and because the renderer
+    /// animates the progress back on release, the morph travels back the
+    /// same way rather than snapping.
     #[test]
     fn pressed_button_morphs_its_corners() {
-        use waterui_backend_core::widget::{PressWave, PressWaves};
         let colors = MaterialColorScheme::baseline_light();
-        let mut waves = PressWaves::EMPTY;
-        waves.push(PressWave {
-            origin: None,
-            progress: 1.0,
-            opacity: 0.1,
-        });
-        let draw = recorded(|draw| {
-            draw_chrome(
-                &colors,
-                draw,
-                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-                ButtonStyle::BorderedProminent,
-                crate::WidgetInteractionState {
-                    state: InteractionState::PRESSED,
-                    press_waves: waves,
-                    ..crate::WidgetInteractionState::NONE
-                },
-            );
-        });
+        let radius_at = |press_progress: f32| {
+            let draw = recorded(|draw| {
+                draw_chrome(
+                    &colors,
+                    draw,
+                    Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
+                    ButtonStyle::BorderedProminent,
+                    crate::WidgetInteractionState {
+                        state: InteractionState::PRESSED,
+                        press_progress,
+                        ..crate::WidgetInteractionState::NONE
+                    },
+                );
+            });
+            draw.rounded_fills[0].1.top_left
+        };
 
-        let radii = draw.rounded_fills[0].1;
+        let resting = BUTTON_SMALL.container_height / 2.0;
         // md.comp.button.small.pressed.container.shape = corner-small (8).
-        assert!((radii.top_left - 8.0).abs() < 0.01);
+        let pressed = 8.0;
+        assert_eq!(radius_at(0.0), resting);
+        assert!((radius_at(0.5) - resting.midpoint(pressed)).abs() < 0.01);
+        assert!((radius_at(1.0) - pressed).abs() < 0.01);
     }
 }

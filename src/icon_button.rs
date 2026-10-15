@@ -279,21 +279,18 @@ fn outline_width(side: f64) -> f64 {
 }
 
 /// The state-layer circle's corner radii in `state`: resting corner-full,
-/// morphing to the size band's pressed shape as the press grows.
+/// morphing to the size band's pressed shape as `press_progress` advances —
+/// the renderer animates it in both directions, so a release morphs the
+/// corners back rather than snapping them.
 fn container_radii(
     layer: waterui_graphics::draw::kurbo::Rect,
     state: crate::WidgetInteractionState,
 ) -> waterui_graphics::draw::kurbo::RoundedRectRadii {
     let resting = layer.height() / 2.0;
     let pressed = pressed_corner_radius(layer.height());
-    let progress = f64::from(
-        state
-            .press_waves
-            .latest()
-            .map_or(0.0, |wave| wave.progress)
-            .clamp(0.0, 1.0),
-    );
-    (pressed - resting).mul_add(progress, resting).into()
+    (pressed - resting)
+        .mul_add(f64::from(state.press_progress), resting)
+        .into()
 }
 
 const fn icon_button_size(size: ControlSize) -> IconButtonSize {
