@@ -182,12 +182,15 @@ pub fn draw_unbounded_circle(
 mod tests {
     use super::{PRESSED_STATE_LAYER_OPACITY, RIPPLE_MINIMUM_DIAMETER, ripple_diameter};
     use crate::{PressWave, PressWaves, WidgetInteractionState, theme::state_layer};
-    use std::path::Path;
+    use waterui::Environment;
     use waterui::interaction::InteractionState;
+    use waterui::reactive::constant;
+    use waterui_core::layout::Size;
     use waterui_graphics::draw::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
     use waterui_graphics::draw::{
         Command, Content, Draw as _, LayoutSize, Paint, Recorder, ShapeData, WorkingColor,
     };
+    use waterui_testing::{TestHost, TestStyle};
 
     #[test]
     fn material_ripple_diameter_spans_diagonal_with_minimum() {
@@ -436,9 +439,8 @@ mod tests {
     #[test]
     #[ignore = "writes a visual acceptance PNG for direct image review"]
     fn material_ripple_visual_snapshot() {
-        let mut surface = hydrolysis::OffscreenSceneSurface::new(240, 120);
         let bounds = Rect::new(24.0, 24.0, 216.0, 96.0);
-        let picture = waterui_graphics::draw::Picture::record(|draw| {
+        let surface = waterui_graphics::draw::Picture::record(|draw| {
             draw.fill(
                 RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(20.0)),
                 WorkingColor::new([0.40, 0.31, 0.64, 1.0]),
@@ -464,33 +466,18 @@ mod tests {
             );
         })
         .into_picture();
-
-        let target = surface.surface();
-        target.clear_color(WorkingColor::WHITE);
-        target.update(|tx| {
-            tx[target.root()].content(waterui_graphics::draw::Picture::record(|draw| {
-                draw.picture(&picture, waterui_graphics::draw::kurbo::Affine::IDENTITY);
-                draw.picture(&ripple, waterui_graphics::draw::kurbo::Affine::IDENTITY);
-            }));
+        let recording = waterui_graphics::Picture::record(|draw| {
+            draw.fill(Rect::new(0.0, 0.0, 240.0, 120.0), WorkingColor::WHITE);
+            draw.picture(&surface, waterui_graphics::draw::kurbo::Affine::IDENTITY);
+            draw.picture(&ripple, waterui_graphics::draw::kurbo::Affine::IDENTITY);
         });
-        surface
-            .engine()
-            .render(waterui_graphics::cherenkov::FrameTime::at(
-                std::time::Instant::now(),
-            ))
-            .expect("ripple visual render failed");
-        let rgba8 = surface.readback_rgba8();
 
-        let output_path = Path::new("target/hydrolysis-m3-visual/material-ripple-solid.png");
-        std::fs::create_dir_all(
-            output_path
-                .parent()
-                .expect("ripple visual output path must have parent"),
-        )
-        .expect("failed to create ripple visual output directory");
-        image::RgbaImage::from_raw(240, 120, rgba8)
-            .expect("readback must be 240x120 RGBA8")
-            .save(output_path)
-            .expect("failed to save ripple visual output");
+        let host = TestHost::new(Environment::new(), 240, 120, TestStyle::new());
+        host.capture_snapshot(
+            waterui_graphics::Picture::new(Size::new(240.0, 120.0), constant(recording)),
+            "hydrolysis-m3-visual",
+            "material-ripple",
+            "solid",
+        );
     }
 }

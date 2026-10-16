@@ -16,7 +16,7 @@ use waterui_testing::{DragOptions, Role, Styled, UiBuilder};
 const ROW_COUNT: usize = 6;
 const VIEWPORT_WIDTH: f32 = 400.0;
 
-#[derive(Clone, Copy, Identifiable)]
+#[derive(Clone, Copy, PartialEq, Identifiable)]
 struct Row {
     #[id]
     id: u64,
@@ -55,12 +55,12 @@ impl Fixture {
     }
 }
 
-fn delete_row(ListDelete(index): ListDelete, State(fixture): State<Fixture>) {
+fn delete_row(ListDelete(index): ListDelete, State(mut fixture): State<Fixture>) {
     fixture.deletes.borrow_mut().push(index);
     let _ = fixture.rows.remove(index);
 }
 
-fn move_row(ListMove(movement): ListMove, State(fixture): State<Fixture>) {
+fn move_row(ListMove(movement): ListMove, State(mut fixture): State<Fixture>) {
     fixture
         .moves
         .borrow_mut()

@@ -4,8 +4,8 @@
 )]
 //! Material Design 3 widget metrics and drawing primitives.
 //!
-//! This crate is a style package: [`Material3`] implements the backend-neutral
-//! widget chrome contract from `waterui-backend-core` and the
+//! This crate is a style package: [`Material3`] implements the
+//! widget chrome contract from `hydrolysis::theme` and the
 //! [`hydrolysis::Style`] contract the rendered Hydrolysis runtime is
 //! constructed with — `hydrolysis::run(app, Material3::defaults())`.
 
@@ -56,11 +56,7 @@ pub(crate) use theme::dimensions;
 use core::cell::OnceCell;
 use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
 
-use waterui::Plugin as _;
-use waterui::reactive::{Computed, Signal, SignalExt as _};
-use waterui::text::font::Font;
-use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
-pub use waterui_backend_core::widget::{
+pub use hydrolysis::theme::{
     BadgeMetrics, ButtonMetrics, DividerMetrics, InputFieldMetrics, InteractionFocusBinding,
     InteractionMotion, InteractionStyle, ListDividerMetrics, ListMetrics, ListRowMetrics,
     ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
@@ -70,6 +66,10 @@ pub use waterui_backend_core::widget::{
     TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState,
     WidgetTheme,
 };
+use waterui::Plugin as _;
+use waterui::reactive::{Computed, Signal, SignalExt as _};
+use waterui::text::font::Font;
+use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
 use waterui_controls::toggle::ToggleStyle;

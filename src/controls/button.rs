@@ -70,7 +70,7 @@ pub fn label_color(colors: &MaterialColorScheme, style: ButtonStyle, disabled: b
 }
 
 /// Resolves to `filled` for an ordinary button label and to `standard` in an
-/// icon-only label's subtree — `hydrolysis::IconOnlyButtonLabel` is installed
+/// icon-only label's subtree — `hydrolysis::theme::IconOnlyButtonLabel` is installed
 /// there — because `Automatic` maps to a different variant for the two.
 #[derive(Debug, Clone)]
 struct AutomaticLabelColor {
@@ -85,7 +85,10 @@ impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
         &self,
         env: &waterui_core::Environment,
     ) -> impl waterui_core::Signal<Output = Self::Resolved> {
-        if env.get::<hydrolysis::IconOnlyButtonLabel>().is_some() {
+        if env
+            .get::<hydrolysis::theme::IconOnlyButtonLabel>()
+            .is_some()
+        {
             self.standard.resolve(env)
         } else {
             self.filled.resolve(env)
@@ -400,7 +403,7 @@ mod tests {
 
     /// `Automatic` resolves differently for the two button kinds: the text
     /// button keeps on-primary content, while an icon-only label — marked by
-    /// `hydrolysis::IconOnlyButtonLabel` — paints the standard icon button's
+    /// `hydrolysis::theme::IconOnlyButtonLabel` — paints the standard icon button's
     /// on-surface-variant.
     #[test]
     fn automatic_label_color_resolves_standard_under_icon_only_marker() {
@@ -413,7 +416,7 @@ mod tests {
         let expected_filled = colors.on_primary.view_color().resolve(&env).snapshot();
         assert_eq!(filled.components[..3], expected_filled.components[..3]);
 
-        env.insert(hydrolysis::IconOnlyButtonLabel);
+        env.insert(hydrolysis::theme::IconOnlyButtonLabel);
         let standard = color.resolve(&env).snapshot();
         let expected_standard = colors
             .on_surface_variant

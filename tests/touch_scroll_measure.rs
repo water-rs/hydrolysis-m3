@@ -65,12 +65,11 @@ fn list_offset(app: &mut OffscreenApp) -> f64 {
         .expect("the rendered list reports its offset")
 }
 
-const fn touch_drag(steps: u16) -> DragOptions {
-    DragOptions {
-        steps,
-        frame_per_step: true,
-        pointer: hydrolysis::PointerKind::Touch,
-    }
+fn touch_drag(steps: u16) -> DragOptions {
+    DragOptions::default()
+        .with_steps(steps)
+        .with_frame_per_step(true)
+        .with_pointer(hydrolysis::PointerKind::Touch)
 }
 
 /// The offset after the first `steps` samples of the same drag, read before

@@ -8,13 +8,13 @@ pub mod tokens;
 
 use core::time::Duration;
 
+use hydrolysis::theme::{
+    InteractionMotion, NavigationMotion, ProgressMotion, RadioSelectionMotion, TextCaretMotion,
+};
 use waterui::animation::Animation;
 use waterui::easing::EasingCurve;
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
-use waterui_backend_core::widget::{
-    InteractionMotion, NavigationMotion, ProgressMotion, RadioSelectionMotion, TextCaretMotion,
-};
 
 use super::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
 use super::state_layer;

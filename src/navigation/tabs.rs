@@ -134,7 +134,7 @@ mod tests {
         TABS_ACTIVE_INDICATOR_RADIUS, TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET,
         TABS_BUTTON_MIN_WIDTH,
     };
-    use waterui_backend_core::widget::TabItemLayout;
+    use hydrolysis::theme::TabItemLayout;
 
     #[test]
     fn primary_tab_metrics_match_compose_primary_navigation_tab_tokens() {
