@@ -440,7 +440,7 @@ mod tests {
     #[ignore = "writes a visual acceptance PNG for direct image review"]
     fn material_ripple_visual_snapshot() {
         let bounds = Rect::new(24.0, 24.0, 216.0, 96.0);
-        let surface = waterui_graphics::draw::Picture::record(|draw| {
+        let card = waterui_graphics::draw::Picture::record(|draw| {
             draw.fill(
                 RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(20.0)),
                 WorkingColor::new([0.40, 0.31, 0.64, 1.0]),
@@ -468,7 +468,7 @@ mod tests {
         .into_picture();
         let recording = waterui_graphics::Picture::record(|draw| {
             draw.fill(Rect::new(0.0, 0.0, 240.0, 120.0), WorkingColor::WHITE);
-            draw.picture(&surface, waterui_graphics::draw::kurbo::Affine::IDENTITY);
+            draw.picture(&card, waterui_graphics::draw::kurbo::Affine::IDENTITY);
             draw.picture(&ripple, waterui_graphics::draw::kurbo::Affine::IDENTITY);
         });
 
