@@ -307,7 +307,7 @@ fn half_style(
     state_layer_color: impl Into<Color>,
     resting: RoundedRectRadii,
     soft: RoundedRectRadii,
-) -> waterui_backend_core::widget::InteractionStyle {
+) -> hydrolysis::theme::InteractionStyle {
     interaction_style_with_radii(state_layer_color, resting).state_layer_radii(
         StateValue::new(resting)
             .when(InteractionState::PRESSED, soft)

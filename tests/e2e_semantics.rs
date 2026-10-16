@@ -913,7 +913,7 @@ fn collection_membership_view() -> impl View {
             label: Str::from("Charlie"),
         },
     ]);
-    let list_for_action = list.clone();
+    let mut list_for_action = list.clone();
 
     // `ZStack::for_each` lowers to a non-virtualized `LazyContainer`, i.e. the
     // retained per-id collection path. Each row is a `text` label, so every item

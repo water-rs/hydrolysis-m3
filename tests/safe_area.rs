@@ -902,11 +902,10 @@ fn a_touch_drag_over_several_frames_keeps_scrolling_under_nonzero_insets(
         400.0,
         195.0,
         150.0,
-        DragOptions {
-            steps: 5,
-            frame_per_step: true,
-            pointer: hydrolysis::PointerKind::Touch,
-        },
+        DragOptions::default()
+            .with_steps(5)
+            .with_frame_per_step(true)
+            .with_pointer(hydrolysis::PointerKind::Touch),
     );
     app.pump_for(Duration::from_millis(500));
     app.settle();

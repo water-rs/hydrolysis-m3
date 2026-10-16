@@ -2,6 +2,7 @@
 
 use core::fmt::{self, Debug};
 
+use hydrolysis::theme::InteractionStyle;
 use waterui::accessibility::AccessibilityState;
 use waterui::color::Color;
 use waterui::component::list::{
@@ -14,7 +15,6 @@ use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
-use waterui_backend_core::widget::InteractionStyle;
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction, boxed_action};
 

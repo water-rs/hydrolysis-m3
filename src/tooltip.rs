@@ -3,6 +3,7 @@
 use core::fmt::{self, Debug};
 use core::time::Duration;
 
+use hydrolysis::theme::InteractionFocusBinding;
 use waterui::accessibility::AccessibilityRole;
 use waterui::layout::padding::EdgeInsets;
 use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
@@ -12,7 +13,6 @@ use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_backend_core::widget::InteractionFocusBinding;
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{Handler, SharedAction};
 

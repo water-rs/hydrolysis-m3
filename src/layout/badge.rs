@@ -1,4 +1,4 @@
-use waterui_backend_core::widget::BadgeMetrics;
+use hydrolysis::theme::BadgeMetrics;
 use waterui_graphics::draw::kurbo::{Circle, RoundedRect};
 use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
 use waterui_graphics::draw::{Draw as _, Recorder};
