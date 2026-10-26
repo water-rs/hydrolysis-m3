@@ -6,7 +6,7 @@ name = "hydrolysis-m3"
 version = "0.3.1"
 edition = "2024"
 authors = ["Lexo Liu"]
-rust-version = "1.95"
+rust-version = "1.99"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/water-rs/hydrolysis-m3"
@@ -101,53 +101,53 @@ multiple_crate_versions = "allow"
 #
 # The `dev` branch of water-rs/waterui; the exact commit is recorded by the
 # committed `Cargo.lock`.
-waterui = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "dev" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
 
 # Component crates living in their own repositories, each at the rev
 # water-rs/waterui's own patch table pins.
 waterui-svg = { git = "https://github.com/water-rs/svg", rev = "16f99e021f735d0b1b31c95552b074e953d56418" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "dev" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "dev" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
 
 
 # The engine and its filter crates live in the waterui repository under
 # `graphics/` and resolve to the same revision as the rest of the graph:
 # every cherenkov/filtrate name in the graph must come from it or a
 # filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-filtrate = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "dev" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+filtrate = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
+filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "fix/1194-reactive-tabs" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
@@ -157,16 +157,17 @@ filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "dev" 
 # does not apply downstream, so without these entries this graph resolves the
 # crashing crates.io build while cherenkov resolves the fork. Drop them once
 # wgpu-hal 30.0.2 ships the backport.
-naga = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-naga-types = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-core = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-core-deps-apple = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-core-deps-emscripten = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-core-deps-windows-linux-android = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-hal = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
-wgpu-types = { git = "https://github.com/water-rs/wgpu", rev = "11e85956a78886d1a96d586f255ea9b0661da2cd" }
+shaderloom = { git = "https://github.com/water-rs/shaderloom", branch = "dev" }
+naga = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+naga-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-core = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-core-deps-apple = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-core-deps-emscripten = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-core-deps-windows-linux-android = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-hal = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
+wgpu-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 
 waterui-canvas = { git = "https://github.com/water-rs/canvas", branch = "dev" }
 waterui-image = { git = "https://github.com/water-rs/image", branch = "dev" }
