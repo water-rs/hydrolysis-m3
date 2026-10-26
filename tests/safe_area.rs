@@ -1853,9 +1853,7 @@ fn a_fixed_height_tabs_inside_tab_content_docks_its_own_bar(
                             )
                         }
                     }),
-                    Tab::new("Other", move || {
-                        NavigationView::new("Other", text("other"))
-                    }),
+                    Tab::new("Other", move || NavigationView::new("Other", text("other"))),
                 ],
             )
         });
