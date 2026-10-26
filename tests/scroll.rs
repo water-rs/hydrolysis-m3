@@ -95,8 +95,9 @@ fn vertical_scroll_rail_reports_content_minimum_on_non_scrolling_axis() {
         .single()
         .bounds();
     assert!(
-        icon.x() >= rail.width() - 0.1,
-        "the trailing icon should be pushed past the rail by the overflow: {icon:?}"
+        (icon.x() - (rail.x() + rail.width() + 8.0)).abs() < 1.0,
+        "the trailing icon sits right after the content-sized rail: \
+         icon={icon:?} rail={rail:?}"
     );
 }
 
