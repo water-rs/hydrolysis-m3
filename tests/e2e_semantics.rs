@@ -1,6 +1,5 @@
 //! End-to-end accessibility coverage for the Material Design 3 theme package.
 
-use core::convert::TryFrom as _;
 use core::time::Duration;
 
 use hydrolysis_m3::{
@@ -15,7 +14,6 @@ use hydrolysis_m3::{
 use waterui::ViewExt as _;
 use waterui::component::{hstack, text, vstack};
 use waterui::graphics::color::Srgb;
-use waterui::id::Id;
 use waterui::navigation::NavigationView;
 use waterui::reactive::Signal;
 use waterui::{Binding, Str};
@@ -32,10 +30,6 @@ fn material_shell<V: View>(content: V) -> impl View {
         .spacing(12.0)
         .padding_with(16.0)
         .background(Srgb::WHITE)
-}
-
-fn tab_id(value: i32) -> Id {
-    Id::try_from(value).expect("test tab id must be non-zero")
 }
 
 fn material_controls_view() -> impl View {
@@ -720,18 +714,18 @@ fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder<Styled<Ma
 
 #[waterui::test(viewport = (360, 320))]
 fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
-    let first = tab_id(1);
-    let second = tab_id(2);
+    let first = 0usize;
+    let second = 1usize;
     let selection = Binding::container(first);
     let selection_for_view = selection.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(material_tabs(
             &selection_for_view,
             vec![
-                material_tab(first, "Photos", || {
+                material_tab("Photos", || {
                     NavigationView::new("Photos", text("photos content"))
                 }),
-                material_tab(second, "Albums", || {
+                material_tab("Albums", || {
                     NavigationView::new("Albums", text("albums content"))
                 }),
             ],

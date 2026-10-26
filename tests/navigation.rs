@@ -187,7 +187,7 @@ fn navigation_split_detail_fits_pane_when_selected_before_mount() {
 /// window.
 #[test]
 fn tabs_content_fits_pane() {
-    let selection = Binding::container(0i32);
+    let selection = Binding::container(0usize);
     let mut app = ui()
         .viewport(WINDOW_WIDTH, WINDOW_HEIGHT)
         .theme(Material3::defaults())
@@ -197,13 +197,13 @@ fn tabs_content_fits_pane() {
                 Tabs::new(
                     &selection,
                     vec![
-                        Tab::new(0i32, "Messages", move || {
+                        Tab::new("Messages", move || {
                             NavigationView::new(
                                 "Messages",
                                 rows(60, "message").a11y_label("messages"),
                             )
                         }),
-                        Tab::new(1i32, "Settings", move || {
+                        Tab::new("Settings", move || {
                             NavigationView::new("Settings", text("settings"))
                         }),
                     ],
