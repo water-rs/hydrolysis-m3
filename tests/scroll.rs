@@ -95,8 +95,9 @@ fn vertical_scroll_rail_reports_content_minimum_on_non_scrolling_axis() {
         .single()
         .bounds();
     assert!(
-        icon.x() >= rail.width() - 0.1,
-        "the trailing icon should be pushed past the rail by the overflow: {icon:?}"
+        (icon.x() - (rail.x() + rail.width() + 8.0)).abs() < 1.0,
+        "the trailing icon sits right after the content-sized rail: \
+         icon={icon:?} rail={rail:?}"
     );
 }
 
@@ -272,9 +273,14 @@ fn chip_rail_fills_offer_when_row_fits() {
             .label("Archive")
             .single()
             .bounds();
+        // The chips' measured extent — the trailing edge of the last whole
+        // chip, relative to the rail's start — not a constant the layout
+        // contract changed under #1208.
+        let rail = app.query().label("chip-rail").single().bounds();
+        let extent = archive.x() + archive.width() - rail.x();
         assert!(
-            archive.x() + archive.width() <= CHIP_ROW_EXTENT + 0.1,
-            "chips render whole: archive={archive:?}"
+            extent <= rail.width() + 0.1,
+            "the rail has room for the whole chip row: extent={extent} rail={rail:?}"
         );
         let icon = app
             .query()
@@ -282,10 +288,23 @@ fn chip_rail_fills_offer_when_row_fits() {
             .label("More filters")
             .single()
             .bounds();
-        assert!(
-            (icon.x() - 552.0_f32).abs() < 1.0,
-            "icon fills the row's trailing edge at 600 pt: {icon:?}"
-        );
+        if horizontal {
+            // The rail claims the offer on its scrolling axis: icon, gap and
+            // rail tile the full row.
+            assert!(
+                (icon.x() - (rail.x() + rail.width() + 8.0)).abs() < 1.0
+                    && (icon.x() + icon.width() - 600.0).abs() < 1.0,
+                "rail and icon fill the 600-pt row: icon={icon:?} rail={rail:?}"
+            );
+        } else {
+            // The rail hugs the content on its non-scrolling axis and the
+            // icon sits right after it — the row no longer tiles to 600.
+            assert!(
+                (rail.width() - extent).abs() < 1.0
+                    && (icon.x() - (rail.x() + rail.width() + 8.0)).abs() < 1.0,
+                "vertical rail hugs the chip extent, icon follows:                  icon={icon:?} rail={rail:?} extent={extent}"
+            );
+        }
     }
 }
 
@@ -595,8 +614,8 @@ fn horizontal_scrollbar_drag_moves_the_offset() {
                     .spacing(12.0),
                 )
                 .report_offset(&offset)
-                .size(120.0, 120.0)
                 .a11y_label("h-rail")
+                .size(120.0, 120.0)
             }
         });
     app.settle();
