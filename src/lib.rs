@@ -62,9 +62,9 @@ pub use hydrolysis::theme::{
     ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
     NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
     ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderMetrics,
-    SliderValueIndicatorMetrics, StepperEnd, StepperMetrics, TabItemLayout, TableMetrics,
-    TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState,
-    WidgetTheme,
+    SliderValueIndicatorMetrics, StepperEnd, StepperMetrics, TabItemGeometry, TabItemLayout,
+    TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics,
+    WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
@@ -917,19 +917,18 @@ impl WidgetTheme for Material3 {
         tabs::draw_bar_divider(&self.colors(), draw, divider);
     }
 
-    fn draw_tabs_highlight(&self, draw: &mut Recorder, bounds: Rect, layout: TabItemLayout) {
-        tabs::draw_highlight(&self.colors(), draw, bounds, layout);
+    fn draw_tabs_highlight(&self, draw: &mut Recorder, item: TabItemGeometry) {
+        tabs::draw_highlight(&self.colors(), draw, item);
     }
 
     fn draw_tabs_button_state_layer(
         &self,
         draw: &mut Recorder,
-        bounds: Rect,
+        item: TabItemGeometry,
         selected: bool,
         state: WidgetInteractionState,
-        layout: TabItemLayout,
     ) {
-        tabs::draw_button_state_layer(&self.colors(), draw, bounds, selected, state, layout);
+        tabs::draw_button_state_layer(&self.colors(), draw, item, selected, state);
     }
 
     fn draw_scroll_indicator(&self, draw: &mut Recorder, bounds: Rect) {

@@ -327,8 +327,6 @@ pub const SCROLL_INDICATOR_CORNER_RADIUS: f64 = 1.25;
 pub const TABS_BAR_HEIGHT: f64 = 48.0;
 pub const TABS_BUTTON_MIN_WIDTH: f64 = 48.0;
 pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
-pub const TABS_ACTIVE_INDICATOR_HEIGHT: f64 = 3.0;
-pub const TABS_ACTIVE_INDICATOR_RADIUS: f64 = 3.0;
 /// `md.comp.nav-bar.container.height`: the horizontal-item bar is the M3
 /// navigation bar.
 pub const NAV_BAR_HEIGHT: f64 = 64.0;

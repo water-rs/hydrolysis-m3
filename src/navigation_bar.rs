@@ -29,8 +29,9 @@ const NAVIGATION_BAR_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_BAR_ICON_SLOT_HEIGHT: f32 = 32.0;
 /// `m3_comp_nav_bar_item_vertical_active_indicator_width` — the Expressive
 /// indicator is 56dp wide, not the 64dp of the classic spec.
-const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
-const NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
+pub(crate) const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
+/// `m3_comp_nav_bar_item_vertical_active_indicator_height`.
+pub(crate) const NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
 const NAVIGATION_BAR_LABEL_TOP_SPACE: f32 = 4.0;
 
 /// A Material Design 3 navigation bar.
