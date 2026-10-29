@@ -639,7 +639,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 [[package]]
 name = "cherenkov"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "arc-swap",
  "cherenkov-record",
@@ -659,7 +659,7 @@ dependencies = [
 [[package]]
 name = "cherenkov-gpu"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "ash",
  "block2",
@@ -709,7 +709,7 @@ dependencies = [
 [[package]]
 name = "cherenkov-record"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "color",
  "filtrate-core",
@@ -724,16 +724,24 @@ dependencies = [
 [[package]]
 name = "cherenkov-shader"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "naga",
  "thiserror 2.0.21",
 ]
 
 [[package]]
+name = "cherenkov-simd"
+version = "0.0.0"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
+dependencies = [
+ "fearless_simd",
+]
+
+[[package]]
 name = "cherenkov-stroke"
 version = "0.0.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "kurbo",
  "num-bigint",
@@ -1232,27 +1240,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "fearless_simd"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "629c9d6b6f30b5604089e0980f4d924a013aacb1654a6cdf5d3d852224f68651"
+dependencies = [
+ "libm",
+]
+
+[[package]]
 name = "filtrate"
 version = "0.2.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
+ "blocking",
  "bytemuck",
  "cherenkov-shader",
+ "cherenkov-simd",
+ "fearless_simd",
  "filtrate-core",
  "filtrate-derive",
+ "futures-util",
  "half",
  "image",
+ "pollster 1.0.1",
  "thiserror 2.0.21",
  "tracing",
  "web-time",
  "wgpu",
- "wide",
 ]
 
 [[package]]
 name = "filtrate-core"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "askama",
  "libm",
@@ -1261,7 +1282,7 @@ dependencies = [
 [[package]]
 name = "filtrate-derive"
 version = "0.1.0"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -1710,7 +1731,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 [[package]]
 name = "hydrolysis"
 version = "0.3.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "accesskit",
  "android_logger",
@@ -1735,7 +1756,6 @@ dependencies = [
  "ndk-context",
  "parley 0.12.0",
  "peniko",
- "png",
  "pollster 1.0.1",
  "raw-window-handle",
  "rustc-hash 2.1.3",
@@ -3420,6 +3440,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "objc2-web-kit"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2e5aaab980c433cf470df9d7af96a7b46a9d892d521a2cbbb2f8a4c16751e7f"
+dependencies = [
+ "objc2",
+ "objc2-foundation",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4102,15 +4132,6 @@ name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
-
-[[package]]
-name = "safe_arch"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42c6efa15875e6ecb39ca61fb0b0c1a40b84fac5a5ffe71eef7d1000c8eb3f5f"
-dependencies = [
- "bytemuck",
-]
 
 [[package]]
 name = "same-file"
@@ -5257,16 +5278,24 @@ dependencies = [
 [[package]]
 name = "waterui"
 version = "0.5.2"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "waterui-dylib",
  "waterui-internal",
 ]
 
 [[package]]
+name = "waterui-apple-os"
+version = "0.5.1"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
+dependencies = [
+ "objc2",
+]
+
+[[package]]
 name = "waterui-assets"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "blocking",
  "memmap2",
@@ -5279,7 +5308,7 @@ dependencies = [
 [[package]]
 name = "waterui-assets-core"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "blocking",
  "tempfile",
@@ -5289,7 +5318,7 @@ dependencies = [
 [[package]]
 name = "waterui-assets-macros"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -5302,7 +5331,7 @@ dependencies = [
 [[package]]
 name = "waterui-assets-planner"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "cargo_metadata",
  "heck",
@@ -5318,7 +5347,7 @@ dependencies = [
 [[package]]
 name = "waterui-backend-core"
 version = "0.5.2"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "kurbo",
  "nami 0.13.0",
@@ -5363,7 +5392,7 @@ dependencies = [
 [[package]]
 name = "waterui-controls"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "executor-core",
  "nami 0.13.0",
@@ -5380,7 +5409,7 @@ dependencies = [
 [[package]]
 name = "waterui-core"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "anyhow",
  "bitflags 2.13.2",
@@ -5396,7 +5425,7 @@ dependencies = [
 [[package]]
 name = "waterui-dylib"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "waterui-internal",
 ]
@@ -5404,7 +5433,7 @@ dependencies = [
 [[package]]
 name = "waterui-form"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "getrandom 0.4.3",
  "jiff",
@@ -5426,7 +5455,7 @@ dependencies = [
 [[package]]
 name = "waterui-graphics"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "arc-swap",
  "bytemuck",
@@ -5454,7 +5483,7 @@ dependencies = [
 [[package]]
 name = "waterui-icon"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "suiteki",
  "waterui-core",
@@ -5466,7 +5495,7 @@ dependencies = [
 [[package]]
 name = "waterui-icons-codegen"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "askama",
  "heck",
@@ -5477,7 +5506,7 @@ dependencies = [
 [[package]]
 name = "waterui-icons-lucide"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "serde_json",
  "waterui-icon",
@@ -5505,7 +5534,7 @@ dependencies = [
 [[package]]
 name = "waterui-inspector-app"
 version = "0.5.2"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "async-channel",
  "futures-lite",
@@ -5521,7 +5550,7 @@ dependencies = [
 [[package]]
 name = "waterui-inspector-protocol"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "bincode 2.0.1",
  "bitflags 2.13.2",
@@ -5538,7 +5567,7 @@ dependencies = [
 [[package]]
 name = "waterui-internal"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "async-channel",
  "cpu-time",
@@ -5565,6 +5594,7 @@ dependencies = [
  "waterui-locale",
  "waterui-macros",
  "waterui-media",
+ "waterui-meta",
  "waterui-navigation",
  "waterui-shape",
  "waterui-svg",
@@ -5576,7 +5606,7 @@ dependencies = [
 [[package]]
 name = "waterui-layout"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "nami 0.13.0",
  "num-traits",
@@ -5588,7 +5618,7 @@ dependencies = [
 [[package]]
 name = "waterui-locale"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "fixed_decimal",
  "iana-time-zone",
@@ -5616,7 +5646,7 @@ dependencies = [
 [[package]]
 name = "waterui-macros"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "icu_locale_core",
  "proc-macro-crate",
@@ -5630,7 +5660,7 @@ dependencies = [
 [[package]]
 name = "waterui-map"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "nami 0.13.0",
  "suiteki",
@@ -5641,7 +5671,7 @@ dependencies = [
 [[package]]
 name = "waterui-media"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "blocking",
  "executor-core",
@@ -5662,12 +5692,12 @@ dependencies = [
 [[package]]
 name = "waterui-meta"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 
 [[package]]
 name = "waterui-navigation"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "nami 0.13.0",
  "waterui-controls",
@@ -5681,7 +5711,7 @@ dependencies = [
 [[package]]
 name = "waterui-preview-protocol"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "image",
  "serde",
@@ -5692,7 +5722,7 @@ dependencies = [
 [[package]]
 name = "waterui-shape"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "executor-core",
  "nami 0.13.0",
@@ -5720,7 +5750,7 @@ dependencies = [
 [[package]]
 name = "waterui-testing"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "accesskit",
  "cargo_metadata",
@@ -5742,7 +5772,7 @@ dependencies = [
 [[package]]
 name = "waterui-text"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "nami 0.13.0",
  "parley 0.12.0",
@@ -5762,7 +5792,7 @@ dependencies = [
 [[package]]
 name = "waterui-url"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "base64",
  "nami-core 0.5.0",
@@ -5772,23 +5802,27 @@ dependencies = [
 [[package]]
 name = "waterui-watcher-set"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 
 [[package]]
 name = "waterui-webview"
 version = "0.5.1"
-source = "git+https://github.com/water-rs/waterui?branch=dev#13669984436e5fdc3d63e94a890ac49c3e5fcb4e"
+source = "git+https://github.com/water-rs/waterui?branch=fix%2F3711-tab-indicator-style#40624253c4709f60f559ae94f2fdc956d6a9c9c7"
 dependencies = [
  "base64",
  "cookie",
  "executor-core",
  "futures",
+ "objc2",
+ "objc2-web-kit",
  "percent-encoding",
+ "robius-open",
  "serde",
  "serde_json",
  "suiteki",
  "thiserror 2.0.21",
  "tracing",
+ "waterui-apple-os",
  "waterui-core",
  "waterui-layout",
  "waterui-url",
@@ -5968,7 +6002,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core-deps-apple"
 version = "30.0.1"
-source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#7f2d58488ff7fca11b5b06a1b8f6541e4c0049c1"
+source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#59bd2fd583ed077030d3ed48db92ecf6e7b9b1e6"
 dependencies = [
  "wgpu-hal",
 ]
@@ -5976,7 +6010,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core-deps-emscripten"
 version = "30.0.1"
-source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#7f2d58488ff7fca11b5b06a1b8f6541e4c0049c1"
+source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#59bd2fd583ed077030d3ed48db92ecf6e7b9b1e6"
 dependencies = [
  "wgpu-hal",
 ]
@@ -5984,7 +6018,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core-deps-windows-linux-android"
 version = "30.0.1"
-source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#7f2d58488ff7fca11b5b06a1b8f6541e4c0049c1"
+source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#59bd2fd583ed077030d3ed48db92ecf6e7b9b1e6"
 dependencies = [
  "wgpu-hal",
 ]
@@ -6068,7 +6102,7 @@ dependencies = [
 [[package]]
 name = "wgpu-naga-bridge"
 version = "30.0.1"
-source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#7f2d58488ff7fca11b5b06a1b8f6541e4c0049c1"
+source = "git+https://github.com/water-rs/wgpu?branch=fix%2Fmetal-shared-memory-v30#59bd2fd583ed077030d3ed48db92ecf6e7b9b1e6"
 dependencies = [
  "naga",
  "wgpu-types",
@@ -6087,16 +6121,6 @@ dependencies = [
  "raw-window-handle",
  "static_assertions",
  "web-sys",
-]
-
-[[package]]
-name = "wide"
-version = "1.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d920ac99c3c8edce110cb8d07dbb324d6d026011dce85b1e9355b70f0adacc4f"
-dependencies = [
- "bytemuck",
- "safe_arch",
 ]
 
 [[package]]

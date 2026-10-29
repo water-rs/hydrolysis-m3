@@ -332,8 +332,6 @@ pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
 pub const NAV_BAR_HEIGHT: f64 = 64.0;
 /// `md.comp.nav-bar.item.horizontal.active-indicator.height`.
 pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT: f64 = 40.0;
-/// `md.comp.nav-bar.item.active-indicator.shape` = corner-full.
-pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS: f64 = 20.0;
 /// `md.comp.nav-bar.item.vertical.icon-label-space`: the gap between a
 /// vertical item's icon and its label.
 pub const NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE: f64 = 4.0;

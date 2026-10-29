@@ -1,8 +1,7 @@
 use crate::dimensions::{
     MEDIUM_WINDOW_WIDTH, NAV_BAR_HEIGHT, NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE,
-    NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS,
-    NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE, TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET,
-    TABS_BUTTON_MIN_WIDTH,
+    NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
+    TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
 };
 use crate::navigation_bar::{
     NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT, NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH,
@@ -87,7 +86,7 @@ pub fn indicator_rect(item: &TabItemGeometry) -> Rect {
         (TabItemLayout::Vertical, None) => Rect::from_center_size(
             item.title.center(),
             (
-                item.title.width() + 2.0 * TABS_BUTTON_HORIZONTAL_INSET,
+                2.0f64.mul_add(TABS_BUTTON_HORIZONTAL_INSET, item.title.width()),
                 NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT,
             ),
         ),
@@ -135,9 +134,8 @@ mod tests {
     use super::{indicator_rect, item_layout, metrics};
     use crate::dimensions::{
         MEDIUM_WINDOW_WIDTH, NAV_BAR_HEIGHT, NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE,
-        NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS,
-        NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE, TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET,
-        TABS_BUTTON_MIN_WIDTH,
+        NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
+        TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
     };
     use hydrolysis::theme::{TabItemGeometry, TabItemLayout};
     use waterui::navigation::tab::NativeTabStyle;
@@ -179,7 +177,6 @@ mod tests {
         // md.comp.nav-bar.item.active-indicator.shape = corner-full.
         assert_eq!(NAV_BAR_HEIGHT, 64.0);
         assert_eq!(NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, 40.0);
-        assert_eq!(NAV_BAR_ITEM_HORIZONTAL_INDICATOR_RADIUS, 20.0);
         // md.comp.nav-bar.item.horizontal.icon-label-space = 4
         assert_eq!(NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE, 4.0);
         assert_eq!(metrics.icon_label_spacing, 4.0);
@@ -225,7 +222,7 @@ mod tests {
         assert_eq!(pill.center(), item.title.center());
         assert_eq!(
             pill.size().width,
-            item.title.width() + 2.0 * TABS_BUTTON_HORIZONTAL_INSET
+            2.0f64.mul_add(TABS_BUTTON_HORIZONTAL_INSET, item.title.width())
         );
         assert_eq!(pill.size().height, NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT);
     }
