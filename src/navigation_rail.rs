@@ -52,9 +52,9 @@ const ACTIVE_INDICATOR_ICON_LABEL_SPACE: f32 = 8.0;
 const EXPANDED_ACTIVE_INDICATOR_HEIGHT: f32 = 56.0;
 /// `NavigationRailVerticalItemTokens.ActiveIndicatorWidth` — the collapsed
 /// item's pill.
-const COLLAPSED_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
+pub(crate) const COLLAPSED_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
 /// `NavigationRailVerticalItemTokens.ActiveIndicatorHeight`.
-const COLLAPSED_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
+pub(crate) const COLLAPSED_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
 /// `NavigationRailVerticalItemTokens.IconLabelSpace` — the gap between the
 /// collapsed indicator's bottom edge and its label.
 const COLLAPSED_ICON_LABEL_SPACE: f32 = 4.0;

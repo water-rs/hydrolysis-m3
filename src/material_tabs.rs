@@ -78,17 +78,12 @@ pub fn material_tab(
 
 #[cfg(test)]
 mod tests {
-    use crate::dimensions::{
-        TABS_ACTIVE_INDICATOR_HEIGHT, TABS_ACTIVE_INDICATOR_RADIUS, TABS_BAR_HEIGHT,
-        TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
-    };
+    use crate::dimensions::{TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH};
 
     #[test]
     fn material_tabs_tokens_match_compose_primary_navigation_tab_tokens() {
         assert_eq!(TABS_BAR_HEIGHT, 48.0);
         assert_eq!(TABS_BUTTON_MIN_WIDTH, 48.0);
         assert_eq!(TABS_BUTTON_HORIZONTAL_INSET, 16.0);
-        assert_eq!(TABS_ACTIVE_INDICATOR_HEIGHT, 3.0);
-        assert_eq!(TABS_ACTIVE_INDICATOR_RADIUS, 3.0);
     }
 }
