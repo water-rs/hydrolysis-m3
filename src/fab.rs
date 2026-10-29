@@ -325,7 +325,7 @@ impl ExtendedFab<fn(&Environment), PrimaryFab> {
             .semantic_text()
             .clone()
             .resolve(&Environment::new())
-            .content
+            .content()
             .snapshot()
             .to_plain();
         Self {

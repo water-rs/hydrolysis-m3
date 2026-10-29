@@ -67,8 +67,8 @@ fn text_ink_runs(app: &mut OffscreenApp) -> (Vec<(f64, f64)>, f64) {
     let x1 = support::f32_as_usize(bounds.x() + bounds.width());
     let y1 = support::f32_as_usize(bounds.y() + bounds.height());
     let pixel = |x: usize, y: usize| {
-        let i = (y * snapshot.width as usize + x) * 4;
-        &snapshot.rgba8[i..i + 4]
+        let i = (y * snapshot.width() as usize + x) * 4;
+        &snapshot.rgba8()[i..i + 4]
     };
     let background = pixel(x1 - 8, usize::midpoint(y0, y1));
     let mut runs: Vec<(f64, f64)> = Vec::new();

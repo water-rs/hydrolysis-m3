@@ -592,7 +592,7 @@ fn for_each_same_id_item_update_rematerializes_row_offscreen() {
     app.settle();
     let after = app.snapshot();
     assert!(
-        after.rgba8 != before.rgba8,
+        after.rgba8() != before.rgba8(),
         "the updated row must repaint: a same-id content change must re-materialize \
          the retained row instead of replaying the stale subtree"
     );
