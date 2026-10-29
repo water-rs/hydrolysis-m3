@@ -818,12 +818,12 @@ fn material_badge_paints_scheme_error_behind_its_label(app: &mut OffscreenApp) {
     };
     let x0 = bounds.x() as usize;
     let y0 = bounds.y() as usize;
-    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width as usize);
-    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height as usize);
-    let width = snapshot.width as usize;
+    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width() as usize);
+    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height() as usize);
+    let width = snapshot.width() as usize;
     let error_pixels = (y0..y1)
         .flat_map(|y| (x0..x1).map(move |x| y * width + x))
-        .filter(|&index| is_error(&snapshot.rgba8[index * 4..index * 4 + 4]))
+        .filter(|&index| is_error(&snapshot.rgba8()[index * 4..index * 4 + 4]))
         .count();
     assert!(
         error_pixels > 20,

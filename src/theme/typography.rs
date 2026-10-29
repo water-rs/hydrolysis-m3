@@ -237,11 +237,14 @@ mod tests {
         expected_line_height: f32,
         expected_letter_spacing: f32,
     ) {
-        assert_eq!(font.size, expected_size);
-        assert_eq!(font.weight, expected_weight);
-        assert_eq!(font.line_height, Some(expected_line_height));
-        assert_eq!(font.letter_spacing, expected_letter_spacing);
-        assert_eq!(font.family.as_deref(), Some(MATERIAL_TYPEFACE));
+        assert_eq!(font.size(), expected_size);
+        assert_eq!(font.weight(), expected_weight);
+        assert_eq!(font.line_height(), Some(expected_line_height));
+        assert_eq!(font.letter_spacing(), expected_letter_spacing);
+        assert_eq!(
+            font.family().map(waterui::Str::as_str),
+            Some(MATERIAL_TYPEFACE)
+        );
     }
 
     #[test]
@@ -327,9 +330,9 @@ mod tests {
         defaults(&mut styled);
         let assembled = app.layered_on(&styled);
         let resolved_body = Body.resolve(&assembled).snapshot();
-        assert_eq!(resolved_body.size, app_body.size);
-        assert_eq!(resolved_body.weight, app_body.weight);
-        assert_eq!(resolved_body.family, app_body.family);
+        assert_eq!(resolved_body.size(), app_body.size());
+        assert_eq!(resolved_body.weight(), app_body.weight());
+        assert_eq!(resolved_body.family(), app_body.family());
         assert_material_font(
             Title.resolve(&assembled).snapshot(),
             22.0,

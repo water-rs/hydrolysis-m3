@@ -104,12 +104,12 @@ fn icon_only_button_draws_the_state_layer_centred_in_its_bounds(app: &mut Offscr
     let rest = app.snapshot();
     let rx0 = support::f32_as_usize(bounds.x().max(0.0));
     let ry0 = support::f32_as_usize(bounds.y().max(0.0));
-    let rx1 = (support::f32_as_usize(bounds.x() + bounds.width())).min(rest.width as usize);
-    let ry1 = (support::f32_as_usize(bounds.y() + bounds.height())).min(rest.height as usize);
+    let rx1 = (support::f32_as_usize(bounds.x() + bounds.width())).min(rest.width() as usize);
+    let ry1 = (support::f32_as_usize(bounds.y() + bounds.height())).min(rest.height() as usize);
     let mut painted_at_rest = 0usize;
     for y in ry0..ry1 {
         for x in rx0..rx1 {
-            let px = &rest.rgba8[(y * rest.width as usize + x) * 4..][..4];
+            let px = &rest.rgba8()[(y * rest.width() as usize + x) * 4..][..4];
             if px[0].max(px[1]).max(px[2]) > 4 {
                 painted_at_rest += 1;
             }
@@ -128,15 +128,15 @@ fn icon_only_button_draws_the_state_layer_centred_in_its_bounds(app: &mut Offscr
     let snapshot = app.snapshot();
     let x0 = support::f32_as_usize(bounds.x().max(0.0));
     let y0 = support::f32_as_usize(bounds.y().max(0.0));
-    let x1 = (support::f32_as_usize(bounds.x() + bounds.width())).min(snapshot.width as usize);
-    let y1 = (support::f32_as_usize(bounds.y() + bounds.height())).min(snapshot.height as usize);
+    let x1 = (support::f32_as_usize(bounds.x() + bounds.width())).min(snapshot.width() as usize);
+    let y1 = (support::f32_as_usize(bounds.y() + bounds.height())).min(snapshot.height() as usize);
     let mut min_x = usize::MAX;
     let mut min_y = usize::MAX;
     let mut max_x = 0usize;
     let mut max_y = 0usize;
     for y in y0..y1 {
         for x in x0..x1 {
-            let px = &snapshot.rgba8[(y * snapshot.width as usize + x) * 4..][..4];
+            let px = &snapshot.rgba8()[(y * snapshot.width() as usize + x) * 4..][..4];
             if px[0].max(px[1]).max(px[2]) > 4 {
                 min_x = min_x.min(x);
                 min_y = min_y.min(y);

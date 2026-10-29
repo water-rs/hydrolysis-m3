@@ -94,7 +94,7 @@ where
                 let phase = env
                     .get::<DragEvent>()
                     .expect("drag handle gesture is missing its DragEvent")
-                    .phase;
+                    .phase();
                 held_for_gesture.set(matches!(
                     phase,
                     GesturePhase::Started | GesturePhase::Updated

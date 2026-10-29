@@ -110,12 +110,12 @@ fn is_dark(pixel: &[u8]) -> bool {
 fn dark_pixels(snapshot: &Snapshot, x0: f32, y0: f32, x1: f32, y1: f32) -> usize {
     let x0 = x0.max(0.0) as usize;
     let y0 = y0.max(0.0) as usize;
-    let x1 = (x1 as usize).min(snapshot.width as usize);
-    let y1 = (y1 as usize).min(snapshot.height as usize);
-    let width = snapshot.width as usize;
+    let x1 = (x1 as usize).min(snapshot.width() as usize);
+    let y1 = (y1 as usize).min(snapshot.height() as usize);
+    let width = snapshot.width() as usize;
     (y0..y1)
         .flat_map(|y| (x0..x1).map(move |x| y * width + x))
-        .filter(|&index| is_dark(&snapshot.rgba8[index * 4..index * 4 + 4]))
+        .filter(|&index| is_dark(&snapshot.rgba8()[index * 4..index * 4 + 4]))
         .count()
 }
 
@@ -132,12 +132,12 @@ fn dark_pixels(snapshot: &Snapshot, x0: f32, y0: f32, x1: f32, y1: f32) -> usize
 fn dark_row_centroid(snapshot: &Snapshot, x0: f32, y0: f32, x1: f32, y1: f32) -> f32 {
     let x0 = x0.max(0.0) as usize;
     let y0 = y0.max(0.0) as usize;
-    let x1 = (x1 as usize).min(snapshot.width as usize);
-    let y1 = (y1 as usize).min(snapshot.height as usize);
-    let width = snapshot.width as usize;
+    let x1 = (x1 as usize).min(snapshot.width() as usize);
+    let y1 = (y1 as usize).min(snapshot.height() as usize);
+    let width = snapshot.width() as usize;
     let (sum, count) = (y0..y1)
         .flat_map(|y| (x0..x1).map(move |x| (y, x)))
-        .filter(|&(y, x)| is_dark(&snapshot.rgba8[(y * width + x) * 4..(y * width + x) * 4 + 4]))
+        .filter(|&(y, x)| is_dark(&snapshot.rgba8()[(y * width + x) * 4..(y * width + x) * 4 + 4]))
         .fold((0usize, 0usize), |(sum, count), (y, _)| {
             (sum + y, count + 1)
         });
@@ -360,8 +360,8 @@ fn rich_tooltip_shadow_hugs_the_card(ui: UiBuilder<Styled<Material3>>) {
               intended conversion"
 )]
 fn pixel_at(snapshot: &Snapshot, x: f32, y: f32) -> [u8; 4] {
-    let index = (y as usize * snapshot.width as usize + x as usize) * 4;
-    snapshot.rgba8[index..index + 4]
+    let index = (y as usize * snapshot.width() as usize + x as usize) * 4;
+    snapshot.rgba8()[index..index + 4]
         .try_into()
         .expect("rgba pixel")
 }

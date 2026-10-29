@@ -251,7 +251,7 @@ impl View for ConnectedButtonGroup {
                         let phase = env
                             .get::<DragEvent>()
                             .expect("connected button gesture is missing its DragEvent")
-                            .phase;
+                            .phase();
                         pressed_for_gesture.set(matches!(
                             phase,
                             GesturePhase::Started | GesturePhase::Updated
@@ -437,7 +437,7 @@ impl View for ButtonGroup {
                             let phase = env
                                 .get::<DragEvent>()
                                 .expect("group button gesture is missing its DragEvent")
-                                .phase;
+                                .phase();
                             pressed.set(matches!(
                                 phase,
                                 GesturePhase::Started | GesturePhase::Updated

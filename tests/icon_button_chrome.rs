@@ -88,12 +88,12 @@ fn count_pixels(
 ) -> usize {
     let x0 = bounds.x().max(0.0) as usize;
     let y0 = bounds.y().max(0.0) as usize;
-    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width as usize);
-    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height as usize);
-    let width = snapshot.width as usize;
+    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width() as usize);
+    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height() as usize);
+    let width = snapshot.width() as usize;
     (y0..y1)
         .flat_map(|y| (x0..x1).map(move |x| y * width + x))
-        .filter(|&index| predicate(&snapshot.rgba8[index * 4..index * 4 + 4]))
+        .filter(|&index| predicate(&snapshot.rgba8()[index * 4..index * 4 + 4]))
         .count()
 }
 

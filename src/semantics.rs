@@ -15,7 +15,7 @@ pub fn label_plain_text(label: &Label) -> Str {
         .semantic_text()
         .clone()
         .resolve(&Environment::new())
-        .content
+        .content()
         .snapshot()
         .to_plain()
 }
