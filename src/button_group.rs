@@ -13,8 +13,8 @@ use waterui::color::Color;
 use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
 use waterui::layout::padding::EdgeInsets;
 use waterui::layout::{
-    Layout, LayoutInvalidationCallback, Point, ProposalSize, Rect, Size, SubView, SubviewPlacement,
-    container::FixedContainer,
+    Layout, LayoutError, LayoutInvalidationCallback, PlacementInput, Point, ProposalSize, Rect,
+    Size, SubView, SubviewPlacement, UnitPoint, container::FixedContainer,
 };
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::watcher::BoxWatcherGuard;
@@ -532,6 +532,16 @@ impl Layout for ButtonGroupLayout {
             widths.iter().sum::<f32>() + gaps,
             Self::row_height(children),
         )
+    }
+
+    /// The row where `place` starts it: at the leading edge, centred
+    /// vertically.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::LEADING))
     }
 
     fn place(
