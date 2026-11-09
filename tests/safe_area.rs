@@ -14,6 +14,7 @@
 
 use std::time::Duration;
 
+use waterui::accessibility::AccessibilityGeometry;
 use waterui::component::list::{List, ListItem};
 use waterui::graphics::color::Srgb;
 use waterui::id::SelfId;
@@ -47,13 +48,17 @@ fn card(label: &'static str) -> impl View {
 /// A labelled probe carrying an `.ignore_safe_area` release: the label's
 /// bounds land on the released boundary only when the edge its frame
 /// touches is reachable — a covered edge releases nothing, so the frame
-/// discriminates the two.
+/// discriminates the two. The probe reports its allocation, the laid-out
+/// frame the release extends, rather than the response its content is
+/// centred to inside it.
 fn edge_probe(
     view: impl View,
     label: impl signal::IntoComputed<Str>,
     ignore: impl Into<IgnoreSafeArea>,
 ) -> impl View {
-    view.ignore_safe_area(ignore).a11y_label(label)
+    view.ignore_safe_area(ignore)
+        .a11y_geometry(AccessibilityGeometry::Allocation)
+        .a11y_label(label)
 }
 
 fn env_with_insets(insets: &Binding<EdgeInsets>) -> Environment {
@@ -72,13 +77,16 @@ fn env_with_keyboard(
 }
 
 /// §7.1 "Layout avoids the regions": the root lays out inside the deepest
-/// region on every edge.
+/// region on every edge. The trailing spacer fills the root so its content
+/// starts on the region's top edge instead of being centred in it.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
 fn root_content_stays_inside_the_safe_area(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .environment(env_with_insets(&insets))
-        .mount_offscreen(move || vstack((card("inbox"),)).alignment(HorizontalAlignment::Leading));
+        .mount_offscreen(move || {
+            vstack((card("inbox"), spacer())).alignment(HorizontalAlignment::Leading)
+        });
 
     let bounds = app
         .query()
@@ -103,7 +111,7 @@ fn ignore_safe_area_all_reaches_the_window_origin(ui: UiBuilder<Styled<hydrolysi
     let mut app = ui
         .environment(env_with_insets(&insets))
         .mount_offscreen(move || {
-            vstack((card("chrome"),))
+            vstack((card("chrome"), spacer()))
                 .alignment(HorizontalAlignment::Leading)
                 .ignore_safe_area(EdgeSet::ALL)
         });
@@ -130,7 +138,7 @@ fn ignore_safe_area_releases_only_the_flagged_edges(
     let mut app = ui
         .environment(env_with_insets(&insets))
         .mount_offscreen(move || {
-            vstack((card("header"),))
+            vstack((card("header"), spacer()))
                 .alignment(HorizontalAlignment::Leading)
                 .ignore_safe_area(EdgeSet::TOP)
         });
@@ -164,8 +172,9 @@ fn an_ignore_releases_only_on_an_edge_the_frame_touches(
         .environment(env_with_insets(&insets))
         .mount_offscreen(move || {
             vstack((
-                card("top-touches").ignore_safe_area(EdgeSet::TOP),
-                card("below").ignore_safe_area(EdgeSet::TOP),
+                edge_probe(card("top-touches"), "top-touches", EdgeSet::TOP),
+                edge_probe(card("below"), "below", EdgeSet::TOP),
+                spacer(),
             ))
             .alignment(HorizontalAlignment::Leading)
         });
@@ -203,7 +212,9 @@ fn a_safe_area_change_relays_out_the_root(ui: UiBuilder<Styled<hydrolysis_m3::Ma
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .environment(env_with_insets(&insets))
-        .mount_offscreen(move || vstack((card("inbox"),)).alignment(HorizontalAlignment::Leading));
+        .mount_offscreen(move || {
+            vstack((card("inbox"), spacer())).alignment(HorizontalAlignment::Leading)
+        });
     let first = app.query().label("inbox").single().bounds();
 
     insets.set(EdgeInsets::new(80.0, 34.0, 24.0, 8.0));
@@ -252,10 +263,10 @@ fn navigation_page_targets_follow_the_safe_area(ui: UiBuilder<Styled<hydrolysis_
         .mount_offscreen(stack);
     let link = app.query().role(Role::BUTTON).label("Open Detail").single();
     let shifted = link.bounds();
-    // The link is centred in the page, so the horizontal insets move it by
-    // half their difference; the top inset moves it down whole.
+    // The link is centred in the page on both axes, so each pair of opposite
+    // insets moves it by half their difference.
     let expected_x = unshifted.x() + (SAFE_INSETS.leading() - SAFE_INSETS.trailing()) / 2.0;
-    let expected_y = unshifted.y() + SAFE_INSETS.top();
+    let expected_y = unshifted.y() + (SAFE_INSETS.top() - SAFE_INSETS.bottom()) / 2.0;
     assert!(
         (shifted.x() - expected_x).abs() <= 1.0 && (shifted.y() - expected_y).abs() <= 1.0,
         "the page's link should sit inside the safe area at ({expected_x}, {expected_y}): \
@@ -1178,7 +1189,11 @@ fn an_ignore_top_inside_navigation_content_stays_below_the_bar(
         .mount_offscreen(move || {
             NavigationView::new(
                 "Hero",
-                vstack((card("hero").ignore_safe_area(EdgeSet::TOP), card("below"))),
+                vstack((
+                    card("hero").ignore_safe_area(EdgeSet::TOP),
+                    card("below"),
+                    spacer(),
+                )),
             )
         });
 
