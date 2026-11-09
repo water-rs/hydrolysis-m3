@@ -4,8 +4,8 @@ use core::fmt::{self, Debug};
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::layout::{
-    HorizontalAlignment, Layout, PlacedSubview, Point, ProposalSize, Rect, Size, SubView,
-    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
+    HorizontalAlignment, Layout, LayoutError, PlacedSubview, PlacementInput, Point, ProposalSize,
+    Rect, Size, SubView, SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
@@ -328,6 +328,16 @@ impl Layout for DialogSurfaceLayout {
             .max(DIALOG_CONTAINER_MIN_HEIGHT);
 
         Size::new(width, height)
+    }
+
+    /// The surface at the bounds' origin, where `place` lays out its
+    /// content.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
     }
 
     fn place(

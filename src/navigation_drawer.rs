@@ -6,8 +6,8 @@ use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, Accessibi
 use waterui::color::Color;
 use waterui::interaction::InteractionState;
 use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
-    container::FixedContainer, padding::EdgeInsets,
+    Layout, LayoutError, PlacementInput, ProposalSize, Rect, Size, StretchAxis, SubView,
+    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::reactive::{SignalExt as _, binding};
@@ -150,7 +150,7 @@ where
                 panel_content,
             )
             .offset(offset, 0.0)
-            .position_in(UnitPoint::TOP_LEADING);
+            .position_in_anchor(UnitPoint::TOP_LEADING, UnitPoint::TOP_LEADING);
             let close_on_overlay_click = self.close_on_overlay_click;
             let opened_for_overlay = opened.clone();
             let overlay_action = self.overlay_action;
@@ -208,6 +208,15 @@ impl Layout for NavigationDrawerPanelLayout {
             })
         });
         Size::new(width, height)
+    }
+
+    /// The panel at the bounds' origin, over which `place` lays its content.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
     }
 
     fn place(

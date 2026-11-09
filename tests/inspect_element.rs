@@ -37,7 +37,11 @@ fn an_application_menu_keeps_its_own_items() {
                 .context_menu(vec!["Rename".action(|| {})])
         });
 
-    app.secondary_click_at(40.0, 30.0);
+    let hello = app.query().label("Hello").single().bounds();
+    app.secondary_click_at(
+        hello.x() + hello.width() / 2.0,
+        hello.y() + hello.height() / 2.0,
+    );
 
     app.query().label("Rename").assert_exists();
     app.query().label("Inspect element").assert_exists();
