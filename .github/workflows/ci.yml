@@ -31,11 +31,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+      # Hydrolysis renders through Vulkan only on Linux; the runner has no
+      # GPU, so Mesa's lavapipe driver and the Vulkan loader stand in for one.
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev spirv-tools
+          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev mesa-vulkan-drivers libvulkan1 spirv-tools
       - name: Install DirectX Shader Compiler
         if: runner.os == 'Windows'
         # The framework's install-dxc restores the compiler from the Actions
