@@ -228,8 +228,8 @@ where
                 .foreground(Tokens::content_color())
                 .padding_with(EdgeInsets::new(
                     0.0,
-                    0.0,
                     LEADING_BUTTON_LEADING_SPACE,
+                    0.0,
                     LEADING_BUTTON_TRAILING_SPACE,
                 ))
                 .height(CONTAINER_HEIGHT)
@@ -265,8 +265,8 @@ where
             chevron
                 .padding_with(EdgeInsets::new(
                     0.0,
-                    0.0,
                     TRAILING_BUTTON_SPACE,
+                    0.0,
                     TRAILING_BUTTON_SPACE,
                 ))
                 .height(CONTAINER_HEIGHT)

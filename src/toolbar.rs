@@ -113,8 +113,8 @@ where
                 .spacing(FLOATING_BETWEEN_SPACE)
                 .padding_with(EdgeInsets::new(
                     0.0,
-                    0.0,
                     FLOATING_HORIZONTAL_SPACE,
+                    0.0,
                     FLOATING_HORIZONTAL_SPACE,
                 ))
                 .height(CONTAINER_HEIGHT)
@@ -176,8 +176,8 @@ where
             .spacing(self.spacing)
             .padding_with(EdgeInsets::new(
                 0.0,
-                0.0,
                 DOCKED_HORIZONTAL_SPACE,
+                0.0,
                 DOCKED_HORIZONTAL_SPACE,
             ))
             .height(CONTAINER_HEIGHT)

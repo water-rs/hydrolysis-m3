@@ -370,8 +370,8 @@ fn drawer_item_content(
     .height(NAVIGATION_DRAWER_ITEM_HEIGHT)
     .padding_with(EdgeInsets::new(
         0.0,
-        0.0,
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
+        0.0,
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
     ))
     .background(Capsule.fill(background))

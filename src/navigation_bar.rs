@@ -169,8 +169,8 @@ where
         // extends `IndicatorVerticalPadding` above the icon.
         .padding_with(EdgeInsets::new(
             NAVIGATION_BAR_ITEM_TOP_PADDING,
-            NAVIGATION_BAR_ITEM_BOTTOM_PADDING,
             0.0,
+            NAVIGATION_BAR_ITEM_BOTTOM_PADDING,
             0.0,
         ))
         .min_width(NAVIGATION_BAR_ITEM_MIN_WIDTH)

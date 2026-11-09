@@ -87,7 +87,7 @@ where
             .font(typography::label_large())
             .foreground(Primary)
             .height(40.0)
-            .padding_with(EdgeInsets::new(0.0, 0.0, 12.0, 12.0))
+            .padding_with(EdgeInsets::new(0.0, 12.0, 0.0, 12.0))
             .on_tap(move |env: Environment| action(&env))
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
