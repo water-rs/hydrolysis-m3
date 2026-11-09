@@ -5416,7 +5416,7 @@ dependencies = [
 [[package]]
 name = "waterui-chart"
 version = "0.3.0"
-source = "git+https://github.com/water-rs/chart?branch=feat%2Fresponse-geometry#c0cb161bb41d72142c0e58739192e6c0a2fdf2c5"
+source = "git+https://github.com/water-rs/chart?branch=dev#c4c0dcb5bfc6ec97257b93bab6e0f8776dc9f951"
 dependencies = [
  "bytemuck",
  "nami 0.13.0",
@@ -5556,7 +5556,7 @@ dependencies = [
 [[package]]
 name = "waterui-image"
 version = "0.5.0"
-source = "git+https://github.com/water-rs/image?branch=feat%2Fresponse-geometry#cbe859bcd16e04ec1e93b54bbd264a61f9b5b690"
+source = "git+https://github.com/water-rs/image?branch=dev#cbb7806ebff2b71fba9446770734523f380018a6"
 dependencies = [
  "executor-core",
  "half",
