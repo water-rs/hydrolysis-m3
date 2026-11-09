@@ -1,114 +1,233 @@
+//! The Material 3 button look: filled, outlined, text and link buttons
+//! from the `md.comp.button.*` tokens.
+
+use hydrolysis::theme::{
+    Border, ButtonLook, ButtonSpec, Chrome, CornerShape, Corners, Custom, Driven, Elevation,
+    Inputs, Label, PressFeedback, Surface,
+};
+use waterui::interaction::InteractionState;
+use waterui::reactive::zip::zip;
+use waterui_controls::button::ButtonStyle;
+use waterui_core::Environment;
+use waterui_graphics::color::Color;
+use waterui_graphics::draw::kurbo::{Line, Point, Stroke};
+use waterui_graphics::draw::{Draw as _, Paint, WorkingColor};
+
+use crate::color::{OnPrimary, OnSurface, OnSurfaceVariant, OutlineVariant, Primary, Shadow};
 use crate::dimensions::{
     BUTTON_LINK_HORIZONTAL_PADDING, BUTTON_LINK_UNDERLINE_BOTTOM_INSET,
     BUTTON_LINK_UNDERLINE_THICKNESS, BUTTON_LINK_VERTICAL_PADDING, BUTTON_MIN_WIDTH,
     BUTTON_TEXT_VERTICAL_PADDING, SHAPE_CORNER_LARGE, SHAPE_CORNER_MEDIUM, SHAPE_CORNER_SMALL,
     button_size_tokens,
 };
-use crate::theme::colors::MaterialColorScheme;
-use crate::theme::state_layer;
-use crate::{ButtonMetrics, WidgetInteractionState};
-use waterui::interaction::InteractionState;
-use waterui_controls::ControlSize;
-use waterui_controls::button::ButtonStyle;
-use waterui_graphics::color::Color;
-use waterui_graphics::draw::kurbo::{Line, RoundedRect, Stroke};
-use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
+use crate::elevation::{MaterialElevationLevel, chrome_elevation};
+use crate::semantics::{focus_indicator, state_layer};
+use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
+use crate::theme::{motion, typography};
 
-pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
-    let tokens = button_size_tokens(size);
-    match style {
-        ButtonStyle::Automatic
-        | ButtonStyle::Bordered
-        | ButtonStyle::BorderedProminent
-        | ButtonStyle::Plain
-        | ButtonStyle::Borderless => ButtonMetrics::new(
-            tokens.horizontal_space,
-            BUTTON_TEXT_VERTICAL_PADDING,
-            BUTTON_MIN_WIDTH,
-            tokens.container_height,
-        ),
+/// The look of a text button in `spec`.
+///
+/// # Panics
+///
+/// Panics on a `ButtonStyle` or `ControlSize` variant this theme does not
+/// implement.
+pub fn look(spec: ButtonSpec, env: &Environment) -> ButtonLook {
+    let style = spec.style();
+    let shape = CornerShape::new(container_corners(pressed_corner_radius));
+    let surface = match style {
+        // `Automatic` is the theme's default button, which in M3 is the
+        // filled button for a text label.
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => Surface::new(
+            shape,
+            disabled_paint(
+                Primary,
+                OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY),
+                env,
+            ),
+        )
+        .elevation(filled_elevation(env)),
+        // md.comp.button.outlined.outline.color = outline-variant in every
+        // state, disabled included.
+        ButtonStyle::Bordered => {
+            Surface::clear(shape).border(outline(OutlineVariant, outline_width, env))
+        }
+        ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => Surface::clear(shape),
+        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    };
+    // md.comp.button.filled.*.state-layer.color = on-primary;
+    // md.comp.button.outlined.*.state-layer.color = on-surface-variant;
+    // md.comp.button.text.*.state-layer.color = primary.
+    let layer = match style {
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => Color::from(OnPrimary),
+        ButtonStyle::Bordered => Color::from(OnSurfaceVariant),
+        ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => Color::from(Primary),
+        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    };
+    let mut chrome = interactive(surface, layer);
+    if style == ButtonStyle::Link {
+        chrome = chrome.custom(link_underline(env));
+    }
+    let look = ButtonLook::new(chrome, label(spec));
+    if style == ButtonStyle::Link {
         // A link has no container, so it takes neither the size scale's
         // padding nor its minimum box.
-        ButtonStyle::Link => ButtonMetrics::new(
-            BUTTON_LINK_HORIZONTAL_PADDING,
-            BUTTON_LINK_VERTICAL_PADDING,
-            0.0,
-            0.0,
-        ),
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+        look.padding(BUTTON_LINK_HORIZONTAL_PADDING, BUTTON_LINK_VERTICAL_PADDING)
+    } else {
+        let tokens = button_size_tokens(spec.size());
+        look.padding(tokens.horizontal_space, BUTTON_TEXT_VERTICAL_PADDING)
+            .minimum_size(waterui_graphics::draw::kurbo::Size::new(
+                BUTTON_MIN_WIDTH,
+                tokens.container_height,
+            ))
     }
 }
 
-pub fn label_color(colors: &MaterialColorScheme, style: ButtonStyle, disabled: bool) -> Color {
+/// A Material control's chrome on `surface`: the state layer in `layer`,
+/// the ripple, the focus indicator, the control motion and the minimum
+/// touch target.
+pub fn interactive(surface: Surface, layer: Color) -> Chrome {
+    Chrome::new(
+        surface,
+        state_layer(layer),
+        PressFeedback::new().ripple(motion::ripple()),
+        focus_indicator(),
+        motion::chrome(),
+    )
+    .hit(motion::hit_region())
+}
+
+/// The label styling of a button in `spec`: `label-large`, in the
+/// variant's content colour, on-surface at 38% while disabled.
+pub fn label(spec: ButtonSpec) -> Label {
+    Label::new()
+        .font(typography::label_large())
+        .color(label_color(spec.style(), spec.icon_only()))
+}
+
+/// The label colour of `style`, `icon_only` or not, in every state.
+///
+/// # Panics
+///
+/// Panics on a `ButtonStyle` variant this theme does not implement.
+pub fn label_color(style: ButtonStyle, icon_only: bool) -> Driven<Color> {
+    let rest = match style {
+        // The filled button's on-primary content for a text label; the
+        // standard icon button's on-surface-variant over no container for
+        // an icon-only one.
+        ButtonStyle::Automatic if icon_only => Color::from(OnSurfaceVariant),
+        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => Color::from(OnPrimary),
+        // md.comp.button.outlined.label-text.color
+        ButtonStyle::Bordered => Color::from(OnSurfaceVariant),
+        // md.comp.button.text.label-text.color
+        ButtonStyle::Plain | ButtonStyle::Link | ButtonStyle::Borderless => Color::from(Primary),
+        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    };
     // MD3 disabled button label: on-surface at the 38% disabled-content
     // opacity, regardless of variant.
-    if disabled {
-        return colors
-            .on_surface
-            .view_color()
-            .with_opacity(crate::theme::colors::DISABLED_CONTENT_OPACITY);
-    }
-    match style {
-        // `Automatic` is the theme's default button, which in M3 is the
-        // filled button for a text label — on-primary content — and the
-        // standard button for an icon-only label — on-surface-variant
-        // content over no container. The backend marks an icon-only label's
-        // subtree so the two resolve differently.
-        ButtonStyle::Automatic => Color::new(AutomaticLabelColor {
-            filled: colors.on_primary.view_color(),
-            standard: colors.on_surface_variant.view_color(),
-        }),
-        ButtonStyle::BorderedProminent => colors.on_primary.view_color(),
-        // md.comp.button.outlined.label-text.color
-        ButtonStyle::Bordered => colors.on_surface_variant.view_color(),
-        // md.comp.button.text.label-text.color
-        ButtonStyle::Plain | ButtonStyle::Link | ButtonStyle::Borderless => {
-            colors.primary.view_color()
-        }
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
-    }
+    waterui_core::interaction::StateValue::new(rest)
+        .when(
+            InteractionState::DISABLED,
+            Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY)),
+        )
+        .into()
 }
 
-/// Resolves to `filled` for an ordinary button label and to `standard` in an
-/// icon-only label's subtree — `hydrolysis::theme::IconOnlyButtonLabel` is installed
-/// there — because `Automatic` maps to a different variant for the two.
-#[derive(Debug, Clone)]
-struct AutomaticLabelColor {
-    filled: Color,
-    standard: Color,
+/// `rest` resolved in `env` as a paint, `disabled` while the widget is
+/// disabled.
+pub fn disabled_paint(
+    rest: impl Into<Color>,
+    disabled: impl Into<Color>,
+    env: &Environment,
+) -> Driven<Paint> {
+    Driven::follow(
+        zip(rest.into().resolve(env), disabled.into().resolve(env)),
+        |&(rest, disabled): &(WorkingColor, WorkingColor), inputs: &Inputs<'_, ()>| {
+            Paint::from(if inputs.state.contains(InteractionState::DISABLED) {
+                disabled
+            } else {
+                rest
+            })
+        },
+    )
 }
 
-impl waterui_core::resolve::Resolvable for AutomaticLabelColor {
-    type Resolved = WorkingColor;
+/// A border in `color` whose width follows the frame's height through
+/// `width`.
+pub fn outline(
+    color: impl Into<Color>,
+    width: fn(f64) -> f64,
+    env: &Environment,
+) -> Driven<Border> {
+    Driven::follow(
+        color.into().resolve(env),
+        move |color: &WorkingColor, inputs: &Inputs<'_, ()>| {
+            Border::new(width(inputs.frame.height()), *color)
+        },
+    )
+}
 
-    fn resolve(
-        &self,
-        env: &waterui_core::Environment,
-    ) -> impl waterui_core::Signal<Output = Self::Resolved> {
-        if env
-            .get::<hydrolysis::theme::IconOnlyButtonLabel>()
-            .is_some()
-        {
-            self.standard.resolve(env)
+/// Resting `CornerFull`, morphing while pressed to the radius `pressed`
+/// gives the frame's height — the size band's `PressedContainerShape`. The
+/// height carries the band because a button stretched to fill a taller row
+/// behaves as the larger size.
+pub fn container_corners(pressed: fn(f64) -> f64) -> Driven<Corners> {
+    Driven::new(move |inputs: &Inputs<'_, ()>| {
+        if inputs.state.contains(InteractionState::PRESSED) {
+            Corners::from(pressed(inputs.frame.height()))
         } else {
-            self.filled.resolve(env)
+            Corners::Full
         }
-    }
+    })
 }
 
-/// A button container is `CornerFull` at every size in the tokens, so its
-/// corner radius is half its height rather than a fixed number of dp. Reading
-/// it off the bounds keeps a large or extra-large button a capsule, and keeps a
-/// button stretched to fill a taller row — a navigation drawer line, say —
-/// rounded to match whatever it is sitting on.
-fn container_radius(bounds: waterui_graphics::draw::kurbo::Rect) -> f64 {
-    bounds.height() / 2.0
+/// `md.comp.button.filled.container.elevation`: level0 at rest, level1
+/// while hovered, level0 again while pressed, focused or disabled.
+fn filled_elevation(env: &Environment) -> Driven<Elevation> {
+    Driven::follow(
+        Color::from(Shadow).resolve(env),
+        |shadow: &WorkingColor, inputs: &Inputs<'_, ()>| {
+            let state = inputs.state;
+            if state.contains(InteractionState::HOVERED)
+                && !state.intersects(
+                    InteractionState::PRESSED
+                        | InteractionState::FOCUSED
+                        | InteractionState::DISABLED,
+                )
+            {
+                chrome_elevation(MaterialElevationLevel::LEVEL1, *shadow)
+            } else {
+                Elevation::NONE
+            }
+        },
+    )
 }
 
-/// `md.comp.button.<size>.pressed.container.shape`, reached through the
-/// container's resting height because the draw callback does not carry a
-/// `ControlSize`: corner-small up to 40dp, corner-medium to 56, corner-large
-/// beyond (a stretched button behaves as large).
+/// A link's underline: primary, following the label to on-surface at 38%
+/// while disabled.
+fn link_underline(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new(
+        (disabled_paint(
+            Primary,
+            OnSurface.with_opacity(DISABLED_CONTENT_OPACITY),
+            env,
+        ),),
+        |recorder, frame, (paint,)| {
+            let y = (frame.y1 - BUTTON_LINK_UNDERLINE_BOTTOM_INSET).max(frame.y0);
+            recorder.stroke(
+                Line::new(
+                    Point::new(frame.x0 + BUTTON_LINK_HORIZONTAL_PADDING, y),
+                    Point::new(frame.x1 - BUTTON_LINK_HORIZONTAL_PADDING, y),
+                ),
+                Stroke::new(BUTTON_LINK_UNDERLINE_THICKNESS),
+                paint,
+            );
+        },
+    )
+}
+
+/// `md.comp.button.<size>.pressed.container.shape` by the container's
+/// height: corner-small up to 40dp, corner-medium to 56, corner-large
+/// beyond.
 fn pressed_corner_radius(height: f64) -> f64 {
     if height <= BUTTON_EXTRA_SMALL_HEIGHT_BAND {
         SHAPE_CORNER_SMALL
@@ -135,124 +254,64 @@ const BUTTON_EXTRA_SMALL_HEIGHT_BAND: f64 = 40.0;
 const BUTTON_MEDIUM_HEIGHT_BAND: f64 = 56.0;
 const BUTTON_LARGE_HEIGHT_BAND: f64 = 96.0;
 
-/// The container's radius in `state`: resting `CornerFull`, morphing to
-/// `PressedContainerShape` as `press_progress` advances. The renderer animates
-/// it in both directions, so a release morphs the corners back rather than
-/// snapping them.
-fn container_radii(
-    bounds: waterui_graphics::draw::kurbo::Rect,
-    state: WidgetInteractionState,
-) -> waterui_graphics::draw::kurbo::RoundedRectRadii {
-    let resting = container_radius(bounds);
-    let pressed = pressed_corner_radius(bounds.height());
-    (pressed - resting)
-        .mul_add(f64::from(state.press_progress), resting)
-        .into()
-}
-
-pub fn draw_chrome(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
-    style: ButtonStyle,
-    state: WidgetInteractionState,
-) {
-    // MD3 disabled button: the filled container drops to on-surface at the
-    // token's 10% (`md.comp.button.filled.disabled.container.opacity`), and
-    // the link underline follows the disabled label (on-surface at 38%). The
-    // outlined border is outline-variant in every state, disabled included
-    // (`md.comp.button.outlined.disabled.outline.color`). Text buttons have
-    // no container to dim.
-    match style {
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => {
-            let fill = if state.state.contains(InteractionState::DISABLED) {
-                colors.on_surface.working_disabled_container()
-            } else {
-                colors.primary.working()
-            };
-            draw.fill(
-                RoundedRect::from_rect(bounds, container_radii(bounds, state)),
-                fill,
-            );
-        }
-        ButtonStyle::Bordered => {
-            draw.stroke(
-                RoundedRect::from_rect(bounds, container_radii(bounds, state)),
-                Stroke::new(outline_width(bounds.height())),
-                colors.outline_variant.working(),
-            );
-        }
-        ButtonStyle::Link => {
-            let underline = if state.state.contains(InteractionState::DISABLED) {
-                colors.on_surface.working_disabled_content()
-            } else {
-                colors.primary.working()
-            };
-            let underline_y = (bounds.y1 - BUTTON_LINK_UNDERLINE_BOTTOM_INSET).max(bounds.y0);
-            draw.stroke(
-                Line::new(
-                    waterui_graphics::draw::kurbo::Point::new(
-                        bounds.x0 + BUTTON_LINK_HORIZONTAL_PADDING,
-                        underline_y,
-                    ),
-                    waterui_graphics::draw::kurbo::Point::new(
-                        bounds.x1 - BUTTON_LINK_HORIZONTAL_PADDING,
-                        underline_y,
-                    ),
-                ),
-                Stroke::new(BUTTON_LINK_UNDERLINE_THICKNESS),
-                underline,
-            );
-        }
-        ButtonStyle::Plain | ButtonStyle::Borderless => {}
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
-    }
-}
-
-pub fn draw_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
-    style: ButtonStyle,
-    state: WidgetInteractionState,
-) {
-    // md.comp.button.filled.*.state-layer.color = on-primary;
-    // md.comp.button.outlined.*.state-layer.color = on-surface-variant;
-    // md.comp.button.text.*.state-layer.color = primary.
-    let color = match style {
-        ButtonStyle::Automatic | ButtonStyle::BorderedProminent => colors.on_primary.working(),
-        ButtonStyle::Bordered => colors.on_surface_variant.working(),
-        ButtonStyle::Link | ButtonStyle::Plain | ButtonStyle::Borderless => {
-            colors.primary.working()
-        }
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
-    };
-    let radii = container_radii(bounds, state);
-    state_layer::draw_bounded(draw, bounds, radii, color, state);
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{draw_chrome, metrics};
+    use super::look;
     use crate::MaterialColorScheme;
     use crate::dimensions::{
         BUTTON_EXTRA_LARGE, BUTTON_EXTRA_SMALL, BUTTON_LARGE, BUTTON_MEDIUM, BUTTON_MIN_WIDTH,
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
-    use crate::test_support::recorded;
+    use hydrolysis::Style as _;
+    use hydrolysis::theme::{ButtonLook, ButtonSpec, Corners, Fill, Inputs};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
-    use waterui_graphics::draw::Paint;
-    use waterui_graphics::draw::kurbo::Rect;
+    use waterui_core::Environment;
+    use waterui_core::Signal as _;
+    use waterui_core::layout::LayoutDirection;
+    use waterui_graphics::draw::kurbo::{Rect, Vec2};
+    use waterui_graphics::draw::{Paint, WorkingColor};
 
-    fn assert_button_metrics(style: ButtonStyle, expected_padding_x: f64) {
-        let metrics = metrics(style, ControlSize::Small);
+    fn env() -> Environment {
+        let mut env = Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        env
+    }
 
-        assert_eq!(metrics.padding_x, expected_padding_x);
-        assert_eq!(metrics.padding_y, BUTTON_TEXT_VERTICAL_PADDING);
-        assert_eq!(metrics.min_width, BUTTON_MIN_WIDTH);
-        assert_eq!(metrics.min_height, BUTTON_SMALL.container_height);
+    fn spec(style: ButtonStyle, size: ControlSize) -> ButtonSpec {
+        ButtonSpec::new(style, size, false, LayoutDirection::LeftToRight)
+    }
+
+    fn small(style: ButtonStyle) -> ButtonLook {
+        look(spec(style, ControlSize::Small), &env())
+    }
+
+    fn frame(height: f64) -> Rect {
+        Rect::new(0.0, 0.0, 120.0, height)
+    }
+
+    fn fill(look: &ButtonLook, state: InteractionState) -> WorkingColor {
+        let Fill::Paint(paint) = look.chrome().surface().fill() else {
+            panic!("a Material button fills with a paint")
+        };
+        match paint.target(&Inputs::at_rest(
+            frame(BUTTON_SMALL.container_height),
+            state,
+            &(),
+        )) {
+            Paint::Solid(color) => color,
+            other => panic!("a Material button fills with a solid colour, not {other:?}"),
+        }
+    }
+
+    fn label(look: &ButtonLook, state: InteractionState) -> WorkingColor {
+        look.label()
+            .get_color()
+            .expect("a Material button colours its label")
+            .target(&Inputs::at_rest(Rect::ZERO, state, &()))
+            .resolve(&env())
+            .snapshot()
     }
 
     /// The Expressive size scale, from Compose's `ButtonXSmallTokens` through
@@ -302,9 +361,12 @@ mod tests {
         }
     }
 
-    /// A button's measured height follows the size it was given.
+    /// A button measures with the size it was given: the size scale's
+    /// height and padding, `ButtonDefaults.MinWidth` and the content
+    /// padding's vertical 8dp, for every container style.
     #[test]
-    fn button_metrics_follow_the_requested_size() {
+    fn button_look_measures_with_the_requested_size() {
+        let env = env();
         for (size, tokens) in [
             (ControlSize::ExtraSmall, BUTTON_EXTRA_SMALL),
             (ControlSize::Small, BUTTON_SMALL),
@@ -312,76 +374,108 @@ mod tests {
             (ControlSize::Large, BUTTON_LARGE),
             (ControlSize::ExtraLarge, BUTTON_EXTRA_LARGE),
         ] {
-            let metrics = metrics(ButtonStyle::BorderedProminent, size);
-            assert_eq!(metrics.min_height, tokens.container_height, "{size:?}");
-            assert_eq!(metrics.padding_x, tokens.horizontal_space, "{size:?}");
+            for style in [
+                ButtonStyle::Plain,
+                ButtonStyle::Borderless,
+                ButtonStyle::Automatic,
+                ButtonStyle::Bordered,
+                ButtonStyle::BorderedProminent,
+            ] {
+                let look = look(spec(style, size), &env);
+                assert_eq!(
+                    look.get_padding(),
+                    Vec2::new(tokens.horizontal_space, BUTTON_TEXT_VERTICAL_PADDING),
+                    "{style:?} {size:?}"
+                );
+                assert_eq!(look.get_minimum_size().width, BUTTON_MIN_WIDTH);
+                assert_eq!(
+                    look.get_minimum_size().height,
+                    tokens.container_height,
+                    "{style:?} {size:?}"
+                );
+            }
         }
-    }
-
-    /// Values from `androidx.compose.material3`: `BaselineButtonTokens` for the
-    /// container, `ButtonDefaults` for the minimum size and content padding.
-    #[test]
-    fn button_metrics_match_compose_button_tokens() {
-        for style in [
-            ButtonStyle::Plain,
-            ButtonStyle::Borderless,
-            ButtonStyle::Automatic,
-            ButtonStyle::Bordered,
-            ButtonStyle::BorderedProminent,
-        ] {
-            assert_button_metrics(style, BUTTON_SMALL.horizontal_space);
-        }
-        // ButtonSmallTokens.ContainerHeight
-        assert_eq!(BUTTON_SMALL.container_height, 40.0);
-        // BaselineButtonTokens.ContainerShapeRound is CornerFull, so every size
-        // is a capsule and the radius follows the container's own height.
-        for size in [
-            BUTTON_EXTRA_SMALL,
-            BUTTON_SMALL,
-            BUTTON_MEDIUM,
-            BUTTON_LARGE,
-            BUTTON_EXTRA_LARGE,
-        ] {
-            let bounds = Rect::new(0.0, 0.0, 200.0, size.container_height);
-            assert_eq!(super::container_radius(bounds), size.container_height / 2.0);
-        }
-        // ButtonDefaults.MinWidth
+        // ButtonDefaults.MinWidth and ContentPadding vertical.
         assert_eq!(BUTTON_MIN_WIDTH, 58.0);
-        // md.comp.button.small.leading-space / trailing-space.
-        assert_eq!(BUTTON_SMALL.horizontal_space, 16.0);
-        // ButtonDefaults.ContentPadding vertical
         assert_eq!(BUTTON_TEXT_VERTICAL_PADDING, 8.0);
     }
 
+    /// `Automatic` is the theme's default button; in M3 that is the filled
+    /// button — a primary container with on-primary content, identical to
+    /// the prominent style. Disabled, the container drops to on-surface at
+    /// 12%.
     #[test]
-    fn disabled_outlined_button_keeps_outline_variant_border() {
-        // md.comp.button.outlined.disabled.outline.color: the border stays
-        // outline-variant rather than dimming to on-surface.
+    fn automatic_button_is_filled() {
         let colors = MaterialColorScheme::baseline_light();
-        let draw = recorded(|draw| {
-            draw_chrome(
-                &colors,
-                draw,
-                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-                ButtonStyle::Bordered,
-                crate::WidgetInteractionState {
-                    state: InteractionState::DISABLED,
-                    ..crate::WidgetInteractionState::NONE
-                },
+        for style in [ButtonStyle::Automatic, ButtonStyle::BorderedProminent] {
+            let look = small(style);
+            assert_eq!(
+                fill(&look, InteractionState::empty()),
+                colors.primary.working(),
+                "{style:?}"
             );
-        });
-
-        assert_eq!(draw.rounded_strokes.len(), 1);
-        assert!(matches!(
-            &draw.rounded_strokes[0].2,
-            Paint::Solid(color) if *color == colors.outline_variant.working()
-        ));
+            assert_eq!(
+                fill(&look, InteractionState::DISABLED),
+                colors.on_surface.working_disabled_container(),
+                "{style:?}"
+            );
+            assert_eq!(
+                label(&look, InteractionState::empty()).components,
+                colors.on_primary.working().components,
+                "{style:?}"
+            );
+        }
     }
 
+    /// The filled button rises to level1 only while hovered.
     #[test]
-    fn disabled_button_label_color_is_on_surface_38() {
-        // MD3 disabled button label: on-surface at 38% for every variant.
-        use waterui_core::Signal as _;
+    fn filled_button_elevates_while_hovered() {
+        let look = small(ButtonStyle::BorderedProminent);
+        let elevation = |state| {
+            look.chrome()
+                .surface()
+                .get_elevation()
+                .target(&Inputs::at_rest(frame(40.0), state, &()))
+        };
+        assert!(elevation(InteractionState::empty()).is_none());
+        assert!(!elevation(InteractionState::HOVERED).is_none());
+        assert!(elevation(InteractionState::HOVERED | InteractionState::PRESSED).is_none());
+    }
+
+    /// md.comp.button.outlined: an outline-variant border in every state,
+    /// disabled included, 1dp through medium and 3dp at extra-large.
+    #[test]
+    fn outlined_button_uses_outline_variant_at_its_size_width() {
+        let colors = MaterialColorScheme::baseline_light();
+        let look = small(ButtonStyle::Bordered);
+        let border = |height, state| {
+            look.chrome()
+                .surface()
+                .get_border()
+                .expect("the outlined button has a border")
+                .target(&Inputs::at_rest(frame(height), state, &()))
+        };
+        for state in [InteractionState::empty(), InteractionState::DISABLED] {
+            let border = border(BUTTON_SMALL.container_height, state);
+            assert_eq!(border.width, 1.0);
+            assert!(matches!(
+                border.paint,
+                Paint::Solid(color) if color == colors.outline_variant.working()
+            ));
+        }
+        assert_eq!(
+            border(
+                BUTTON_EXTRA_LARGE.container_height,
+                InteractionState::empty()
+            )
+            .width,
+            3.0
+        );
+    }
+
+    /// MD3 disabled button label: on-surface at 38% for every variant.
+    #[test]
+    fn disabled_button_label_is_on_surface_38() {
         let colors = MaterialColorScheme::baseline_light();
         for style in [
             ButtonStyle::Automatic,
@@ -389,136 +483,32 @@ mod tests {
             ButtonStyle::BorderedProminent,
             ButtonStyle::Plain,
         ] {
-            let color = super::label_color(&colors, style, true);
-            let resolved = color.resolve(&waterui_core::Environment::new()).snapshot();
-            let expected = colors
-                .on_surface
-                .view_color()
-                .with_opacity(crate::theme::colors::DISABLED_CONTENT_OPACITY)
-                .resolve(&waterui_core::Environment::new())
-                .snapshot();
-            assert_eq!(resolved.components, expected.components, "style {style:?}");
-        }
-    }
-
-    /// `Automatic` resolves differently for the two button kinds: the text
-    /// button keeps on-primary content, while an icon-only label — marked by
-    /// `hydrolysis::theme::IconOnlyButtonLabel` — paints the standard icon button's
-    /// on-surface-variant.
-    #[test]
-    fn automatic_label_color_resolves_standard_under_icon_only_marker() {
-        use waterui_core::Signal as _;
-        let colors = MaterialColorScheme::baseline_light();
-        let color = super::label_color(&colors, ButtonStyle::Automatic, false);
-
-        let mut env = waterui_core::Environment::new();
-        let filled = color.resolve(&env).snapshot();
-        let expected_filled = colors.on_primary.view_color().resolve(&env).snapshot();
-        assert_eq!(filled.components[..3], expected_filled.components[..3]);
-
-        env.insert(hydrolysis::theme::IconOnlyButtonLabel);
-        let standard = color.resolve(&env).snapshot();
-        let expected_standard = colors
-            .on_surface_variant
-            .view_color()
-            .resolve(&env)
-            .snapshot();
-        assert_eq!(standard.components[..3], expected_standard.components[..3]);
-    }
-
-    /// `Automatic` is the theme's default button; in M3 that is the filled
-    /// button — a primary container with on-primary content, identical to the
-    /// prominent style.
-    #[test]
-    fn automatic_button_renders_filled() {
-        let colors = MaterialColorScheme::baseline_light();
-        for style in [ButtonStyle::Automatic, ButtonStyle::BorderedProminent] {
-            let draw = recorded(|draw| {
-                draw_chrome(
-                    &colors,
-                    draw,
-                    Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-                    style,
-                    crate::WidgetInteractionState::NONE,
-                );
-            });
-
-            assert_eq!(draw.rounded_fills.len(), 1, "style {style:?}");
-            assert!(
-                matches!(
-                    &draw.rounded_fills[0].2,
-                    Paint::Solid(color) if *color == colors.primary.working()
-                ),
-                "style {style:?}"
+            assert_eq!(
+                label(&small(style), InteractionState::DISABLED).components,
+                colors.on_surface.working_disabled_content().components,
+                "{style:?}"
             );
         }
     }
 
-    #[test]
-    fn outlined_button_uses_outline_variant_at_its_size_width() {
-        // md.comp.button.outlined.outline.color = outline-variant;
-        // md.comp.button.small.outlined.outline-width = 1.
-        let colors = MaterialColorScheme::baseline_light();
-        let draw = recorded(|draw| {
-            draw_chrome(
-                &colors,
-                draw,
-                Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-                ButtonStyle::Bordered,
-                crate::WidgetInteractionState::NONE,
-            );
-        });
-
-        assert_eq!(draw.rounded_strokes.len(), 1);
-        assert!(matches!(
-            &draw.rounded_strokes[0].2,
-            Paint::Solid(color) if *color == colors.outline_variant.working()
-        ));
-        assert_eq!(draw.rounded_strokes[0].3, 1.0);
-
-        // md.comp.button.xlarge.outlined.outline-width = 3.
-        let draw = recorded(|draw| {
-            draw_chrome(
-                &colors,
-                draw,
-                Rect::new(0.0, 0.0, 240.0, BUTTON_EXTRA_LARGE.container_height),
-                ButtonStyle::Bordered,
-                crate::WidgetInteractionState::NONE,
-            );
-        });
-        assert_eq!(draw.rounded_strokes[0].3, 3.0);
-    }
-
-    /// `press_progress` morphs the capsule toward the size band's
-    /// `PressedContainerShape` — resting `CornerFull` at 0, corner-small
-    /// (8dp) fully pressed on a small button — and because the renderer
-    /// animates the progress back on release, the morph travels back the
-    /// same way rather than snapping.
+    /// The capsule morphs to the size band's `PressedContainerShape` while
+    /// pressed — corner-small (8dp) on a small button — and back at rest.
     #[test]
     fn pressed_button_morphs_its_corners() {
-        let colors = MaterialColorScheme::baseline_light();
-        let radius_at = |press_progress: f32| {
-            let draw = recorded(|draw| {
-                draw_chrome(
-                    &colors,
-                    draw,
-                    Rect::new(0.0, 0.0, 120.0, BUTTON_SMALL.container_height),
-                    ButtonStyle::BorderedProminent,
-                    crate::WidgetInteractionState {
-                        state: InteractionState::PRESSED,
-                        press_progress,
-                        ..crate::WidgetInteractionState::NONE
-                    },
-                );
-            });
-            draw.rounded_fills[0].1.top_left
+        let look = small(ButtonStyle::BorderedProminent);
+        let corners = |state| {
+            look.chrome()
+                .surface()
+                .shape()
+                .corners()
+                .target(&Inputs::at_rest(
+                    frame(BUTTON_SMALL.container_height),
+                    state,
+                    &(),
+                ))
         };
-
-        let resting = BUTTON_SMALL.container_height / 2.0;
+        assert_eq!(corners(InteractionState::empty()), Corners::Full);
         // md.comp.button.small.pressed.container.shape = corner-small (8).
-        let pressed = 8.0;
-        assert_eq!(radius_at(0.0), resting);
-        assert!((radius_at(0.5) - resting.midpoint(pressed)).abs() < 0.01);
-        assert!((radius_at(1.0) - pressed).abs() < 0.01);
+        assert_eq!(corners(InteractionState::PRESSED), Corners::from(8.0));
     }
 }

@@ -27,7 +27,8 @@ use waterui_core::handler::{BoxedAction, Handler, boxed_action};
 use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
-use crate::semantics::{conditional_color, interaction_style_with_radii};
+use crate::semantics::{conditional_color, interaction_chrome};
+use hydrolysis::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -260,12 +261,10 @@ impl View for ConnectedButtonGroup {
                     .on_tap(move |env: Environment| action(&env))
                     .a11y_role(AccessibilityRole::Button)
                     .a11y_state_signal(accessibility_state)
-                    // The state layer traces the segment's resting shape; the
-                    // selected/pressed corner morph has no per-state radii
-                    // surface on `InteractionStyle`.
-                    .install(interaction_style_with_radii(
+                    // The state layer traces the segment's resting shape.
+                    .install(interaction_chrome(
                         content,
-                        position.resting_radii(),
+                        Corners::from(position.resting_radii()),
                     ))
             })
             .collect::<Vec<_>>();

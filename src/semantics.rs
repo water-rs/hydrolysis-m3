@@ -1,4 +1,6 @@
-use hydrolysis::theme::{ButtonMetrics, FocusRing, InteractionStyle};
+use hydrolysis::theme::{
+    Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
+};
 use waterui::color::Color;
 use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
@@ -6,9 +8,9 @@ use waterui::{Environment, Signal as _, Str};
 use waterui_controls::label::Label;
 use waterui_core::resolve::Resolvable;
 use waterui_graphics::draw::WorkingColor;
-use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::Secondary;
+use crate::theme::{motion, state_layer};
 
 pub fn label_plain_text(label: &Label) -> Str {
     label
@@ -22,36 +24,45 @@ pub fn label_plain_text(label: &Label) -> Str {
 
 /// `md.comp.focus-indicator.*`: the 3dp secondary ring that rides 2dp
 /// outside a keyboard-focused control's state layer.
-pub fn focus_indicator() -> FocusRing {
-    FocusRing {
-        color: Secondary.into(),
+pub fn focus_indicator() -> FocusIndicator {
+    FocusIndicator::Ring {
         width: 3.0,
         offset: 2.0,
+        color: Secondary.into(),
     }
 }
 
-pub fn interaction_style(
-    state_layer_color: impl Into<Color>,
-    corner_radius: f64,
-) -> InteractionStyle {
-    InteractionStyle::new(
-        ButtonMetrics::new(0.0, 0.0, 0.0, 0.0),
-        state_layer_color,
-        RoundedRectRadii::from(corner_radius),
+/// The MD3 state layer in `color`, at the `StateTokens` opacities.
+pub fn state_layer(color: impl Into<Color>) -> StateLayer {
+    StateLayer::new(color).opacities(
+        state_layer::HOVER_STATE_LAYER_OPACITY,
+        state_layer::FOCUS_STATE_LAYER_OPACITY,
+        state_layer::PRESSED_STATE_LAYER_OPACITY,
+        state_layer::DRAGGED_STATE_LAYER_OPACITY,
     )
-    .focus_ring(focus_indicator())
 }
 
-pub fn interaction_style_with_radii(
+/// The interaction chrome of a composed Material control: no container of
+/// its own — the control draws it — and a state layer in
+/// `state_layer_color` on `corners`, with the Material ripple, the focus
+/// indicator and the minimum touch target.
+pub fn interaction_chrome(
     state_layer_color: impl Into<Color>,
-    radii: RoundedRectRadii,
-) -> InteractionStyle {
-    InteractionStyle::new(
-        ButtonMetrics::new(0.0, 0.0, 0.0, 0.0),
-        state_layer_color,
-        radii,
+    corners: impl Into<Driven<Corners>>,
+) -> Chrome {
+    Chrome::new(
+        Surface::clear(CornerShape::new(corners)),
+        state_layer(state_layer_color),
+        PressFeedback::new().ripple(motion::ripple()),
+        focus_indicator(),
+        motion::chrome(),
     )
-    .focus_ring(focus_indicator())
+    .hit(motion::hit_region())
+}
+
+/// [`interaction_chrome`] on corners of `radius`.
+pub fn interaction_chrome_radius(state_layer_color: impl Into<Color>, radius: f64) -> Chrome {
+    interaction_chrome(state_layer_color, Corners::from(radius))
 }
 
 pub fn conditional_color(

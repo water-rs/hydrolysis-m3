@@ -6,7 +6,7 @@ use waterui_graphics::draw::{Draw as _, Paint, Recorder, WorkingColor};
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
 /// targets still produce a ripple at least this wide.
-const RIPPLE_MINIMUM_DIAMETER: f64 = 48.0;
+pub const RIPPLE_MINIMUM_DIAMETER: f64 = 48.0;
 
 /// `StateTokens.HoverStateLayerOpacity`.
 pub const HOVER_STATE_LAYER_OPACITY: f32 = 0.08;
@@ -54,7 +54,7 @@ fn resolved_press_waves(state: WidgetInteractionState) -> PressWaves {
 /// Initial ripple size as a fraction of the full diameter: a wave starts at
 /// this scale over its press point and grows to full size as the renderer's
 /// press-grow animation advances the wave's progress from 0 to 1.
-const RIPPLE_INITIAL_SCALE: f64 = 0.4;
+pub const RIPPLE_INITIAL_SCALE: f64 = 0.4;
 
 /// The full Material ripple diameter for a target: the surface diagonal,
 /// floored at [`RIPPLE_MINIMUM_DIAMETER`]. Waves are drawn fresh each frame

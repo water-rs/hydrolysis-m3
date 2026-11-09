@@ -21,7 +21,7 @@ use waterui_core::view::TupleViews;
 use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, Surface,
 };
-use crate::semantics::{conditional_color, conditional_font, interaction_style};
+use crate::semantics::{conditional_color, conditional_font, interaction_chrome_radius};
 use crate::theme::typography;
 
 /// `NavigationRailCollapsedTokens.ContainerWidth`.
@@ -293,7 +293,7 @@ where
                 // The indicator pill is 56dp tall; the item itself is 64dp.
                 .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
                 .background(Capsule.fill(indicator_color))
-                .install(interaction_style(
+                .install(interaction_chrome_radius(
                     state_layer_color,
                     f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
                 ))
@@ -312,7 +312,7 @@ where
                         .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
                     icon,
                 ))
-                .install(interaction_style(
+                .install(interaction_chrome_radius(
                     state_layer_color,
                     f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
                 )),

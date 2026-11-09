@@ -101,6 +101,10 @@ pub const fn button_size_tokens(size: waterui_controls::ControlSize) -> ButtonSi
     }
 }
 
+/// `minimumInteractiveComponentSize`: the 48dp touch target every
+/// interactive Material component keeps, whatever its visual size.
+pub const MINIMUM_TOUCH_TARGET: f64 = 48.0;
+
 /// `ButtonDefaults.MinWidth`.
 pub const BUTTON_MIN_WIDTH: f64 = 58.0;
 /// `ButtonDefaults.ContentPadding` vertical.

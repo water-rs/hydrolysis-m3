@@ -16,7 +16,9 @@ use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, SurfaceContainer,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{conditional_color, conditional_font, interaction_style, label_plain_text};
+use crate::semantics::{
+    conditional_color, conditional_font, interaction_chrome_radius, label_plain_text,
+};
 use crate::theme::typography;
 
 /// `NavigationBarTokens.ContainerHeight`. Compose's 80dp value is
@@ -182,18 +184,25 @@ where
         .a11y_state_signal(accessibility_state)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
         .install(
-            interaction_style(
+            interaction_chrome_radius(
                 state_layer_color,
                 f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT * 0.5),
             )
-            .fixed_state_layer(
-                f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
-                f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
-                0.5,
-                f64::from(NAVIGATION_BAR_ITEM_TOP_PADDING)
-                    / f64::from(
-                        NAVIGATION_BAR_CONTAINER_HEIGHT - NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT,
-                    ),
+            // The state layer is the active indicator's pill, centred
+            // horizontally at the item's top padding.
+            .sized(
+                waterui_graphics::draw::kurbo::Size::new(
+                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
+                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
+                ),
+                waterui_graphics::draw::kurbo::Vec2::new(
+                    0.5,
+                    f64::from(NAVIGATION_BAR_ITEM_TOP_PADDING)
+                        / f64::from(
+                            NAVIGATION_BAR_CONTAINER_HEIGHT
+                                - NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT,
+                        ),
+                ),
             ),
         )
     }

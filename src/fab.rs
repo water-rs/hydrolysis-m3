@@ -17,7 +17,7 @@ use crate::color::{
     SecondaryContainer, SurfaceContainerHigh, TertiaryContainer,
 };
 use crate::elevation::MaterialElevationLevel;
-use crate::semantics::interaction_style;
+use crate::semantics::interaction_chrome_radius;
 use crate::theme::typography;
 
 /// The geometry of one FAB size.
@@ -293,7 +293,7 @@ where
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 Tokens::content_color(),
                 f64::from(size.corner_radius),
             ))
@@ -408,7 +408,7 @@ where
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 Tokens::content_color(),
                 f64::from(EXTENDED_FAB_SHAPE),
             ))

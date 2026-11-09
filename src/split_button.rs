@@ -23,7 +23,7 @@ use waterui_core::handler::{Handler, boxed_action};
 use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
-use crate::semantics::interaction_style_with_radii;
+use crate::semantics::interaction_chrome;
 
 /// `SplitButtonSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -300,15 +300,16 @@ where
     }
 }
 
-/// One half's `InteractionStyle`: the state layer traces the resting corners
-/// and softens to `CornerValueMedium` on the seam side while the half is
+/// One half's chrome: the state layer traces the resting corners and
+/// softens to `CornerValueMedium` on the seam side while the half is
 /// hovered or held.
 fn half_style(
     state_layer_color: impl Into<Color>,
     resting: RoundedRectRadii,
     soft: RoundedRectRadii,
-) -> hydrolysis::theme::InteractionStyle {
-    interaction_style_with_radii(state_layer_color, resting).state_layer_radii(
+) -> hydrolysis::theme::Chrome {
+    interaction_chrome(
+        state_layer_color,
         StateValue::new(resting)
             .when(InteractionState::PRESSED, soft)
             .when(InteractionState::HOVERED, soft),

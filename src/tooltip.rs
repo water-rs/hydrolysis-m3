@@ -18,7 +18,7 @@ use waterui_core::handler::{Handler, SharedAction};
 
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{interaction_style, label_plain_text};
+use crate::semantics::{interaction_chrome_radius, label_plain_text};
 use crate::theme::{motion, typography};
 
 const PLAIN_TOOLTIP_CONTAINER_HEIGHT: f32 = 24.0;
@@ -442,7 +442,7 @@ fn rich_tooltip_action(action: Option<(Label, SharedAction)>) -> impl View {
         .on_tap(move |env: Environment| action.call(&env))
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
-        .install(interaction_style(Primary, 20.0))
+        .install(interaction_chrome_radius(Primary, 20.0))
         .anyview()
 }
 

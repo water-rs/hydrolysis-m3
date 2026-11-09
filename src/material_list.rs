@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Debug};
 
-use hydrolysis::theme::InteractionStyle;
+use hydrolysis::theme::Chrome;
 use waterui::accessibility::AccessibilityState;
 use waterui::color::Color;
 use waterui::component::list::{
@@ -20,7 +20,7 @@ use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction, boxed_action}
 
 use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer};
 use crate::dimensions::{LIST_ONE_LINE_ROW_HEIGHT, LIST_VERTICAL_INSET};
-use crate::semantics::{interaction_style, label_plain_text};
+use crate::semantics::{interaction_chrome, label_plain_text};
 use crate::theme::typography;
 use num_traits::ToPrimitive;
 
@@ -261,7 +261,7 @@ impl MaterialListItem {
             OnSecondaryContainer,
             OnSurface,
         );
-        let style = interaction_style(layer_color, 8.0).state_layer_radii(state_layer_radii);
+        let style = interaction_chrome(layer_color, state_layer_radii);
 
         match self.action {
             Some(action) => {
@@ -296,7 +296,7 @@ impl MaterialListItem {
         item: AnyView,
         selected: Computed<bool>,
         state: &Binding<InteractionState>,
-        style: InteractionStyle,
+        style: Chrome,
     ) -> AnyView {
         let a11y = selected.map(|selected| AccessibilityState::new().selected(selected));
         let fill = watch(zip::zip(state.clone(), selected), |(state, selected)| {

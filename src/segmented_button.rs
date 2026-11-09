@@ -17,8 +17,9 @@ use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;
-use crate::semantics::{conditional_color, interaction_style_with_radii, label_plain_text};
+use crate::semantics::{conditional_color, interaction_chrome, label_plain_text};
 use crate::theme::typography;
+use hydrolysis::theme::Corners;
 
 const OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT: f32 = 40.0;
 const OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE: f32 = 20.0;
@@ -382,9 +383,9 @@ fn segmented_button_view(
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
-        .install(interaction_style_with_radii(
+        .install(interaction_chrome(
             state_layer_color,
-            shape.interaction_radii(),
+            Corners::from(shape.interaction_radii()),
         ))
 }
 

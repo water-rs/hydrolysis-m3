@@ -9,14 +9,16 @@ pub mod tokens;
 use core::time::Duration;
 
 use hydrolysis::theme::{
-    InteractionMotion, NavigationMotion, ProgressMotion, RadioSelectionMotion, TextCaretMotion,
+    HitRegion, InteractionMotion, Motion, NavigationMotion, ProgressMotion, RadioSelectionMotion,
+    Ripple, TextCaretMotion, Transition, ValueMotion,
 };
 use waterui::animation::Animation;
 use waterui::easing::EasingCurve;
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
+use waterui_graphics::draw::kurbo::Size;
 
-use super::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
+use super::dimensions::{MINIMUM_TOUCH_TARGET, NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE};
 use super::state_layer;
 use tokens::{duration, easing, motion};
 
@@ -63,6 +65,53 @@ pub fn interaction() -> InteractionMotion {
         minimum_press_duration: RIPPLE_RADIUS_IN,
         touch_delay: RIPPLE_TOUCH_DELAY,
     }
+}
+
+/// The Material ripple: a wave of [`state_layer::RIPPLE_INITIAL_SCALE`] of
+/// the surface diagonal — floored at
+/// [`state_layer::RIPPLE_MINIMUM_DIAMETER`] — that grows from the press
+/// point to full size while drifting to the surface centre, fades in
+/// linearly as it grows, and fades out only once its growth has completed,
+/// so a release never plays the growth backwards.
+pub const fn ripple() -> Ripple {
+    Ripple {
+        min_diameter: state_layer::RIPPLE_MINIMUM_DIAMETER,
+        initial_scale: state_layer::RIPPLE_INITIAL_SCALE,
+        drift: 1.0,
+        grow: material_standard(RIPPLE_RADIUS_IN),
+        fade_in: Animation::linear(RIPPLE_OPACITY_IN),
+        fade_out: Animation::linear(RIPPLE_OPACITY_OUT),
+        minimum_duration: RIPPLE_RADIUS_IN,
+    }
+}
+
+/// The motion of a Material control's chrome: the state layer cross-fades
+/// over 280ms with standard easing on hover, focus and drag, and the
+/// pressed container shape plays the fast spatial spring in both
+/// directions, so a release morphs the corners back.
+pub fn chrome() -> Motion {
+    let fade = Transition::symmetric(material_standard(RIPPLE_STATE_LAYER_FADE));
+    Motion {
+        hover: fade.clone(),
+        focus: fade.clone(),
+        press: Transition::symmetric(fast_spatial()),
+        drag: fade,
+        value: ValueMotion::Follow(material_standard(RIPPLE_STATE_LAYER_FADE)),
+    }
+}
+
+/// Android's `ViewConfiguration` touch slop: a touch that moves no farther
+/// than this while its ripple waits stays a press.
+const TOUCH_SLOP: f64 = 8.0;
+
+/// Where a Material control takes touches: at least the 48dp
+/// `minimumInteractiveComponentSize`, a touch press holding its ripple back
+/// for [`RIPPLE_TOUCH_DELAY`] and surviving the touch slop meanwhile.
+pub const fn hit_region() -> HitRegion {
+    HitRegion::NONE
+        .minimum(Size::new(MINIMUM_TOUCH_TARGET, MINIMUM_TOUCH_TARGET))
+        .slop(TOUCH_SLOP)
+        .press_delay(RIPPLE_TOUCH_DELAY)
 }
 
 /// material-web drives both progress indicators with CSS `ease-in-out`-family
