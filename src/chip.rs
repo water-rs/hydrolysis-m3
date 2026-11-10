@@ -17,7 +17,7 @@ use crate::color::{
     OnSecondaryContainer, OnSurface, OnSurfaceVariant, OutlineVariant, SecondaryContainer,
 };
 use crate::icons::CheckmarkIcon;
-use crate::semantics::{conditional_color, interaction_style, label_plain_text};
+use crate::semantics::{conditional_color, interaction_chrome_radius, label_plain_text};
 use crate::theme::typography;
 
 const ASSIST_CHIP_CONTAINER_HEIGHT: f32 = 32.0;
@@ -130,7 +130,7 @@ where
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 LabelColor::default(),
                 f64::from(ASSIST_CHIP_CONTAINER_SHAPE),
             ))
@@ -347,7 +347,7 @@ where
         .a11y_role(AccessibilityRole::Button)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
         .a11y_state_signal(accessibility_state)
-        .install(interaction_style(
+        .install(interaction_chrome_radius(
             state_layer_color,
             f64::from(FILTER_CHIP_CONTAINER_SHAPE),
         ))
@@ -375,7 +375,7 @@ where
                 .a11y_label(accessibility_label)
                 .a11y_role(AccessibilityRole::Button)
                 .a11y_children(AccessibilityChildren::ExcludeDescendants)
-                .install(interaction_style(
+                .install(interaction_chrome_radius(
                     OnSurfaceVariant,
                     f64::from(INPUT_CHIP_CONTAINER_SHAPE),
                 )),
@@ -443,7 +443,7 @@ impl View for RemoveButton {
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 OnSurfaceVariant,
                 f64::from(INPUT_CHIP_TRAILING_ICON_SIZE * 0.5),
             ))

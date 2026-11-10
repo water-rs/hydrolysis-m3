@@ -184,6 +184,25 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
     )
 }
 
+/// `level`'s key and ambient shadows in `shadow`, the resolved `shadow`
+/// role, as the elevation of a control's chrome.
+pub(crate) fn chrome_elevation(
+    level: MaterialElevationLevel,
+    shadow: waterui_graphics::draw::WorkingColor,
+) -> hydrolysis::theme::Elevation {
+    let tokens = ElevationTokens::for_level(level);
+    let cast = |token: ElevationShadow, base_opacity| waterui_graphics::draw::Shadow {
+        sigma: f64::from(token.blur),
+        offset: waterui_graphics::draw::kurbo::Vec2::new(0.0, f64::from(token.y)),
+        spread: 0.0,
+        color: shadow.with_alpha(token.opacity(base_opacity)),
+    };
+    hydrolysis::theme::Elevation::new(
+        cast(tokens.key, KEY_OPACITY),
+        cast(tokens.ambient, AMBIENT_OPACITY),
+    )
+}
+
 /// Casts `level`'s key and ambient shadows for a rounded-rect surface drawn
 /// into `draw`. `colors` resolves the `shadow` role — the same role
 /// [`Shadow`] resolves through the environment — at draw time.

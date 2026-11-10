@@ -22,7 +22,9 @@ use crate::color::{
     SurfaceContainerLow,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{conditional_color, conditional_font, interaction_style, label_plain_text};
+use crate::semantics::{
+    conditional_color, conditional_font, interaction_chrome_radius, label_plain_text,
+};
 use crate::theme::{motion, typography};
 
 const NAVIGATION_DRAWER_CONTAINER_WIDTH: f32 = 360.0;
@@ -168,7 +170,7 @@ where
                     }
                 })
                 .a11y_hidden(true)
-                .install(interaction_style(Scrim.with_opacity(0.0), 0.0).pointer_only());
+                .install(interaction_chrome_radius(Scrim.with_opacity(0.0), 0.0).pointer_only());
             let opened_for_escape = opened.clone();
             let modal = ModalInteraction::new(
                 self.close_on_escape,
@@ -345,7 +347,7 @@ where
         .a11y_role(AccessibilityRole::Button)
         .a11y_state_signal(accessibility_state)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
-        .install(interaction_style(
+        .install(interaction_chrome_radius(
             state_layer_color,
             f64::from(NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE),
         ))

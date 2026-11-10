@@ -46,7 +46,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/icon_button.rs:193-195 | outlined border outline-variant in all states | was outline | `md.comp.icon-button.outlined.{outline,disabled.outline}.color` | fixed |
 | src/icon_button.rs:228-230 | layer on-primary (filled) / on-surface-variant (standard, outlined) | same | `md.comp.icon-button.*.state-layer.color` | conforms |
 | src/icon_button.rs:250-264 | pressed corner morph 8/8/12/16/16 | new | `md.comp.icon-button.<size>.pressed.container.shape` | fixed |
-| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | fixed: `InteractionStyle.state_layer_radii` resolves radii per reported state; the pressed morph itself is driven by `state.press_progress` |
+| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | fixed: the `Chrome` surface's corners are a `Driven` value resolved per reported state, and the pressed morph animates its live operand under the press transition |
 
 ## FABs (`src/fab.rs`, `src/fab_menu.rs`)
 
@@ -77,7 +77,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/chip.rs:120-124 | flat chips transparent fill, outline-variant border | was elevated/tinted | `md.comp.assist-chip.flat.*` | fixed |
 | src/chip.rs:285-292 | filter selected → secondary-container fill, outline width 0 | was outline kept | `md.comp.filter-chip.flat.selected.*` | fixed |
 | src/chip.rs:396 | input-chip flat outline outline-variant | outline-variant | `md.comp.input-chip.flat.unselected.outline.color` | conforms |
-| chip focus outline | — | per-state outline color | `md.comp.*-chip.flat.focused.outline.color` | fixed: the `InteractionStyle.focus_ring` on every `interaction_style` draws the `md.comp.focus-indicator.*` ring — secondary, 3dp, riding 2dp outside the state layer — which carries the flat-chip focused outline |
+| chip focus outline | — | per-state outline color | `md.comp.*-chip.flat.focused.outline.color` | fixed: the focus-indicator ring on every `interaction_chrome` draws the `md.comp.focus-indicator.*` ring — secondary, 3dp, riding 2dp outside the state layer — which carries the flat-chip focused outline |
 
 ## Dialog, tooltip, drag handle, badge (`src/dialog.rs`, `src/tooltip.rs`, `src/drag_handle.rs`, `src/layout/badge.rs`, `src/material_badge.rs`)
 
@@ -172,7 +172,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 
 Former items 1–5 and 9 are implemented through the per-state interaction
 styling API (`InteractionState`/`StateValue`, `.interaction_state`,
-`.selected`, `InteractionStyle.state_layer_radii`/`label_color`/`focus_ring`,
+`.selected`, the `Chrome` surface's driven corners and focus indicator,
 `FloatingStyle.elevation: StateValue<FloatingElevation>`). Item 6 is
 implemented too: `tabs_item_layout` returns `Horizontal` at the 600dp medium
 window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container

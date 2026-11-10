@@ -2,8 +2,8 @@
 
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
-use waterui_graphics::draw::Draw as _;
-use waterui_graphics::draw::kurbo::{RoundedRect, Stroke};
+use hydrolysis::theme::{ButtonLook, ButtonSpec, CornerShape, Corners, Surface};
+use waterui_graphics::draw::kurbo::Size;
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::border::Border;
@@ -12,12 +12,13 @@ use waterui::shape::{Circle, ShapeExt as _};
 use waterui::{Environment, Str, View, ViewExt as _};
 use waterui_core::handler::{Handler, boxed_action};
 
-use crate::ButtonMetrics;
+use crate::button;
 use crate::color::{
-    InverseOnSurface, InverseSurface, OnPrimary, OnSecondaryContainer, OnSurfaceVariant,
+    InverseOnSurface, InverseSurface, OnPrimary, OnSecondaryContainer, OnSurface, OnSurfaceVariant,
     OutlineVariant, Primary, SecondaryContainer,
 };
-use crate::semantics::interaction_style;
+use crate::semantics::interaction_chrome;
+use crate::theme::colors::DISABLED_CONTAINER_OPACITY;
 use waterui_controls::ControlSize;
 use waterui_controls::button::ButtonStyle;
 
@@ -107,154 +108,67 @@ impl IconButtonSize {
     }
 }
 
-/// `WidgetTheme::icon_button_metrics`: the metrics a semantic `Button`
-/// resolves when its label is `IconOnly`.
+/// The look of a semantic `Button` whose label is `IconOnly`.
 ///
-/// Every style except `Link` reserves the icon-button touch target —
-/// 48dp at the small size — with no text padding, and the layout bounds
-/// are the hit area; the chrome draws the smaller state-layer circle
-/// centred inside them, as Compose does. A link keeps no container and
-/// no minimum box. `Automatic` resolves to the standard variant, which
-/// draws no container but still reserves the touch target.
+/// Every style except `Link` reserves the icon-button touch target — 48dp
+/// at the small size — with no text padding, and the layout bounds are the
+/// hit area; the container is the size's state-layer circle centred inside
+/// them, as Compose draws it. Filled and tonal variants fill it, the
+/// outlined variant strokes it, and the standard variant — like a link —
+/// draws no container at all. `Automatic` resolves to the standard
+/// variant, the Material default for icon buttons. A link keeps no
+/// minimum box.
 ///
 /// # Panics
 ///
 /// Panics on a `ButtonStyle` or `ControlSize` variant this theme does not
 /// implement.
 #[must_use]
-pub fn metrics(style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
-    let tokens = icon_button_size(size).tokens();
-    match style {
-        ButtonStyle::Automatic
-        | ButtonStyle::Bordered
-        | ButtonStyle::BorderedProminent
-        | ButtonStyle::Plain
-        | ButtonStyle::Borderless => ButtonMetrics::new(
-            0.0,
-            0.0,
-            f64::from(tokens.container),
-            f64::from(tokens.container),
+pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
+    let style = spec.style();
+    let tokens = icon_button_size(spec.size()).tokens();
+    let shape = CornerShape::new(button::container_corners(pressed_corner_radius));
+    let surface = match style {
+        // md.comp.icon-button.filled.container.color = primary;
+        // md.comp.icon-button.filled.disabled.container.opacity = 0.12.
+        ButtonStyle::BorderedProminent => Surface::new(
+            shape,
+            button::disabled_paint(
+                Primary,
+                OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY),
+                env,
+            ),
         ),
-        // A link has no container, so it takes no minimum box.
-        ButtonStyle::Link => ButtonMetrics::new(0.0, 0.0, 0.0, 0.0),
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
-    }
-}
-
-/// The rect the icon-button state layer draws in: centred in the layout
-/// bounds at the size tokens give it — 40dp inside the 48dp small touch
-/// target, and the full bounds once the container is the touch target
-/// itself (medium and larger).
-///
-/// A semantic extra-small icon button reserves the same 48dp target, so its
-/// bounds are indistinguishable from a small's and it draws the small 40dp
-/// layer; the 32dp layer is reachable only through the composed `IconButton`
-/// view, which carries its size.
-fn state_layer_rect(
-    bounds: waterui_graphics::draw::kurbo::Rect,
-) -> waterui_graphics::draw::kurbo::Rect {
-    let side = if bounds.height() > f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE) {
-        bounds.height()
-    } else {
-        f64::from(ICON_BUTTON_STATE_LAYER_SIZE)
-    };
-    let center = bounds.center();
-    waterui_graphics::draw::kurbo::Rect::from_center_size(center, (side, side))
-}
-
-/// `WidgetTheme::draw_button_chrome` for an icon-only button.
-///
-/// The icon-button container is the state-layer circle centred in the
-/// bounds, not the bounds themselves. Filled and tonal variants fill it,
-/// the outlined variant strokes it, and the standard variant — like a
-/// link — draws no container at all. `Automatic` resolves to the
-/// standard variant, the Material default for icon buttons; the
-/// text-button chrome in `controls::button` keeps it filled.
-///
-/// # Panics
-///
-/// Panics on a `ButtonStyle` variant this theme does not implement.
-pub fn draw_chrome(
-    colors: &crate::theme::colors::MaterialColorScheme,
-    draw: &mut waterui_graphics::draw::Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
-    style: ButtonStyle,
-    state: crate::WidgetInteractionState,
-) {
-    let layer = state_layer_rect(bounds);
-    let radii = container_radii(layer, state);
-    match style {
-        ButtonStyle::BorderedProminent => {
-            // md.comp.icon-button.filled.container.color = primary;
-            // md.comp.icon-button.filled.disabled.container.opacity = 0.1.
-            let fill = if state
-                .state
-                .contains(waterui::interaction::InteractionState::DISABLED)
-            {
-                colors.on_surface.working_disabled_container()
-            } else {
-                colors.primary.working()
-            };
-            draw.fill(
-                RoundedRect::from_rect(layer, radii),
-                crate::Paint::from(fill),
-            );
-        }
+        // md.comp.icon-button.outlined.outline.color = outline-variant in
+        // every state, disabled included.
         ButtonStyle::Bordered => {
-            // md.comp.icon-button.outlined.outline.color = outline-variant in
-            // every state, disabled included
-            // (md.comp.icon-button.outlined.disabled.outline.color).
-            draw.stroke(
-                RoundedRect::from_rect(layer, radii),
-                Stroke::new(outline_width(layer.height())),
-                crate::Paint::from(colors.outline_variant.working()),
-            );
+            Surface::clear(shape).border(button::outline(OutlineVariant, outline_width, env))
         }
-        // Standard and link icon buttons carry no container; `Automatic`
-        // resolves to the standard variant for icon buttons.
         ButtonStyle::Automatic
         | ButtonStyle::Plain
         | ButtonStyle::Borderless
-        | ButtonStyle::Link => {}
+        | ButtonStyle::Link => Surface::clear(shape),
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+    };
+    // md.comp.icon-button.filled.*.state-layer.color = on-primary;
+    // standard and outlined both use on-surface-variant.
+    let layer = match style {
+        ButtonStyle::BorderedProminent => Color::from(OnPrimary),
+        _ => Color::from(OnSurfaceVariant),
+    };
+    let side = f64::from(tokens.state_layer);
+    let chrome = button::interactive(surface, layer).centered(Size::new(side, side));
+    let look = ButtonLook::new(chrome, button::label(*spec));
+    if style == ButtonStyle::Link {
+        look
+    } else {
+        let container = f64::from(tokens.container);
+        look.minimum_size(Size::new(container, container))
     }
 }
 
-/// `WidgetTheme::draw_button_state_layer` for an icon-only button.
-///
-/// The interaction state layer is the icon-button state-layer circle
-/// centred in the bounds — 40dp inside the 48dp small touch target.
-///
-/// # Panics
-///
-/// Panics on a `ButtonStyle` variant this theme does not implement.
-pub fn draw_state_layer(
-    colors: &crate::theme::colors::MaterialColorScheme,
-    draw: &mut waterui_graphics::draw::Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
-    style: ButtonStyle,
-    state: crate::WidgetInteractionState,
-) {
-    // md.comp.icon-button.filled.*.state-layer.color = on-primary;
-    // standard and outlined both use on-surface-variant
-    // (md.comp.icon-button.{standard,outlined}.*.state-layer.color).
-    let color = match style {
-        ButtonStyle::BorderedProminent => colors.on_primary.working(),
-        ButtonStyle::Automatic
-        | ButtonStyle::Bordered
-        | ButtonStyle::Plain
-        | ButtonStyle::Borderless
-        | ButtonStyle::Link => colors.on_surface_variant.working(),
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
-    };
-    let layer = state_layer_rect(bounds);
-    let radii = container_radii(layer, state);
-    crate::theme::state_layer::draw_bounded(draw, layer, radii, color, state);
-}
-
-/// `md.comp.icon-button.<size>.pressed.container.shape`, reached through the
-/// state layer's side because the draw callback does not carry an
-/// `IconButtonSize`: corner-small up to 40dp, corner-medium to 56,
+/// `md.comp.icon-button.<size>.pressed.container.shape` by the state
+/// layer's side: corner-small up to 40dp, corner-medium to 56,
 /// corner-large beyond.
 fn pressed_corner_radius(side: f64) -> f64 {
     if side <= f64::from(ICON_BUTTON_STATE_LAYER_SIZE) {
@@ -276,21 +190,6 @@ fn outline_width(side: f64) -> f64 {
     } else {
         3.0
     }
-}
-
-/// The state-layer circle's corner radii in `state`: resting corner-full,
-/// morphing to the size band's pressed shape as `press_progress` advances —
-/// the renderer animates it in both directions, so a release morphs the
-/// corners back rather than snapping them.
-fn container_radii(
-    layer: waterui_graphics::draw::kurbo::Rect,
-    state: crate::WidgetInteractionState,
-) -> waterui_graphics::draw::kurbo::RoundedRectRadii {
-    let resting = layer.height() / 2.0;
-    let pressed = pressed_corner_radius(layer.height());
-    (pressed - resting)
-        .mul_add(f64::from(state.press_progress), resting)
-        .into()
 }
 
 const fn icon_button_size(size: ControlSize) -> IconButtonSize {
@@ -536,10 +435,14 @@ where
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
-                Tokens::icon_color(),
-                f64::from(size.state_layer * 0.5),
-            ))
+            // The state layer is the container circle centred in the touch
+            // target.
+            .install(
+                interaction_chrome(Tokens::icon_color(), Corners::Full).centered(Size::new(
+                    f64::from(size.state_layer),
+                    f64::from(size.state_layer),
+                )),
+            )
     }
 }
 
@@ -598,26 +501,95 @@ mod tests {
     use super::{
         ICON_BUTTON_ICON_SIZE, ICON_BUTTON_OUTLINE_WIDTH, ICON_BUTTON_STATE_LAYER_SIZE,
         ICON_BUTTON_TOUCH_TARGET_SIZE, IconButtonSize, IconButtonVariantTokens, OutlinedIconButton,
-        metrics,
+        look,
     };
+    use hydrolysis::Style as _;
+    use hydrolysis::theme::{ButtonSpec, Fill, Inputs};
+    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
+    use waterui_core::layout::LayoutDirection;
+    use waterui_graphics::draw::kurbo::{Rect, Size, Vec2};
+
+    fn icon_look(style: ButtonStyle, size: ControlSize) -> hydrolysis::theme::ButtonLook {
+        let mut env = waterui::Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        look(
+            &ButtonSpec::new(style, size, true, LayoutDirection::LeftToRight),
+            &env,
+        )
+    }
 
     /// A semantic icon-only button lays out at the icon-button touch
     /// target — 48dp at the small size — with no text padding, and the
-    /// layout bounds are the hit area. A link keeps no container and no
-    /// minimum box.
+    /// layout bounds are the hit area; its container is the size's state
+    /// layer centred inside. A link keeps no minimum box.
     #[test]
-    fn icon_button_metrics_lay_out_at_the_touch_target() {
-        let m = metrics(ButtonStyle::Automatic, ControlSize::Small);
-        assert_eq!(m.min_width, f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE));
-        assert_eq!(m.min_height, f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE));
-        assert_eq!(m.padding_x, 0.0);
-        assert_eq!(m.padding_y, 0.0);
+    fn icon_button_look_lays_out_at_the_touch_target() {
+        let target = f64::from(ICON_BUTTON_TOUCH_TARGET_SIZE);
+        let automatic = icon_look(ButtonStyle::Automatic, ControlSize::Small);
+        assert_eq!(automatic.get_minimum_size(), Size::new(target, target));
+        assert_eq!(automatic.get_padding(), Vec2::ZERO);
+        assert_eq!(
+            automatic
+                .chrome()
+                .frame(Rect::new(0.0, 0.0, target, target)),
+            Rect::new(4.0, 4.0, 44.0, 44.0),
+            "the 40dp state layer sits centred in the 48dp target"
+        );
 
-        let link = metrics(ButtonStyle::Link, ControlSize::Small);
-        assert_eq!(link.min_width, 0.0);
-        assert_eq!(link.min_height, 0.0);
+        let extra_small = icon_look(ButtonStyle::Automatic, ControlSize::ExtraSmall);
+        assert_eq!(
+            extra_small
+                .chrome()
+                .frame(Rect::new(0.0, 0.0, target, target))
+                .size(),
+            Size::new(32.0, 32.0),
+            "the spec carries the size, so the extra-small layer is 32dp"
+        );
+
+        let link = icon_look(ButtonStyle::Link, ControlSize::Small);
+        assert_eq!(link.get_minimum_size(), Size::ZERO);
+    }
+
+    /// `Automatic` is the standard icon button: no container fill, and the
+    /// on-surface-variant label; `BorderedProminent` fills its container.
+    #[test]
+    fn automatic_icon_button_is_standard() {
+        let colors = crate::MaterialColorScheme::baseline_light();
+        let automatic = icon_look(ButtonStyle::Automatic, ControlSize::Small);
+        let Fill::Paint(fill) = automatic.chrome().surface().fill() else {
+            panic!("the icon button's surface is a paint")
+        };
+        let rest = Inputs::at_rest(
+            Rect::new(0.0, 0.0, 40.0, 40.0),
+            InteractionState::empty(),
+            &(),
+        );
+        assert_eq!(
+            fill.target(&rest),
+            waterui_graphics::draw::Paint::from(waterui_graphics::draw::WorkingColor::TRANSPARENT,)
+        );
+        let mut env = waterui::Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        let label = automatic
+            .label()
+            .get_color()
+            .expect("the icon button colours its label")
+            .target(&rest);
+        assert_eq!(
+            waterui::Signal::snapshot(&label.resolve(&env)).components,
+            colors.on_surface_variant.working().components
+        );
+
+        let prominent = icon_look(ButtonStyle::BorderedProminent, ControlSize::Small);
+        let Fill::Paint(fill) = prominent.chrome().surface().fill() else {
+            panic!("the icon button's surface is a paint")
+        };
+        assert_eq!(
+            fill.target(&rest),
+            waterui_graphics::draw::Paint::from(colors.primary.working())
+        );
     }
 
     /// `md.comp.icon-button.{xsmall..xlarge}`. Past the small size the

@@ -57,8 +57,8 @@ use core::cell::OnceCell;
 use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
 
 pub use hydrolysis::theme::{
-    BadgeMetrics, ButtonMetrics, DividerMetrics, InputFieldMetrics, InteractionFocusBinding,
-    InteractionMotion, InteractionStyle, ListDividerMetrics, ListMetrics, ListRowMetrics,
+    BadgeMetrics, ButtonLook, ButtonSpec, DividerMetrics, InputFieldMetrics,
+    InteractionFocusBinding, InteractionMotion, ListDividerMetrics, ListMetrics, ListRowMetrics,
     ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
     NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
     ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderMetrics,
@@ -71,7 +71,6 @@ use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_controls::ControlSize;
-use waterui_controls::button::ButtonStyle;
 use waterui_controls::toggle::ToggleStyle;
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
@@ -466,61 +465,12 @@ impl WidgetTheme for Material3 {
         theme::motion::navigation()
     }
 
-    fn button_metrics(&self, style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
-        button::metrics(style, size)
-    }
-
-    fn icon_button_metrics(&self, style: ButtonStyle, size: ControlSize) -> ButtonMetrics {
-        icon_button::metrics(style, size)
-    }
-
-    fn button_label_color(&self, style: ButtonStyle, disabled: bool) -> Option<Color> {
-        Some(button::label_color(&self.colors(), style, disabled))
-    }
-
-    fn button_label_font(&self, _style: ButtonStyle) -> Option<Font> {
-        Some(theme::typography::label_large())
-    }
-
-    fn draw_button_chrome(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        style: ButtonStyle,
-        icon_only: bool,
-        state: WidgetInteractionState,
-    ) {
-        if icon_only {
-            icon_button::draw_chrome(&self.colors(), draw, bounds, style, state);
+    fn button(&self, spec: &ButtonSpec, env: &Environment) -> ButtonLook {
+        if spec.icon_only() {
+            icon_button::look(spec, env)
         } else {
-            button::draw_chrome(&self.colors(), draw, bounds, style, state);
+            button::look(*spec, env)
         }
-    }
-
-    fn draw_button_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        style: ButtonStyle,
-        icon_only: bool,
-        state: WidgetInteractionState,
-    ) {
-        if icon_only {
-            icon_button::draw_state_layer(&self.colors(), draw, bounds, style, state);
-        } else {
-            button::draw_state_layer(&self.colors(), draw, bounds, style, state);
-        }
-    }
-
-    fn draw_interaction_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        radii: waterui_graphics::draw::kurbo::RoundedRectRadii,
-        color: WorkingColor,
-        state: WidgetInteractionState,
-    ) {
-        theme::state_layer::draw_bounded(draw, bounds, radii, color, state);
     }
 
     fn toggle_metrics(&self, style: ToggleStyle) -> ToggleMetrics {

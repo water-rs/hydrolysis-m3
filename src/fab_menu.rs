@@ -16,7 +16,7 @@ use waterui_core::handler::{BoxedAction, Handler, boxed_action};
 
 use crate::color::{OnPrimary, OnPrimaryContainer, Primary, PrimaryContainer};
 use crate::elevation::MaterialElevationLevel;
-use crate::semantics::interaction_style;
+use crate::semantics::interaction_chrome_radius;
 use crate::theme::motion;
 
 /// `FabMenuBaselineTokens.ListItemContainerHeight`.
@@ -196,7 +196,7 @@ impl View for FloatingActionButtonMenu {
                 .opacity(opacity)
                 .on_tap(move |env: Environment| action(&env))
                 .a11y_role(AccessibilityRole::Button)
-                .install(interaction_style(
+                .install(interaction_chrome_radius(
                     OnPrimaryContainer,
                     f64::from(ITEM_HEIGHT / 2.0),
                 ));
@@ -216,7 +216,7 @@ impl View for FloatingActionButtonMenu {
             .a11y_label(toggle_accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 OnPrimary,
                 f64::from(CLOSE_BUTTON_CONTAINER / 2.0),
             ));

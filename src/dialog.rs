@@ -20,7 +20,7 @@ use waterui_core::view::TupleViews;
 use crate::ModalInteraction;
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, Scrim, SurfaceContainerHigh};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{interaction_style, label_plain_text};
+use crate::semantics::{interaction_chrome_radius, label_plain_text};
 use crate::theme::{motion, typography};
 
 const DIALOG_CONTAINER_MIN_WIDTH: f32 = 280.0;
@@ -92,7 +92,7 @@ where
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(Primary, 20.0))
+            .install(interaction_chrome_radius(Primary, 20.0))
     }
 }
 
@@ -213,7 +213,8 @@ where
                 .on_tap(|_: Environment| {})
                 .a11y_hidden(true)
                 .install(
-                    interaction_style(SurfaceContainerHigh.with_opacity(0.0), 0.0).pointer_only(),
+                    interaction_chrome_radius(SurfaceContainerHigh.with_opacity(0.0), 0.0)
+                        .pointer_only(),
                 ),
         )
         .a11y_label(self.accessibility_label)
@@ -247,7 +248,7 @@ where
             ))
             .on_tap(move |env: Environment| overlay_action.call(&env))
             .a11y_hidden(true)
-            .install(interaction_style(Scrim.with_opacity(0.0), 0.0).pointer_only());
+            .install(interaction_chrome_radius(Scrim.with_opacity(0.0), 0.0).pointer_only());
 
         let accessibility_state = presented
             .map(|presented| waterui::accessibility::AccessibilityState::new().hidden(!presented));
