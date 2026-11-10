@@ -16,7 +16,9 @@ fn save(app: &mut OffscreenApp, stage: &str) {
 
 fn wifi_toggle_view() -> impl View {
     let value = binding(false);
-    toggle("Wi-Fi", &value)
+    // `toggle()` takes the platform default, a checkbox on macOS, so the
+    // switch this capture names is spelled out.
+    toggle("Wi-Fi", &value).switch()
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
