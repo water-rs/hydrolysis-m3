@@ -11,6 +11,7 @@ use hydrolysis::theme::{
     CheckboxLook, Custom, Driven, Inputs, Motion, SwitchDrag, SwitchLook, ToggleControl,
     ToggleSpec, Transition, ValueMotion,
 };
+use waterui::animation::Animation;
 use waterui::interaction::InteractionState;
 use waterui::reactive::zip::zip;
 use waterui::reactive::{Computed, SignalExt as _};
@@ -23,8 +24,8 @@ use waterui_graphics::draw::kurbo::{
 use waterui_graphics::draw::{Draw as _, Paint, Shadow as ShadowCast, WorkingColor};
 
 use crate::color::{
-    OnPrimary, OnPrimaryContainer, OnSurface, OnSurfaceVariant, Outline, Primary, PrimaryContainer,
-    Shadow, Surface, SurfaceContainerHighest,
+    OnPrimary, OnPrimaryContainer, OnSurface, OnSurfaceVariant, Outline, PrimaryContainer, Shadow,
+    Surface, SurfaceContainerHighest,
 };
 use crate::dimensions::{
     TOGGLE_CHECKBOX_CONTAINER_SHAPE, TOGGLE_CHECKBOX_OUTLINE_WIDTH,
@@ -37,6 +38,7 @@ use crate::dimensions::{
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
 use crate::theme::motion;
+use crate::theme::motion::tokens::duration;
 use crate::theme::state_layer::{
     FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
     RIPPLE_INITIAL_SCALE,
@@ -171,56 +173,60 @@ impl Progress {
 }
 
 /// The look of a switch in `spec`.
-pub fn switch(spec: ToggleSpec, env: &Environment) -> SwitchLook {
+pub fn switch(spec: &ToggleSpec, env: &Environment) -> SwitchLook {
     let drag = SwitchDrag::new(SWITCH_TRAVEL, spec.direction());
     let progress = Progress {
         drag,
         direction: spec.direction(),
     };
+    let tint = spec.tint();
     let control = ToggleControl::new(
         Size::new(TOGGLE_SWITCH_WIDTH, TOGGLE_SWITCH_HEIGHT),
         toggle_motion(),
     )
     .label_spacing(TOGGLE_LABEL_SPACING)
+    .reach(STATE_LAYER_RADIUS)
     .hit(motion::hit_region())
-    .part(switch_track(progress, env))
+    .part(switch_track(progress, &tint, env))
     .part(switch_outline(progress, env))
     .part(thumb_shadow(progress, env))
     .part(thumb(progress, env))
     .part(thumb_icon(progress, env))
-    .part(switch_state_layer(progress, env))
-    .part(switch_ripple(progress, env));
+    .part(switch_state_layer(progress, &tint, env))
+    .part(switch_ripple(progress, &tint, env));
     SwitchLook::new(control, drag)
 }
 
 /// The look of a checkbox in `spec`.
-pub fn checkbox(spec: ToggleSpec, env: &Environment) -> CheckboxLook {
+pub fn checkbox(spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
     // A checkbox has no drag: its operands sit at the value's end.
     let progress = Progress {
         drag: SwitchDrag::new(1.0, spec.direction()),
         direction: spec.direction(),
     };
+    let tint = spec.tint();
     let control = ToggleControl::new(
         Size::new(TOGGLE_CHECKBOX_SIZE, TOGGLE_CHECKBOX_SIZE),
         toggle_motion(),
     )
     .label_spacing(TOGGLE_LABEL_SPACING)
+    .reach(STATE_LAYER_RADIUS)
     .hit(motion::hit_region())
     .part(checkbox_outline(progress, env))
-    .part(checkbox_container(progress, env))
-    .part(checkbox_state_layer(progress, env))
-    .part(checkbox_ripple(env));
+    .part(checkbox_container(progress, &tint, env))
+    .part(checkbox_state_layer(&tint, env))
+    .part(checkbox_ripple(&tint, env));
     CheckboxLook::new(control)
 }
 
-/// The track: surface-container-highest to primary, to the disabled
+/// The track: surface-container-highest to the tint, to the disabled
 /// containers at 12% while disabled.
-fn track_paint(progress: Progress, env: &Environment) -> Toggled<Paint> {
+fn track_paint(progress: Progress, tint: &Color, env: &Environment) -> Toggled<Paint> {
     Driven::follow(
         gather(
             [
                 SurfaceContainerHighest.into(),
-                Primary.into(),
+                tint.clone(),
                 SurfaceContainerHighest
                     .with_opacity(DISABLED_CONTAINER_OPACITY)
                     .into(),
@@ -240,9 +246,13 @@ fn track_paint(progress: Progress, env: &Environment) -> Toggled<Paint> {
     )
 }
 
-fn switch_track(progress: Progress, env: &Environment) -> Custom<bool, (Toggled<Paint>,)> {
+fn switch_track(
+    progress: Progress,
+    tint: &Color,
+    env: &Environment,
+) -> Custom<bool, (Toggled<Paint>,)> {
     Custom::new(
-        (track_paint(progress, env),),
+        (track_paint(progress, tint, env),),
         |recorder, frame, (paint,)| {
             recorder.fill(
                 RoundedRect::from_rect(
@@ -362,6 +372,19 @@ fn thumb(progress: Progress, env: &Environment) -> ShapePart {
     )
 }
 
+/// How the thumb icon fades, per the M3 reference's staged linear
+/// transitions over the 200ms value animation: entering lags behind the
+/// slide (the reference waits 50ms, then ramps over 150ms) and exiting is
+/// gone within the first 50ms. An animation has no delay, so entering is an
+/// ease-in over the whole 200ms.
+const fn icon_fade(on: bool) -> ValueMotion {
+    ValueMotion::Own(if on {
+        Animation::ease_in(duration::SHORT_4)
+    } else {
+        Animation::linear(duration::SHORT_1)
+    })
+}
+
 /// The default checked icon: a 16dp checkmark on the thumb in
 /// on-primary-container, scaling in from 0.92 as it fades with the switch
 /// turning on.
@@ -388,7 +411,8 @@ fn thumb_icon(
                 progress.at(inputs),
             ))
         },
-    );
+    )
+    .value_motion(|on| icon_fade(*on));
     Custom::new((place, paint), |recorder, _frame, (place, paint)| {
         recorder.transform(place, |recorder| {
             recorder.stroke(
@@ -435,29 +459,30 @@ fn state_layer_opacity(inputs: &Inputs<'_, bool>) -> f64 {
     }
 }
 
-/// The state-layer colour: primary while on, on-surface while off.
-fn layer_color(env: &Environment) -> Computed<[WorkingColor; 2]> {
-    gather([Primary.into(), OnSurface.into()], env)
+/// The state-layer colour: the tint while on, on-surface while off.
+fn layer_color(tint: &Color, env: &Environment) -> Computed<[WorkingColor; 2]> {
+    gather([tint.clone(), OnSurface.into()], env)
 }
 
 fn layer_paint(
+    tint: &Color,
     env: &Environment,
     opacity: impl Fn(&Inputs<'_, bool>) -> f64 + 'static,
 ) -> Toggled<Paint> {
     Driven::follow(
-        layer_color(env),
+        layer_color(tint, env),
         move |&[on, off]: &[WorkingColor; 2], inputs: &Inputs<'_, bool>| {
             Paint::from(faded(if *inputs.value { on } else { off }, opacity(inputs)))
         },
     )
 }
 
-fn switch_state_layer(progress: Progress, env: &Environment) -> ShapePart {
+fn switch_state_layer(progress: Progress, tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(move |inputs: &Inputs<'_, bool>| {
         Circle::new(progress.thumb_center(inputs), STATE_LAYER_RADIUS)
     });
     Custom::new(
-        (circle, layer_paint(env, state_layer_opacity)),
+        (circle, layer_paint(tint, env, state_layer_opacity)),
         |recorder, _frame, (circle, paint)| recorder.fill(circle, paint),
     )
 }
@@ -487,14 +512,14 @@ fn ripple_opacity(inputs: &Inputs<'_, bool>) -> f64 {
     }
 }
 
-fn switch_ripple(progress: Progress, env: &Environment) -> ShapePart {
+fn switch_ripple(progress: Progress, tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(move |inputs: &Inputs<'_, bool>| {
         Circle::new(progress.thumb_center(inputs), ripple_radius(inputs))
     })
     .motion(ripple_motion());
-    let paint = layer_paint(env, ripple_opacity).motion(ripple_motion());
+    let paint = layer_paint(tint, env, ripple_opacity).motion(ripple_motion());
     Custom::new((circle, paint), |recorder, _frame, (circle, paint)| {
-        recorder.fill(circle, paint)
+        recorder.fill(circle, paint);
     })
 }
 
@@ -539,14 +564,18 @@ fn container_shape(frame: Rect) -> RoundedRect {
 }
 
 /// The checked container's fill and its check, fading in with the box
-/// checking: primary with an on-primary check, on-surface at 38% with a
+/// checking: the tint with an on-primary check, on-surface at 38% with a
 /// surface check while disabled.
-fn checkbox_paints(progress: Progress, env: &Environment) -> (Toggled<Paint>, Toggled<Paint>) {
+fn checkbox_paints(
+    progress: Progress,
+    tint: &Color,
+    env: &Environment,
+) -> (Toggled<Paint>, Toggled<Paint>) {
     let paint = |container: fn(&[WorkingColor; 4]) -> (WorkingColor, WorkingColor)| {
         Driven::follow(
             gather(
                 [
-                    Primary.into(),
+                    tint.clone(),
                     OnPrimary.into(),
                     OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
                     Surface.into(),
@@ -570,7 +599,7 @@ fn checkbox_paints(progress: Progress, env: &Environment) -> (Toggled<Paint>, To
 
 /// The checked container and its check, scaling in from 0.6 as they fade
 /// in.
-fn checkbox_container(progress: Progress, env: &Environment) -> ContainerPart {
+fn checkbox_container(progress: Progress, tint: &Color, env: &Environment) -> ContainerPart {
     let place = Driven::new(move |inputs: &Inputs<'_, bool>| {
         let center = inputs.frame.center().to_vec2();
         let scale = lerp(
@@ -580,7 +609,7 @@ fn checkbox_container(progress: Progress, env: &Environment) -> ContainerPart {
         );
         Affine::translate(center) * Affine::scale(scale) * Affine::translate(-center)
     });
-    let (fill, check) = checkbox_paints(progress, env);
+    let (fill, check) = checkbox_paints(progress, tint, env);
     Custom::new(
         (place, fill, check),
         |recorder, frame, (place, fill, check)| {
@@ -596,43 +625,45 @@ fn checkbox_container(progress: Progress, env: &Environment) -> ContainerPart {
     )
 }
 
-fn checkbox_state_layer(progress: Progress, env: &Environment) -> ShapePart {
-    let _ = progress;
+fn checkbox_state_layer(tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
         Circle::new(inputs.frame.center(), STATE_LAYER_RADIUS)
     });
     Custom::new(
-        (circle, layer_paint(env, state_layer_opacity)),
+        (circle, layer_paint(tint, env, state_layer_opacity)),
         |recorder, _frame, (circle, paint)| recorder.fill(circle, paint),
     )
 }
 
-fn checkbox_ripple(env: &Environment) -> ShapePart {
+fn checkbox_ripple(tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
         Circle::new(inputs.frame.center(), ripple_radius(inputs))
     })
     .motion(ripple_motion());
-    let paint = layer_paint(env, ripple_opacity).motion(ripple_motion());
+    let paint = layer_paint(tint, env, ripple_opacity).motion(ripple_motion());
     Custom::new((circle, paint), |recorder, _frame, (circle, paint)| {
-        recorder.fill(circle, paint)
+        recorder.fill(circle, paint);
     })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{checkbox, switch};
+    use super::{checkbox, icon_fade, switch};
     use crate::color::Primary;
     use crate::dimensions::{
         TOGGLE_LABEL_SPACING, TOGGLE_SWITCH_HEIGHT, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE,
         TOGGLE_SWITCH_WIDTH,
     };
+    use crate::theme::motion::tokens::duration;
     use hydrolysis::Style as _;
-    use hydrolysis::theme::{Inputs, SwitchDrag, SwitchLook, ToggleSpec};
+    use hydrolysis::theme::ValueMotion;
+    use hydrolysis::theme::{Inputs, SpecTint, SwitchDrag, SwitchLook, ToggleSpec};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::toggle::ToggleStyle;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;
+    use waterui_graphics::color::Color;
     use waterui_graphics::draw::Paint;
     use waterui_graphics::draw::kurbo::{Circle, Point, Rect, Vec2};
 
@@ -643,7 +674,12 @@ mod tests {
     }
 
     fn spec(style: ToggleStyle, direction: LayoutDirection) -> ToggleSpec {
-        ToggleSpec::new(style, ControlSize::Small, direction)
+        ToggleSpec::new(style, ControlSize::Small, direction, SpecTint::default())
+    }
+
+    /// The `Primary` token as the untinted toggles of these tests draw it.
+    fn untinted() -> Color {
+        Color::from(Primary)
     }
 
     fn frame() -> Rect {
@@ -661,7 +697,7 @@ mod tests {
     }
 
     fn progress(direction: LayoutDirection) -> super::Progress {
-        let look = switch(spec(ToggleStyle::Switch, direction), &env());
+        let look = switch(&spec(ToggleStyle::Switch, direction), &env());
         super::Progress {
             drag: *look.drag(),
             direction,
@@ -669,9 +705,20 @@ mod tests {
     }
 
     #[test]
+    fn the_thumb_icon_leaves_within_the_first_50ms() {
+        let (ValueMotion::Own(entering), ValueMotion::Own(exiting)) =
+            (icon_fade(true), icon_fade(false))
+        else {
+            panic!("the icon fade owns its animation");
+        };
+        assert_eq!(entering.duration(), duration::SHORT_4);
+        assert_eq!(exiting.duration(), duration::SHORT_1);
+    }
+
+    #[test]
     fn toggle_sizes_and_spacing_are_the_material_tokens() {
         let look: SwitchLook = switch(
-            spec(ToggleStyle::Switch, LayoutDirection::LeftToRight),
+            &spec(ToggleStyle::Switch, LayoutDirection::LeftToRight),
             &env(),
         );
         assert_eq!(
@@ -681,7 +728,7 @@ mod tests {
         assert_eq!(look.control().get_label_spacing(), TOGGLE_LABEL_SPACING);
         assert_eq!(TOGGLE_LABEL_SPACING, 8.0);
         let checkbox = checkbox(
-            spec(ToggleStyle::Checkbox, LayoutDirection::LeftToRight),
+            &spec(ToggleStyle::Checkbox, LayoutDirection::LeftToRight),
             &env(),
         );
         assert_eq!(checkbox.control().size(), kurbo_size(18.0, 18.0));
@@ -774,7 +821,7 @@ mod tests {
 
         let env = env();
         let progress = progress(LayoutDirection::LeftToRight);
-        let paint = super::track_paint(progress, &env);
+        let paint = super::track_paint(progress, &untinted(), &env);
         let disabled = InteractionState::DISABLED;
         // Unchecked: surface-container-highest at 12%; checked: on-surface
         // at 12%.
@@ -799,6 +846,36 @@ mod tests {
             &paint.target(&at(&true, InteractionState::empty(), None)),
             &Paint::from(Color::from(Primary).resolve(&env).snapshot()),
         );
+    }
+
+    /// A tinted subtree's switch track and checkbox container draw in the
+    /// tint; an untinted one's draw in `Primary`, the `Accent` token's value.
+    #[test]
+    fn toggles_draw_with_the_subtrees_tint() {
+        use waterui::theme::Tint;
+        use waterui_core::Signal as _;
+        use waterui_graphics::color::Working;
+        use waterui_graphics::draw::WorkingColor;
+
+        let tint = WorkingColor::new([0.9, 0.1, 0.2, 1.0]);
+        let env = env().extending(Tint::new(Color::new(Working(tint))));
+        let spec = ToggleSpec::new(
+            ToggleStyle::Switch,
+            ControlSize::Small,
+            LayoutDirection::LeftToRight,
+            SpecTint::resolve(&env),
+        );
+        let progress = progress(LayoutDirection::LeftToRight);
+        let on = InteractionState::empty();
+        assert_close(
+            &super::track_paint(progress, &spec.tint(), &env).target(&at(&true, on, None)),
+            &Paint::from(tint),
+        );
+        let (fill, _) = super::checkbox_paints(progress, &spec.tint(), &env);
+        assert_close(&fill.target(&at(&true, on, None)), &Paint::from(tint));
+
+        let plain = Paint::from(Color::from(Primary).resolve(&env).snapshot());
+        assert_ne!(plain, Paint::from(tint));
     }
 
     /// Two solid paints equal to the blend's float rounding.
@@ -827,7 +904,7 @@ mod tests {
             direction: LayoutDirection::LeftToRight,
         };
         let outline = super::checkbox_outline_paint(progress, &env);
-        let (fill, check) = super::checkbox_paints(progress, &env);
+        let (fill, check) = super::checkbox_paints(progress, &untinted(), &env);
         let rest = InteractionState::empty();
         assert_eq!(alpha(outline.target(&at(&false, rest, None))), 1.0);
         assert_eq!(alpha(outline.target(&at(&true, rest, None))), 0.0);
@@ -859,7 +936,7 @@ mod tests {
         let disabled = InteractionState::DISABLED;
         let outline = super::checkbox_outline_paint(progress, &env);
         assert_eq!(outline.target(&at(&false, disabled, None)), dim);
-        let (fill, check) = super::checkbox_paints(progress, &env);
+        let (fill, check) = super::checkbox_paints(progress, &untinted(), &env);
         assert_eq!(fill.target(&at(&true, disabled, None)), dim);
         assert_eq!(check.target(&at(&true, disabled, None)), surface);
     }

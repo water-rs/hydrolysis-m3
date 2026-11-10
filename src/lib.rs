@@ -63,8 +63,8 @@ pub use hydrolysis::theme::{
     NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
     ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderMetrics,
     SliderValueIndicatorMetrics, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry,
-    TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics,
-    ToggleSpec, WidgetInteractionState, WidgetTheme,
+    TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
+    WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
@@ -473,11 +473,11 @@ impl WidgetTheme for Material3 {
     }
 
     fn switch(&self, spec: &ToggleSpec, env: &Environment) -> SwitchLook {
-        toggle::switch(*spec, env)
+        toggle::switch(spec, env)
     }
 
     fn checkbox(&self, spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
-        toggle::checkbox(*spec, env)
+        toggle::checkbox(spec, env)
     }
 
     fn stepper_metrics(&self) -> StepperMetrics {

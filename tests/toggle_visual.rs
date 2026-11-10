@@ -5,6 +5,7 @@
 //! The PNG-producing tests are ignored by default and reviewed by eye.
 
 use core::time::Duration;
+use waterui::ViewExt as _;
 use waterui::reactive::binding;
 use waterui_controls::toggle;
 use waterui_core::View;
@@ -18,7 +19,7 @@ fn wifi_toggle_view() -> impl View {
     let value = binding(false);
     // `toggle()` takes the platform default, a checkbox on macOS, so the
     // switch this capture names is spelled out.
-    toggle("Wi-Fi", &value).switch()
+    toggle("Wi-Fi", &value).switch().padding_with(16.0)
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
@@ -85,8 +86,10 @@ fn switch_thumb_follows_a_drag_and_settles(app: &mut OffscreenApp) {
         .label("Wi-Fi")
         .single()
         .bounds();
+    // The node fills its row: the switch sits at the trailing edge, and the
+    // drag starts on its track.
     let (cx, cy) = (
-        bounds.x() + bounds.width() / 2.0,
+        bounds.x() + bounds.width() - 26.0,
         bounds.y() + bounds.height() / 2.0,
     );
     app.queue_pointer_down(cx, cy);
@@ -103,7 +106,9 @@ fn switch_thumb_follows_a_drag_and_settles(app: &mut OffscreenApp) {
 
 fn notify_checkbox_view() -> impl View {
     let value = binding(false);
-    toggle("Notify me", &value).checkbox()
+    // The state layer is a 40dp circle around the 18dp box: padded so the
+    // capture shows it whole.
+    toggle("Notify me", &value).checkbox().padding_with(16.0)
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
@@ -123,12 +128,10 @@ fn checkbox_checks_and_unchecks(app: &mut OffscreenApp) {
         .label("Notify me")
         .single()
         .bounds();
-    let (cx, cy) = (
-        bounds.x() + bounds.width() / 2.0,
-        bounds.y() + bounds.height() / 2.0,
-    );
+    // The node fills its row: the box sits at the leading edge.
+    let (cx, cy) = (bounds.x() + 9.0, bounds.y() + bounds.height() / 2.0);
     app.queue_pointer_down(cx, cy);
-    let _ = app.snapshot();
+    app.pump_for(Duration::from_millis(150));
     let _ = app.capture_snapshot("material3-preview", "checkbox", "pressed");
     app.queue_pointer_up(cx, cy);
     app.queue_pointer_move(5.0, 5.0);
