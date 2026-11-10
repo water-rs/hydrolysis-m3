@@ -132,7 +132,6 @@ mod tests {
     use hydrolysis::Style as _;
     use hydrolysis::theme::{Corners, Inputs, SpecTint, StepperSpec};
     use waterui::interaction::InteractionState;
-    use waterui_controls::ControlSize;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;
     use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
@@ -148,11 +147,7 @@ mod tests {
 
     #[test]
     fn stepper_uses_the_connected_button_group_tokens() {
-        let spec = StepperSpec::new(
-            ControlSize::Small,
-            LayoutDirection::LeftToRight,
-            SpecTint::default(),
-        );
+        let spec = StepperSpec::new(LayoutDirection::LeftToRight, SpecTint::default());
         let mut env = Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
         let look = look(&spec, &env);
