@@ -59,8 +59,8 @@ where
     fn body(self, _env: &Environment) -> impl View {
         WaterList::content(self.content).padding_with(EdgeInsets::new(
             LIST_CONTAINER_TOP_SPACE,
-            LIST_CONTAINER_BOTTOM_SPACE,
             0.0,
+            LIST_CONTAINER_BOTTOM_SPACE,
             0.0,
         ))
     }

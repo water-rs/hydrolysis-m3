@@ -187,8 +187,8 @@ impl View for FloatingActionButtonMenu {
                 .spacing(ITEM_ICON_LABEL_SPACE)
                 .padding_with(EdgeInsets::new(
                     0.0,
-                    0.0,
                     ITEM_HORIZONTAL_SPACE,
+                    0.0,
                     ITEM_HORIZONTAL_SPACE,
                 ))
                 .foreground(OnPrimaryContainer)

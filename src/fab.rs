@@ -399,8 +399,8 @@ where
             .height(EXTENDED_FAB_HEIGHT)
             .padding_with(EdgeInsets::new(
                 0.0,
-                0.0,
                 EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON,
+                0.0,
                 EXTENDED_FAB_TRAILING_SPACE,
             ))
             .floating_with(floating_style)

@@ -233,8 +233,8 @@ impl View for ConnectedButtonGroup {
                     .foreground(content.clone())
                     .padding_with(EdgeInsets::new(
                         0.0,
-                        0.0,
                         SEGMENT_HORIZONTAL_SPACE,
+                        0.0,
                         SEGMENT_HORIZONTAL_SPACE,
                     ))
                     .height(CONTAINER_HEIGHT)

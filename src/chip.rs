@@ -112,8 +112,8 @@ where
             .height(ASSIST_CHIP_CONTAINER_HEIGHT)
             .padding_with(EdgeInsets::new(
                 0.0,
-                0.0,
                 ASSIST_CHIP_LEADING_SPACE,
+                0.0,
                 ASSIST_CHIP_TRAILING_SPACE,
             ))
             // flat chips publish no container color — the background is
@@ -330,8 +330,8 @@ where
         .height(FILTER_CHIP_CONTAINER_HEIGHT)
         .padding_with(EdgeInsets::new(
             0.0,
-            0.0,
             FILTER_CHIP_WITH_ICON_LEADING_SPACE,
+            0.0,
             FILTER_CHIP_TRAILING_SPACE,
         ))
         .background(FixedRoundedRectangle::new(FILTER_CHIP_CONTAINER_SHAPE).fill(background))
@@ -388,8 +388,8 @@ where
         .height(INPUT_CHIP_CONTAINER_HEIGHT)
         .padding_with(EdgeInsets::new(
             0.0,
-            0.0,
             INPUT_CHIP_LEADING_SPACE,
+            0.0,
             INPUT_CHIP_WITH_TRAILING_ICON_TRAILING_SPACE,
         ))
         // The unselected input chip publishes no container color; its outline

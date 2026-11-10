@@ -306,8 +306,8 @@ impl View for PlainTooltip {
             .foreground(InverseOnSurface)
             .padding_with(EdgeInsets::new(
                 PLAIN_TOOLTIP_TOP_SPACE,
-                PLAIN_TOOLTIP_BOTTOM_SPACE,
                 PLAIN_TOOLTIP_LEADING_SPACE,
+                PLAIN_TOOLTIP_BOTTOM_SPACE,
                 PLAIN_TOOLTIP_TRAILING_SPACE,
             ))
             .background(
@@ -399,8 +399,8 @@ impl View for RichTooltip {
         .spacing(RICH_TOOLTIP_CONTENT_SPACING)
         .padding_with(EdgeInsets::new(
             RICH_TOOLTIP_TOP_PADDING,
-            RICH_TOOLTIP_BOTTOM_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
+            RICH_TOOLTIP_BOTTOM_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
         .background(

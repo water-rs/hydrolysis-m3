@@ -286,8 +286,8 @@ where
                 .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
                 .padding_with(EdgeInsets::new(
                     0.0,
-                    0.0,
                     ACTIVE_INDICATOR_HORIZONTAL_SPACE,
+                    0.0,
                     ACTIVE_INDICATOR_HORIZONTAL_SPACE,
                 ))
                 // The indicator pill is 56dp tall; the item itself is 64dp.

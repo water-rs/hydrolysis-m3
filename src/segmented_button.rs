@@ -349,8 +349,8 @@ fn segmented_button_view(
         .spacing(OUTLINED_SEGMENTED_BUTTON_ICON_LABEL_SPACE)
         .padding_with(EdgeInsets::new(
             0.0,
-            0.0,
             OUTLINED_SEGMENTED_BUTTON_LEADING_SPACE,
+            0.0,
             OUTLINED_SEGMENTED_BUTTON_TRAILING_SPACE,
         ));
     let content = if shape.has_leading_separator() {
