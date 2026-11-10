@@ -223,6 +223,7 @@ pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
 /// and handle height vary with size, and the track's outer corner is a token
 /// of its own rather than half the track height (24 and 40 share the 8/12dp
 /// corner table, not stadium caps).
+#[derive(Clone, Copy)]
 pub struct SliderSizeTokens {
     /// `*-track-height` (active and inactive agree in every size).
     pub track_height: f64,
