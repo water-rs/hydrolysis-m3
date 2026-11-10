@@ -1,3 +1,33 @@
+//! The Material 3 progress looks: the linear bar with its track gap and stop
+//! indicator, the circular indicator, and the expressive loading indicator.
+//!
+//! A determinate indicator's parts are functions of its value, so a value
+//! change moves their recorded operands. An indeterminate indicator's motion
+//! is keyframes the engine samples on its own clock, each segment along its
+//! own cubic-bezier or spring; the look declares the tracks and records them
+//! once, so a running indicator does no work per frame.
+
+use core::f64::consts::{FRAC_PI_2, TAU};
+use core::time::Duration;
+
+use hydrolysis::theme::{
+    Custom, Driven, IndicatorLook, Inputs, LinearProgressLook, ProgressControl, ProgressSpec,
+};
+use waterui_core::Environment;
+use waterui_core::SignalExt as _;
+use waterui_graphics::color::Color;
+use waterui_graphics::draw::kurbo::{
+    Affine, Arc, BezPath, Circle, Point, Rect, RoundedRect, RoundedRectRadii, Shape as _, Size,
+    Stroke,
+};
+use waterui_graphics::draw::{
+    Curve, Draw as _, Easing, Fixed, Keyframes, Live, Paint, Recorder, Repeat, ShapeData, Spring,
+    WorkingColor,
+};
+
+use crate::color::{
+    Primary, PrimaryContainer, SurfaceContainerHighest, Tertiary, TertiaryContainer,
+};
 use crate::dimensions::{
     PROGRESS_CIRCULAR_DIAMETER, PROGRESS_CIRCULAR_STROKE_WIDTH,
     PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE, PROGRESS_LINEAR_BAR_HEIGHT,
@@ -5,16 +35,9 @@ use crate::dimensions::{
     PROGRESS_LINEAR_LABEL_HEIGHT, PROGRESS_LINEAR_MIN_TRACK_WIDTH, PROGRESS_LINEAR_STOP_SIZE,
     PROGRESS_LINEAR_TRACK_ACTIVE_SPACE, PROGRESS_LINEAR_VALUE_LABEL_TOP_SPACING,
 };
-use crate::material_shapes::{material_shape_sequence, morph, radii_to_path};
-use crate::theme::colors::MaterialColorScheme;
-use crate::{ProgressIndicatorStyle, ProgressMetrics, lerp_color};
-use core::f64::consts::FRAC_PI_2;
-use core::time::Duration;
-use num_traits::ToPrimitive;
-use waterui_graphics::draw::kurbo::{BezPath, Point, Rect};
-use waterui_graphics::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
-use waterui_graphics::draw::{Curve, Paint, curve_value};
-use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
+use crate::material_shapes::{material_shape_sequence, radii_to_path};
+use crate::theme::motion;
+use crate::theme::motion::tokens::{self, easing};
 
 /// `LinearAnimationDuration` in Compose's `ProgressIndicator.kt`.
 const LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(1_750);
@@ -29,10 +52,35 @@ const CIRCULAR_ADDITIONAL_ROTATION_DELAY: Duration = Duration::from_millis(1_500
 const CIRCULAR_GLOBAL_ROTATION_DEGREES: f64 = 1_080.0;
 /// `CircularAdditionalRotationDegreesTarget`, reached in four 90-degree steps.
 const CIRCULAR_ADDITIONAL_ROTATION_DEGREES: f64 = 360.0;
+/// How many kicks the additional rotation makes per cycle.
+const CIRCULAR_ADDITIONAL_ROTATION_STEPS: u32 = 4;
 /// `CircularIndeterminateMinProgress`: the shortest the arc gets.
 const CIRCULAR_INDETERMINATE_MIN_PROGRESS: f64 = 0.1;
 /// `CircularIndeterminateMaxProgress`: the longest it grows to, half a cycle in.
 const CIRCULAR_INDETERMINATE_MAX_PROGRESS: f64 = 0.87;
+
+/// `LoadingIndicatorTokens.ContainerWidth` / `ContainerHeight`.
+pub const LOADING_CONTAINER_SIZE: f64 = 48.0;
+/// `LoadingIndicatorTokens.ActiveSize`: the shape inside that container.
+pub const LOADING_INDICATOR_SIZE: f64 = 38.0;
+
+// The loading indicator's timing is Compose's `LoadingIndicator.kt`
+// (androidx.compose.material3): the morph loop waits `MorphIntervalMillis`
+// between morphs, `globalRotation` runs `GlobalRotationDurationMillis` per
+// turn, and the shape is drawn rotated by
+// `progress * 90 + morphRotationTargetAngle + globalRotation`, where
+// `progress` is the morph's spring and `morphRotationTargetAngle` advances
+// by `QuarterRotation` per morph.
+
+/// `MorphIntervalMillis`: how long each morph, and the rest after it, lasts.
+const LOADING_MORPH_INTERVAL_MS: u32 = 650;
+/// `GlobalRotationDurationMillis`: one turn of the steady rotation, linear.
+const LOADING_GLOBAL_ROTATION_MS: u32 = 4_666;
+/// `QuarterRotation`: each morph also kicks the shape a quarter turn on.
+const LOADING_QUARTER_ROTATION: f64 = FRAC_PI_2;
+/// The morph's `spring(dampingRatio = 0.6f, stiffness = 200f)`.
+const LOADING_MORPH_SPRING_DAMPING_RATIO: f64 = 0.6;
+const LOADING_MORPH_SPRING_STIFFNESS: f64 = 200.0;
 
 #[derive(Debug, Clone, Copy)]
 struct Segment {
@@ -129,233 +177,683 @@ const SECONDARY_TRANSLATE: &[Segment] = &[
         easing: None,
     },
 ];
+/// Where each indeterminate bar starts, in percent of the track's width.
+const PRIMARY_INITIAL_INSET: f64 = -145.167;
+const SECONDARY_INITIAL_INSET: f64 = -54.8889;
+/// How far a bar's rounded half reaches past its end, in track widths: more
+/// than any bar is long.
+const BAR_REACH: f64 = 4.0;
 
-pub const fn metrics(style: ProgressIndicatorStyle) -> ProgressMetrics {
-    match style {
-        ProgressIndicatorStyle::Linear => ProgressMetrics::linear(
-            PROGRESS_LINEAR_LABEL_HEIGHT,
-            PROGRESS_LINEAR_BAR_TOP_OFFSET,
-            PROGRESS_LINEAR_BAR_HEIGHT,
-            PROGRESS_LINEAR_BAR_HORIZONTAL_INSET,
-            PROGRESS_LINEAR_VALUE_LABEL_TOP_SPACING,
-            PROGRESS_LINEAR_MIN_TRACK_WIDTH,
-        ),
-        ProgressIndicatorStyle::Circular => {
-            ProgressMetrics::circular(PROGRESS_CIRCULAR_DIAMETER, PROGRESS_CIRCULAR_STROKE_WIDTH)
-        }
-        ProgressIndicatorStyle::Loading => loading_metrics(),
-    }
-}
-
-/// Draws the linear track: fully rounded, stopping clear of the active
-/// indicator, with a stop indicator at the far end.
-///
-/// Expressive gives the track and indicator `CornerFull` ends and separates
-/// them by `TrackActiveSpace`, so the bar reads as two pieces rather than one
-/// square-ended strip filling from the left.
-pub fn draw_linear_track(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
-    active_end: Option<f64>,
-) {
-    let radius = RoundedRectRadii::from_single_radius(bounds.height() / 2.0);
-    let track_color = colors.surface_container_highest.working();
-    let start = active_end.map_or(bounds.x0, |end| {
-        (end + PROGRESS_LINEAR_TRACK_ACTIVE_SPACE).min(bounds.x1)
-    });
-    if start < bounds.x1 {
-        draw.fill(
-            RoundedRect::from_rect(
-                waterui_graphics::draw::kurbo::Rect::new(start, bounds.y0, bounds.x1, bounds.y1),
-                radius,
-            ),
-            track_color,
-        );
-    }
-    // The stop indicator only exists on a determinate bar.
-    if active_end.is_some() {
-        let center = waterui_graphics::draw::kurbo::Point::new(
-            bounds.x1 - PROGRESS_LINEAR_STOP_SIZE / 2.0,
-            bounds.y0 + bounds.height() / 2.0,
-        );
-        if center.x > start {
-            draw.fill(
-                Circle::new(center, PROGRESS_LINEAR_STOP_SIZE / 2.0),
-                colors.primary.working(),
-            );
-        }
-    }
-}
-
-pub fn draw_linear_fill(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
-) {
-    draw.fill(
-        RoundedRect::from_rect(
-            bounds,
-            RoundedRectRadii::from_single_radius(bounds.height() / 2.0),
-        ),
-        colors.primary.working(),
+/// The look of a linear progress indicator.
+pub fn linear(spec: &ProgressSpec, env: &Environment) -> LinearProgressLook {
+    let rtl = spec.direction().is_right_to_left();
+    let control = ProgressControl::new(
+        Size::new(PROGRESS_LINEAR_MIN_TRACK_WIDTH, PROGRESS_LINEAR_BAR_HEIGHT),
+        motion::progress_linear(),
     );
-}
-
-/// Draws the circular track: the arc the active sweep has not covered, held
-/// clear of it by `TrackActiveSpace` at both ends.
-///
-/// The track was previously not drawn at all, so a determinate circular
-/// indicator showed only its active arc against the background. Compose always
-/// draws a track behind the indicator.
-pub fn draw_circular_track(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    center: waterui_graphics::draw::kurbo::Point,
-    radius: f64,
-    width: f64,
-    active_turns: Option<f64>,
-) {
-    use core::f64::consts::{FRAC_PI_2, TAU};
-    use waterui_graphics::draw::kurbo::Shape as _;
-
-    let brush = Paint::from(colors.surface_container_highest.working());
-    let Some(active_turns) = active_turns else {
-        // Indeterminate: the sweep moves, so the whole ring stays behind it.
-        draw.stroke(
-            waterui_graphics::draw::kurbo::Arc::new(center, (radius, radius), -FRAC_PI_2, TAU, 0.0)
-                .into_path(0.1),
-            Stroke::new(width),
-            brush,
-        );
-        return;
-    };
-
-    // Convert the gap from an arc length into an angle at this radius.
-    let gap = if radius > 0.0 {
-        PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE / radius
+    let control = if spec.determinate() {
+        control.part(linear_determinate(spec, rtl, env))
     } else {
-        0.0
+        control.part(linear_indeterminate(spec, rtl, env))
     };
-    let active = TAU * active_turns.clamp(0.0, 1.0);
-    let sweep = gap.mul_add(-2.0, TAU - active);
-    if sweep <= 0.0 {
-        return;
-    }
-    draw.stroke(
-        waterui_graphics::draw::kurbo::Arc::new(
-            center,
-            (radius, radius),
-            -FRAC_PI_2 + active + gap,
-            sweep,
-            0.0,
+    LinearProgressLook::new(control, PROGRESS_LINEAR_BAR_HORIZONTAL_INSET)
+        .label_band(PROGRESS_LINEAR_LABEL_HEIGHT, PROGRESS_LINEAR_BAR_TOP_OFFSET)
+        .value_label_band(PROGRESS_LINEAR_VALUE_LABEL_TOP_SPACING)
+}
+
+/// The look of a circular progress indicator.
+pub fn circular(spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
+    let control = ProgressControl::new(
+        Size::new(PROGRESS_CIRCULAR_DIAMETER, PROGRESS_CIRCULAR_DIAMETER),
+        motion::progress_circular(),
+    );
+    IndicatorLook::new(if spec.determinate() {
+        control.part(circular_determinate(spec, env))
+    } else {
+        control.part(circular_indeterminate(spec, env))
+    })
+}
+
+/// The look of the expressive loading indicator.
+pub fn loading(spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
+    IndicatorLook::new(
+        ProgressControl::new(
+            Size::new(LOADING_CONTAINER_SIZE, LOADING_CONTAINER_SIZE),
+            motion::progress_circular(),
         )
-        .into_path(0.1),
-        Stroke::new(width),
-        brush,
-    );
+        .part(loading_part(spec, env)),
+    )
 }
 
-pub fn draw_circular_fill(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    path: &waterui_graphics::draw::kurbo::BezPath,
-    width: f64,
-) {
-    draw.stroke(
-        (*path).clone(),
-        Stroke::new(width),
-        colors.primary.working(),
-    );
+// ---------------------------------------------------------------------------
+// Paints
+// ---------------------------------------------------------------------------
+
+/// `color` as a paint that follows it.
+fn solid(color: impl Into<Color>, env: &Environment) -> Driven<Paint, f64> {
+    Driven::follow(
+        color.into().resolve(env),
+        |color: &WorkingColor, _inputs: &Inputs<'_, f64>| Paint::from(*color),
+    )
 }
 
-pub fn draw_linear_indeterminate(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    elapsed: Duration,
-    four_color: bool,
+/// The indicator's active colour: the tint, or the four accent colours in
+/// turn over `cycle` when the spec asks for them. The four follow their
+/// theme tokens: a colour-scheme change starts the cycle again from the new
+/// colours.
+fn active_paint(spec: &ProgressSpec, cycle: Duration, env: &Environment) -> Driven<Paint, f64> {
+    if !spec.four_color() {
+        return solid(spec.tint(), env);
+    }
+    let [primary, primary_container, tertiary, tertiary_container] = [
+        Color::from(Primary),
+        Color::from(PrimaryContainer),
+        Color::from(Tertiary),
+        Color::from(TertiaryContainer),
+    ]
+    .map(|color| color.resolve(env));
+    Driven::repeating_following(
+        primary
+            .zip(&primary_container)
+            .zip(&tertiary)
+            .zip(&tertiary_container),
+        move |(((primary, primary_container), tertiary), tertiary_container): &(
+            ((WorkingColor, WorkingColor), WorkingColor),
+            WorkingColor,
+        ),
+              _frame| {
+            four_colors(
+                &[
+                    Paint::from(*primary),
+                    Paint::from(*primary_container),
+                    Paint::from(*tertiary),
+                    Paint::from(*tertiary_container),
+                ],
+                cycle,
+            )
+        },
+        Repeat::Forever,
+    )
+}
+
+/// The palette's colours held for a stretch of the cycle each, and blended
+/// into the next over a tenth of it.
+fn four_colors(palette: &[Paint; 4], cycle: Duration) -> Keyframes<Paint> {
+    let curve = Curve::linear(cycle);
+    let [first, second, third, fourth] = palette;
+    Keyframes::new(cycle, first.clone())
+        .then(0.15, curve, first.clone())
+        .then(0.25, curve, second.clone())
+        .then(0.40, curve, second.clone())
+        .then(0.50, curve, third.clone())
+        .then(0.65, curve, third.clone())
+        .then(0.75, curve, fourth.clone())
+        .then(0.90, curve, fourth.clone())
+        .then(1.0, curve, first.clone())
+}
+
+// ---------------------------------------------------------------------------
+// Keyframes
+// ---------------------------------------------------------------------------
+
+/// The cubic-bezier easing token as a curve of a `cycle`-long track, whose
+/// own length the engine ignores: a segment's share of the cycle sets it.
+fn curve(cycle: Duration, token: tokens::Easing) -> Curve {
+    Curve::bezier(
+        cycle,
+        f64::from(token.x1),
+        f64::from(token.y1),
+        f64::from(token.x2),
+        f64::from(token.y2),
+    )
+}
+
+/// `token` run backwards: the easing of a move that is another one in
+/// reverse, `1 - ease(1 - t)`.
+fn reversed(token: tokens::Easing) -> tokens::Easing {
+    tokens::Easing::bezier(
+        1.0 - token.x2,
+        1.0 - token.y2,
+        1.0 - token.x1,
+        1.0 - token.y1,
+    )
+}
+
+/// The track of `segments` over `cycle`: each reaches the next keyframe
+/// along its own cubic-bezier easing, or linearly when it has none. `value`
+/// builds the track's value from a segment's.
+fn segment_track<T>(
+    cycle: Duration,
+    segments: &[Segment],
+    value: impl Fn(f64) -> T,
+) -> Keyframes<T> {
+    let (first, rest) = segments
+        .split_first()
+        .expect("indeterminate progress segments must not be empty");
+    rest.iter().zip(segments).fold(
+        Keyframes::new(cycle, value(first.value)),
+        |keyframes, (end, start)| {
+            let easing = start.easing.map_or_else(
+                || Curve::linear(cycle),
+                |(x1, y1, x2, y2)| curve(cycle, tokens::Easing::bezier(x1, y1, x2, y2)),
+            );
+            keyframes.then(end.at, easing, value(end.value))
+        },
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Linear
+// ---------------------------------------------------------------------------
+
+/// A pill `[x0, x1]` wide across `frame`'s height: `CornerFull` ends.
+fn pill(frame: Rect, x0: f64, x1: f64) -> RoundedRect {
+    RoundedRect::from_rect(
+        Rect::new(x0, frame.y0, x1.max(x0), frame.y1),
+        RoundedRectRadii::from_single_radius(frame.height() / 2.0),
+    )
+}
+
+/// A pill `[x0, x1]` wide across `frame`'s height, mirrored for a
+/// right-to-left indicator.
+fn bar(frame: Rect, x0: f64, x1: f64, rtl: bool) -> ShapeData {
+    let (x0, x1) = if rtl {
+        (frame.x0 + frame.x1 - x1, frame.x0 + frame.x1 - x0)
+    } else {
+        (x0, x1)
+    };
+    ShapeData::of(&pill(frame, x0, x1))
+}
+
+/// The three pieces of a determinate linear bar at `value`: the track, kept
+/// clear of the active indicator by `TrackActiveSpace`, the active indicator,
+/// and the stop indicator at the track's far end, which is gone once the
+/// active indicator reaches it.
+fn linear_pieces(frame: Rect, value: f64, rtl: bool) -> (ShapeData, ShapeData, ShapeData) {
+    let end = frame.width().mul_add(value, frame.x0);
+    let start = (end + PROGRESS_LINEAR_TRACK_ACTIVE_SPACE).min(frame.x1);
+    let stop_center = frame.x1 - PROGRESS_LINEAR_STOP_SIZE / 2.0;
+    let stop = Circle::new(
+        Point::new(
+            if rtl {
+                frame.x0 + frame.x1 - stop_center
+            } else {
+                stop_center
+            },
+            frame.center().y,
+        ),
+        if stop_center > start {
+            PROGRESS_LINEAR_STOP_SIZE / 2.0
+        } else {
+            0.0
+        },
+    );
+    (
+        bar(frame, start, frame.x1, rtl),
+        bar(frame, frame.x0, end, rtl),
+        ShapeData::of(&stop),
+    )
+}
+
+/// A determinate linear bar: three shapes, each with its paint.
+type LinearBar = Custom<
+    f64,
+    (
+        Driven<ShapeData, f64>,
+        Driven<Paint, f64>,
+        Driven<ShapeData, f64>,
+        Driven<Paint, f64>,
+        Driven<ShapeData, f64>,
+        Driven<Paint, f64>,
+    ),
+>;
+
+/// An indeterminate linear bar: the track's paint, then for each of the two
+/// moving bars the translation of its start, the translation that lengthens
+/// it, and its paint.
+type MovingBars = Custom<
+    f64,
+    (
+        Driven<Paint, f64>,
+        Driven<Affine, f64>,
+        Driven<Affine, f64>,
+        Driven<Paint, f64>,
+        Driven<Affine, f64>,
+        Driven<Affine, f64>,
+        Driven<Paint, f64>,
+    ),
+>;
+
+/// A circular indicator: the track and the arc, each a stroke with its paint.
+type Ring = Custom<
+    f64,
+    (
+        Driven<Stroke, f64>,
+        Driven<Paint, f64>,
+        Driven<Stroke, f64>,
+        Driven<Paint, f64>,
+    ),
+>;
+
+/// The loading indicator: one shape with its paint.
+type Blob = Custom<f64, (Driven<ShapeData, f64>, Driven<Paint, f64>)>;
+
+fn linear_determinate(spec: &ProgressSpec, rtl: bool, env: &Environment) -> LinearBar {
+    let piece = |pick: fn((ShapeData, ShapeData, ShapeData)) -> ShapeData| {
+        Driven::new(move |inputs: &Inputs<'_, f64>| {
+            pick(linear_pieces(inputs.frame, *inputs.value, rtl))
+        })
+    };
+    Custom::new(
+        (
+            piece(|(track, ..)| track),
+            solid(SurfaceContainerHighest, env),
+            piece(|(_, active, _)| active),
+            solid(spec.tint(), env),
+            piece(|(.., stop)| stop),
+            solid(spec.tint(), env),
+        ),
+        |recorder, _frame, (track, track_paint, active, active_paint, stop, stop_paint)| {
+            recorder.fill(track, track_paint);
+            recorder.fill(active, active_paint);
+            recorder.fill(stop, stop_paint);
+        },
+    )
+}
+
+/// How far a bar's start travels across `frame`, as the translation of the
+/// layer it is drawn in.
+fn bar_start(frame: Rect, translate: &[Segment]) -> Keyframes<Affine> {
+    segment_track(LINEAR_INDETERMINATE_CYCLE, translate, |percent| {
+        Affine::translate((frame.width() * percent / 100.0, 0.0))
+    })
+}
+
+/// How far a bar's end travels from its start across `frame`: the bar's
+/// length, `scale` of the track's width.
+fn bar_length(frame: Rect, scale: &[Segment]) -> Keyframes<Affine> {
+    segment_track(LINEAR_INDETERMINATE_CYCLE, scale, |share| {
+        Affine::translate((frame.width() * share, 0.0))
+    })
+}
+
+/// One indeterminate bar. It starts `initial_inset` percent of the track's
+/// width in and spans from its start, which travels by `start`, to its end,
+/// which travels from there by `length`: a pill reaching right from the
+/// start, clipped by one reaching left from the end. The two travel with
+/// their own tracks, each segment on its own easing, so the bar's length
+/// and its position are both exact.
+fn record_bar(
+    recorder: &mut Recorder,
+    frame: Rect,
+    initial_inset: f64,
+    start: Live<Affine>,
+    length: Live<Affine>,
+    paint: Live<Paint>,
 ) {
-    let color = progress_color(colors, elapsed, four_color, LINEAR_INDETERMINATE_CYCLE * 2);
-    draw.clip(bounds, |draw| {
-        draw_indeterminate_bar(
-            draw,
-            bounds,
-            -145.167,
-            sample_segments(PRIMARY_TRANSLATE, elapsed, LINEAR_INDETERMINATE_CYCLE),
-            sample_segments(PRIMARY_SCALE, elapsed, LINEAR_INDETERMINATE_CYCLE),
-            color,
-        );
-        draw_indeterminate_bar(
-            draw,
-            bounds,
-            -54.8889,
-            sample_segments(SECONDARY_TRANSLATE, elapsed, LINEAR_INDETERMINATE_CYCLE),
-            sample_segments(SECONDARY_SCALE, elapsed, LINEAR_INDETERMINATE_CYCLE),
-            color,
-        );
+    let origin = frame.width().mul_add(initial_inset / 100.0, frame.x0);
+    let reach = frame.width() * BAR_REACH;
+    recorder.transform(start, |recorder| {
+        recorder.clip(pill(frame, origin, origin + reach), |recorder| {
+            recorder.transform(length, |recorder| {
+                recorder.fill(pill(frame, origin - reach, origin), paint);
+            });
+        });
     });
 }
 
-pub fn draw_circular_indeterminate(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    center: Point,
-    radius: f64,
-    width: f64,
-    elapsed: Duration,
-    four_color: bool,
-) {
-    let color = progress_color(colors, elapsed, four_color, CIRCULAR_CYCLE_DURATION);
-    let (start, sweep) = circular_indeterminate_arc(elapsed);
-    let arc = circle_arc_path(center, radius, start, sweep);
-    draw.stroke(arc, Stroke::new(width), color);
-}
-
-fn draw_indeterminate_bar(
-    draw: &mut Recorder,
-    track: Rect,
-    initial_inset_percent: f64,
-    translate_percent: f64,
-    scale: f64,
-    color: WorkingColor,
-) {
-    let x = track.width().mul_add(
-        (initial_inset_percent + translate_percent) / 100.0,
-        track.x0,
-    );
-    let width = (track.width() * scale).max(0.0);
-    let rect = Rect::new(x, track.y0, x + width, track.y1);
-    // Expressive gives every progress element CornerFull ends, so the moving
-    // segments cap at half the track height like the determinate fill does.
-    draw.fill(
-        RoundedRect::from_rect(
-            rect,
-            RoundedRectRadii::from_single_radius(track.height() / 2.0),
+fn linear_indeterminate(spec: &ProgressSpec, rtl: bool, env: &Environment) -> MovingBars {
+    // The two bars share one colour cycle, twice the bars' own.
+    let paint = active_paint(spec, LINEAR_INDETERMINATE_CYCLE * 2, env);
+    Custom::new(
+        (
+            solid(SurfaceContainerHighest, env),
+            Driven::repeating(|frame| bar_start(frame, PRIMARY_TRANSLATE), Repeat::Forever),
+            Driven::repeating(|frame| bar_length(frame, PRIMARY_SCALE), Repeat::Forever),
+            paint.clone(),
+            Driven::repeating(
+                |frame| bar_start(frame, SECONDARY_TRANSLATE),
+                Repeat::Forever,
+            ),
+            Driven::repeating(|frame| bar_length(frame, SECONDARY_SCALE), Repeat::Forever),
+            paint,
         ),
-        color,
-    );
+        move |recorder,
+              frame,
+              (
+            track_paint,
+            primary_start,
+            primary_length,
+            primary_paint,
+            secondary_start,
+            secondary_length,
+            secondary_paint,
+        )| {
+            let draw = |recorder: &mut Recorder| {
+                recorder.fill(pill(frame, frame.x0, frame.x1), track_paint);
+                recorder.clip(frame, |recorder| {
+                    record_bar(
+                        recorder,
+                        frame,
+                        PRIMARY_INITIAL_INSET,
+                        primary_start,
+                        primary_length,
+                        primary_paint,
+                    );
+                    record_bar(
+                        recorder,
+                        frame,
+                        SECONDARY_INITIAL_INSET,
+                        secondary_start,
+                        secondary_length,
+                        secondary_paint,
+                    );
+                });
+            };
+            if rtl {
+                let mirror = Affine::translate((frame.x0 + frame.x1, 0.0))
+                    * Affine::scale_non_uniform(-1.0, 1.0);
+                recorder.transform(Fixed(mirror), draw);
+            } else {
+                draw(recorder);
+            }
+        },
+    )
 }
 
-fn sample_segments(segments: &[Segment], elapsed: Duration, cycle: Duration) -> f64 {
-    let phase = cycle_phase(elapsed, cycle);
-    for window in segments.windows(2) {
-        let start = window[0];
-        let end = window[1];
-        if phase < start.at || phase > end.at {
-            continue;
-        }
-        if (end.at - start.at).abs() <= f64::EPSILON {
-            return end.value;
-        }
-        let local = ((phase - start.at) / (end.at - start.at)).clamp(0.0, 1.0);
-        let eased = start.easing.map_or_else(
-            || {
-                local
-                    .to_f32()
-                    .expect("progress phase must be representable as f32")
+// ---------------------------------------------------------------------------
+// Circular
+// ---------------------------------------------------------------------------
+
+/// The ring a circular indicator strokes, in `frame`, starting at the top
+/// and running clockwise, and its circumference.
+fn ring(frame: Rect) -> (BezPath, f64) {
+    let radius =
+        (frame.width().min(frame.height()) - PROGRESS_CIRCULAR_STROKE_WIDTH).max(0.0) / 2.0;
+    (
+        Arc::new(frame.center(), (radius, radius), -FRAC_PI_2, TAU, 0.0).into_path(0.1),
+        TAU * radius,
+    )
+}
+
+/// The dashes that stroke the active arc covering `value` of the ring.
+fn active_stroke(circumference: f64, value: f64) -> Stroke {
+    Stroke::new(PROGRESS_CIRCULAR_STROKE_WIDTH)
+        .with_dashes(0.0, [value * circumference, circumference])
+}
+
+/// The dashes that stroke the track around an active arc covering `value` of
+/// the ring: the rest of it, clear of the arc by `TrackActiveSpace` at both
+/// ends. The pattern is one dash and one ring of gap, shifted so the dash
+/// begins where the gap after the arc ends.
+fn track_stroke(circumference: f64, value: f64) -> Stroke {
+    let gap = PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE;
+    let active = value * circumference;
+    let dash = gap.mul_add(-2.0, circumference - active).max(0.0);
+    let period = dash + circumference;
+    Stroke::new(PROGRESS_CIRCULAR_STROKE_WIDTH).with_dashes(
+        (period - (active + gap)).rem_euclid(period),
+        [dash, circumference],
+    )
+}
+
+fn circular_determinate(spec: &ProgressSpec, env: &Environment) -> Ring {
+    Custom::new(
+        (
+            Driven::new(|inputs: &Inputs<'_, f64>| {
+                let (_, circumference) = ring(inputs.frame);
+                track_stroke(circumference, *inputs.value)
+            }),
+            solid(SurfaceContainerHighest, env),
+            Driven::new(|inputs: &Inputs<'_, f64>| {
+                active_stroke(ring(inputs.frame).1, *inputs.value)
+            }),
+            solid(spec.tint(), env),
+        ),
+        |recorder, frame, (track, track_paint, active, active_paint)| {
+            let (path, _) = ring(frame);
+            recorder.stroke(path.clone(), track, track_paint);
+            recorder.stroke(path, active, active_paint);
+        },
+    )
+}
+
+/// The arc's dashes when it covers `share` of a ring of `circumference`: one
+/// dash as long as the arc, and the rest of the ring as gap.
+fn arc_stroke(circumference: f64, share: f64) -> Stroke {
+    let arc = share * circumference;
+    Stroke::new(PROGRESS_CIRCULAR_STROKE_WIDTH).with_dashes(0.0, [arc, circumference - arc])
+}
+
+/// The arc's length over a cycle: growing from `CircularIndeterminateMinProgress`
+/// to `CircularIndeterminateMaxProgress` by mid-cycle along the standard
+/// easing, then shrinking back along the same one in reverse.
+fn arc_keyframes(circumference: f64) -> Keyframes<Stroke> {
+    let cycle = CIRCULAR_CYCLE_DURATION;
+    Keyframes::new(
+        cycle,
+        arc_stroke(circumference, CIRCULAR_INDETERMINATE_MIN_PROGRESS),
+    )
+    .then(
+        0.5,
+        curve(cycle, easing::STANDARD),
+        arc_stroke(circumference, CIRCULAR_INDETERMINATE_MAX_PROGRESS),
+    )
+    .then(
+        1.0,
+        curve(cycle, reversed(easing::STANDARD)),
+        arc_stroke(circumference, CIRCULAR_INDETERMINATE_MIN_PROGRESS),
+    )
+}
+
+/// The ring's steady global rotation over a cycle, in radians: three turns
+/// linearly. It is the outer stage of the ring's rotation.
+fn circular_turn() -> Keyframes<f64> {
+    let cycle = CIRCULAR_CYCLE_DURATION;
+    Keyframes::new(cycle, 0.0).then(
+        1.0,
+        Curve::linear(cycle),
+        CIRCULAR_GLOBAL_ROTATION_DEGREES.to_radians(),
+    )
+}
+
+/// The ring's additional rotation over a cycle, in radians: four 90-degree
+/// kicks, each eased with the emphasized-decelerate curve over its 300 ms and
+/// held until the next one 1.5 s after it began, a whole turn in all. It is
+/// the inner stage of the ring's rotation.
+fn circular_kicks() -> Keyframes<f64> {
+    let cycle = CIRCULAR_CYCLE_DURATION;
+    let total = cycle.as_secs_f64();
+    let delay = CIRCULAR_ADDITIONAL_ROTATION_DELAY.as_secs_f64();
+    let kick = CIRCULAR_ADDITIONAL_ROTATION_DURATION.as_secs_f64();
+    let steps = CIRCULAR_ADDITIONAL_ROTATION_STEPS;
+    let step = CIRCULAR_ADDITIONAL_ROTATION_DEGREES / f64::from(steps);
+    let kick_curve = curve(cycle, easing::EMPHASIZED_DECELERATE);
+    let hold_curve = Curve::linear(cycle);
+    (0..steps).fold(Keyframes::new(cycle, 0.0), |keyframes, index| {
+        let turned = (step * f64::from(index + 1)).to_radians();
+        let next = if index + 1 == steps {
+            1.0
+        } else {
+            f64::from(index + 1) * delay / total
+        };
+        keyframes
+            .then(
+                f64::from(index).mul_add(delay, kick) / total,
+                kick_curve,
+                turned,
+            )
+            .then(next, hold_curve, turned)
+    })
+}
+
+fn circular_indeterminate(spec: &ProgressSpec, env: &Environment) -> Ring {
+    Custom::new(
+        (
+            Driven::new(|_inputs: &Inputs<'_, f64>| Stroke::new(PROGRESS_CIRCULAR_STROKE_WIDTH)),
+            solid(SurfaceContainerHighest, env),
+            Driven::repeating(|frame| arc_keyframes(ring(frame).1), Repeat::Forever),
+            active_paint(spec, CIRCULAR_CYCLE_DURATION, env),
+        ),
+        |recorder, frame, (track, track_paint, arc, arc_paint)| {
+            let (path, _) = ring(frame);
+            recorder.stroke(path.clone(), track, track_paint);
+            recorder.stroke(path, arc, arc_paint);
+        },
+    )
+    // The whole ring turns as one layer, so the arc keeps its place in the
+    // layer and only its length is keyframed.
+    .rotating(circular_kicks(), Repeat::Forever)
+    .rotating(circular_turn(), Repeat::Forever)
+}
+
+// ---------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------
+
+/// The spring Compose morphs the loading indicator's shapes with.
+fn morph_spring() -> Spring {
+    Spring {
+        response: TAU / LOADING_MORPH_SPRING_STIFFNESS.sqrt(),
+        damping: LOADING_MORPH_SPRING_DAMPING_RATIO,
+    }
+}
+
+/// The outlines the loading indicator morphs through, in `frame`: the shape
+/// is drawn at `ActiveSize` inside a container box, so it never touches the
+/// container's edge.
+fn loading_outlines(frame: Rect) -> Vec<ShapeData> {
+    let scale = LOADING_INDICATOR_SIZE.min(frame.width().min(frame.height())) / 2.0;
+    material_shape_sequence()
+        .iter()
+        .map(|radii| ShapeData::of(&radii_to_path(radii, frame.center(), scale)))
+        .collect()
+}
+
+/// The loop through every shape in turn and back to the first, each morph a
+/// spring over its interval.
+fn loading_morph(frame: Rect) -> Keyframes<ShapeData> {
+    let outlines = loading_outlines(frame);
+    let count = outlines.len();
+    let steps = u32::try_from(count).expect("the shape sequence is seven long");
+    let spring = Easing::Spring(morph_spring());
+    let first = outlines[0].clone();
+    outlines
+        .into_iter()
+        .cycle()
+        .skip(1)
+        .take(count)
+        .enumerate()
+        .fold(
+            Keyframes::new(
+                Duration::from_millis(u64::from(LOADING_MORPH_INTERVAL_MS)) * steps,
+                first,
+            ),
+            |keyframes, (index, outline)| {
+                let at = f64::from(u32::try_from(index + 1).expect("bounded by the shape count"))
+                    / f64::from(steps);
+                keyframes.then(at, spring, outline)
             },
-            |(x1, y1, x2, y2)| {
+        )
+}
+
+/// How many morphs make the quarter-turn kicks a whole turn.
+const LOADING_KICKS_PER_TURN: u32 = 4;
+
+/// The loading indicator's steady rotation, in radians: `globalRotation`,
+/// one turn linearly over `GlobalRotationDurationMillis`. It is the outer
+/// stage of the rotation, repeating on its own period.
+fn loading_turn() -> Keyframes<f64> {
+    let period = Duration::from_millis(u64::from(LOADING_GLOBAL_ROTATION_MS));
+    Keyframes::new(period, 0.0).then(1.0, Curve::linear(period), TAU)
+}
+
+/// The loading indicator's kicks, in radians: Compose's `progress * 90 +
+/// morphRotationTargetAngle`, whose target starts at a quarter turn and
+/// gains one per morph while `progress` is the morph's spring. Four morphs
+/// turn it a whole turn, so the track is those four and repeats on that
+/// period. It is the inner stage of the rotation.
+fn loading_kicks() -> Keyframes<f64> {
+    let spring = Easing::Spring(morph_spring());
+    let period = Duration::from_millis(u64::from(
+        LOADING_KICKS_PER_TURN * LOADING_MORPH_INTERVAL_MS,
+    ));
+    (1..=LOADING_KICKS_PER_TURN).fold(
+        Keyframes::new(period, LOADING_QUARTER_ROTATION),
+        |keyframes, kick| {
+            keyframes.then(
+                f64::from(kick) / f64::from(LOADING_KICKS_PER_TURN),
+                spring,
+                LOADING_QUARTER_ROTATION * f64::from(kick + 1),
+            )
+        },
+    )
+}
+
+fn loading_part(spec: &ProgressSpec, env: &Environment) -> Blob {
+    Custom::new(
+        (
+            Driven::repeating(loading_morph, Repeat::Forever),
+            active_paint(
+                spec,
+                Duration::from_millis(u64::from(LOADING_GLOBAL_ROTATION_MS)),
+                env,
+            ),
+        ),
+        |recorder, _frame, (outline, paint)| {
+            recorder.fill(outline, paint);
+        },
+    )
+    // Two rotating stages, the kicks inside the steady turn, each repeating
+    // on its own period.
+    .rotating(loading_kicks(), Repeat::Forever)
+    .rotating(loading_turn(), Repeat::Forever)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hydrolysis::Style as _;
+    use hydrolysis::theme::SpecTint;
+    use waterui_core::layout::LayoutDirection;
+    use waterui_graphics::draw::curve_value;
+
+    fn env() -> Environment {
+        let mut env = Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        env
+    }
+
+    fn spec(style: waterui::component::progress::ProgressStyle, determinate: bool) -> ProgressSpec {
+        ProgressSpec::new(
+            style,
+            determinate,
+            LayoutDirection::LeftToRight,
+            SpecTint::default(),
+        )
+    }
+
+    fn track() -> Rect {
+        Rect::new(8.0, 0.0, 328.0, 4.0)
+    }
+
+    fn rounded(shape: &ShapeData) -> (Rect, RoundedRectRadii) {
+        let ShapeData::RoundedRect(rounded) = shape else {
+            panic!("expected a rounded rect, got {shape:?}")
+        };
+        (rounded.rect(), rounded.radii())
+    }
+
+    /// The value of `segments` at `phase` of their cycle, read directly
+    /// off the table: the oracle the keyframes are checked against.
+    fn sample_segments(segments: &[Segment], phase: f64) -> f64 {
+        for window in segments.windows(2) {
+            let (start, end) = (window[0], window[1]);
+            if phase < start.at || phase > end.at {
+                continue;
+            }
+            let local = ((phase - start.at) / (end.at - start.at)).clamp(0.0, 1.0);
+            let eased = start.easing.map_or(local, |(x1, y1, x2, y2)| {
                 curve_value(
                     &Curve::bezier(
                         Duration::from_secs(1),
@@ -366,284 +864,20 @@ fn sample_segments(segments: &[Segment], elapsed: Duration, cycle: Duration) -> 
                     ),
                     local,
                 )
-                .to_f32()
-                .expect("eased progress must be representable as f32")
-            },
-        );
-        return (end.value - start.value).mul_add(f64::from(eased), start.value);
+            });
+            return (end.value - start.value).mul_add(eased, start.value);
+        }
+        segments.last().expect("segments").value
     }
-    segments
-        .last()
-        .expect("indeterminate progress segments must not be empty")
-        .value
-}
 
-fn cycle_phase(elapsed: Duration, cycle: Duration) -> f64 {
-    let cycle = cycle.as_secs_f64();
-    assert!(
-        cycle > 0.0,
-        "Material progress cycle duration must be positive"
-    );
-    (elapsed.as_secs_f64() % cycle) / cycle
-}
-
-fn progress_color(
-    colors: &MaterialColorScheme,
-    elapsed: Duration,
-    four_color: bool,
-    cycle: Duration,
-) -> WorkingColor {
-    if !four_color {
-        return colors.primary.working();
+    /// The value of `keyframes` at `phase` of its cycle.
+    macro_rules! at_phase {
+        ($keyframes:expr, $phase:expr) => {
+            $keyframes
+                .sample($keyframes.duration().mul_f64($phase), Repeat::Forever)
+                .expect("a repeating track has a value")
+        };
     }
-    let phase = cycle_phase(elapsed, cycle);
-    let palette = [
-        colors.primary.working(),
-        colors.primary_container.working(),
-        colors.tertiary.working(),
-        colors.tertiary_container.working(),
-    ];
-    sample_color_phase(phase, palette)
-}
-
-fn sample_color_phase(phase: f64, palette: [WorkingColor; 4]) -> WorkingColor {
-    match phase {
-        p if p < 0.15 => palette[0],
-        p if p < 0.25 => lerp_color(palette[0], palette[1], progress_phase((p - 0.15) / 0.10)),
-        p if p < 0.40 => palette[1],
-        p if p < 0.50 => lerp_color(palette[1], palette[2], progress_phase((p - 0.40) / 0.10)),
-        p if p < 0.65 => palette[2],
-        p if p < 0.75 => lerp_color(palette[2], palette[3], progress_phase((p - 0.65) / 0.10)),
-        p if p < 0.90 => palette[3],
-        _ => lerp_color(
-            palette[3],
-            palette[0],
-            progress_phase((phase - 0.90) / 0.10),
-        ),
-    }
-}
-
-fn progress_phase(value: f64) -> f32 {
-    value
-        .to_f32()
-        .expect("progress phase must be representable as f32")
-}
-
-/// The indeterminate arc's start angle and sweep, following Compose's
-/// `CircularProgressIndicator`.
-///
-/// Three animations run over one 6s cycle and compose into the motion: a linear
-/// global rotation of three full turns, an additional rotation that kicks
-/// through four 90-degree steps spaced 1.5s apart, and a progress value that
-/// grows the arc from 10% to 87% of the circle by mid-cycle and back. The two
-/// rotations are summed, exactly as Compose's `rotate(globalRotation +
-/// additionalRotation)` does, and the sweep is `progress * 360`.
-fn circular_indeterminate_arc(elapsed: Duration) -> (f64, f64) {
-    let cycle = cycle_phase(elapsed, CIRCULAR_CYCLE_DURATION);
-    let global_rotation = cycle * CIRCULAR_GLOBAL_ROTATION_DEGREES;
-    let additional_rotation = circular_additional_rotation(cycle);
-    let progress = circular_indeterminate_progress(cycle);
-    (
-        -FRAC_PI_2 + (global_rotation + additional_rotation).to_radians(),
-        (progress * 360.0).to_radians(),
-    )
-}
-
-/// The additional rotation at `cycle`: four 90-degree steps, each eased with
-/// the emphasized-decelerate curve and held until the next one begins.
-fn circular_additional_rotation(cycle: f64) -> f64 {
-    const STEPS: f64 = 4.0;
-    let cycle_secs = CIRCULAR_CYCLE_DURATION.as_secs_f64();
-    let delay_secs = CIRCULAR_ADDITIONAL_ROTATION_DELAY.as_secs_f64();
-    let step_secs = CIRCULAR_ADDITIONAL_ROTATION_DURATION.as_secs_f64();
-    let elapsed_secs = cycle * cycle_secs;
-    let completed = (elapsed_secs / delay_secs).floor().min(STEPS);
-    let into_step = completed.mul_add(-delay_secs, elapsed_secs);
-    let step_progress = if step_secs > 0.0 {
-        (into_step / step_secs).clamp(0.0, 1.0)
-    } else {
-        1.0
-    };
-    let eased = f64::from(
-        crate::theme::motion::tokens::easing::EMPHASIZED_DECELERATE
-            .ease(progress_phase(step_progress)),
-    );
-    (completed + eased).min(STEPS) / STEPS * CIRCULAR_ADDITIONAL_ROTATION_DEGREES
-}
-
-/// The arc length at `cycle`: growing to `CircularIndeterminateMaxProgress` by
-/// mid-cycle, then shrinking back to `CircularIndeterminateMinProgress`.
-fn circular_indeterminate_progress(cycle: f64) -> f64 {
-    let span = CIRCULAR_INDETERMINATE_MAX_PROGRESS - CIRCULAR_INDETERMINATE_MIN_PROGRESS;
-    let half = if cycle <= 0.5 {
-        cycle * 2.0
-    } else {
-        (1.0 - cycle) * 2.0
-    };
-    let eased =
-        f64::from(crate::theme::motion::tokens::easing::STANDARD.ease(progress_phase(half)));
-    span.mul_add(eased, CIRCULAR_INDETERMINATE_MIN_PROGRESS)
-}
-
-fn circle_arc_path(center: Point, radius: f64, start_angle: f64, sweep: f64) -> BezPath {
-    let mut path = BezPath::new();
-    if sweep == 0.0 {
-        return path;
-    }
-    let segments = 64usize;
-    let step = sweep
-        / segments
-            .to_f64()
-            .expect("progress arc segment count must be representable as f64");
-    let mut angle = start_angle;
-    path.move_to(Point::new(
-        radius.mul_add(angle.cos(), center.x),
-        radius.mul_add(angle.sin(), center.y),
-    ));
-    for _ in 0..segments {
-        angle += step;
-        path.line_to(Point::new(
-            radius.mul_add(angle.cos(), center.x),
-            radius.mul_add(angle.sin(), center.y),
-        ));
-    }
-    path
-}
-
-// ---------------------------------------------------------------------------
-// Loading indicator
-// ---------------------------------------------------------------------------
-
-/// `LoadingIndicatorTokens.ContainerWidth` / `ContainerHeight`.
-pub const LOADING_CONTAINER_SIZE: f64 = 48.0;
-/// `LoadingIndicatorTokens.ActiveSize`: the shape inside that container.
-pub const LOADING_INDICATOR_SIZE: f64 = 38.0;
-/// `MorphIntervalMillis`: how long the indicator rests on each shape.
-const LOADING_MORPH_INTERVAL_MS: u64 = 650;
-const LOADING_MORPH_INTERVAL: Duration = Duration::from_millis(LOADING_MORPH_INTERVAL_MS);
-/// `GlobalRotationDurationMillis`: one full turn, linear.
-const LOADING_GLOBAL_ROTATION_MS: u64 = 4_666;
-const LOADING_GLOBAL_ROTATION: Duration = Duration::from_millis(LOADING_GLOBAL_ROTATION_MS);
-/// `QuarterRotation`: each morph also kicks the shape a quarter turn on.
-const LOADING_QUARTER_ROTATION: f64 = core::f64::consts::FRAC_PI_2;
-/// Compose morphs between shapes with `spring(dampingRatio = 0.6f, stiffness = 200f)`.
-const LOADING_MORPH_SPRING_DAMPING_RATIO: f64 = 0.6;
-const LOADING_MORPH_SPRING_STIFFNESS: f64 = 200.0;
-/// `visibilityThreshold = 0.1f`: within 10% of the target the spring is at rest.
-const LOADING_MORPH_VISIBILITY_THRESHOLD: f64 = 0.1;
-
-/// Returns the metrics for a loading indicator.
-pub const fn loading_metrics() -> ProgressMetrics {
-    ProgressMetrics::loading(LOADING_CONTAINER_SIZE, LOADING_INDICATOR_SIZE)
-}
-
-/// The period over which the morph and the rotation come back into phase.
-///
-/// The shape cycle is seven morph intervals and the rotation is its own
-/// duration; neither divides the other, so a single repeating clock has to run
-/// for their least common multiple. Sampling one clock — rather than two —
-/// keeps both beats derived from the same instant, so they can never drift
-/// apart across a dropped frame.
-pub fn loading_cycle() -> Duration {
-    let shapes =
-        u64::try_from(material_shape_sequence().len()).expect("the shape sequence is seven long");
-    let morph = LOADING_MORPH_INTERVAL_MS * shapes;
-    Duration::from_millis(
-        morph / gcd(morph, LOADING_GLOBAL_ROTATION_MS) * LOADING_GLOBAL_ROTATION_MS,
-    )
-}
-
-/// Greatest common divisor, for putting the two beats on one clock.
-const fn gcd(mut a: u64, mut b: u64) -> u64 {
-    while b != 0 {
-        let remainder = a % b;
-        a = b;
-        b = remainder;
-    }
-    a
-}
-
-/// The indicator's outline at `elapsed` into its cycle, in its own unit space.
-///
-/// Compose drives the morph progress with a low-damping spring, so the shape
-/// snaps onto each target quickly and rests there for the rest of the
-/// interval; the spring's step response is evaluated directly at the elapsed
-/// fraction of the morph interval.
-fn loading_outline(elapsed: Duration) -> Vec<f64> {
-    let shapes = material_shape_sequence();
-    // Which shape is counted in whole milliseconds, so a long-running indicator
-    // cannot drift onto the wrong one through accumulated float error; only the
-    // fraction within an interval needs to be continuous.
-    let millis =
-        u64::try_from(elapsed.as_millis()).expect("the loading phase is bounded by its own cycle");
-    let steps = millis / LOADING_MORPH_INTERVAL_MS;
-    let index = usize::try_from(steps).unwrap_or(0) % shapes.len();
-    let next = (index + 1) % shapes.len();
-    let interval_progress = Duration::from_millis(millis % LOADING_MORPH_INTERVAL_MS).as_secs_f64();
-    morph(
-        &shapes[index],
-        &shapes[next],
-        morph_spring(interval_progress),
-    )
-}
-
-/// The step response of the Compose morph spring
-/// (`spring(dampingRatio = 0.6f, stiffness = 200f)`): the underdamped oscillator
-/// `x(t) = 1 − e^(−ζωt)·(cos ωd·t + (ζω/ωd)·sin ωd·t)` with `ω = √stiffness`
-/// and `ωd = ω√(1−ζ²)`, evaluated at `seconds` into the morph interval. Within
-/// the visibility threshold of the target the spring is considered at rest.
-fn morph_spring(seconds: f64) -> f64 {
-    let omega = LOADING_MORPH_SPRING_STIFFNESS.sqrt();
-    let zeta = LOADING_MORPH_SPRING_DAMPING_RATIO;
-    let omega_d = omega * zeta.mul_add(-zeta, 1.0).sqrt();
-    let decay = (-zeta * omega * seconds).exp();
-    let progress = decay.mul_add(
-        -(zeta * omega / omega_d).mul_add((omega_d * seconds).sin(), (omega_d * seconds).cos()),
-        1.0,
-    );
-    if (progress - 1.0).abs() <= LOADING_MORPH_VISIBILITY_THRESHOLD {
-        1.0
-    } else {
-        progress
-    }
-}
-
-/// How far the indicator has turned at `elapsed`: a steady rotation, plus the
-/// quarter turn each completed morph adds.
-fn loading_rotation(elapsed: Duration) -> f64 {
-    let turns = elapsed.as_secs_f64() / LOADING_GLOBAL_ROTATION.as_secs_f64();
-    let morphs = (elapsed.as_secs_f64() / LOADING_MORPH_INTERVAL.as_secs_f64()).floor();
-    core::f64::consts::TAU.mul_add(turns, LOADING_QUARTER_ROTATION * morphs)
-}
-
-pub fn draw_loading(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    elapsed: Duration,
-    four_color: bool,
-) {
-    let radii = loading_outline(elapsed);
-    let centre = bounds.center();
-    // `ActiveIndicatorScale`: the shape is drawn at ActiveSize inside a
-    // ContainerSize box, so it never touches the container's edge.
-    let scale = LOADING_INDICATOR_SIZE.min(bounds.width().min(bounds.height())) / 2.0;
-    let mut path = radii_to_path(&radii, Point::ORIGIN, scale);
-    path.apply_affine(
-        waterui_graphics::draw::kurbo::Affine::translate((centre.x, centre.y))
-            * waterui_graphics::draw::kurbo::Affine::rotate(loading_rotation(elapsed)),
-    );
-    let color = progress_color(colors, elapsed, four_color, LOADING_GLOBAL_ROTATION);
-    draw.fill(path.clone(), color);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{ProgressIndicatorStyle, metrics};
-    use crate::dimensions::{
-        PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE, PROGRESS_LINEAR_STOP_SIZE,
-        PROGRESS_LINEAR_TRACK_ACTIVE_SPACE,
-    };
 
     /// The indeterminate circular motion follows Compose's
     /// `CircularProgressIndicator`: a 6s cycle whose arc grows from
@@ -651,104 +885,71 @@ mod tests {
     /// at the halfway point and shrinks back.
     #[test]
     fn circular_indeterminate_sweep_follows_the_compose_cycle() {
-        use super::{
-            CIRCULAR_CYCLE_DURATION, CIRCULAR_INDETERMINATE_MAX_PROGRESS,
-            CIRCULAR_INDETERMINATE_MIN_PROGRESS, circular_indeterminate_arc,
-        };
-        use core::time::Duration;
-
-        let sweep_turns = |at: Duration| circular_indeterminate_arc(at).1 / core::f64::consts::TAU;
-
-        let start = sweep_turns(Duration::ZERO);
+        let circumference = 100.0;
+        let keyframes = arc_keyframes(circumference);
+        let share = |phase: f64| at_phase!(keyframes, phase).dash_pattern[0] / circumference;
         assert!(
-            (start - CIRCULAR_INDETERMINATE_MIN_PROGRESS).abs() < 1e-6,
-            "the cycle starts at the minimum arc, was {start}"
+            (share(0.0) - CIRCULAR_INDETERMINATE_MIN_PROGRESS).abs() < 1e-6,
+            "the cycle starts at the minimum arc, was {}",
+            share(0.0)
         );
-
-        let middle = sweep_turns(CIRCULAR_CYCLE_DURATION / 2);
         assert!(
-            (middle - CIRCULAR_INDETERMINATE_MAX_PROGRESS).abs() < 1e-6,
-            "the arc peaks at the half cycle, was {middle}"
+            (share(0.5) - CIRCULAR_INDETERMINATE_MAX_PROGRESS).abs() < 1e-6,
+            "the arc peaks at the half cycle, was {}",
+            share(0.5)
         );
-
         // The cycle is closed: it ends where it began, so a repeat does not jump.
-        let end = sweep_turns(CIRCULAR_CYCLE_DURATION);
         assert!(
-            (end - CIRCULAR_INDETERMINATE_MIN_PROGRESS).abs() < 1e-6,
-            "the cycle returns to the minimum arc, was {end}"
+            (share(0.999_999) - CIRCULAR_INDETERMINATE_MIN_PROGRESS).abs() < 1e-3,
+            "the cycle returns to the minimum arc, was {}",
+            share(0.999_999)
         );
-
-        // Never inverted or past a full turn at any point in the cycle.
+        // Each half follows its easing exactly: the standard curve growing,
+        // the same curve in reverse shrinking.
+        let span = CIRCULAR_INDETERMINATE_MAX_PROGRESS - CIRCULAR_INDETERMINATE_MIN_PROGRESS;
         for step in 0..=120 {
-            let at = CIRCULAR_CYCLE_DURATION.mul_f64(f64::from(step) / 120.0);
-            let turns = sweep_turns(at);
+            let phase = f64::from(step) / 120.0 * 0.999_999;
+            let half = if phase <= 0.5 {
+                phase * 2.0
+            } else {
+                (1.0 - phase) * 2.0
+            };
+            let expected = span.mul_add(
+                curve_value(&curve(CIRCULAR_CYCLE_DURATION, easing::STANDARD), half),
+                CIRCULAR_INDETERMINATE_MIN_PROGRESS,
+            );
             assert!(
-                (CIRCULAR_INDETERMINATE_MIN_PROGRESS - 1e-6
-                    ..=CIRCULAR_INDETERMINATE_MAX_PROGRESS + 1e-6)
-                    .contains(&turns),
-                "sweep left its range at {at:?}: {turns}"
+                (share(phase) - expected).abs() < 1e-4,
+                "the arc at {phase} is {}, not {expected}",
+                share(phase)
             );
         }
     }
 
-    /// Expressive gives every progress element `CornerFull` ends: the moving
-    /// indeterminate segments cap at half the track height, same as the
-    /// determinate fill.
-    #[test]
-    fn indeterminate_segments_draw_with_rounded_caps() {
-        use super::{LINEAR_INDETERMINATE_CYCLE, draw_linear_indeterminate};
-        use crate::MaterialColorScheme;
-        use crate::test_support::recorded;
-        use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
-
-        let colors = MaterialColorScheme::baseline_light();
-        let track = Rect::new(0.0, 0.0, 320.0, 4.0);
-        // Mid-cycle: both segments are on screen with real width.
-        let draw = recorded(|draw| {
-            draw_linear_indeterminate(&colors, draw, track, LINEAR_INDETERMINATE_CYCLE / 2, false);
-        });
-        assert_eq!(draw.rounded_fills.len(), 2);
-        for (rect, radii, _) in &draw.rounded_fills {
-            assert_eq!(
-                *radii,
-                RoundedRectRadii::from(track.height() / 2.0),
-                "segment {rect:?} did not cap at half the track height"
-            );
-        }
-    }
-
-    /// The additional rotation reaches a full turn by the end of the cycle, in
-    /// four 90-degree steps.
+    /// The additional rotation reaches a full turn by the end of the cycle
+    /// in four 90-degree steps.
     #[test]
     fn circular_additional_rotation_completes_a_turn_in_four_steps() {
-        use super::{CIRCULAR_ADDITIONAL_ROTATION_DEGREES, circular_additional_rotation};
-
-        assert!(circular_additional_rotation(0.0).abs() < 1e-6);
-        assert!(
-            (circular_additional_rotation(1.0) - CIRCULAR_ADDITIONAL_ROTATION_DEGREES).abs() < 1e-6,
-            "a full cycle turns the arc once more"
-        );
+        let rotation = circular_kicks();
+        let additional = |seconds: f64| at_phase!(rotation, seconds / 6.0).to_degrees();
+        assert!(additional(0.0).abs() < 1e-6);
         // Compose's keyframes ramp each step over 300ms and then hold it until
         // the next 1.5s boundary: 90 at 300ms, still 90 at 1.4s, 180 at 1.8s.
-        let first_step = circular_additional_rotation(300.0 / 6_000.0);
+        assert!((additional(0.3) - 90.0).abs() < 1e-6, "{}", additional(0.3));
+        assert!((additional(1.4) - 90.0).abs() < 1e-6, "{}", additional(1.4));
         assert!(
-            (first_step - 90.0).abs() < 1e-6,
-            "the first step completes at 300ms, was {first_step}"
+            (additional(1.8) - 180.0).abs() < 1e-6,
+            "{}",
+            additional(1.8)
         );
-        let holding = circular_additional_rotation(1_400.0 / 6_000.0);
         assert!(
-            (holding - 90.0).abs() < 1e-6,
-            "the step holds until the next delay boundary, was {holding}"
-        );
-        let second_step = circular_additional_rotation(1_800.0 / 6_000.0);
-        assert!(
-            (second_step - 180.0).abs() < 1e-6,
-            "the second step completes at 1.8s, was {second_step}"
+            (additional(5.999_999) - CIRCULAR_ADDITIONAL_ROTATION_DEGREES).abs() < 1e-3,
+            "a full cycle turns the arc once more"
         );
         // Monotonic: the arc never rotates backwards.
         let mut previous = 0.0_f64;
-        for step in 0..=200 {
-            let value = circular_additional_rotation(f64::from(step) / 200.0);
+        for step in 0..=600 {
+            let value = additional(f64::from(step) / 100.0 * 0.999_999);
             assert!(
                 value >= previous - 1e-9,
                 "rotation went backwards at {step}"
@@ -757,47 +958,264 @@ mod tests {
         }
     }
 
-    /// Values from `androidx.compose.material3.tokens`
-    /// `LinearProgressIndicatorTokens` and `CircularProgressIndicatorTokens`.
+    /// Each stage turns a whole number of times over its cycle, so the
+    /// repeat does not jump, and the global stage is steady: three turns in
+    /// six seconds.
     #[test]
-    fn progress_metrics_match_compose_progress_tokens() {
-        let linear = metrics(ProgressIndicatorStyle::Linear);
-        // LinearProgressIndicatorTokens.Height / TrackThickness
-        assert_eq!(linear.bar_height, 4.0);
-        assert_eq!(linear.min_track_width, 80.0);
-
-        let circular = metrics(ProgressIndicatorStyle::Circular);
-        // CircularProgressIndicatorTokens.Size
-        assert_eq!(circular.circular_diameter, 40.0);
-        // CircularProgressIndicatorTokens.ActiveThickness / TrackThickness
-        assert_eq!(circular.circular_stroke_width, 4.0);
-        // TrackActiveSpace on both indicators
-        assert_eq!(PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE, 4.0);
-        assert_eq!(PROGRESS_LINEAR_TRACK_ACTIVE_SPACE, 4.0);
-        // LinearProgressIndicatorTokens.StopSize
-        assert_eq!(PROGRESS_LINEAR_STOP_SIZE, 4.0);
+    fn circular_rotation_stages_repeat_seamlessly() {
+        let (kicks, turn) = (circular_kicks(), circular_turn());
+        for stage in [&kicks, &turn] {
+            let turns = at_phase!(stage, 0.999_999_9) / TAU;
+            assert!(
+                (turns - turns.round()).abs() < 1e-5,
+                "the cycle ends a whole number of turns on, was {turns}"
+            );
+        }
+        let third = at_phase!(turn, 1.0 / 3.0) / TAU;
+        assert!((third - 1.0).abs() < 1e-9, "a turn every two seconds");
     }
 
-    /// Compose morphs between loading shapes with `spring(dampingRatio = 0.6,
-    /// stiffness = 200, visibilityThreshold = 0.1)`: the low-damping spring
-    /// settles within the 0.1 visibility threshold well inside the 650ms morph
-    /// interval, ending the morph early rather than running a full ease.
+    /// Both bars' tracks are the table's segments, each on its own easing:
+    /// the start and the length at any phase equal the table evaluated
+    /// directly.
     #[test]
-    fn loading_morph_spring_settles_within_the_interval() {
-        use super::morph_spring;
+    fn indeterminate_bars_follow_their_segment_tables() {
+        let frame = track();
+        for (translate, scale) in [
+            (PRIMARY_TRANSLATE, PRIMARY_SCALE),
+            (SECONDARY_TRANSLATE, SECONDARY_SCALE),
+        ] {
+            let start = bar_start(frame, translate);
+            let length = bar_length(frame, scale);
+            for step in 0..=200 {
+                let phase = f64::from(step) / 200.0 * 0.999_999;
+                let moved = at_phase!(start, phase).translation().x;
+                let expected = frame.width() * sample_segments(translate, phase) / 100.0;
+                assert!(
+                    (moved - expected).abs() < 1e-3,
+                    "start at {phase}: {moved} vs {expected}"
+                );
+                let long = at_phase!(length, phase).translation().x;
+                let expected = frame.width() * sample_segments(scale, phase);
+                assert!(
+                    (long - expected).abs() < 1e-3,
+                    "length at {phase}: {long} vs {expected}"
+                );
+            }
+        }
+    }
 
-        assert_eq!(morph_spring(0.0), 0.0, "the morph starts on the shape");
-        let mid = morph_spring(0.1);
-        assert!(mid > 0.0 && mid < 1.0, "still morphing at 100ms, was {mid}");
-        assert_eq!(
-            morph_spring(0.35),
-            1.0,
-            "the spring settles inside the visibility threshold before half the interval"
+    /// Expressive gives every progress element `CornerFull` ends: the moving
+    /// indeterminate segments cap at half the track height, same as the
+    /// determinate fill.
+    #[test]
+    fn indeterminate_segments_draw_with_rounded_caps() {
+        let frame = track();
+        let (_, radii) = rounded(&bar(frame, 20.0, 120.0, false));
+        assert_eq!(radii, RoundedRectRadii::from(frame.height() / 2.0));
+    }
+
+    /// The indeterminate bars start and end off the track, so the repeat
+    /// does not show a segment appear.
+    #[test]
+    fn indeterminate_bars_leave_the_track_between_cycles() {
+        let frame = track();
+        let origin = frame
+            .width()
+            .mul_add(PRIMARY_INITIAL_INSET / 100.0, frame.x0);
+        let (start, length) = (
+            bar_start(frame, PRIMARY_TRANSLATE),
+            bar_length(frame, PRIMARY_SCALE),
         );
-        assert_eq!(
-            morph_spring(0.65),
-            1.0,
-            "the shape rests on the target for the remainder of the interval"
+        let (start, length) = (
+            at_phase!(start, 0.0).translation().x,
+            at_phase!(length, 0.0).translation().x,
         );
+        assert!(
+            origin + start + length < frame.x0,
+            "the primary bar starts left of the track"
+        );
+    }
+
+    /// The determinate bar leaves `TrackActiveSpace` between the active
+    /// indicator and the track, and the stop indicator disappears under the
+    /// active indicator.
+    #[test]
+    fn determinate_linear_pieces_follow_the_value() {
+        let frame = track();
+        let (track_shape, active, stop) = linear_pieces(frame, 0.5, false);
+        let (active_rect, _) = rounded(&active);
+        let (track_rect, _) = rounded(&track_shape);
+        assert!((active_rect.x1 - 168.0).abs() < 1e-9);
+        assert!(
+            (track_rect.x0 - active_rect.x1 - PROGRESS_LINEAR_TRACK_ACTIVE_SPACE).abs() < 1e-9,
+            "the track starts a gap after the active indicator"
+        );
+        let ShapeData::Circle(stop) = stop else {
+            panic!("the stop indicator is a circle")
+        };
+        assert!((stop.radius - PROGRESS_LINEAR_STOP_SIZE / 2.0).abs() < 1e-9);
+        assert!((stop.center.x - (frame.x1 - PROGRESS_LINEAR_STOP_SIZE / 2.0)).abs() < 1e-9);
+
+        let (.., stop) = linear_pieces(frame, 1.0, false);
+        let ShapeData::Circle(stop) = stop else {
+            panic!("the stop indicator is a circle")
+        };
+        assert!(stop.radius.abs() < 1e-9, "a full bar covers the stop");
+    }
+
+    /// A right-to-left bar fills from the right edge.
+    #[test]
+    fn determinate_linear_pieces_mirror_for_right_to_left() {
+        let frame = track();
+        let (_, active, _) = linear_pieces(frame, 0.25, true);
+        let (rect, _) = rounded(&active);
+        assert!((rect.x1 - frame.x1).abs() < 1e-9);
+        assert!((rect.x0 - (frame.x1 - 80.0)).abs() < 1e-9);
+    }
+
+    /// The active arc and the track together cover the ring, apart from
+    /// `TrackActiveSpace` at each of the two seams between them.
+    #[test]
+    fn circular_strokes_leave_the_track_gap() {
+        let circumference = 100.0;
+        for value in [0.0, 0.25, 0.5, 0.9] {
+            let active = active_stroke(circumference, value);
+            let track = track_stroke(circumference, value);
+            let covered = value * circumference;
+            assert!((active.dash_pattern[0] - covered).abs() < 1e-9);
+            let gap = PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE;
+            assert!(
+                (track.dash_pattern[0] - (circumference - covered - gap - gap)).abs() < 1e-9,
+                "the track is what the arc and its two gaps leave"
+            );
+            // The track's dash begins a gap past the arc's end.
+            let period = track.dash_pattern[0] + track.dash_pattern[1];
+            let begins = (period - track.dash_offset).rem_euclid(period);
+            assert!(
+                (begins - (covered + gap)).abs() < 1e-9,
+                "the track begins a gap after the arc, at {begins}"
+            );
+        }
+    }
+
+    /// The indicators have the Compose progress tokens' sizes.
+    #[test]
+    fn looks_match_compose_progress_tokens() {
+        use waterui::component::progress::ProgressStyle;
+
+        let env = env();
+        let linear = linear(&spec(ProgressStyle::Linear, true), &env);
+        // LinearProgressIndicatorTokens.Height / TrackThickness
+        assert!((linear.control().size().height - 4.0).abs() < f64::EPSILON);
+        assert!((linear.minimum_width() - (80.0 + 8.0 + 8.0)).abs() < f64::EPSILON);
+        // CircularProgressIndicatorTokens.Size
+        let circular = circular(&spec(ProgressStyle::Circular, true), &env);
+        assert!((circular.control().size().width - 40.0).abs() < f64::EPSILON);
+        // CircularProgressIndicatorTokens.ActiveThickness / TrackThickness
+        assert!((PROGRESS_CIRCULAR_STROKE_WIDTH - 4.0).abs() < f64::EPSILON);
+        // TrackActiveSpace on both indicators
+        assert!((PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE - 4.0).abs() < f64::EPSILON);
+        assert!((PROGRESS_LINEAR_TRACK_ACTIVE_SPACE - 4.0).abs() < f64::EPSILON);
+        // LinearProgressIndicatorTokens.StopSize
+        assert!((PROGRESS_LINEAR_STOP_SIZE - 4.0).abs() < f64::EPSILON);
+        let loading = loading(&spec(ProgressStyle::Loading, false), &env);
+        assert!((loading.control().size().width - LOADING_CONTAINER_SIZE).abs() < f64::EPSILON);
+    }
+
+    /// The loading indicator's timing is Compose's `LoadingIndicator.kt`
+    /// (`MorphIntervalMillis` 650, `GlobalRotationDurationMillis` 4666,
+    /// `QuarterRotation` 90 degrees, `spring(dampingRatio = 0.6f,
+    /// stiffness = 200f)`).
+    #[test]
+    fn loading_timing_is_compose_s() {
+        assert_eq!(LOADING_MORPH_INTERVAL_MS, 650);
+        assert_eq!(LOADING_GLOBAL_ROTATION_MS, 4_666);
+        assert!((LOADING_QUARTER_ROTATION.to_degrees() - 90.0).abs() < 1e-9);
+        let spring = morph_spring();
+        assert!((spring.damping - 0.6).abs() < f64::EPSILON);
+        let omega = TAU / spring.response;
+        assert!(omega.mul_add(omega, -200.0).abs() < 1e-9);
+        // The seven shapes repeat every seven intervals.
+        let morph = loading_morph(Rect::new(0.0, 0.0, 48.0, 48.0));
+        assert_eq!(morph.duration(), Duration::from_millis(7 * 650));
+        // The rotation is two stages, each on its own period: one steady
+        // turn, and four quarter-turn kicks.
+        assert_eq!(loading_turn().duration(), Duration::from_millis(4_666));
+        assert_eq!(loading_kicks().duration(), Duration::from_millis(4 * 650));
+    }
+
+    /// Every shape the loading indicator morphs through has the same
+    /// verbs, which is what lets the engine morph between them.
+    #[test]
+    fn loading_outlines_share_one_structure() {
+        let outlines = loading_outlines(Rect::new(0.0, 0.0, 48.0, 48.0));
+        assert_eq!(outlines.len(), 7);
+        let verbs = |shape: &ShapeData| match shape {
+            ShapeData::Path { elements, .. } => elements.len(),
+            other => panic!("expected a path, got {other:?}"),
+        };
+        for outline in &outlines {
+            assert_eq!(verbs(outline), verbs(&outlines[0]));
+        }
+        // The loop returns to its first shape.
+        let morph = loading_morph(Rect::new(0.0, 0.0, 48.0, 48.0));
+        assert_eq!(morph.first(), &outlines[0]);
+    }
+
+    /// The two rotation stages compose to Compose's sum at any time, however
+    /// far in: the steady turn plus a quarter turn per morph, the last along
+    /// the morph's spring. Each stage repeats on its own period, so the sum
+    /// is the unwrapped reference up to whole turns.
+    #[test]
+    fn loading_rotation_stages_compose_the_steady_turn_and_the_springed_quarter_turns() {
+        let (kicks, turn) = (loading_kicks(), loading_turn());
+        let kick = Keyframes::new(Duration::from_millis(650), 0.0).then(1.0, morph_spring(), 1.0);
+        let reference = |millis: u64| {
+            let morphs = millis / 650;
+            let into = Duration::from_millis(millis % 650);
+            let eased = kick.sample(into, Repeat::Forever).expect("forever");
+            TAU.mul_add(
+                f64::from(u32::try_from(millis).expect("under the period"))
+                    / f64::from(LOADING_GLOBAL_ROTATION_MS),
+                LOADING_QUARTER_ROTATION
+                    * (f64::from(u32::try_from(morphs).expect("a few morphs")) + 1.0 + eased),
+            )
+        };
+        for millis in [
+            0, 1, 40, 200, 649, 650, 651, 1_300, 123_456, 3_000_000, 6_065_000,
+        ] {
+            let at = Duration::from_millis(millis);
+            let sampled = kicks.sample(at, Repeat::Forever).expect("forever")
+                + turn.sample(at, Repeat::Forever).expect("forever");
+            let apart = (sampled - reference(millis)).rem_euclid(TAU);
+            assert!(
+                // The steady turn is the engine's linear bezier, which its
+                // solver resolves to about a thousandth of a milliradian.
+                apart.min(TAU - apart) < 1e-5,
+                "{millis} ms: {sampled} vs {}",
+                reference(millis)
+            );
+        }
+        // Each stage ends a whole number of turns past where it started, so
+        // its repeat does not jump: a nanosecond before the period the last
+        // spring has settled to within its residual (0.4% of a quarter turn)
+        // of the last keyframe.
+        for stage in [&kicks, &turn] {
+            let end = stage
+                .sample(
+                    stage
+                        .duration()
+                        .checked_sub(Duration::from_nanos(1))
+                        .expect("a period outlasts a nanosecond"),
+                    Repeat::Forever,
+                )
+                .expect("forever");
+            let turns = (end - stage.first()) / TAU;
+            assert!(
+                (turns - turns.round()).abs() < 2e-3,
+                "ended {turns} turns on"
+            );
+        }
     }
 }

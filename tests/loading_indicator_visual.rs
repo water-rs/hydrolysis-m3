@@ -30,6 +30,24 @@ fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder<Styled<hydrolysis_m3::
     }
 }
 
+/// One capture per morph, taken half way through it, across a whole cycle of
+/// the seven shapes and a few more: each shows a different shape, and the
+/// loop closes back on the first.
+#[ignore = "writes visual acceptance PNG files for direct image review"]
+#[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (120, 120))]
+fn the_loading_indicator_visits_every_shape(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+    let mut app: OffscreenApp = ui.mount_offscreen(indicator);
+    app.pump_for(Duration::from_millis(325));
+    for step in 0..9 {
+        let _ = app.capture_snapshot(
+            "material3-preview",
+            "loading-indicator",
+            format!("morph-{step}"),
+        );
+        app.pump_for(Duration::from_millis(650));
+    }
+}
+
 /// The indicator is an indeterminate progress indicator, and says so.
 #[waterui::test(viewport = (120, 120))]
 fn the_loading_indicator_exposes_progress_semantics(ui: UiBuilder) {

@@ -9,8 +9,8 @@ pub mod tokens;
 use core::time::Duration;
 
 use hydrolysis::theme::{
-    HitRegion, InteractionMotion, Motion, NavigationMotion, ProgressMotion, RadioSelectionMotion,
-    Ripple, TextCaretMotion, Transition, ValueMotion,
+    HitRegion, InteractionMotion, Motion, NavigationMotion, RadioSelectionMotion, Ripple,
+    TextCaretMotion, Transition, ValueMotion,
 };
 use waterui::animation::Animation;
 use waterui::easing::EasingCurve;
@@ -115,33 +115,39 @@ pub const fn hit_region() -> HitRegion {
 }
 
 /// material-web drives both progress indicators with CSS `ease-in-out`-family
-/// curves of its own rather than M3 easing tokens, and the indeterminate cycles
-/// are keyframe loop lengths, not durations from the scale.
+/// curves of its own rather than M3 easing tokens.
 const PROGRESS_LINEAR_DETERMINATE: (f32, f32, f32, f32) = (0.4, 0.0, 0.6, 1.0);
 const PROGRESS_CIRCULAR_DETERMINATE: (f32, f32, f32, f32) = (0.0, 0.0, 0.2, 1.0);
-const PROGRESS_LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_secs(2);
-const PROGRESS_CIRCULAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(5_332);
 
-pub fn progress() -> ProgressMotion {
-    ProgressMotion {
-        linear_determinate: Animation::Bezier {
-            duration: duration::MEDIUM_1,
-            x1: PROGRESS_LINEAR_DETERMINATE.0,
-            y1: PROGRESS_LINEAR_DETERMINATE.1,
-            x2: PROGRESS_LINEAR_DETERMINATE.2,
-            y2: PROGRESS_LINEAR_DETERMINATE.3,
-        },
-        circular_determinate: Animation::Bezier {
-            duration: duration::LONG_2,
-            x1: PROGRESS_CIRCULAR_DETERMINATE.0,
-            y1: PROGRESS_CIRCULAR_DETERMINATE.1,
-            x2: PROGRESS_CIRCULAR_DETERMINATE.2,
-            y2: PROGRESS_CIRCULAR_DETERMINATE.3,
-        },
-        linear_indeterminate_cycle: PROGRESS_LINEAR_INDETERMINATE_CYCLE,
-        circular_indeterminate_cycle: PROGRESS_CIRCULAR_INDETERMINATE_CYCLE,
-        loading_cycle: crate::controls::progress::loading_cycle(),
+/// A determinate indicator whose value changes run `animation` whatever
+/// animation the caller names, and snap when the caller disables animation.
+fn progress(animation: Animation) -> Motion {
+    Motion {
+        value: ValueMotion::Own(animation.clone()),
+        ..Motion::uniform(animation)
     }
+}
+
+/// The motion of a linear indicator's value.
+pub fn progress_linear() -> Motion {
+    progress(Animation::Bezier {
+        duration: duration::MEDIUM_1,
+        x1: PROGRESS_LINEAR_DETERMINATE.0,
+        y1: PROGRESS_LINEAR_DETERMINATE.1,
+        x2: PROGRESS_LINEAR_DETERMINATE.2,
+        y2: PROGRESS_LINEAR_DETERMINATE.3,
+    })
+}
+
+/// The motion of a circular indicator's value.
+pub fn progress_circular() -> Motion {
+    progress(Animation::Bezier {
+        duration: duration::LONG_2,
+        x1: PROGRESS_CIRCULAR_DETERMINATE.0,
+        y1: PROGRESS_CIRCULAR_DETERMINATE.1,
+        x2: PROGRESS_CIRCULAR_DETERMINATE.2,
+        y2: PROGRESS_CIRCULAR_DETERMINATE.3,
+    })
 }
 
 /// The caret blinks on the platform text-cursor cadence (530ms per half cycle),

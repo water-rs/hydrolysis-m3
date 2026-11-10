@@ -57,12 +57,12 @@ use core::cell::OnceCell;
 use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
 
 pub use hydrolysis::theme::{
-    BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, InputFieldMetrics,
-    InteractionFocusBinding, InteractionMotion, ListDividerMetrics, ListMetrics, ListRowMetrics,
-    ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
-    NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
-    ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderLook,
-    SliderSpec, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry, TabItemLayout,
+    BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, IndicatorLook,
+    InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
+    ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
+    ListTrailingControlMetrics, ModalInteraction, NavigationMetrics, NavigationMotion,
+    PickerMetrics, PressWave, PressWaves, ProgressSpec, RadioIndicatorState, RadioSelectionMotion,
+    SliderLook, SliderSpec, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry, TabItemLayout,
     TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
     WidgetInteractionState, WidgetTheme,
 };
@@ -73,7 +73,7 @@ use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
-use waterui_graphics::draw::kurbo::{BezPath, Point, Rect};
+use waterui_graphics::draw::kurbo::{Point, Rect};
 
 pub use button_group::{
     ButtonGroup, ConnectedButton, ConnectedButtonGroup, GroupButton, button_group,
@@ -451,10 +451,6 @@ impl WidgetTheme for Material3 {
         theme::motion::interaction()
     }
 
-    fn progress_motion(&self) -> ProgressMotion {
-        theme::motion::progress()
-    }
-
     fn text_caret_motion(&self) -> TextCaretMotion {
         theme::motion::text_caret()
     }
@@ -669,76 +665,16 @@ impl WidgetTheme for Material3 {
         slider::look(spec, env)
     }
 
-    fn progress_metrics(&self, style: ProgressIndicatorStyle) -> ProgressMetrics {
-        progress::metrics(style)
+    fn linear_progress(&self, spec: &ProgressSpec, env: &Environment) -> LinearProgressLook {
+        progress::linear(spec, env)
     }
 
-    fn draw_progress_linear_track(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        active_end: Option<f64>,
-    ) {
-        progress::draw_linear_track(&self.colors(), draw, bounds, active_end);
+    fn circular_progress(&self, spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
+        progress::circular(spec, env)
     }
 
-    fn draw_progress_linear_fill(&self, draw: &mut Recorder, bounds: Rect) {
-        progress::draw_linear_fill(&self.colors(), draw, bounds);
-    }
-
-    fn draw_progress_linear_indeterminate(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        elapsed: core::time::Duration,
-        four_color: bool,
-    ) {
-        progress::draw_linear_indeterminate(&self.colors(), draw, bounds, elapsed, four_color);
-    }
-
-    fn draw_progress_circular_track(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        width: f64,
-        active_turns: Option<f64>,
-    ) {
-        progress::draw_circular_track(&self.colors(), draw, center, radius, width, active_turns);
-    }
-
-    fn draw_progress_circular_fill(&self, draw: &mut Recorder, path: &BezPath, width: f64) {
-        progress::draw_circular_fill(&self.colors(), draw, path, width);
-    }
-
-    fn draw_progress_loading(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        elapsed: core::time::Duration,
-        four_color: bool,
-    ) {
-        progress::draw_loading(&self.colors(), draw, bounds, elapsed, four_color);
-    }
-
-    fn draw_progress_circular_indeterminate(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        width: f64,
-        elapsed: core::time::Duration,
-        four_color: bool,
-    ) {
-        progress::draw_circular_indeterminate(
-            &self.colors(),
-            draw,
-            center,
-            radius,
-            width,
-            elapsed,
-            four_color,
-        );
+    fn loading_indicator(&self, spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
+        progress::loading(spec, env)
     }
 
     fn navigation_metrics(&self) -> NavigationMetrics {
