@@ -646,43 +646,44 @@ fn arc_keyframes(circumference: f64) -> Keyframes<Stroke> {
     )
 }
 
-/// How far the whole ring has turned over a cycle, in radians: the steady
-/// global rotation, plus the additional rotation's four 90-degree kicks,
-/// each eased with the emphasized-decelerate curve over its 300 ms and held
-/// until the next one 1.5 s after it began. The turn and the kick run
-/// together, so each kick segment carries the turn's share of its travel as
-/// a steady drift.
-fn circular_rotation() -> Keyframes<f64> {
+/// The ring's steady global rotation over a cycle, in radians: three turns
+/// linearly. It is the outer stage of the ring's rotation.
+fn circular_turn() -> Keyframes<f64> {
+    let cycle = CIRCULAR_CYCLE_DURATION;
+    Keyframes::new(cycle, 0.0).then(
+        1.0,
+        Curve::linear(cycle),
+        CIRCULAR_GLOBAL_ROTATION_DEGREES.to_radians(),
+    )
+}
+
+/// The ring's additional rotation over a cycle, in radians: four 90-degree
+/// kicks, each eased with the emphasized-decelerate curve over its 300 ms and
+/// held until the next one 1.5 s after it began, a whole turn in all. It is
+/// the inner stage of the ring's rotation.
+fn circular_kicks() -> Keyframes<f64> {
     let cycle = CIRCULAR_CYCLE_DURATION;
     let total = cycle.as_secs_f64();
     let delay = CIRCULAR_ADDITIONAL_ROTATION_DELAY.as_secs_f64();
     let kick = CIRCULAR_ADDITIONAL_ROTATION_DURATION.as_secs_f64();
     let steps = CIRCULAR_ADDITIONAL_ROTATION_STEPS;
     let step = CIRCULAR_ADDITIONAL_ROTATION_DEGREES / f64::from(steps);
-    let turned = |seconds: f64| CIRCULAR_GLOBAL_ROTATION_DEGREES * seconds / total;
     let kick_curve = curve(cycle, easing::EMPHASIZED_DECELERATE);
     let hold_curve = Curve::linear(cycle);
     (0..steps).fold(Keyframes::new(cycle, 0.0), |keyframes, index| {
-        let begin = f64::from(index) * delay;
-        let kicks = step * f64::from(index + 1);
+        let turned = (step * f64::from(index + 1)).to_radians();
         let next = if index + 1 == steps {
-            total
+            1.0
         } else {
-            f64::from(index + 1) * delay
+            f64::from(index + 1) * delay / total
         };
         keyframes
-            .then_steadily(
-                (begin + kick) / total,
+            .then(
+                f64::from(index).mul_add(delay, kick) / total,
                 kick_curve,
-                (turned(begin + kick) + kicks).to_radians(),
-                turned(kick) / (turned(kick) + step),
+                turned,
             )
-            .then_steadily(
-                next / total,
-                hold_curve,
-                (turned(next) + kicks).to_radians(),
-                1.0,
-            )
+            .then(next, hold_curve, turned)
     })
 }
 
@@ -702,7 +703,8 @@ fn circular_indeterminate(spec: &ProgressSpec, env: &Environment) -> Ring {
     )
     // The whole ring turns as one layer, so the arc keeps its place in the
     // layer and only its length is keyframed.
-    .rotating(circular_rotation(), Repeat::Forever)
+    .rotating(circular_kicks(), Repeat::Forever)
+    .rotating(circular_turn(), Repeat::Forever)
 }
 
 // ---------------------------------------------------------------------------
@@ -755,49 +757,34 @@ fn loading_morph(frame: Rect) -> Keyframes<ShapeData> {
         )
 }
 
-/// The greatest common divisor.
-const fn gcd(mut a: u32, mut b: u32) -> u32 {
-    while b != 0 {
-        (a, b) = (b, a % b);
-    }
-    a
+/// How many morphs make the quarter-turn kicks a whole turn.
+const LOADING_KICKS_PER_TURN: u32 = 4;
+
+/// The loading indicator's steady rotation, in radians: `globalRotation`,
+/// one turn linearly over `GlobalRotationDurationMillis`. It is the outer
+/// stage of the rotation, repeating on its own period.
+fn loading_turn() -> Keyframes<f64> {
+    let period = Duration::from_millis(u64::from(LOADING_GLOBAL_ROTATION_MS));
+    Keyframes::new(period, 0.0).then(1.0, Curve::linear(period), TAU)
 }
 
-/// How long the loading indicator's rotation takes to repeat exactly: the
-/// steady rotation is `LOADING_GLOBAL_ROTATION_MS` a turn, and the quarter
-/// turn each morph adds makes a whole one every four morphs, so the pair is
-/// back where it started after the least common multiple of the two.
-const LOADING_ROTATION_PERIOD_MS: u32 = {
-    let kicks = 4 * LOADING_MORPH_INTERVAL_MS;
-    LOADING_GLOBAL_ROTATION_MS / gcd(LOADING_GLOBAL_ROTATION_MS, kicks) * kicks
-};
-
-/// How far the loading indicator has turned over its rotation period, in
-/// radians: Compose's `progress * 90 + morphRotationTargetAngle +
-/// globalRotation`, whose `morphRotationTargetAngle` starts at a quarter
-/// turn. Each morph interval is a segment that carries the steady turn the
-/// interval makes as a steady drift, and the quarter turn along the morph's
-/// own spring.
-fn loading_rotation() -> Keyframes<f64> {
-    let morphs = LOADING_ROTATION_PERIOD_MS / LOADING_MORPH_INTERVAL_MS;
-    let turned = |millis: u32| TAU * f64::from(millis) / f64::from(LOADING_GLOBAL_ROTATION_MS);
-    let interval = turned(LOADING_MORPH_INTERVAL_MS);
-    let steady = interval / (interval + LOADING_QUARTER_ROTATION);
+/// The loading indicator's kicks, in radians: Compose's `progress * 90 +
+/// morphRotationTargetAngle`, whose target starts at a quarter turn and
+/// gains one per morph while `progress` is the morph's spring. Four morphs
+/// turn it a whole turn, so the track is those four and repeats on that
+/// period. It is the inner stage of the rotation.
+fn loading_kicks() -> Keyframes<f64> {
     let spring = Easing::Spring(morph_spring());
-    (1..=morphs).fold(
-        Keyframes::new(
-            Duration::from_millis(u64::from(LOADING_ROTATION_PERIOD_MS)),
-            LOADING_QUARTER_ROTATION,
-        ),
-        |keyframes, morph| {
-            keyframes.then_steadily(
-                f64::from(morph) / f64::from(morphs),
+    let period = Duration::from_millis(u64::from(
+        LOADING_KICKS_PER_TURN * LOADING_MORPH_INTERVAL_MS,
+    ));
+    (1..=LOADING_KICKS_PER_TURN).fold(
+        Keyframes::new(period, LOADING_QUARTER_ROTATION),
+        |keyframes, kick| {
+            keyframes.then(
+                f64::from(kick) / f64::from(LOADING_KICKS_PER_TURN),
                 spring,
-                LOADING_QUARTER_ROTATION.mul_add(
-                    f64::from(morph) + 1.0,
-                    turned(morph * LOADING_MORPH_INTERVAL_MS),
-                ),
-                steady,
+                LOADING_QUARTER_ROTATION * f64::from(kick + 1),
             )
         },
     )
@@ -817,7 +804,10 @@ fn loading_part(spec: &ProgressSpec, env: &Environment) -> Blob {
             recorder.fill(outline, paint);
         },
     )
-    .rotating(loading_rotation(), Repeat::Forever)
+    // Two rotating stages, the kicks inside the steady turn, each repeating
+    // on its own period.
+    .rotating(loading_kicks(), Repeat::Forever)
+    .rotating(loading_turn(), Repeat::Forever)
 }
 
 #[cfg(test)]
@@ -936,17 +926,12 @@ mod tests {
         }
     }
 
-    /// The additional rotation, the ring's turn less the steady global
-    /// rotation, reaches a full turn by the end of the cycle in four
-    /// 90-degree steps.
+    /// The additional rotation reaches a full turn by the end of the cycle
+    /// in four 90-degree steps.
     #[test]
     fn circular_additional_rotation_completes_a_turn_in_four_steps() {
-        let rotation = circular_rotation();
-        let additional = |seconds: f64| {
-            let phase = seconds / 6.0;
-            CIRCULAR_GLOBAL_ROTATION_DEGREES
-                .mul_add(-phase, at_phase!(rotation, phase).to_degrees())
-        };
+        let rotation = circular_kicks();
+        let additional = |seconds: f64| at_phase!(rotation, seconds / 6.0).to_degrees();
         assert!(additional(0.0).abs() < 1e-6);
         // Compose's keyframes ramp each step over 300ms and then hold it until
         // the next 1.5s boundary: 90 at 300ms, still 90 at 1.4s, 180 at 1.8s.
@@ -973,16 +958,21 @@ mod tests {
         }
     }
 
-    /// The ring turns a whole number of times over the cycle, so the repeat
-    /// does not jump.
+    /// Each stage turns a whole number of times over its cycle, so the
+    /// repeat does not jump, and the global stage is steady: three turns in
+    /// six seconds.
     #[test]
-    fn circular_rotation_repeats_seamlessly() {
-        let rotation = circular_rotation();
-        let turns = at_phase!(rotation, 0.999_999_9) / TAU;
-        assert!(
-            (turns - turns.round()).abs() < 1e-5,
-            "the cycle ends a whole number of turns on, was {turns}"
-        );
+    fn circular_rotation_stages_repeat_seamlessly() {
+        let (kicks, turn) = (circular_kicks(), circular_turn());
+        for stage in [&kicks, &turn] {
+            let turns = at_phase!(stage, 0.999_999_9) / TAU;
+            assert!(
+                (turns - turns.round()).abs() < 1e-5,
+                "the cycle ends a whole number of turns on, was {turns}"
+            );
+        }
+        let third = at_phase!(turn, 1.0 / 3.0) / TAU;
+        assert!((third - 1.0).abs() < 1e-9, "a turn every two seconds");
     }
 
     /// Both bars' tracks are the table's segments, each on its own easing:
@@ -1149,11 +1139,10 @@ mod tests {
         // The seven shapes repeat every seven intervals.
         let morph = loading_morph(Rect::new(0.0, 0.0, 48.0, 48.0));
         assert_eq!(morph.duration(), Duration::from_millis(7 * 650));
-        // The rotation repeats after the least common multiple of its turn
-        // and four quarter-turn kicks.
-        assert_eq!(LOADING_ROTATION_PERIOD_MS, 6_065_800);
-        assert_eq!(LOADING_ROTATION_PERIOD_MS % (4 * 650), 0);
-        assert_eq!(LOADING_ROTATION_PERIOD_MS % 4_666, 0);
+        // The rotation is two stages, each on its own period: one steady
+        // turn, and four quarter-turn kicks.
+        assert_eq!(loading_turn().duration(), Duration::from_millis(4_666));
+        assert_eq!(loading_kicks().duration(), Duration::from_millis(4 * 650));
     }
 
     /// Every shape the loading indicator morphs through has the same
@@ -1174,12 +1163,13 @@ mod tests {
         assert_eq!(morph.first(), &outlines[0]);
     }
 
-    /// The loading rotation is Compose's sum at any time, however far into
-    /// its period: the steady turn plus a quarter turn per morph, the last
-    /// along the morph's spring.
+    /// The two rotation stages compose to Compose's sum at any time, however
+    /// far in: the steady turn plus a quarter turn per morph, the last along
+    /// the morph's spring. Each stage repeats on its own period, so the sum
+    /// is the unwrapped reference up to whole turns.
     #[test]
-    fn loading_rotation_is_the_steady_turn_plus_the_springed_quarter_turns() {
-        let rotation = loading_rotation();
+    fn loading_rotation_stages_compose_the_steady_turn_and_the_springed_quarter_turns() {
+        let (kicks, turn) = (loading_kicks(), loading_turn());
         let kick = Keyframes::new(Duration::from_millis(650), 0.0).then(1.0, morph_spring(), 1.0);
         let reference = |millis: u64| {
             let morphs = millis / 650;
@@ -1195,31 +1185,37 @@ mod tests {
         for millis in [
             0, 1, 40, 200, 649, 650, 651, 1_300, 123_456, 3_000_000, 6_065_000,
         ] {
-            let sampled = rotation
-                .sample(Duration::from_millis(millis), Repeat::Forever)
-                .expect("forever");
+            let at = Duration::from_millis(millis);
+            let sampled = kicks.sample(at, Repeat::Forever).expect("forever")
+                + turn.sample(at, Repeat::Forever).expect("forever");
+            let apart = (sampled - reference(millis)).rem_euclid(TAU);
             assert!(
-                (sampled - reference(millis)).abs() < 1e-6,
+                // The steady turn is the engine's linear bezier, which its
+                // solver resolves to about a thousandth of a milliradian.
+                apart.min(TAU - apart) < 1e-5,
                 "{millis} ms: {sampled} vs {}",
                 reference(millis)
             );
         }
-        // It ends a whole number of turns past where it started, so the
-        // repeat does not jump: a nanosecond before the period the last
+        // Each stage ends a whole number of turns past where it started, so
+        // its repeat does not jump: a nanosecond before the period the last
         // spring has settled to within its residual (0.4% of a quarter turn)
         // of the last keyframe.
-        let end = rotation
-            .sample(
-                Duration::from_millis(u64::from(LOADING_ROTATION_PERIOD_MS))
-                    .checked_sub(Duration::from_nanos(1))
-                    .expect("a period outlasts a nanosecond"),
-                Repeat::Forever,
-            )
-            .expect("forever");
-        let turns = (end - LOADING_QUARTER_ROTATION) / TAU;
-        assert!(
-            (turns - turns.round()).abs() < 2e-3,
-            "ended {turns} turns on"
-        );
+        for stage in [&kicks, &turn] {
+            let end = stage
+                .sample(
+                    stage
+                        .duration()
+                        .checked_sub(Duration::from_nanos(1))
+                        .expect("a period outlasts a nanosecond"),
+                    Repeat::Forever,
+                )
+                .expect("forever");
+            let turns = (end - stage.first()) / TAU;
+            assert!(
+                (turns - turns.round()).abs() < 2e-3,
+                "ended {turns} turns on"
+            );
+        }
     }
 }
