@@ -13,7 +13,7 @@ use waterui_graphics::color::Color;
 use waterui_graphics::draw::kurbo::{Line, Point, Stroke};
 use waterui_graphics::draw::{Draw as _, Paint, WorkingColor};
 
-use crate::color::{OnPrimary, OnSurface, OnSurfaceVariant, OutlineVariant, Primary, Shadow};
+use crate::color::{OnPrimary, OnSurface, OnSurfaceVariant, OutlineVariant, Shadow};
 use crate::dimensions::{
     BUTTON_LINK_HORIZONTAL_PADDING, BUTTON_LINK_UNDERLINE_BOTTOM_INSET,
     BUTTON_LINK_UNDERLINE_THICKNESS, BUTTON_LINK_VERTICAL_PADDING, BUTTON_MIN_WIDTH,
@@ -31,8 +31,9 @@ use crate::theme::{motion, typography};
 ///
 /// Panics on a `ButtonStyle` or `ControlSize` variant this theme does not
 /// implement.
-pub fn look(spec: ButtonSpec, env: &Environment) -> ButtonLook {
+pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
     let style = spec.style();
+    let tint = spec.tint();
     let shape = CornerShape::new(container_corners(pressed_corner_radius));
     let surface = match style {
         // `Automatic` is the theme's default button, which in M3 is the
@@ -40,7 +41,7 @@ pub fn look(spec: ButtonSpec, env: &Environment) -> ButtonLook {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => Surface::new(
             shape,
             disabled_paint(
-                Primary,
+                tint.clone(),
                 OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY),
                 env,
             ),
@@ -60,12 +61,12 @@ pub fn look(spec: ButtonSpec, env: &Environment) -> ButtonLook {
     let layer = match style {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => Color::from(OnPrimary),
         ButtonStyle::Bordered => Color::from(OnSurfaceVariant),
-        ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => Color::from(Primary),
+        ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => tint.clone(),
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     let mut chrome = interactive(surface, layer);
     if style == ButtonStyle::Link {
-        chrome = chrome.custom(link_underline(env));
+        chrome = chrome.custom(link_underline(tint, env));
     }
     let look = ButtonLook::new(chrome, label(spec));
     if style == ButtonStyle::Link {
@@ -98,18 +99,19 @@ pub fn interactive(surface: Surface, layer: Color) -> Chrome {
 
 /// The label styling of a button in `spec`: `label-large`, in the
 /// variant's content colour, on-surface at 38% while disabled.
-pub fn label(spec: ButtonSpec) -> Label {
+pub fn label(spec: &ButtonSpec) -> Label {
     Label::new()
         .font(typography::label_large())
-        .color(label_color(spec.style(), spec.icon_only()))
+        .color(label_color(spec.style(), spec.icon_only(), spec.tint()))
 }
 
-/// The label colour of `style`, `icon_only` or not, in every state.
+/// The label colour of `style`, `icon_only` or not, in every state; the
+/// text-like variants draw in `tint`.
 ///
 /// # Panics
 ///
 /// Panics on a `ButtonStyle` variant this theme does not implement.
-pub fn label_color(style: ButtonStyle, icon_only: bool) -> Driven<Color> {
+pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<Color> {
     let rest = match style {
         // The filled button's on-primary content for a text label; the
         // standard icon button's on-surface-variant over no container for
@@ -119,7 +121,7 @@ pub fn label_color(style: ButtonStyle, icon_only: bool) -> Driven<Color> {
         // md.comp.button.outlined.label-text.color
         ButtonStyle::Bordered => Color::from(OnSurfaceVariant),
         // md.comp.button.text.label-text.color
-        ButtonStyle::Plain | ButtonStyle::Link | ButtonStyle::Borderless => Color::from(Primary),
+        ButtonStyle::Plain | ButtonStyle::Link | ButtonStyle::Borderless => tint,
         _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
     };
     // MD3 disabled button label: on-surface at the 38% disabled-content
@@ -202,12 +204,12 @@ fn filled_elevation(env: &Environment) -> Driven<Elevation> {
     )
 }
 
-/// A link's underline: primary, following the label to on-surface at 38%
+/// A link's underline: the tint, following the label to on-surface at 38%
 /// while disabled.
-fn link_underline(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+fn link_underline(tint: Color, env: &Environment) -> Custom<(), (Driven<Paint>,)> {
     Custom::new(
         (disabled_paint(
-            Primary,
+            tint,
             OnSurface.with_opacity(DISABLED_CONTENT_OPACITY),
             env,
         ),),
@@ -263,13 +265,15 @@ mod tests {
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
     use hydrolysis::Style as _;
-    use hydrolysis::theme::{ButtonLook, ButtonSpec, Corners, Fill, Inputs};
+    use hydrolysis::theme::{ButtonLook, ButtonSpec, Corners, Fill, Inputs, SpecTint};
     use waterui::interaction::InteractionState;
+    use waterui::theme::Tint;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
     use waterui_core::Environment;
     use waterui_core::Signal as _;
     use waterui_core::layout::LayoutDirection;
+    use waterui_graphics::color::{Color, Working};
     use waterui_graphics::draw::kurbo::{Rect, Vec2};
     use waterui_graphics::draw::{Paint, WorkingColor};
 
@@ -280,11 +284,31 @@ mod tests {
     }
 
     fn spec(style: ButtonStyle, size: ControlSize) -> ButtonSpec {
-        ButtonSpec::new(style, size, false, LayoutDirection::LeftToRight)
+        ButtonSpec::new(
+            style,
+            size,
+            false,
+            LayoutDirection::LeftToRight,
+            SpecTint::default(),
+        )
     }
 
     fn small(style: ButtonStyle) -> ButtonLook {
-        look(spec(style, ControlSize::Small), &env())
+        look(&spec(style, ControlSize::Small), &env())
+    }
+
+    /// The small `style` button of a subtree tinted `tint`, with the
+    /// environment it draws in.
+    fn tinted(style: ButtonStyle, tint: WorkingColor) -> (ButtonLook, Environment) {
+        let env = env().extending(Tint::new(Color::new(Working(tint))));
+        let spec = ButtonSpec::new(
+            style,
+            ControlSize::Small,
+            false,
+            LayoutDirection::LeftToRight,
+            SpecTint::resolve(&env),
+        );
+        (look(&spec, &env), env)
     }
 
     fn frame(height: f64) -> Rect {
@@ -381,7 +405,7 @@ mod tests {
                 ButtonStyle::Bordered,
                 ButtonStyle::BorderedProminent,
             ] {
-                let look = look(spec(style, size), &env);
+                let look = look(&spec(style, size), &env);
                 assert_eq!(
                     look.get_padding(),
                     Vec2::new(tokens.horizontal_space, BUTTON_TEXT_VERTICAL_PADDING),
@@ -425,6 +449,51 @@ mod tests {
                 "{style:?}"
             );
         }
+    }
+
+    /// A tinted subtree's filled container and text-button label draw in
+    /// the tint; an untinted one's draw in `Primary`, the `Accent` token's
+    /// value.
+    #[test]
+    fn buttons_draw_with_the_subtrees_tint() {
+        let colors = MaterialColorScheme::baseline_light();
+        let tint = WorkingColor::new([0.9, 0.1, 0.2, 1.0]);
+        assert_ne!(tint, colors.primary.working());
+
+        let (filled, _) = tinted(ButtonStyle::BorderedProminent, tint);
+        let Fill::Paint(paint) = filled.chrome().surface().fill() else {
+            panic!("a Material button fills with a paint")
+        };
+        let Paint::Solid(container) = paint.target(&Inputs::at_rest(
+            frame(BUTTON_SMALL.container_height),
+            InteractionState::empty(),
+            &(),
+        )) else {
+            panic!("a Material button fills with a solid colour")
+        };
+        assert_eq!(container, tint);
+
+        let (text, env) = tinted(ButtonStyle::Plain, tint);
+        let color = text
+            .label()
+            .get_color()
+            .expect("a Material button colours its label")
+            .target(&Inputs::at_rest(Rect::ZERO, InteractionState::empty(), &()))
+            .resolve(&env)
+            .snapshot();
+        assert_eq!(color, tint);
+
+        assert_eq!(
+            fill(
+                &small(ButtonStyle::BorderedProminent),
+                InteractionState::empty()
+            ),
+            colors.primary.working()
+        );
+        assert_eq!(
+            label(&small(ButtonStyle::Plain), InteractionState::empty()),
+            colors.primary.working()
+        );
     }
 
     /// The filled button rises to level1 only while hovered.
