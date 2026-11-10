@@ -134,7 +134,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
         ButtonStyle::BorderedProminent => Surface::new(
             shape,
             button::disabled_paint(
-                Primary,
+                spec.tint(),
                 OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY),
                 env,
             ),
@@ -158,7 +158,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
     };
     let side = f64::from(tokens.state_layer);
     let chrome = button::interactive(surface, layer).centered(Size::new(side, side));
-    let look = ButtonLook::new(chrome, button::label(*spec));
+    let look = ButtonLook::new(chrome, button::label(spec));
     if style == ButtonStyle::Link {
         look
     } else {
@@ -504,7 +504,7 @@ mod tests {
         look,
     };
     use hydrolysis::Style as _;
-    use hydrolysis::theme::{ButtonSpec, Fill, Inputs};
+    use hydrolysis::theme::{ButtonSpec, Fill, Inputs, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
@@ -515,7 +515,13 @@ mod tests {
         let mut env = waterui::Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
         look(
-            &ButtonSpec::new(style, size, true, LayoutDirection::LeftToRight),
+            &ButtonSpec::new(
+                style,
+                size,
+                true,
+                LayoutDirection::LeftToRight,
+                SpecTint::default(),
+            ),
             &env,
         )
     }
