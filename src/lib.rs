@@ -57,20 +57,19 @@ use core::cell::OnceCell;
 use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
 
 pub use hydrolysis::theme::{
-    BadgeMetrics, ButtonLook, ButtonSpec, DividerMetrics, IndicatorLook, InputFieldMetrics,
-    InteractionFocusBinding, InteractionMotion, LinearProgressLook, ListDividerMetrics,
-    ListMetrics, ListRowMetrics, ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction,
-    NavigationMetrics, NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressSpec,
-    RadioIndicatorState, RadioSelectionMotion, SliderMetrics, SliderValueIndicatorMetrics,
-    StepperEnd, StepperMetrics, TabItemGeometry, TabItemLayout, TableMetrics, TabsMetrics,
-    TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState, WidgetTheme,
+    BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, IndicatorLook,
+    InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
+    ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
+    ListTrailingControlMetrics, ModalInteraction, NavigationMetrics, NavigationMotion,
+    PickerMetrics, PressWave, PressWaves, ProgressSpec, RadioIndicatorState, RadioSelectionMotion,
+    SliderLook, SliderSpec, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry, TabItemLayout,
+    TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
+    WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
-use waterui_controls::ControlSize;
-use waterui_controls::toggle::ToggleStyle;
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
@@ -468,54 +467,12 @@ impl WidgetTheme for Material3 {
         }
     }
 
-    fn toggle_metrics(&self, style: ToggleStyle) -> ToggleMetrics {
-        toggle::metrics(style)
+    fn switch(&self, spec: &ToggleSpec, env: &Environment) -> SwitchLook {
+        toggle::switch(spec, env)
     }
 
-    fn toggle_value_animation(&self) -> waterui::animation::Animation {
-        theme::motion::toggle_value()
-    }
-
-    fn draw_toggle_switch(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_switch(&self.colors(), draw, bounds, progress, selected, state);
-    }
-
-    fn draw_toggle_switch_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_switch_state_layer(&self.colors(), draw, bounds, progress, selected, state);
-    }
-
-    fn draw_toggle_checkbox(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_checkbox(&self.colors(), draw, bounds, progress, state);
-    }
-
-    fn draw_toggle_checkbox_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_checkbox_state_layer(&self.colors(), draw, bounds, progress, state);
+    fn checkbox(&self, spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
+        toggle::checkbox(spec, env)
     }
 
     fn stepper_metrics(&self) -> StepperMetrics {
@@ -704,57 +661,8 @@ impl WidgetTheme for Material3 {
         );
     }
 
-    fn slider_metrics(&self, size: ControlSize) -> SliderMetrics {
-        slider::metrics(size)
-    }
-
-    fn draw_slider_track(
-        &self,
-        draw: &mut Recorder,
-        track_rect: Rect,
-        fill_rect: Rect,
-        size: ControlSize,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_track(&self.colors(), draw, track_rect, fill_rect, size, state);
-    }
-
-    fn draw_slider_thumb(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        size: ControlSize,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_thumb(&self.colors(), draw, center, radius, size, state);
-    }
-
-    fn draw_slider_thumb_state_layer(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        size: ControlSize,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_thumb_state_layer(&self.colors(), draw, center, radius, size, state);
-    }
-
-    fn slider_value_indicator_metrics(&self) -> SliderValueIndicatorMetrics {
-        slider::value_indicator_metrics()
-    }
-
-    fn slider_value_indicator_color(&self) -> Color {
-        slider::value_indicator_color(&self.colors())
-    }
-
-    fn slider_value_indicator_font(&self) -> Font {
-        slider::value_indicator_font()
-    }
-
-    fn draw_slider_value_indicator(&self, draw: &mut Recorder, bounds: Rect) {
-        slider::draw_value_indicator(&self.colors(), draw, bounds);
+    fn slider(&self, spec: &SliderSpec, env: &Environment) -> SliderLook {
+        slider::look(spec, env)
     }
 
     fn linear_progress(&self, spec: &ProgressSpec, env: &Environment) -> LinearProgressLook {
@@ -935,8 +843,4 @@ fn lerp_color(start: WorkingColor, end: WorkingColor, t: f32) -> WorkingColor {
         lerp_channel(b0, b1, t),
         lerp_channel(a0, a1, t),
     ])
-}
-
-fn lerp_f64(start: f64, end: f64, t: f32) -> f64 {
-    (end - start).mul_add(f64::from(t.clamp(0.0, 1.0)), start)
 }

@@ -180,7 +180,7 @@ window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container
 values, and `draw_tabs_highlight` draws the secondary-container corner-full
 capsule spanning the item.
 
-1. ~~**Slider size variants and value indicator**~~ — implemented: `slider_metrics(ControlSize)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and `draw_slider_value_indicator` draws the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
+1. ~~**Slider size variants and value indicator**~~ — implemented: `slider(&SliderSpec)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and its value indicator is the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
 2. ~~**App-bar scrolled state**~~ — fixed: `material_scrolled_app_bar(view, &offset)` binds a `ScrollView::report_offset` binding and drives `md.comp.app-bar.scrolled.container.color` (surface-container, the tonal L2 elevation expression) once `offset.y > 0`.
 
 ## Tests updated
@@ -193,5 +193,5 @@ capsule spanning the item.
 - `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values.
 - `src/navigation_rail.rs`: expanded indicator height 56.
 - `src/material_list.rs`: icon sizes 20.
-- `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions; per-size token tables (`slider_metrics_match_the_size_token_tables`) and the value indicator's inverse-surface tokens.
+- `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions; per-size token tables (`the_look_follows_the_size_token_tables`), the track split around the handle, the state-layer opacities and the value indicator's tokens; the look's parts draw in the spec's tint.
 - Visual acceptance tests (`*_visual.rs`, ignored by default) regenerate their PNGs under the new tokens; they are opt-in rendering comparisons, not CI assertions.

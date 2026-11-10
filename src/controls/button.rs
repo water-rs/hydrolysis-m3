@@ -136,14 +136,14 @@ pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<C
 
 /// `rest` resolved in `env` as a paint, `disabled` while the widget is
 /// disabled.
-pub fn disabled_paint(
+pub fn disabled_paint<V: 'static>(
     rest: impl Into<Color>,
     disabled: impl Into<Color>,
     env: &Environment,
-) -> Driven<Paint> {
+) -> Driven<Paint, V> {
     Driven::follow(
         zip(rest.into().resolve(env), disabled.into().resolve(env)),
-        |&(rest, disabled): &(WorkingColor, WorkingColor), inputs: &Inputs<'_, ()>| {
+        |&(rest, disabled): &(WorkingColor, WorkingColor), inputs: &Inputs<'_, V>| {
             Paint::from(if inputs.state.contains(InteractionState::DISABLED) {
                 disabled
             } else {
