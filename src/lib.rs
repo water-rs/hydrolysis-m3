@@ -469,7 +469,7 @@ impl WidgetTheme for Material3 {
         if spec.icon_only() {
             icon_button::look(spec, env)
         } else {
-            button::look(*spec, env)
+            button::look(spec, env)
         }
     }
 
