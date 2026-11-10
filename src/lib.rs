@@ -61,16 +61,15 @@ pub use hydrolysis::theme::{
     InteractionFocusBinding, InteractionMotion, ListDividerMetrics, ListMetrics, ListRowMetrics,
     ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
     NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
-    ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderMetrics,
-    SliderValueIndicatorMetrics, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry,
-    TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
+    ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderLook,
+    SliderSpec, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry, TabItemLayout,
+    TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
     WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
-use waterui_controls::ControlSize;
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
@@ -666,57 +665,8 @@ impl WidgetTheme for Material3 {
         );
     }
 
-    fn slider_metrics(&self, size: ControlSize) -> SliderMetrics {
-        slider::metrics(size)
-    }
-
-    fn draw_slider_track(
-        &self,
-        draw: &mut Recorder,
-        track_rect: Rect,
-        fill_rect: Rect,
-        size: ControlSize,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_track(&self.colors(), draw, track_rect, fill_rect, size, state);
-    }
-
-    fn draw_slider_thumb(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        size: ControlSize,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_thumb(&self.colors(), draw, center, radius, size, state);
-    }
-
-    fn draw_slider_thumb_state_layer(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        size: ControlSize,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_thumb_state_layer(&self.colors(), draw, center, radius, size, state);
-    }
-
-    fn slider_value_indicator_metrics(&self) -> SliderValueIndicatorMetrics {
-        slider::value_indicator_metrics()
-    }
-
-    fn slider_value_indicator_color(&self) -> Color {
-        slider::value_indicator_color(&self.colors())
-    }
-
-    fn slider_value_indicator_font(&self) -> Font {
-        slider::value_indicator_font()
-    }
-
-    fn draw_slider_value_indicator(&self, draw: &mut Recorder, bounds: Rect) {
-        slider::draw_value_indicator(&self.colors(), draw, bounds);
+    fn slider(&self, spec: &SliderSpec, env: &Environment) -> SliderLook {
+        slider::look(spec, env)
     }
 
     fn progress_metrics(&self, style: ProgressIndicatorStyle) -> ProgressMetrics {
