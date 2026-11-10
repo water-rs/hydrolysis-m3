@@ -17,7 +17,7 @@ const LABELS: [&str; 3] = ["First", "Second", "Third"];
     reason = "the binding is cloned into the mounted body, which must own it"
 )]
 fn selectable_list(current: Binding<Option<usize>>) -> impl View {
-    let row = |index: usize| move || ListItem::new(text(LABELS[index]));
+    let row = |index: usize| (move || ListItem::new(text(LABELS[index]))).tag(index);
     List::content((row(0), row(1), row(2))).selection(&current)
 }
 
