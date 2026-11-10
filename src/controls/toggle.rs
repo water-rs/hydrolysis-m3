@@ -1,3 +1,31 @@
+//! The Material 3 switch and checkbox looks from the `md.comp.switch.*` and
+//! `md.comp.checkbox.*` tokens.
+//!
+//! Every part of a toggle is a [`Custom`] part over the toggle's `bool`:
+//! its [`Driven`] values read the value, the interaction state and, for a
+//! switch, the drag, so the thumb's slide, its size, the track's colour, the
+//! outline's width, the check glyph and the state layer are live operands
+//! the engine animates. A toggle, hover, press or drag records nothing.
+
+use hydrolysis::theme::{
+    CheckboxLook, Custom, Driven, Inputs, Motion, SwitchDrag, SwitchLook, ToggleControl,
+    ToggleSpec, Transition, ValueMotion,
+};
+use waterui::interaction::InteractionState;
+use waterui::reactive::zip::zip;
+use waterui::reactive::{Computed, SignalExt as _};
+use waterui_core::Environment;
+use waterui_core::layout::LayoutDirection;
+use waterui_graphics::color::Color;
+use waterui_graphics::draw::kurbo::{
+    Affine, BezPath, Circle, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, Size, Stroke,
+};
+use waterui_graphics::draw::{Draw as _, Paint, Shadow as ShadowCast, WorkingColor};
+
+use crate::color::{
+    OnPrimary, OnPrimaryContainer, OnSurface, OnSurfaceVariant, Outline, Primary, PrimaryContainer,
+    Shadow, Surface, SurfaceContainerHighest,
+};
 use crate::dimensions::{
     TOGGLE_CHECKBOX_CONTAINER_SHAPE, TOGGLE_CHECKBOX_OUTLINE_WIDTH,
     TOGGLE_CHECKBOX_SELECTED_SCALE_START, TOGGLE_CHECKBOX_SIZE, TOGGLE_LABEL_SPACING,
@@ -6,269 +34,373 @@ use crate::dimensions::{
     TOGGLE_SWITCH_SELECTED_HANDLE_SIZE, TOGGLE_SWITCH_THUMB_PADDING,
     TOGGLE_SWITCH_UNSELECTED_HANDLE_SIZE, TOGGLE_SWITCH_WIDTH,
 };
-use crate::theme::colors::MaterialColorScheme;
-use crate::theme::state_layer;
-use crate::{ToggleMetrics, WidgetInteractionState, lerp_color};
-use waterui::interaction::InteractionState;
-use waterui_controls::toggle::ToggleStyle;
-use waterui_graphics::draw::kurbo::{Affine, BezPath, PathEl, Point, Rect};
-use waterui_graphics::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
-use waterui_graphics::draw::{Draw as _, Recorder};
+use crate::elevation::{MaterialElevationLevel, chrome_elevation};
+use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
+use crate::theme::motion;
+use crate::theme::state_layer::{
+    FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
+    RIPPLE_INITIAL_SCALE,
+};
 
-pub fn metrics(style: ToggleStyle) -> ToggleMetrics {
-    match style {
-        ToggleStyle::Automatic | ToggleStyle::Switch => ToggleMetrics::new(
-            TOGGLE_SWITCH_WIDTH,
-            TOGGLE_SWITCH_HEIGHT,
-            TOGGLE_LABEL_SPACING,
-        ),
-        ToggleStyle::Checkbox => ToggleMetrics::new(
-            TOGGLE_CHECKBOX_SIZE,
-            TOGGLE_CHECKBOX_SIZE,
-            TOGGLE_LABEL_SPACING,
-        ),
-        _ => panic!("hydrolysis ToggleStyle variant is not implemented"),
+/// `md.comp.switch.state-layer.size` / `md.comp.checkbox.state-layer.size`
+/// over two: the unbounded state layer's radius.
+const STATE_LAYER_RADIUS: f64 = 20.0;
+
+/// The distance the switch thumb travels between its resting centres.
+const SWITCH_TRAVEL: f64 =
+    TOGGLE_SWITCH_WIDTH - 2.0 * (TOGGLE_SWITCH_THUMB_PADDING + SWITCH_SLOT_HALF);
+/// Half the slot the thumb centres in at each end of the track: Compose
+/// reserves the *selected* handle's width, so growing or shrinking the thumb
+/// never moves it sideways.
+const SWITCH_SLOT_HALF: f64 = TOGGLE_SWITCH_SELECTED_HANDLE_SIZE / 2.0;
+
+/// A `bool`-valued [`Driven`].
+type Toggled<T> = Driven<T, bool>;
+
+/// A part drawing a shape and its paint.
+type ShapePart = Custom<bool, (Toggled<Circle>, Toggled<Paint>)>;
+/// The switch outline: its shape, stroke and paint.
+type OutlinePart = Custom<bool, (Toggled<RoundedRect>, Toggled<Stroke>, Toggled<Paint>)>;
+/// The thumb's key and ambient shadows, each over its own copy of the
+/// thumb's shape.
+type ShadowPart = Custom<
+    bool,
+    (
+        Toggled<Circle>,
+        Toggled<ShadowCast>,
+        Toggled<Circle>,
+        Toggled<ShadowCast>,
+    ),
+>;
+/// The checked container: where it scales to, its fill and its check.
+type ContainerPart = Custom<bool, (Toggled<Affine>, Toggled<Paint>, Toggled<Paint>)>;
+
+/// The Material toggle's motion: the control chrome's, with the value
+/// running the 200 ms standard easing whatever animation the change names.
+fn toggle_motion() -> Motion {
+    let mut motion = motion::chrome();
+    motion.value = ValueMotion::Own(motion::toggle_value());
+    motion
+}
+
+/// `colors` resolved in `env` together, so one [`Driven`] reads them all.
+fn gather<const N: usize>(colors: [Color; N], env: &Environment) -> Computed<[WorkingColor; N]> {
+    let mut gathered: Computed<Vec<WorkingColor>> = Computed::constant(Vec::with_capacity(N));
+    for color in colors {
+        gathered = zip(gathered, color.resolve(env))
+            .map(|(mut all, color): (Vec<WorkingColor>, WorkingColor)| {
+                all.push(color);
+                all
+            })
+            .computed();
+    }
+    gathered
+        .map(|all| <[WorkingColor; N]>::try_from(all).expect("every colour was gathered"))
+        .computed()
+}
+
+const fn disabled(inputs: &Inputs<'_, bool>) -> bool {
+    inputs.state.contains(InteractionState::DISABLED)
+}
+
+/// `t` as the `f32` the colour blend takes.
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "a blend factor in [0, 1] loses nothing visible in f32"
+)]
+const fn narrow(t: f64) -> f32 {
+    t as f32
+}
+
+fn lerp(start: f64, end: f64, t: f64) -> f64 {
+    (end - start).mul_add(t, start)
+}
+
+fn blend(start: WorkingColor, end: WorkingColor, t: f64) -> WorkingColor {
+    crate::lerp_color(start, end, narrow(t))
+}
+
+/// `color` at `opacity` of its own alpha.
+fn faded(color: WorkingColor, opacity: f64) -> WorkingColor {
+    color.with_alpha(color.components[3] * narrow(opacity))
+}
+
+/// Where a toggle's operands are between their ends: the value's end, moved
+/// by a switch's drag.
+#[derive(Clone, Copy)]
+struct Progress {
+    drag: SwitchDrag,
+    direction: LayoutDirection,
+}
+
+impl Progress {
+    fn at(self, inputs: &Inputs<'_, bool>) -> f64 {
+        self.drag.progress(*inputs.value, inputs.drag)
+    }
+
+    /// The thumb's centre at `inputs`.
+    fn thumb_center(self, inputs: &Inputs<'_, bool>) -> Point {
+        let frame = inputs.frame;
+        let slot = TOGGLE_SWITCH_THUMB_PADDING + SWITCH_SLOT_HALF;
+        let (off, on) = match self.direction {
+            LayoutDirection::LeftToRight => (frame.x0 + slot, frame.x1 - slot),
+            LayoutDirection::RightToLeft => (frame.x1 - slot, frame.x0 + slot),
+        };
+        Point::new(lerp(off, on, self.at(inputs)), frame.center().y)
+    }
+
+    /// The thumb's radius: the pressed handle while pressed, otherwise
+    /// growing from the unselected to the selected handle.
+    fn thumb_radius(self, inputs: &Inputs<'_, bool>) -> f64 {
+        if inputs.state.contains(InteractionState::PRESSED) {
+            TOGGLE_SWITCH_PRESSED_HANDLE_SIZE / 2.0
+        } else {
+            lerp(
+                TOGGLE_SWITCH_UNSELECTED_HANDLE_SIZE,
+                TOGGLE_SWITCH_SELECTED_HANDLE_SIZE,
+                self.at(inputs),
+            ) / 2.0
+        }
+    }
+
+    fn thumb(self) -> Toggled<Circle> {
+        Driven::new(move |inputs: &Inputs<'_, bool>| {
+            Circle::new(self.thumb_center(inputs), self.thumb_radius(inputs))
+        })
     }
 }
 
-/// The switch thumb's center for the given animated `progress`.
-///
-/// Compose reserves a slot the width of the *selected* handle at each end,
-/// inset by `ThumbPadding`, and centres whatever size the thumb currently is
-/// inside it. Both rest centres therefore sit half a selected handle in from
-/// the padding, and growing or shrinking the thumb — on press, or when the
-/// value changes — never moves it sideways.
-fn switch_thumb_center(bounds: Rect, progress: f32) -> Point {
-    let slot_half = TOGGLE_SWITCH_SELECTED_HANDLE_SIZE / 2.0;
-    let unselected_x = bounds.x0 + TOGGLE_SWITCH_THUMB_PADDING + slot_half;
-    let selected_x = bounds.x1 - (TOGGLE_SWITCH_THUMB_PADDING + slot_half);
-    Point::new(
-        crate::lerp_f64(unselected_x, selected_x, progress),
-        bounds.y0 + bounds.height() / 2.0,
+/// The look of a switch in `spec`.
+pub fn switch(spec: ToggleSpec, env: &Environment) -> SwitchLook {
+    let drag = SwitchDrag::new(SWITCH_TRAVEL, spec.direction());
+    let progress = Progress {
+        drag,
+        direction: spec.direction(),
+    };
+    let control = ToggleControl::new(
+        Size::new(TOGGLE_SWITCH_WIDTH, TOGGLE_SWITCH_HEIGHT),
+        toggle_motion(),
+    )
+    .label_spacing(TOGGLE_LABEL_SPACING)
+    .hit(motion::hit_region())
+    .part(switch_track(progress, env))
+    .part(switch_outline(progress, env))
+    .part(thumb_shadow(progress, env))
+    .part(thumb(progress, env))
+    .part(thumb_icon(progress, env))
+    .part(switch_state_layer(progress, env))
+    .part(switch_ripple(progress, env));
+    SwitchLook::new(control, drag)
+}
+
+/// The look of a checkbox in `spec`.
+pub fn checkbox(spec: ToggleSpec, env: &Environment) -> CheckboxLook {
+    // A checkbox has no drag: its operands sit at the value's end.
+    let progress = Progress {
+        drag: SwitchDrag::new(1.0, spec.direction()),
+        direction: spec.direction(),
+    };
+    let control = ToggleControl::new(
+        Size::new(TOGGLE_CHECKBOX_SIZE, TOGGLE_CHECKBOX_SIZE),
+        toggle_motion(),
+    )
+    .label_spacing(TOGGLE_LABEL_SPACING)
+    .hit(motion::hit_region())
+    .part(checkbox_outline(progress, env))
+    .part(checkbox_container(progress, env))
+    .part(checkbox_state_layer(progress, env))
+    .part(checkbox_ripple(env));
+    CheckboxLook::new(control)
+}
+
+/// The track: surface-container-highest to primary, to the disabled
+/// containers at 12% while disabled.
+fn track_paint(progress: Progress, env: &Environment) -> Toggled<Paint> {
+    Driven::follow(
+        gather(
+            [
+                SurfaceContainerHighest.into(),
+                Primary.into(),
+                SurfaceContainerHighest
+                    .with_opacity(DISABLED_CONTAINER_OPACITY)
+                    .into(),
+                OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY).into(),
+            ],
+            env,
+        ),
+        move |&[off, on, off_disabled, on_disabled]: &[WorkingColor; 4],
+              inputs: &Inputs<'_, bool>| {
+            let t = progress.at(inputs);
+            Paint::from(if disabled(inputs) {
+                blend(off_disabled, on_disabled, t)
+            } else {
+                blend(off, on, t)
+            })
+        },
     )
 }
 
-/// The thumb icon's opacity for one frame, per the M3 reference's staged linear
-/// transitions over the 200ms value animation: entering waits 50ms then ramps
-/// over 150ms (progress 0.25→1.0); exiting ramps out during the first 50ms
-/// (progress 1.0→0.75).
-fn switch_icon_opacity(progress: f32, selected: bool) -> f32 {
-    if selected {
-        ((progress - 0.25) / 0.75).clamp(0.0, 1.0)
-    } else {
-        ((progress - 0.75) / 0.25).clamp(0.0, 1.0)
-    }
+fn switch_track(progress: Progress, env: &Environment) -> Custom<bool, (Toggled<Paint>,)> {
+    Custom::new(
+        (track_paint(progress, env),),
+        |recorder, frame, (paint,)| {
+            recorder.fill(
+                RoundedRect::from_rect(
+                    frame,
+                    RoundedRectRadii::from_single_radius(frame.height() / 2.0),
+                ),
+                paint,
+            );
+        },
+    )
 }
 
-pub fn draw_switch(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    progress: f32,
-    selected: bool,
-    state: WidgetInteractionState,
-) {
-    let progress = progress.clamp(0.0, 1.0);
-    // the disabled Material switch: the track drops to surface-container-highest at
-    // 12% (unchecked) or on-surface at 12% (checked), the outline to
-    // on-surface at 12%, the thumb to on-surface at 38% (unchecked) or opaque
-    // surface (checked), and the checked icon to on-surface at 38%.
-    let track_color = if state.state.contains(InteractionState::DISABLED) {
-        lerp_color(
-            colors
-                .surface_container_highest
-                .working_disabled_container(),
-            colors.on_surface.working_disabled_container(),
-            progress,
-        )
-    } else {
-        lerp_color(
-            colors.surface_container_highest.working(),
-            colors.primary.working(),
-            progress,
-        )
-    };
-    let handle_size = if state.state.contains(InteractionState::PRESSED) {
-        TOGGLE_SWITCH_PRESSED_HANDLE_SIZE
-    } else {
-        crate::lerp_f64(
-            TOGGLE_SWITCH_UNSELECTED_HANDLE_SIZE,
-            TOGGLE_SWITCH_SELECTED_HANDLE_SIZE,
-            progress,
-        )
-    };
-    let handle_radius = handle_size / 2.0;
-    let thumb_center = switch_thumb_center(bounds, progress);
-    let track_radius = bounds.height() / 2.0;
-    draw.fill(
-        RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(track_radius)),
-        track_color,
-    );
-    draw_switch_outline(colors, draw, bounds, progress, track_radius, &state);
-    let thumb_color = if state.state.contains(InteractionState::DISABLED) {
-        lerp_color(
-            colors.on_surface.working_disabled_content(),
-            colors.surface.working(),
-            progress,
-        )
-    } else if state.state.intersects(
-        InteractionState::PRESSED | InteractionState::HOVERED | InteractionState::FOCUSED,
-    ) {
-        if selected {
-            colors.primary_container.working()
-        } else {
-            colors.on_surface_variant.working()
-        }
-    } else {
-        lerp_color(
-            colors.outline.working(),
-            colors.on_primary.working(),
-            progress,
-        )
-    };
-    // md.comp.switch.handle.elevation = level1; the disabled handle is level0.
-    if !state.state.contains(InteractionState::DISABLED) {
-        crate::elevation::draw_shadows(
-            draw,
-            Rect::from_center_size(thumb_center, (handle_size, handle_size)),
-            handle_radius.into(),
-            crate::elevation::MaterialElevationLevel::LEVEL1,
-            colors,
-        );
-    }
-    draw.fill(Circle::new(thumb_center, handle_radius), thumb_color);
-
-    // the default checked icon: a 16dp checkmark on the thumb, colored
-    // on-primary-container, scaling in from 0.92 as it fades.
-    let icon_opacity = switch_icon_opacity(progress, selected);
-    if icon_opacity > 0.0 {
-        let icon_scale = crate::lerp_f64(TOGGLE_SWITCH_ICON_SCALE_START, 1.0, icon_opacity);
-        let icon_bounds = Rect::from_center_size(
-            thumb_center,
-            (
-                TOGGLE_SWITCH_ICON_SIZE * icon_scale,
-                TOGGLE_SWITCH_ICON_SIZE * icon_scale,
-            ),
-        );
-        let icon_color = if state.state.contains(InteractionState::DISABLED) {
-            colors.on_surface.working_disabled_content()
-        } else {
-            colors.on_primary_container.working()
-        };
-        draw.stroke(
-            check_glyph_path(icon_bounds),
-            Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
-            icon_color.with_alpha(icon_color.components[3] * icon_opacity),
-        );
-    }
+/// The unselected outline's width: 2dp shrinking to nothing as the switch
+/// turns on (the border-width animates, not its opacity), with the border
+/// inside the track's box.
+fn outline_width(progress: Progress, inputs: &Inputs<'_, bool>) -> f64 {
+    TOGGLE_SWITCH_OUTLINE_WIDTH * (1.0 - progress.at(inputs))
 }
 
-// the unselected outline's border-width animates from 2dp to 0 (not
-// its opacity), with the border inside the 52x32 box (border-box sizing).
-fn draw_switch_outline(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    progress: f32,
-    track_radius: f64,
-    state: &WidgetInteractionState,
-) {
-    let outline_width = TOGGLE_SWITCH_OUTLINE_WIDTH * f64::from(1.0 - progress);
-    if outline_width > 0.01 {
-        let inset = outline_width / 2.0;
-        let outline_bounds = bounds.inflate(-inset, -inset);
-        let outline_color = if state.state.contains(InteractionState::DISABLED) {
-            colors.on_surface.working_disabled_container()
-        } else {
-            colors.outline.working()
-        };
-        draw.stroke(
-            RoundedRect::from_rect(
-                outline_bounds,
-                RoundedRectRadii::from_single_radius(track_radius - inset),
-            ),
-            Stroke::new(outline_width),
-            outline_color,
-        );
-    }
-}
-
-pub fn draw_switch_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    progress: f32,
-    selected: bool,
-    state: WidgetInteractionState,
-) {
-    let center = switch_thumb_center(bounds, progress);
-    // the Material switches the thumb's state-layer color with the checked attribute.
-    let color = if selected {
-        colors.primary.working()
-    } else {
-        colors.on_surface.working()
-    };
-    state_layer::draw_unbounded_circle(draw, center, 20.0, color, state);
-}
-
-pub fn draw_checkbox(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    progress: f32,
-    state: WidgetInteractionState,
-) {
-    let progress = progress.clamp(0.0, 1.0);
-    let outline_opacity = 1.0 - progress;
-    if outline_opacity > 0.0 {
-        // MD3 disabled checkbox: the unchecked outline drops to on-surface at
-        // the 38% disabled-content opacity.
-        let outline_color = if state.state.contains(InteractionState::DISABLED) {
-            colors.on_surface.working_disabled_content()
-        } else {
-            colors.on_surface_variant.working()
-        };
-        draw.stroke(
-            RoundedRect::from_rect(
-                bounds,
-                RoundedRectRadii::from_single_radius(TOGGLE_CHECKBOX_CONTAINER_SHAPE),
-            ),
-            Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
-            outline_color.with_alpha(outline_color.components[3] * outline_opacity),
-        );
-    }
-    if progress <= 0.0 {
-        return;
-    }
-
-    let selected_scale = crate::lerp_f64(TOGGLE_CHECKBOX_SELECTED_SCALE_START, 1.0, progress);
-    let selected_transform = Affine::translate((bounds.center().x, bounds.center().y))
-        * Affine::scale(selected_scale)
-        * Affine::translate((-bounds.center().x, -bounds.center().y));
-    // MD3 disabled checkbox (checked): container on-surface at 38%, checkmark
-    // in the surface color.
-    let (container_color, check_color) = if state.state.contains(InteractionState::DISABLED) {
-        (
-            colors.on_surface.working_disabled_content(),
-            colors.surface.working(),
+fn switch_outline(progress: Progress, env: &Environment) -> OutlinePart {
+    let shape = Driven::new(move |inputs: &Inputs<'_, bool>| {
+        let inset = outline_width(progress, inputs) / 2.0;
+        RoundedRect::from_rect(
+            inputs.frame.inflate(-inset, -inset),
+            RoundedRectRadii::from_single_radius(inputs.frame.height() / 2.0 - inset),
         )
-    } else {
-        (colors.primary.working(), colors.on_primary.working())
-    };
-    draw.transform(selected_transform, |draw| {
-        draw.fill(
-            RoundedRect::from_rect(
-                bounds,
-                RoundedRectRadii::from_single_radius(TOGGLE_CHECKBOX_CONTAINER_SHAPE),
-            ),
-            container_color.with_alpha(container_color.components[3] * progress),
-        );
-        draw.stroke(
-            check_glyph_path(bounds),
-            Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
-            check_color.with_alpha(check_color.components[3] * progress),
-        );
     });
+    let stroke =
+        Driven::new(move |inputs: &Inputs<'_, bool>| Stroke::new(outline_width(progress, inputs)));
+    let paint = Driven::follow(
+        gather(
+            [
+                Outline.into(),
+                OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY).into(),
+            ],
+            env,
+        ),
+        |&[rest, dim]: &[WorkingColor; 2], inputs: &Inputs<'_, bool>| {
+            Paint::from(if disabled(inputs) { dim } else { rest })
+        },
+    );
+    Custom::new(
+        (shape, stroke, paint),
+        |recorder, _frame, (shape, stroke, paint)| {
+            recorder.stroke(shape, stroke, paint);
+        },
+    )
+}
+
+/// `md.comp.switch.handle.elevation`: level1, level0 while disabled.
+fn thumb_shadow(progress: Progress, env: &Environment) -> ShadowPart {
+    let cast = |key: bool| {
+        Driven::follow(
+            Color::from(Shadow).resolve(env),
+            move |shadow: &WorkingColor, inputs: &Inputs<'_, bool>| {
+                let elevation = if disabled(inputs) {
+                    hydrolysis::theme::Elevation::NONE
+                } else {
+                    chrome_elevation(MaterialElevationLevel::LEVEL1, *shadow)
+                };
+                if key {
+                    elevation.key
+                } else {
+                    elevation.ambient
+                }
+            },
+        )
+    };
+    Custom::new(
+        (progress.thumb(), cast(true), progress.thumb(), cast(false)),
+        |recorder, _frame, (key_shape, key, ambient_shape, ambient)| {
+            recorder.shadow(key_shape, key);
+            recorder.shadow(ambient_shape, ambient);
+        },
+    )
+}
+
+fn thumb(progress: Progress, env: &Environment) -> ShapePart {
+    let paint = Driven::follow(
+        gather(
+            [
+                OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
+                Surface.into(),
+                PrimaryContainer.into(),
+                OnSurfaceVariant.into(),
+                Outline.into(),
+                OnPrimary.into(),
+            ],
+            env,
+        ),
+        move |&[
+            disabled_off,
+            disabled_on,
+            selected,
+            unselected,
+            rest_off,
+            rest_on,
+        ]: &[WorkingColor; 6],
+              inputs: &Inputs<'_, bool>| {
+            let t = progress.at(inputs);
+            Paint::from(if disabled(inputs) {
+                blend(disabled_off, disabled_on, t)
+            } else if inputs.state.intersects(
+                InteractionState::PRESSED | InteractionState::HOVERED | InteractionState::FOCUSED,
+            ) {
+                if *inputs.value { selected } else { unselected }
+            } else {
+                blend(rest_off, rest_on, t)
+            })
+        },
+    );
+    Custom::new(
+        (progress.thumb(), paint),
+        |recorder, _frame, (circle, paint)| {
+            recorder.fill(circle, paint);
+        },
+    )
+}
+
+/// The default checked icon: a 16dp checkmark on the thumb in
+/// on-primary-container, scaling in from 0.92 as it fades with the switch
+/// turning on.
+fn thumb_icon(
+    progress: Progress,
+    env: &Environment,
+) -> Custom<bool, (Toggled<Affine>, Toggled<Paint>)> {
+    let place = Driven::new(move |inputs: &Inputs<'_, bool>| {
+        let scale = lerp(TOGGLE_SWITCH_ICON_SCALE_START, 1.0, progress.at(inputs));
+        let center = progress.thumb_center(inputs);
+        Affine::translate(center.to_vec2()) * Affine::scale(scale)
+    });
+    let paint = Driven::follow(
+        gather(
+            [
+                OnPrimaryContainer.into(),
+                OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
+            ],
+            env,
+        ),
+        move |&[rest, dim]: &[WorkingColor; 2], inputs: &Inputs<'_, bool>| {
+            Paint::from(faded(
+                if disabled(inputs) { dim } else { rest },
+                progress.at(inputs),
+            ))
+        },
+    );
+    Custom::new((place, paint), |recorder, _frame, (place, paint)| {
+        recorder.transform(place, |recorder| {
+            recorder.stroke(
+                check_glyph_path(Rect::from_center_size(
+                    Point::ORIGIN,
+                    (TOGGLE_SWITCH_ICON_SIZE, TOGGLE_SWITCH_ICON_SIZE),
+                )),
+                Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
+                paint,
+            );
+        });
+    })
 }
 
 /// The Material `check` glyph as a stroked path filling `bounds`.
@@ -289,367 +421,446 @@ fn check_glyph_path(bounds: Rect) -> BezPath {
     ])
 }
 
-pub fn draw_checkbox_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: Rect,
-    progress: f32,
-    state: WidgetInteractionState,
-) {
-    let center = Point::new(
-        bounds.x0 + bounds.width() / 2.0,
-        bounds.y0 + bounds.height() / 2.0,
-    );
-    let color = if progress > 0.0 {
-        colors.primary.working()
+/// The state layer's opacity while hovered or focused; the press is the
+/// ripple's.
+fn state_layer_opacity(inputs: &Inputs<'_, bool>) -> f64 {
+    if disabled(inputs) {
+        0.0
+    } else if inputs.state.contains(InteractionState::FOCUSED) {
+        f64::from(FOCUS_STATE_LAYER_OPACITY)
+    } else if inputs.state.contains(InteractionState::HOVERED) {
+        f64::from(HOVER_STATE_LAYER_OPACITY)
     } else {
-        colors.on_surface.working()
+        0.0
+    }
+}
+
+/// The state-layer colour: primary while on, on-surface while off.
+fn layer_color(env: &Environment) -> Computed<[WorkingColor; 2]> {
+    gather([Primary.into(), OnSurface.into()], env)
+}
+
+fn layer_paint(
+    env: &Environment,
+    opacity: impl Fn(&Inputs<'_, bool>) -> f64 + 'static,
+) -> Toggled<Paint> {
+    Driven::follow(
+        layer_color(env),
+        move |&[on, off]: &[WorkingColor; 2], inputs: &Inputs<'_, bool>| {
+            Paint::from(faded(if *inputs.value { on } else { off }, opacity(inputs)))
+        },
+    )
+}
+
+fn switch_state_layer(progress: Progress, env: &Environment) -> ShapePart {
+    let circle = Driven::new(move |inputs: &Inputs<'_, bool>| {
+        Circle::new(progress.thumb_center(inputs), STATE_LAYER_RADIUS)
+    });
+    Custom::new(
+        (circle, layer_paint(env, state_layer_opacity)),
+        |recorder, _frame, (circle, paint)| recorder.fill(circle, paint),
+    )
+}
+
+/// The press ripple of an unbounded layer: it grows from the initial scale
+/// to the layer's radius and fades in on press, and fades out on release.
+fn ripple_motion() -> Motion {
+    let ripple = motion::ripple();
+    let mut motion = toggle_motion();
+    motion.press = Transition::new(ripple.grow, ripple.fade_out);
+    motion
+}
+
+fn ripple_radius(inputs: &Inputs<'_, bool>) -> f64 {
+    if inputs.state.contains(InteractionState::PRESSED) {
+        STATE_LAYER_RADIUS
+    } else {
+        STATE_LAYER_RADIUS * RIPPLE_INITIAL_SCALE
+    }
+}
+
+fn ripple_opacity(inputs: &Inputs<'_, bool>) -> f64 {
+    if inputs.state.contains(InteractionState::PRESSED) && !disabled(inputs) {
+        f64::from(PRESSED_STATE_LAYER_OPACITY)
+    } else {
+        0.0
+    }
+}
+
+fn switch_ripple(progress: Progress, env: &Environment) -> ShapePart {
+    let circle = Driven::new(move |inputs: &Inputs<'_, bool>| {
+        Circle::new(progress.thumb_center(inputs), ripple_radius(inputs))
+    })
+    .motion(ripple_motion());
+    let paint = layer_paint(env, ripple_opacity).motion(ripple_motion());
+    Custom::new((circle, paint), |recorder, _frame, (circle, paint)| {
+        recorder.fill(circle, paint)
+    })
+}
+
+/// The unchecked outline: on-surface-variant (on-surface at 38% while
+/// disabled), fading out as the box checks.
+fn checkbox_outline_paint(progress: Progress, env: &Environment) -> Toggled<Paint> {
+    Driven::follow(
+        gather(
+            [
+                OnSurfaceVariant.into(),
+                OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
+            ],
+            env,
+        ),
+        move |&[rest, dim]: &[WorkingColor; 2], inputs: &Inputs<'_, bool>| {
+            Paint::from(faded(
+                if disabled(inputs) { dim } else { rest },
+                1.0 - progress.at(inputs),
+            ))
+        },
+    )
+}
+
+fn checkbox_outline(progress: Progress, env: &Environment) -> Custom<bool, (Toggled<Paint>,)> {
+    Custom::new(
+        (checkbox_outline_paint(progress, env),),
+        |recorder, frame, (paint,)| {
+            recorder.stroke(
+                container_shape(frame),
+                Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
+                paint,
+            );
+        },
+    )
+}
+
+fn container_shape(frame: Rect) -> RoundedRect {
+    RoundedRect::from_rect(
+        frame,
+        RoundedRectRadii::from_single_radius(TOGGLE_CHECKBOX_CONTAINER_SHAPE),
+    )
+}
+
+/// The checked container's fill and its check, fading in with the box
+/// checking: primary with an on-primary check, on-surface at 38% with a
+/// surface check while disabled.
+fn checkbox_paints(progress: Progress, env: &Environment) -> (Toggled<Paint>, Toggled<Paint>) {
+    let paint = |container: fn(&[WorkingColor; 4]) -> (WorkingColor, WorkingColor)| {
+        Driven::follow(
+            gather(
+                [
+                    Primary.into(),
+                    OnPrimary.into(),
+                    OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
+                    Surface.into(),
+                ],
+                env,
+            ),
+            move |colors: &[WorkingColor; 4], inputs: &Inputs<'_, bool>| {
+                let (rest, dim) = container(colors);
+                Paint::from(faded(
+                    if disabled(inputs) { dim } else { rest },
+                    progress.at(inputs),
+                ))
+            },
+        )
     };
-    state_layer::draw_unbounded_circle(draw, center, 20.0, color, state);
+    (
+        paint(|&[primary, _, dim, _]| (primary, dim)),
+        paint(|&[_, on_primary, _, surface]| (on_primary, surface)),
+    )
+}
+
+/// The checked container and its check, scaling in from 0.6 as they fade
+/// in.
+fn checkbox_container(progress: Progress, env: &Environment) -> ContainerPart {
+    let place = Driven::new(move |inputs: &Inputs<'_, bool>| {
+        let center = inputs.frame.center().to_vec2();
+        let scale = lerp(
+            TOGGLE_CHECKBOX_SELECTED_SCALE_START,
+            1.0,
+            progress.at(inputs),
+        );
+        Affine::translate(center) * Affine::scale(scale) * Affine::translate(-center)
+    });
+    let (fill, check) = checkbox_paints(progress, env);
+    Custom::new(
+        (place, fill, check),
+        |recorder, frame, (place, fill, check)| {
+            recorder.transform(place, |recorder| {
+                recorder.fill(container_shape(frame), fill);
+                recorder.stroke(
+                    check_glyph_path(frame),
+                    Stroke::new(TOGGLE_CHECKBOX_OUTLINE_WIDTH),
+                    check,
+                );
+            });
+        },
+    )
+}
+
+fn checkbox_state_layer(progress: Progress, env: &Environment) -> ShapePart {
+    let _ = progress;
+    let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
+        Circle::new(inputs.frame.center(), STATE_LAYER_RADIUS)
+    });
+    Custom::new(
+        (circle, layer_paint(env, state_layer_opacity)),
+        |recorder, _frame, (circle, paint)| recorder.fill(circle, paint),
+    )
+}
+
+fn checkbox_ripple(env: &Environment) -> ShapePart {
+    let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
+        Circle::new(inputs.frame.center(), ripple_radius(inputs))
+    })
+    .motion(ripple_motion());
+    let paint = layer_paint(env, ripple_opacity).motion(ripple_motion());
+    Custom::new((circle, paint), |recorder, _frame, (circle, paint)| {
+        recorder.fill(circle, paint)
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::test_support::{Recorded, recorded, solid};
-    use waterui_graphics::draw::WorkingColor;
-    use waterui_graphics::draw::kurbo::{Point, Rect};
-
-    use super::{
-        MaterialColorScheme, WidgetInteractionState, draw_checkbox, draw_switch,
-        switch_icon_opacity,
+    use super::{checkbox, switch};
+    use crate::color::Primary;
+    use crate::dimensions::{
+        TOGGLE_LABEL_SPACING, TOGGLE_SWITCH_HEIGHT, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE,
+        TOGGLE_SWITCH_WIDTH,
     };
-    use crate::dimensions::{TOGGLE_LABEL_SPACING, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE};
+    use hydrolysis::Style as _;
+    use hydrolysis::theme::{Inputs, SwitchDrag, SwitchLook, ToggleSpec};
     use waterui::interaction::InteractionState;
+    use waterui_controls::ControlSize;
+    use waterui_controls::toggle::ToggleStyle;
+    use waterui_core::Environment;
+    use waterui_core::layout::LayoutDirection;
+    use waterui_graphics::draw::Paint;
+    use waterui_graphics::draw::kurbo::{Circle, Point, Rect, Vec2};
 
-    /// The toggle chrome a draw recorded, in the shape the assertions read.
-    struct Chrome {
-        rounded_stroke_count: usize,
-        rounded_stroke_widths: Vec<f64>,
-        rounded_stroke_brushes: Vec<WorkingColor>,
-        rounded_fill_count: usize,
-        rounded_fill_brushes: Vec<WorkingColor>,
-        path_stroke_count: usize,
-        circle_centers: Vec<Point>,
-        circle_radii: Vec<f64>,
-        circle_brushes: Vec<WorkingColor>,
+    fn env() -> Environment {
+        let mut env = Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        env
     }
 
-    impl Chrome {
-        fn from(recorded: &Recorded) -> Self {
-            Self {
-                rounded_stroke_count: recorded.rounded_strokes.len(),
-                rounded_stroke_widths: recorded
-                    .rounded_strokes
-                    .iter()
-                    .map(|(_, _, _, width)| *width)
-                    .collect(),
-                rounded_stroke_brushes: recorded
-                    .rounded_strokes
-                    .iter()
-                    .map(|(_, _, paint, _)| solid(paint))
-                    .collect(),
-                rounded_fill_count: recorded.rounded_fills.len(),
-                rounded_fill_brushes: recorded
-                    .rounded_fills
-                    .iter()
-                    .map(|(_, _, paint)| solid(paint))
-                    .collect(),
-                path_stroke_count: recorded.path_strokes,
-                circle_centers: recorded
-                    .circle_fills
-                    .iter()
-                    .map(|(circle, _)| circle.center)
-                    .collect(),
-                circle_radii: recorded
-                    .circle_fills
-                    .iter()
-                    .map(|(circle, _)| circle.radius)
-                    .collect(),
-                circle_brushes: recorded
-                    .circle_fills
-                    .iter()
-                    .map(|(_, paint)| solid(paint))
-                    .collect(),
-            }
+    fn spec(style: ToggleStyle, direction: LayoutDirection) -> ToggleSpec {
+        ToggleSpec::new(style, ControlSize::Small, direction)
+    }
+
+    fn frame() -> Rect {
+        Rect::from_origin_size((0.0, 0.0), (TOGGLE_SWITCH_WIDTH, TOGGLE_SWITCH_HEIGHT))
+    }
+
+    fn at(value: &bool, state: InteractionState, drag: Option<Vec2>) -> Inputs<'_, bool> {
+        Inputs {
+            frame: frame(),
+            state,
+            value,
+            drag,
+            press_point: None,
+        }
+    }
+
+    fn progress(direction: LayoutDirection) -> super::Progress {
+        let look = switch(spec(ToggleStyle::Switch, direction), &env());
+        super::Progress {
+            drag: *look.drag(),
+            direction,
         }
     }
 
     #[test]
-    fn selected_material_switch_track_has_no_outline() {
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
-
-        let unselected = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                0.0,
-                false,
-                WidgetInteractionState::NONE,
-            );
-        }));
-        let selected = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                1.0,
-                true,
-                WidgetInteractionState::NONE,
-            );
-        }));
-
-        assert_eq!(unselected.rounded_stroke_count, 1);
-        assert_eq!(selected.rounded_stroke_count, 0);
+    fn toggle_sizes_and_spacing_are_the_material_tokens() {
+        let look: SwitchLook = switch(
+            spec(ToggleStyle::Switch, LayoutDirection::LeftToRight),
+            &env(),
+        );
+        assert_eq!(
+            look.control().size(),
+            kurbo_size(TOGGLE_SWITCH_WIDTH, TOGGLE_SWITCH_HEIGHT)
+        );
+        assert_eq!(look.control().get_label_spacing(), TOGGLE_LABEL_SPACING);
+        assert_eq!(TOGGLE_LABEL_SPACING, 8.0);
+        let checkbox = checkbox(
+            spec(ToggleStyle::Checkbox, LayoutDirection::LeftToRight),
+            &env(),
+        );
+        assert_eq!(checkbox.control().size(), kurbo_size(18.0, 18.0));
     }
 
-    #[test]
-    fn switch_outline_width_shrinks_with_progress() {
-        // the border-width animates 2dp → 0 with the value transition, not
-        // the outline's opacity.
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
-
-        let mid = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                0.5,
-                true,
-                WidgetInteractionState::NONE,
-            );
-        }));
-
-        assert_eq!(mid.rounded_stroke_widths, vec![1.0]);
+    fn kurbo_size(width: f64, height: f64) -> waterui_graphics::draw::kurbo::Size {
+        waterui_graphics::draw::kurbo::Size::new(width, height)
     }
 
-    #[test]
     /// Compose's `ThumbPadding` is `(32 - 24) / 2 = 4`, and the thumb sits in a
     /// 24dp slot at each end regardless of the size it currently draws at. The
     /// rest centres are therefore 4 + 12 = 16dp from either edge of the 52dp
     /// track, which is what keeps the thumb still while it changes size.
+    #[test]
     fn switch_thumb_rests_at_compose_centers() {
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
-
-        let unselected = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                0.0,
-                false,
-                WidgetInteractionState::NONE,
-            );
-        }));
-        assert_eq!(unselected.circle_centers, vec![Point::new(16.0, 16.0)]);
-
-        let selected = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                1.0,
-                true,
-                WidgetInteractionState::NONE,
-            );
-        }));
-        assert_eq!(selected.circle_centers, vec![Point::new(36.0, 16.0)]);
+        let progress = progress(LayoutDirection::LeftToRight);
+        let off = progress
+            .thumb()
+            .target(&at(&false, InteractionState::empty(), None));
+        let on = progress
+            .thumb()
+            .target(&at(&true, InteractionState::empty(), None));
+        assert_eq!(off.center, Point::new(16.0, 16.0));
+        assert_eq!(on.center, Point::new(36.0, 16.0));
+        // Pressing grows the thumb in place.
+        let pressed = progress
+            .thumb()
+            .target(&at(&false, InteractionState::PRESSED, None));
+        assert_eq!(pressed.center, off.center);
+        assert_eq!(pressed.radius, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE / 2.0);
     }
 
     #[test]
-    fn switch_checked_icon_stages_with_material_timing() {
-        // Entering: 50ms delay then a 150ms linear ramp over the 200ms value
-        // animation. Exiting: gone within the first 50ms.
-        assert_eq!(switch_icon_opacity(0.25, true), 0.0);
-        assert!((switch_icon_opacity(0.625, true) - 0.5).abs() < 1e-6);
-        assert_eq!(switch_icon_opacity(1.0, true), 1.0);
-        assert!((switch_icon_opacity(0.9, false) - 0.6).abs() < 1e-6);
-        assert_eq!(switch_icon_opacity(0.75, false), 0.0);
-        assert_eq!(switch_icon_opacity(0.2, false), 0.0);
+    fn switch_thumb_mirrors_in_a_right_to_left_layout() {
+        let progress = progress(LayoutDirection::RightToLeft);
+        let off = progress
+            .thumb()
+            .target(&at(&false, InteractionState::empty(), None));
+        let on = progress
+            .thumb()
+            .target(&at(&true, InteractionState::empty(), None));
+        assert_eq!(off.center, Point::new(36.0, 16.0));
+        assert_eq!(on.center, Point::new(16.0, 16.0));
     }
 
     #[test]
-    fn selected_switch_draws_checkmark_icon_on_thumb() {
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
+    fn a_drag_moves_the_thumb_between_its_centres() {
+        let progress = progress(LayoutDirection::LeftToRight);
+        let halfway: Circle = progress.thumb().target(&at(
+            &false,
+            InteractionState::DRAGGED,
+            Some(Vec2::new(10.0, 0.0)),
+        ));
+        assert_eq!(halfway.center, Point::new(26.0, 16.0));
+    }
 
-        let selected = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                1.0,
-                true,
-                WidgetInteractionState::NONE,
-            );
-        }));
+    /// The border-width animates 2dp to 0 with the value transition, not the
+    /// outline's opacity.
+    #[test]
+    fn switch_outline_width_shrinks_with_progress() {
+        let progress = progress(LayoutDirection::LeftToRight);
+        let rest = &false;
         assert_eq!(
-            selected.path_stroke_count, 1,
-            "checked thumb shows the check glyph"
+            super::outline_width(progress, &at(rest, InteractionState::empty(), None)),
+            2.0
         );
-
-        let unselected = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                0.0,
-                false,
-                WidgetInteractionState::NONE,
-            );
-        }));
         assert_eq!(
-            unselected.path_stroke_count, 0,
-            "unselected thumb has no icon"
+            super::outline_width(
+                progress,
+                &at(
+                    &true,
+                    InteractionState::DRAGGED,
+                    Some(Vec2::new(-10.0, 0.0))
+                )
+            ),
+            1.0
         );
-    }
-
-    #[test]
-    fn toggle_metrics_include_material_label_spacing() {
-        let metrics = super::metrics(waterui_controls::toggle::ToggleStyle::Switch);
-
-        assert_eq!(metrics.label_spacing, TOGGLE_LABEL_SPACING);
-        assert_eq!(TOGGLE_LABEL_SPACING, 8.0);
+        assert_eq!(
+            super::outline_width(progress, &at(&true, InteractionState::empty(), None)),
+            0.0
+        );
     }
 
     #[test]
     fn disabled_material_switch_uses_disabled_palette() {
-        // the disabled Material switch: unchecked track surface-container-highest at
-        // 12% with an on-surface 12% outline and an on-surface 38% thumb;
-        // checked track on-surface at 12% with an opaque surface thumb.
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
-        let disabled = WidgetInteractionState {
-            state: InteractionState::DISABLED,
-            ..WidgetInteractionState::NONE
-        };
+        use crate::color::{OnSurface, SurfaceContainerHighest};
+        use crate::theme::colors::DISABLED_CONTAINER_OPACITY;
+        use waterui_core::Signal as _;
+        use waterui_graphics::color::Color;
 
-        let unchecked = Chrome::from(&recorded(|draw| {
-            draw_switch(&colors, draw, bounds, 0.0, false, disabled);
-        }));
-        assert_eq!(
-            unchecked.rounded_fill_brushes,
-            vec![crate::lerp_color(
-                colors
-                    .surface_container_highest
-                    .working_disabled_container(),
-                colors.on_surface.working_disabled_container(),
-                0.0,
-            )],
-            "disabled unchecked track drops to surface-container-highest at 12%"
+        let env = env();
+        let progress = progress(LayoutDirection::LeftToRight);
+        let paint = super::track_paint(progress, &env);
+        let disabled = InteractionState::DISABLED;
+        // Unchecked: surface-container-highest at 12%; checked: on-surface
+        // at 12%.
+        assert_close(
+            &paint.target(&at(&false, disabled, None)),
+            &Paint::from(
+                Color::from(SurfaceContainerHighest.with_opacity(DISABLED_CONTAINER_OPACITY))
+                    .resolve(&env)
+                    .snapshot(),
+            ),
         );
-        assert_eq!(
-            unchecked.rounded_stroke_brushes,
-            vec![colors.on_surface.working_disabled_container()],
-            "disabled unchecked outline drops to on-surface at 12%"
+        assert_close(
+            &paint.target(&at(&true, disabled, None)),
+            &Paint::from(
+                Color::from(OnSurface.with_opacity(DISABLED_CONTAINER_OPACITY))
+                    .resolve(&env)
+                    .snapshot(),
+            ),
         );
-        assert_eq!(
-            unchecked.circle_brushes,
-            vec![crate::lerp_color(
-                colors.on_surface.working_disabled_content(),
-                colors.surface.working(),
-                0.0,
-            )],
-            "disabled unchecked thumb drops to on-surface at 38%"
-        );
-
-        let checked = Chrome::from(&recorded(|draw| {
-            draw_switch(&colors, draw, bounds, 1.0, true, disabled);
-        }));
-        assert_eq!(
-            checked.rounded_fill_brushes,
-            vec![crate::lerp_color(
-                colors
-                    .surface_container_highest
-                    .working_disabled_container(),
-                colors.on_surface.working_disabled_container(),
-                1.0,
-            )],
-            "disabled checked track drops to on-surface at 12%"
-        );
-        assert_eq!(
-            checked.circle_brushes,
-            vec![crate::lerp_color(
-                colors.on_surface.working_disabled_content(),
-                colors.surface.working(),
-                1.0,
-            )],
-            "disabled checked thumb is the opaque surface color"
+        // Enabled and on, the track is primary.
+        assert_close(
+            &paint.target(&at(&true, InteractionState::empty(), None)),
+            &Paint::from(Color::from(Primary).resolve(&env).snapshot()),
         );
     }
 
+    /// Two solid paints equal to the blend's float rounding.
+    fn assert_close(got: &Paint, want: &Paint) {
+        let (Paint::Solid(got), Paint::Solid(want)) = (got, want) else {
+            panic!("a Material toggle paints solid colours, not {got:?} and {want:?}");
+        };
+        for (channel, expected) in got.components.iter().zip(want.components) {
+            assert!((channel - expected).abs() < 1e-5, "{got:?} is not {want:?}");
+        }
+    }
+
+    fn alpha(paint: Paint) -> f32 {
+        match paint {
+            Paint::Solid(color) => color.components[3],
+            other => panic!("a Material checkbox paints solid colours, not {other:?}"),
+        }
+    }
+
+    /// The unchecked outline fades out as the container fades in.
+    #[test]
+    fn checkbox_outline_and_container_trade_places() {
+        let env = env();
+        let progress = super::Progress {
+            drag: SwitchDrag::new(1.0, LayoutDirection::LeftToRight),
+            direction: LayoutDirection::LeftToRight,
+        };
+        let outline = super::checkbox_outline_paint(progress, &env);
+        let (fill, check) = super::checkbox_paints(progress, &env);
+        let rest = InteractionState::empty();
+        assert_eq!(alpha(outline.target(&at(&false, rest, None))), 1.0);
+        assert_eq!(alpha(outline.target(&at(&true, rest, None))), 0.0);
+        assert_eq!(alpha(fill.target(&at(&false, rest, None))), 0.0);
+        assert_eq!(alpha(fill.target(&at(&true, rest, None))), 1.0);
+        assert_eq!(alpha(check.target(&at(&true, rest, None))), 1.0);
+    }
+
+    /// Disabled, the unchecked outline drops to on-surface at 38% and the
+    /// checked container to on-surface at 38% under a surface check.
     #[test]
     fn disabled_material_checkbox_uses_disabled_palette() {
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (18.0, 18.0));
-        let disabled = WidgetInteractionState {
-            state: InteractionState::DISABLED,
-            ..WidgetInteractionState::NONE
+        use crate::color::{OnSurface, Surface};
+        use crate::theme::colors::DISABLED_CONTENT_OPACITY;
+        use waterui_core::Signal as _;
+        use waterui_graphics::color::Color;
+
+        let env = env();
+        let progress = super::Progress {
+            drag: SwitchDrag::new(1.0, LayoutDirection::LeftToRight),
+            direction: LayoutDirection::LeftToRight,
         };
-
-        let unchecked = Chrome::from(&recorded(|draw| {
-            draw_checkbox(&colors, draw, bounds, 0.0, disabled);
-        }));
-        assert_eq!(
-            unchecked.rounded_stroke_brushes,
-            vec![colors.on_surface.working_disabled_content()],
-            "disabled unchecked outline drops to on-surface at 38%"
+        let dim = Paint::from(
+            Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY))
+                .resolve(&env)
+                .snapshot(),
         );
-
-        let checked = Chrome::from(&recorded(|draw| {
-            draw_checkbox(&colors, draw, bounds, 1.0, disabled);
-        }));
-        assert_eq!(
-            checked.rounded_fill_brushes,
-            vec![colors.on_surface.working_disabled_content()],
-            "disabled checked container drops to on-surface at 38%"
-        );
-    }
-
-    #[test]
-    fn pressed_material_switch_uses_large_handle() {
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (52.0, 32.0));
-        let draw = Chrome::from(&recorded(|draw| {
-            draw_switch(
-                &colors,
-                draw,
-                bounds,
-                0.0,
-                false,
-                WidgetInteractionState {
-                    state: InteractionState::PRESSED,
-                    ..WidgetInteractionState::NONE
-                },
-            );
-        }));
-
-        assert_eq!(
-            draw.circle_radii,
-            vec![TOGGLE_SWITCH_PRESSED_HANDLE_SIZE / 2.0]
-        );
-    }
-
-    #[test]
-    fn selected_material_checkbox_has_no_outline() {
-        let colors = MaterialColorScheme::baseline_light();
-        let bounds = Rect::from_origin_size((0.0, 0.0), (18.0, 18.0));
-
-        let unselected = Chrome::from(&recorded(|draw| {
-            draw_checkbox(&colors, draw, bounds, 0.0, WidgetInteractionState::NONE);
-        }));
-
-        let selected = Chrome::from(&recorded(|draw| {
-            draw_checkbox(&colors, draw, bounds, 1.0, WidgetInteractionState::NONE);
-        }));
-
-        assert_eq!(unselected.rounded_stroke_count, 1);
-        assert_eq!(unselected.rounded_fill_count, 0);
-        assert_eq!(selected.rounded_stroke_count, 0);
-        assert_eq!(selected.rounded_fill_count, 1);
-        assert_eq!(selected.path_stroke_count, 1);
+        let surface = Paint::from(Color::from(Surface).resolve(&env).snapshot());
+        let disabled = InteractionState::DISABLED;
+        let outline = super::checkbox_outline_paint(progress, &env);
+        assert_eq!(outline.target(&at(&false, disabled, None)), dim);
+        let (fill, check) = super::checkbox_paints(progress, &env);
+        assert_eq!(fill.target(&at(&true, disabled, None)), dim);
+        assert_eq!(check.target(&at(&true, disabled, None)), surface);
     }
 }
