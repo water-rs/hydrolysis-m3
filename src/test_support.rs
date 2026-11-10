@@ -7,9 +7,7 @@
 //! the whole harness.
 
 use waterui_graphics::draw::kurbo::{Circle, Line, Rect, RoundedRectRadii};
-use waterui_graphics::draw::{
-    Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData, WorkingColor,
-};
+use waterui_graphics::draw::{Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData};
 
 /// The commands a theme draw recorded, split by shape.
 #[derive(Debug, Default)]
@@ -91,16 +89,4 @@ impl Recorded {
 pub(crate) fn recorded(body: impl FnOnce(&mut Recorder)) -> Recorded {
     let mut content = Content::record(&LayoutSize::new(), body);
     Recorded::from(&mut content)
-}
-
-/// The colour of a solid paint.
-///
-/// # Panics
-/// Panics when the paint is a gradient or image.
-#[allow(clippy::redundant_pub_crate, reason = "test-only module")]
-pub(crate) fn solid(paint: &Paint) -> WorkingColor {
-    let Paint::Solid(color) = paint else {
-        panic!("expected a solid paint, recorded {paint:?}");
-    };
-    *color
 }

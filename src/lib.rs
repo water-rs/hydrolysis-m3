@@ -57,20 +57,19 @@ use core::cell::OnceCell;
 use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
 
 pub use hydrolysis::theme::{
-    BadgeMetrics, ButtonLook, ButtonSpec, DividerMetrics, InputFieldMetrics,
+    BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, InputFieldMetrics,
     InteractionFocusBinding, InteractionMotion, ListDividerMetrics, ListMetrics, ListRowMetrics,
     ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction, NavigationMetrics,
     NavigationMotion, PickerMetrics, PressWave, PressWaves, ProgressIndicatorStyle,
     ProgressMetrics, ProgressMotion, RadioIndicatorState, RadioSelectionMotion, SliderLook,
-    SliderSpec, StepperEnd, StepperMetrics, TabItemGeometry, TabItemLayout,
-    TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleMetrics,
+    SliderSpec, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry, TabItemLayout,
+    TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
     WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal, SignalExt as _};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
-use waterui_controls::toggle::ToggleStyle;
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
@@ -472,54 +471,12 @@ impl WidgetTheme for Material3 {
         }
     }
 
-    fn toggle_metrics(&self, style: ToggleStyle) -> ToggleMetrics {
-        toggle::metrics(style)
+    fn switch(&self, spec: &ToggleSpec, env: &Environment) -> SwitchLook {
+        toggle::switch(spec, env)
     }
 
-    fn toggle_value_animation(&self) -> waterui::animation::Animation {
-        theme::motion::toggle_value()
-    }
-
-    fn draw_toggle_switch(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_switch(&self.colors(), draw, bounds, progress, selected, state);
-    }
-
-    fn draw_toggle_switch_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_switch_state_layer(&self.colors(), draw, bounds, progress, selected, state);
-    }
-
-    fn draw_toggle_checkbox(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_checkbox(&self.colors(), draw, bounds, progress, state);
-    }
-
-    fn draw_toggle_checkbox_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f32,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_checkbox_state_layer(&self.colors(), draw, bounds, progress, state);
+    fn checkbox(&self, spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
+        toggle::checkbox(spec, env)
     }
 
     fn stepper_metrics(&self) -> StepperMetrics {
@@ -950,8 +907,4 @@ fn lerp_color(start: WorkingColor, end: WorkingColor, t: f32) -> WorkingColor {
         lerp_channel(b0, b1, t),
         lerp_channel(a0, a1, t),
     ])
-}
-
-fn lerp_f64(start: f64, end: f64, t: f32) -> f64 {
-    (end - start).mul_add(f64::from(t.clamp(0.0, 1.0)), start)
 }
