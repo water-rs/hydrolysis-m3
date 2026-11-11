@@ -439,7 +439,9 @@ fn rich_tooltip_action(action: Option<(Label, SharedAction)>) -> impl View {
             0.0,
             0.0,
         ))
-        .on_tap(move |env: Environment| action.call(&env))
+        .on_tap(move |env: Environment| {
+            action.run(&env);
+        })
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .install(interaction_chrome_radius(Primary, 20.0))

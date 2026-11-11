@@ -10,7 +10,11 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{Rectangle, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
 use waterui_core::interaction::Disabled;
 use waterui_core::view::TupleViews;
 use waterui_graphics::draw::kurbo::RoundedRectRadii;
@@ -130,7 +134,7 @@ impl SegmentedButtonShape {
 }
 
 /// A Material Design 3 outlined segmented button.
-pub struct OutlinedSegmentedButton<Action = fn(&Environment)> {
+pub struct OutlinedSegmentedButton<Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     selected: Binding<bool>,
@@ -146,7 +150,7 @@ impl<Action> Debug for OutlinedSegmentedButton<Action> {
     }
 }
 
-impl OutlinedSegmentedButton<fn(&Environment)> {
+impl OutlinedSegmentedButton<NoAction> {
     /// Creates an outlined segmented button bound to the provided selected state.
     #[must_use]
     pub fn new(label: impl IntoLabel, selected: &Binding<bool>) -> Self {
@@ -186,7 +190,10 @@ impl<Action> OutlinedSegmentedButton<Action> {
 
     /// Sets the action performed after this button toggles its selected state.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> OutlinedSegmentedButton<impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> OutlinedSegmentedButton<impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -202,11 +209,13 @@ impl<Action> OutlinedSegmentedButton<Action> {
 
 impl<Action> View for OutlinedSegmentedButton<Action>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, env: &Environment) -> impl View {
         let mut action = self.action;
-        let action = SharedAction::new(move |env: Environment| action(&env));
+        let action = SharedAction::new(move |env: Environment| {
+            action(&env).report_extraction();
+        });
         let selected_for_view = self.selected.clone();
         let accessibility_state = self
             .selected
@@ -378,7 +387,7 @@ fn segmented_button_view(
         .background(shape.shape().fill(background))
         .on_tap(move |env: Environment| {
             selected_state.toggle();
-            action.call(&env);
+            action.run(&env);
         })
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
@@ -388,8 +397,6 @@ fn segmented_button_view(
             Corners::from(shape.interaction_radii()),
         ))
 }
-
-const fn noop(_env: &Environment) {}
 
 #[cfg(test)]
 mod tests {

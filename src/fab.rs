@@ -10,8 +10,9 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::style::FloatingStyle;
 use waterui::{Environment, Signal, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
+use crate::action::{NoAction, noop};
 use crate::color::{
     OnPrimaryContainer, OnSecondaryContainer, OnTertiaryContainer, Primary, PrimaryContainer,
     SecondaryContainer, SurfaceContainerHigh, TertiaryContainer,
@@ -180,7 +181,7 @@ impl FabVariantTokens for TertiaryFab {
 ///
 /// The default variant is `PrimaryFab`: `FloatingActionButtonDefaults
 /// .containerColor` resolves to `primaryContainer`.
-pub struct Fab<Content, Action = fn(&Environment), Tokens = PrimaryFab> {
+pub struct Fab<Content, Action = NoAction, Tokens = PrimaryFab> {
     accessibility_label: Str,
     content: Content,
     action: Action,
@@ -196,7 +197,7 @@ impl<Content, Action, Tokens> Debug for Fab<Content, Action, Tokens> {
     }
 }
 
-impl<Content> Fab<Content, fn(&Environment), PrimaryFab> {
+impl<Content> Fab<Content, NoAction, PrimaryFab> {
     /// Creates a primary FAB with arbitrary visual content.
     #[must_use]
     pub fn new(accessibility_label: impl Into<Str>, content: Content) -> Self {
@@ -254,7 +255,10 @@ impl<Content, Action, Tokens> Fab<Content, Action, Tokens> {
 
     /// Sets the action performed when the FAB is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> Fab<Content, impl FnMut(&Environment), Tokens>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> Fab<Content, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -271,7 +275,7 @@ impl<Content, Action, Tokens> Fab<Content, Action, Tokens> {
 impl<Content, Action, Tokens> View for Fab<Content, Action, Tokens>
 where
     Content: View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: FabVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -289,7 +293,9 @@ where
             .padding_with(size.icon_padding())
             .size(size.container, size.container)
             .floating_with(floating_style)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
@@ -301,7 +307,7 @@ where
 }
 
 /// A Material Design 3 extended floating action button.
-pub struct ExtendedFab<Action = fn(&Environment), Tokens = PrimaryFab> {
+pub struct ExtendedFab<Action = NoAction, Tokens = PrimaryFab> {
     label: Label,
     accessibility_label: Str,
     action: Action,
@@ -316,7 +322,7 @@ impl<Action, Tokens> Debug for ExtendedFab<Action, Tokens> {
     }
 }
 
-impl ExtendedFab<fn(&Environment), PrimaryFab> {
+impl ExtendedFab<NoAction, PrimaryFab> {
     /// Creates a primary extended FAB with a semantic text label.
     #[must_use]
     pub fn new(label: impl IntoLabel) -> Self {
@@ -367,7 +373,10 @@ impl<Action, Tokens> ExtendedFab<Action, Tokens> {
 
     /// Sets the action performed when the extended FAB is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> ExtendedFab<impl FnMut(&Environment), Tokens>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> ExtendedFab<impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -382,7 +391,7 @@ impl<Action, Tokens> ExtendedFab<Action, Tokens> {
 
 impl<Action, Tokens> View for ExtendedFab<Action, Tokens>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: FabVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -404,7 +413,9 @@ where
                 EXTENDED_FAB_TRAILING_SPACE,
             ))
             .floating_with(floating_style)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
@@ -414,8 +425,6 @@ where
             ))
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 pub(crate) fn theme() -> FloatingStyle {
     let size = FabSize::Baseline.tokens();

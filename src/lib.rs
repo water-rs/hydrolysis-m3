@@ -38,6 +38,7 @@ pub mod tooltip;
 #[cfg(test)]
 mod layout_test_support;
 
+mod action;
 mod controls;
 mod icon_paths;
 mod icons;

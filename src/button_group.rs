@@ -23,7 +23,7 @@ use waterui::shape::{ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
 use waterui_controls::button::Button;
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{BoxedAction, Handler, boxed_action};
+use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
@@ -258,7 +258,9 @@ impl View for ConnectedButtonGroup {
                             GesturePhase::Started | GesturePhase::Updated
                         ));
                     })
-                    .on_tap(move |env: Environment| action(&env))
+                    .on_tap(move |env: Environment| {
+                        action(&env).report_extraction();
+                    })
                     .a11y_role(AccessibilityRole::Button)
                     .a11y_state_signal(accessibility_state)
                     // The state layer traces the segment's resting shape.
@@ -442,7 +444,9 @@ impl View for ButtonGroup {
                                 GesturePhase::Started | GesturePhase::Updated
                             ));
                         })
-                        .on_tap(move |env: Environment| action(&env)),
+                        .on_tap(move |env: Environment| {
+                            action(&env).report_extraction();
+                        }),
                 )
             })
             .collect::<Vec<_>>();

@@ -10,8 +10,9 @@ use waterui::layout::frame::Frame;
 use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Environment, Str, View, ViewExt as _};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
+use crate::action::{NoAction, noop};
 use crate::color::{OnSurface, Outline};
 use crate::semantics::conditional_color;
 
@@ -32,7 +33,7 @@ const CONTAINER_WIDTH: f32 = 24.0;
 /// `DragHandleTokens` gives the pressed and dragged states identical geometry,
 /// so one `held` flag covers both.
 #[derive(Debug)]
-pub struct VerticalDragHandle<Action = fn(&Environment)> {
+pub struct VerticalDragHandle<Action = NoAction> {
     accessibility_label: Str,
     on_drag: Action,
 }
@@ -57,7 +58,10 @@ impl<Action> VerticalDragHandle<Action> {
     /// The handler receives the drag through the environment, so it can read
     /// the translation and phase and resize whatever the handle controls.
     #[must_use]
-    pub fn on_drag<F, Args>(self, action: F) -> VerticalDragHandle<impl FnMut(&Environment)>
+    pub fn on_drag<F, Args>(
+        self,
+        action: F,
+    ) -> VerticalDragHandle<impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -70,7 +74,7 @@ impl<Action> VerticalDragHandle<Action> {
 
 impl<Action> View for VerticalDragHandle<Action>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut on_drag = self.on_drag;
@@ -99,13 +103,11 @@ where
                     phase,
                     GesturePhase::Started | GesturePhase::Updated
                 ));
-                on_drag(&env);
+                on_drag(&env).report_extraction();
             })
             .a11y_label(self.accessibility_label)
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 vertical drag handle.
 #[must_use]
