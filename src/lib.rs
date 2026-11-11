@@ -55,8 +55,9 @@ pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use waterui_graphics::draw::{Paint, Recorder, WorkingColor};
+use hydrolysis::draw::{Paint, Recorder, WorkingColor};
 
+use hydrolysis::draw::kurbo::{Point, Rect};
 pub use hydrolysis::theme::{
     BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, IndicatorLook,
     InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
@@ -74,7 +75,6 @@ use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_core::Environment;
 use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
-use waterui_graphics::draw::kurbo::{Point, Rect};
 
 pub use button_group::{
     ButtonGroup, ConnectedButton, ConnectedButtonGroup, GroupButton, button_group,

@@ -10,11 +10,11 @@ use crate::navigation_rail::{COLLAPSED_ACTIVE_INDICATOR_HEIGHT, COLLAPSED_ACTIVE
 use crate::theme::colors::MaterialColorScheme;
 use crate::theme::state_layer;
 use crate::{TabItemGeometry, TabItemLayout, TabsMetrics, WidgetInteractionState};
+use hydrolysis::draw::kurbo::RoundedRect;
+use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
+use hydrolysis::draw::{Draw as _, Recorder};
 use waterui::interaction::InteractionState;
 use waterui::navigation::tab::NativeTabStyle;
-use waterui_graphics::draw::kurbo::RoundedRect;
-use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
-use waterui_graphics::draw::{Draw as _, Recorder};
 
 /// Whether the bar shows vertical or horizontal items. The M3 navigation bar
 /// switches to horizontal items at the medium window width class boundary —
@@ -137,9 +137,9 @@ mod tests {
         NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
         TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
     };
+    use hydrolysis::draw::kurbo::Rect;
     use hydrolysis::theme::{TabItemGeometry, TabItemLayout};
     use waterui::navigation::tab::NativeTabStyle;
-    use waterui_graphics::draw::kurbo::Rect;
 
     #[test]
     fn primary_tab_metrics_match_compose_primary_navigation_tab_tokens() {

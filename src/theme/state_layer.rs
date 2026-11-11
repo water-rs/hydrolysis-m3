@@ -1,8 +1,8 @@
 use crate::{PressWave, PressWaves, WidgetInteractionState};
+use hydrolysis::draw::kurbo::{Circle, RoundedRect};
+use hydrolysis::draw::kurbo::{Point, Rect, RoundedRectRadii};
+use hydrolysis::draw::{Draw as _, Paint, Recorder, WorkingColor};
 use waterui::interaction::InteractionState;
-use waterui_graphics::draw::kurbo::{Circle, RoundedRect};
-use waterui_graphics::draw::kurbo::{Point, Rect, RoundedRectRadii};
-use waterui_graphics::draw::{Draw as _, Paint, Recorder, WorkingColor};
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
 /// targets still produce a ripple at least this wide.
@@ -182,14 +182,14 @@ pub fn draw_unbounded_circle(
 mod tests {
     use super::{PRESSED_STATE_LAYER_OPACITY, RIPPLE_MINIMUM_DIAMETER, ripple_diameter};
     use crate::{PressWave, PressWaves, WidgetInteractionState, theme::state_layer};
+    use hydrolysis::draw::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
+    use hydrolysis::draw::{
+        Command, Content, Draw as _, LayoutSize, Paint, Recorder, ShapeData, WorkingColor,
+    };
     use waterui::Environment;
     use waterui::interaction::InteractionState;
     use waterui::reactive::constant;
     use waterui_core::layout::Size;
-    use waterui_graphics::draw::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii};
-    use waterui_graphics::draw::{
-        Command, Content, Draw as _, LayoutSize, Paint, Recorder, ShapeData, WorkingColor,
-    };
     use waterui_testing::{TestHost, TestStyle};
 
     #[test]
@@ -440,7 +440,7 @@ mod tests {
     #[ignore = "writes a visual acceptance PNG for direct image review"]
     fn material_ripple_visual_snapshot() {
         let bounds = Rect::new(24.0, 24.0, 216.0, 96.0);
-        let card = waterui_graphics::draw::Picture::record(|draw| {
+        let card = hydrolysis::draw::Picture::record(|draw| {
             draw.fill(
                 RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(20.0)),
                 WorkingColor::new([0.40, 0.31, 0.64, 1.0]),
@@ -466,15 +466,15 @@ mod tests {
             );
         })
         .into_picture();
-        let recording = waterui_graphics::Picture::record(|draw| {
+        let recording = waterui_graphics::backend::Picture::record(|draw| {
             draw.fill(Rect::new(0.0, 0.0, 240.0, 120.0), WorkingColor::WHITE);
-            draw.picture(&card, waterui_graphics::draw::kurbo::Affine::IDENTITY);
-            draw.picture(&ripple, waterui_graphics::draw::kurbo::Affine::IDENTITY);
+            draw.picture(&card, hydrolysis::draw::kurbo::Affine::IDENTITY);
+            draw.picture(&ripple, hydrolysis::draw::kurbo::Affine::IDENTITY);
         });
 
         let host = TestHost::new(Environment::new(), 240, 120, TestStyle::new());
         host.capture_snapshot(
-            waterui_graphics::Picture::new(Size::new(240.0, 120.0), constant(recording)),
+            waterui_graphics::backend::Picture::new(Size::new(240.0, 120.0), constant(recording)),
             "hydrolysis-m3-visual",
             "material-ripple",
             "solid",

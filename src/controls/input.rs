@@ -6,12 +6,12 @@ use crate::dimensions::{
 };
 use crate::theme::colors::MaterialColorScheme;
 use crate::{InputFieldMetrics, WidgetInteractionState};
+use hydrolysis::draw::kurbo::{Line, RoundedRect, Stroke};
+use hydrolysis::draw::kurbo::{Point, Rect, RoundedRectRadii};
+use hydrolysis::draw::{Draw as _, Paint, Recorder, WorkingColor};
 use material_color_utils::utils::color_utils::Argb;
 use waterui::interaction::InteractionState;
 use waterui_graphics::color::Color;
-use waterui_graphics::draw::kurbo::{Line, RoundedRect, Stroke};
-use waterui_graphics::draw::kurbo::{Point, Rect, RoundedRectRadii};
-use waterui_graphics::draw::{Draw as _, Paint, Recorder, WorkingColor};
 
 const INPUT_SELECTION_ALPHA: f32 = 0.28;
 
@@ -130,7 +130,7 @@ pub fn draw_state_layer(
         0.0,
     );
     draw.clip(
-        waterui_graphics::draw::kurbo::RoundedRect::from_rect(bounds, radii),
+        hydrolysis::draw::kurbo::RoundedRect::from_rect(bounds, radii),
         |draw| {
             draw.fill(
                 bounds,
@@ -146,9 +146,9 @@ pub fn draw_state_layer(
 #[cfg(test)]
 mod tests {
     use crate::test_support::recorded;
+    use hydrolysis::draw::Paint;
+    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
     use waterui::interaction::InteractionState;
-    use waterui_graphics::draw::Paint;
-    use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
 
     use super::{
         MaterialColorScheme, WidgetInteractionState, caret_brush, draw_field, metrics,

@@ -1,8 +1,8 @@
 use crate::dimensions::SCROLL_INDICATOR_CORNER_RADIUS;
 use crate::theme::colors::MaterialColorScheme;
-use waterui_graphics::draw::kurbo::Rect;
-use waterui_graphics::draw::kurbo::{RoundedRect, RoundedRectRadii};
-use waterui_graphics::draw::{Draw as _, Recorder};
+use hydrolysis::draw::kurbo::Rect;
+use hydrolysis::draw::kurbo::{RoundedRect, RoundedRectRadii};
+use hydrolysis::draw::{Draw as _, Recorder};
 
 pub fn draw_indicator(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
     draw.fill(

@@ -34,9 +34,6 @@ image = { version = "0.25.10", default-features = false, features = ["png"] }
 # Per-frame gesture observations in the touch-scroll tests go through the
 # diagnostics channel, not stdout.
 tracing = "0.1"
-# The theme itself draws into the scene directly; only the shape gallery test
-# authors a canvas.
-waterui-canvas = "0.2.0"
 # nami 0.12 renamed `Signal::get` to `snapshot`; waterkit consumers of
 # `Subscribed` need the migrated source too.
 waterkit-core = "0.1.4"
@@ -90,7 +87,7 @@ multiple_crate_versions = "allow"
 [patch.crates-io]
 
 # The render-target-neutral recording contract (water-rs/waterui#1435):
-# `SceneContent::build_scene` records into `waterui_graphics::draw`
+# `SceneContent::build_scene` records into `hydrolysis::draw`
 # (`cherenkov_record::Recorder`) and `SceneResources::new` takes the target's
 # `SceneBackend`/`ShaderBackend` registry. Cherenkov, filtrate and hydrolysis
 # live in that repository — the engine family under `graphics/` and the
@@ -169,7 +166,6 @@ wgpu-hal = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-share
 wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 wgpu-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 
-waterui-canvas = { git = "https://github.com/water-rs/canvas", branch = "dev" }
 waterui-image = { git = "https://github.com/water-rs/image", branch = "dev" }
 waterui-chart = { git = "https://github.com/water-rs/chart", branch = "dev" }
 waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "dev" }

@@ -1,7 +1,7 @@
+use hydrolysis::draw::kurbo::{Circle, RoundedRect};
+use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
+use hydrolysis::draw::{Draw as _, Recorder};
 use hydrolysis::theme::BadgeMetrics;
-use waterui_graphics::draw::kurbo::{Circle, RoundedRect};
-use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
-use waterui_graphics::draw::{Draw as _, Recorder};
 
 use crate::theme::colors::MaterialColorScheme;
 
