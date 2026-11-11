@@ -62,7 +62,7 @@ pub use hydrolysis::theme::{
     ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
     ListTrailingControlMetrics, ModalInteraction, NavigationMetrics, NavigationMotion,
     PickerMetrics, PressWave, PressWaves, ProgressSpec, RadioIndicatorState, RadioSelectionMotion,
-    SliderLook, SliderSpec, StepperEnd, StepperMetrics, SwitchLook, TabItemGeometry, TabItemLayout,
+    SliderLook, SliderSpec, StepperLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout,
     TableMetrics, TabsMetrics, TextCaretMotion, TextContextMenuMetrics, ToggleSpec,
     WidgetInteractionState, WidgetTheme,
 };
@@ -475,36 +475,8 @@ impl WidgetTheme for Material3 {
         toggle::checkbox(spec, env)
     }
 
-    fn stepper_metrics(&self) -> StepperMetrics {
-        stepper::metrics()
-    }
-
-    fn draw_stepper_button(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        end: StepperEnd,
-        state: WidgetInteractionState,
-    ) {
-        stepper::draw_button(&self.colors(), draw, bounds, end, state);
-    }
-
-    fn draw_stepper_decrement_icon(&self, draw: &mut Recorder, bounds: Rect) {
-        stepper::draw_decrement_icon(&self.colors(), draw, bounds);
-    }
-
-    fn draw_stepper_increment_icon(&self, draw: &mut Recorder, bounds: Rect) {
-        stepper::draw_increment_icon(&self.colors(), draw, bounds);
-    }
-
-    fn draw_stepper_button_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        end: StepperEnd,
-        state: WidgetInteractionState,
-    ) {
-        stepper::draw_button_state_layer(&self.colors(), draw, bounds, end, state);
+    fn stepper(&self, spec: &StepperSpec, env: &Environment) -> StepperLook {
+        stepper::look(spec, env)
     }
 
     fn input_field_metrics(&self) -> InputFieldMetrics {
