@@ -22,7 +22,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
-use waterui_graphics::draw::kurbo::RoundedRectRadii;
+use hydrolysis::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
 use crate::semantics::interaction_chrome;

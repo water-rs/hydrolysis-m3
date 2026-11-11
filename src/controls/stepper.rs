@@ -10,6 +10,8 @@
 //! icon is a part of it, and an end at the limit of the range is disabled, so
 //! it reads in the disabled colours.
 
+use hydrolysis::draw::kurbo::{BezPath, Rect, RoundedRectRadii, Size};
+use hydrolysis::draw::{Draw as _, Paint};
 use hydrolysis::theme::{
     Chrome, CornerShape, Corners, Custom, Driven, Inputs, StepperLook, StepperSpec, Surface,
 };
@@ -17,8 +19,6 @@ use waterui::interaction::InteractionState;
 use waterui_core::Environment;
 use waterui_core::layout::LayoutDirection;
 use waterui_graphics::color::Color;
-use waterui_graphics::draw::kurbo::{BezPath, Rect, RoundedRectRadii, Size};
-use waterui_graphics::draw::{Draw as _, Paint};
 
 use crate::color::{OnSurface, OnSurfaceVariant, SurfaceContainer};
 use crate::controls::button::{disabled_paint, interactive};
@@ -130,11 +130,11 @@ mod tests {
         STEPPER_INNER_CORNER_RADIUS, STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
     };
     use hydrolysis::Style as _;
+    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
     use hydrolysis::theme::{Corners, Inputs, SpecTint, StepperSpec};
     use waterui::interaction::InteractionState;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;
-    use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
 
     const BOUNDS: Rect = Rect::new(0.0, 0.0, 40.0, 40.0);
 

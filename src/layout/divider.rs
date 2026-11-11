@@ -1,7 +1,7 @@
 use crate::DividerMetrics;
 use crate::theme::colors::MaterialColorScheme;
-use waterui_graphics::draw::kurbo::Rect;
-use waterui_graphics::draw::{Draw as _, Recorder};
+use hydrolysis::draw::kurbo::Rect;
+use hydrolysis::draw::{Draw as _, Recorder};
 
 pub const fn metrics() -> DividerMetrics {
     DividerMetrics::new(crate::dimensions::DIVIDER_THICKNESS)

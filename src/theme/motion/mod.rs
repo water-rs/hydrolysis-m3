@@ -8,6 +8,7 @@ pub mod tokens;
 
 use core::time::Duration;
 
+use hydrolysis::draw::kurbo::Size;
 use hydrolysis::theme::{
     HitRegion, InteractionMotion, Motion, NavigationMotion, RadioSelectionMotion, Ripple,
     TextCaretMotion, Transition, ValueMotion,
@@ -16,7 +17,6 @@ use waterui::animation::Animation;
 use waterui::easing::EasingCurve;
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
-use waterui_graphics::draw::kurbo::Size;
 
 use super::dimensions::{MINIMUM_TOUCH_TARGET, NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE};
 use super::state_layer;

@@ -1,3 +1,4 @@
+use hydrolysis::draw::WorkingColor;
 use hydrolysis::theme::{
     Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
@@ -7,7 +8,6 @@ use waterui::text::font::{Font, ResolvedFont};
 use waterui::{Environment, Signal as _, Str};
 use waterui_controls::label::Label;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::draw::WorkingColor;
 
 use crate::color::Secondary;
 use crate::theme::{motion, state_layer};

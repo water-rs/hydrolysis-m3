@@ -10,20 +10,20 @@
 use core::f64::consts::{FRAC_PI_2, TAU};
 use core::time::Duration;
 
+use hydrolysis::draw::kurbo::{
+    Affine, Arc, BezPath, Circle, Point, Rect, RoundedRect, RoundedRectRadii, Shape as _, Size,
+    Stroke,
+};
+use hydrolysis::draw::{
+    Curve, Draw as _, Easing, Fixed, Keyframes, Live, Paint, Recorder, Repeat, ShapeData, Spring,
+    WorkingColor,
+};
 use hydrolysis::theme::{
     Custom, Driven, IndicatorLook, Inputs, LinearProgressLook, ProgressControl, ProgressSpec,
 };
 use waterui_core::Environment;
 use waterui_core::SignalExt as _;
 use waterui_graphics::color::Color;
-use waterui_graphics::draw::kurbo::{
-    Affine, Arc, BezPath, Circle, Point, Rect, RoundedRect, RoundedRectRadii, Shape as _, Size,
-    Stroke,
-};
-use waterui_graphics::draw::{
-    Curve, Draw as _, Easing, Fixed, Keyframes, Live, Paint, Recorder, Repeat, ShapeData, Spring,
-    WorkingColor,
-};
 
 use crate::color::{
     Primary, PrimaryContainer, SurfaceContainerHighest, Tertiary, TertiaryContainer,
@@ -814,9 +814,9 @@ fn loading_part(spec: &ProgressSpec, env: &Environment) -> Blob {
 mod tests {
     use super::*;
     use hydrolysis::Style as _;
+    use hydrolysis::draw::curve_value;
     use hydrolysis::theme::SpecTint;
     use waterui_core::layout::LayoutDirection;
-    use waterui_graphics::draw::curve_value;
 
     fn env() -> Environment {
         let mut env = Environment::new();

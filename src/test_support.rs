@@ -6,8 +6,8 @@
 //! through [`recorded`]: `recorded(|draw| draw_chrome(&colors, draw, …))` is
 //! the whole harness.
 
-use waterui_graphics::draw::kurbo::{Circle, Line, Rect, RoundedRectRadii};
-use waterui_graphics::draw::{Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData};
+use hydrolysis::draw::kurbo::{Circle, Line, Rect, RoundedRectRadii};
+use hydrolysis::draw::{Command, Content, LayoutSize, Paint, Recorder, Shadow, ShapeData};
 
 /// The commands a theme draw recorded, split by shape.
 #[derive(Debug, Default)]

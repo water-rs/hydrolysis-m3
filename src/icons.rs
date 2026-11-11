@@ -8,12 +8,12 @@
 use core::cell::Cell;
 use std::rc::Rc;
 
+use hydrolysis::draw::kurbo::{BezPath, Cap, Join, Point, Stroke};
+use hydrolysis::draw::{Draw as _, Recorder, WorkingColor};
 use waterui::{Environment, View, ViewExt as _};
 use waterui_core::Signal;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::draw::kurbo::{BezPath, Cap, Join, Point, Stroke};
-use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
-use waterui_graphics::{RecordingResources, SceneContent, SceneInvalidator, SceneView};
+use waterui_graphics::backend::{RecordingResources, SceneContent, SceneInvalidator, SceneView};
 
 /// The miter limit Material icon strokes are authored against.
 const MITER_LIMIT: f64 = 10.0;

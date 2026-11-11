@@ -24,7 +24,7 @@
 //! `MaterialShapes.kt`'s `customPolygon`, whose repetition and mirroring
 //! [`RoundedPolygon::repeated`] reproduces.
 
-use waterui_graphics::draw::kurbo::{BezPath, Point, Vec2};
+use hydrolysis::draw::kurbo::{BezPath, Point, Vec2};
 
 /// How many angles each shape is sampled at. The outlines are smooth and the
 /// indicator is drawn small, so this is well past the point of visible facets.
@@ -415,8 +415,7 @@ fn append_arc(path: &mut BezPath, centre: Point, start: Point, end: Point) {
     // Wrap the sweep into -PI..=PI so the arc takes the short way round.
     let raw = end_angle - start_angle;
     let sweep = core::f64::consts::TAU.mul_add(-(raw / core::f64::consts::TAU).round(), raw);
-    let arc =
-        waterui_graphics::draw::kurbo::Arc::new(centre, (radius, radius), start_angle, sweep, 0.0);
+    let arc = hydrolysis::draw::kurbo::Arc::new(centre, (radius, radius), start_angle, sweep, 0.0);
     arc.to_cubic_beziers(ARC_TOLERANCE, |p1, p2, p3| {
         path.curve_to(p1, p2, p3);
     });
@@ -426,9 +425,9 @@ fn append_arc(path: &mut BezPath, centre: Point, start: Point, end: Point) {
 fn flatten(path: &BezPath) -> Vec<Point> {
     const TOLERANCE: f64 = 0.001;
     let mut points = Vec::new();
-    waterui_graphics::draw::kurbo::flatten(path.iter(), TOLERANCE, |element| match element {
-        waterui_graphics::draw::kurbo::PathEl::MoveTo(point)
-        | waterui_graphics::draw::kurbo::PathEl::LineTo(point) => {
+    hydrolysis::draw::kurbo::flatten(path.iter(), TOLERANCE, |element| match element {
+        hydrolysis::draw::kurbo::PathEl::MoveTo(point)
+        | hydrolysis::draw::kurbo::PathEl::LineTo(point) => {
             points.push(point);
         }
         _ => {}

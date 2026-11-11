@@ -10,8 +10,8 @@ use crate::dimensions::{
 };
 use crate::icon_paths::{self, IconGrid};
 use crate::theme::colors::MaterialColorScheme;
-use waterui_graphics::draw::kurbo::{Point, Rect};
-use waterui_graphics::draw::{Draw as _, Paint, Recorder};
+use hydrolysis::draw::kurbo::{Point, Rect};
+use hydrolysis::draw::{Draw as _, Paint, Recorder};
 
 pub const fn metrics() -> NavigationMetrics {
     NavigationMetrics {

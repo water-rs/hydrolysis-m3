@@ -2,8 +2,8 @@
 
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
+use hydrolysis::draw::kurbo::Size;
 use hydrolysis::theme::{ButtonLook, ButtonSpec, CornerShape, Corners, Surface};
-use waterui_graphics::draw::kurbo::Size;
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::border::Border;
@@ -509,12 +509,12 @@ mod tests {
         look,
     };
     use hydrolysis::Style as _;
+    use hydrolysis::draw::kurbo::{Rect, Size, Vec2};
     use hydrolysis::theme::{ButtonSpec, Fill, Inputs, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
     use waterui_core::layout::LayoutDirection;
-    use waterui_graphics::draw::kurbo::{Rect, Size, Vec2};
 
     fn icon_look(style: ButtonStyle, size: ControlSize) -> hydrolysis::theme::ButtonLook {
         let mut env = waterui::Environment::new();
@@ -579,7 +579,7 @@ mod tests {
         );
         assert_eq!(
             fill.target(&rest),
-            waterui_graphics::draw::Paint::from(waterui_graphics::draw::WorkingColor::TRANSPARENT,)
+            hydrolysis::draw::Paint::from(hydrolysis::draw::WorkingColor::TRANSPARENT,)
         );
         let mut env = waterui::Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
@@ -599,7 +599,7 @@ mod tests {
         };
         assert_eq!(
             fill.target(&rest),
-            waterui_graphics::draw::Paint::from(colors.primary.working())
+            hydrolysis::draw::Paint::from(colors.primary.working())
         );
     }
 
@@ -664,8 +664,8 @@ mod tests {
         use super::{IconButtonVariantTokens, SelectedOutlinedIconButton};
         use crate::{Material3, theme::colors::MaterialColorScheme};
         use hydrolysis::Style as _;
+        use hydrolysis::draw::WorkingColor;
         use waterui::{Environment, Signal};
-        use waterui_graphics::draw::WorkingColor;
 
         fn assert_resolves_to(actual: WorkingColor, expected: WorkingColor) {
             assert_eq!(

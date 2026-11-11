@@ -11,10 +11,10 @@ use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
 use crate::{PickerMetrics, RadioIndicatorState, WidgetInteractionState};
+use hydrolysis::draw::kurbo::{Circle, Line, RoundedRect, RoundedRectRadii, Stroke};
+use hydrolysis::draw::{Draw as _, Recorder, WorkingColor};
 use num_traits::ToPrimitive;
 use waterui_form::picker::PickerStyle;
-use waterui_graphics::draw::kurbo::{Circle, Line, RoundedRect, RoundedRectRadii, Stroke};
-use waterui_graphics::draw::{Draw as _, Recorder, WorkingColor};
 
 pub fn metrics(style: PickerStyle) -> PickerMetrics {
     match style {
@@ -82,22 +82,24 @@ const fn segmented_metrics() -> PickerMetrics {
 pub fn draw_indicator(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
+    bounds: hydrolysis::draw::kurbo::Rect,
 ) {
     let center_x = PICKER_INDICATOR_SPACE.mul_add(-0.5, bounds.x1 - PICKER_HORIZONTAL_INSET);
     let center_y = bounds.height().mul_add(0.5, bounds.y0);
-    let chevron =
-        waterui_graphics::draw::kurbo::BezPath::from_vec(vec![
-            waterui_graphics::draw::kurbo::PathEl::MoveTo(
-                waterui_graphics::draw::kurbo::Point::new(center_x - 4.0, center_y - 2.0),
-            ),
-            waterui_graphics::draw::kurbo::PathEl::LineTo(
-                waterui_graphics::draw::kurbo::Point::new(center_x, center_y + 2.0),
-            ),
-            waterui_graphics::draw::kurbo::PathEl::LineTo(
-                waterui_graphics::draw::kurbo::Point::new(center_x + 4.0, center_y - 2.0),
-            ),
-        ]);
+    let chevron = hydrolysis::draw::kurbo::BezPath::from_vec(vec![
+        hydrolysis::draw::kurbo::PathEl::MoveTo(hydrolysis::draw::kurbo::Point::new(
+            center_x - 4.0,
+            center_y - 2.0,
+        )),
+        hydrolysis::draw::kurbo::PathEl::LineTo(hydrolysis::draw::kurbo::Point::new(
+            center_x,
+            center_y + 2.0,
+        )),
+        hydrolysis::draw::kurbo::PathEl::LineTo(hydrolysis::draw::kurbo::Point::new(
+            center_x + 4.0,
+            center_y - 2.0,
+        )),
+    ]);
     draw.stroke(
         chevron,
         Stroke::new(1.5),
@@ -108,7 +110,7 @@ pub fn draw_indicator(
 pub fn draw_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
+    bounds: hydrolysis::draw::kurbo::Rect,
     state: WidgetInteractionState,
 ) {
     // md.comp.filled-select menu field: container shape is
@@ -125,7 +127,7 @@ pub fn draw_state_layer(
 pub fn draw_popup(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    popup_rect: waterui_graphics::draw::kurbo::Rect,
+    popup_rect: hydrolysis::draw::kurbo::Rect,
 ) {
     let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
     // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
@@ -146,13 +148,13 @@ pub fn draw_popup(
 pub fn draw_popup_row_background(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    row_rect: waterui_graphics::draw::kurbo::Rect,
+    row_rect: hydrolysis::draw::kurbo::Rect,
     selected: bool,
 ) {
     if !selected {
         return;
     }
-    let inset = waterui_graphics::draw::kurbo::Rect::new(
+    let inset = hydrolysis::draw::kurbo::Rect::new(
         row_rect.x0 + 2.0,
         row_rect.y0 + 1.0,
         row_rect.x1 - 2.0,
@@ -164,11 +166,11 @@ pub fn draw_popup_row_background(
 pub fn draw_popup_row_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    row_rect: waterui_graphics::draw::kurbo::Rect,
+    row_rect: hydrolysis::draw::kurbo::Rect,
     _selected: bool,
     state: WidgetInteractionState,
 ) {
-    let inset = waterui_graphics::draw::kurbo::Rect::new(
+    let inset = hydrolysis::draw::kurbo::Rect::new(
         row_rect.x0 + 2.0,
         row_rect.y0 + 1.0,
         row_rect.x1 - 2.0,
@@ -183,7 +185,7 @@ pub fn draw_popup_row_state_layer(
 pub fn draw_separator(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    separator: waterui_graphics::draw::kurbo::Rect,
+    separator: hydrolysis::draw::kurbo::Rect,
 ) {
     // md.comp.filled-select.menu.divider.color = surface-variant.
     draw.fill(separator, colors.surface_variant.working());
@@ -192,7 +194,7 @@ pub fn draw_separator(
 pub fn draw_radio_indicator(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    center: waterui_graphics::draw::kurbo::Point,
+    center: hydrolysis::draw::kurbo::Point,
     radius: f64,
     state: RadioIndicatorState,
 ) {
@@ -225,7 +227,7 @@ fn blend_role_color(from: MaterialRoleColor, to: MaterialRoleColor, progress: f3
 pub fn draw_radio_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    center: waterui_graphics::draw::kurbo::Point,
+    center: hydrolysis::draw::kurbo::Point,
     _radius: f64,
     selected: bool,
     state: WidgetInteractionState,
@@ -257,7 +259,7 @@ pub fn segmented_label_color(
 pub fn draw_segmented_container(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
+    bounds: hydrolysis::draw::kurbo::Rect,
     segment_count: usize,
 ) {
     draw.stroke(
@@ -284,8 +286,8 @@ pub fn draw_segmented_container(
         );
         draw.stroke(
             Line::new(
-                waterui_graphics::draw::kurbo::Point::new(x, bounds.y0),
-                waterui_graphics::draw::kurbo::Point::new(x, bounds.y1),
+                hydrolysis::draw::kurbo::Point::new(x, bounds.y0),
+                hydrolysis::draw::kurbo::Point::new(x, bounds.y1),
             ),
             Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH),
             colors.outline.working(),
@@ -297,29 +299,22 @@ pub fn draw_segmented_container(
 /// outside edge of each end segment takes the group's full rounding — the
 /// first item rounds its leading corners, the last its trailing corners, and
 /// middle items stay square against the separator strokes.
-const fn segment_radii(
-    is_first: bool,
-    is_last: bool,
-) -> waterui_graphics::draw::kurbo::RoundedRectRadii {
+const fn segment_radii(is_first: bool, is_last: bool) -> hydrolysis::draw::kurbo::RoundedRectRadii {
     let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
     match (is_first, is_last) {
         (true, true) => {
-            waterui_graphics::draw::kurbo::RoundedRectRadii::new(radius, radius, radius, radius)
+            hydrolysis::draw::kurbo::RoundedRectRadii::new(radius, radius, radius, radius)
         }
-        (true, false) => {
-            waterui_graphics::draw::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius)
-        }
-        (false, true) => {
-            waterui_graphics::draw::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0)
-        }
-        (false, false) => waterui_graphics::draw::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
+        (true, false) => hydrolysis::draw::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
+        (false, true) => hydrolysis::draw::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
+        (false, false) => hydrolysis::draw::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
     }
 }
 
 pub fn draw_segmented_segment(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
+    bounds: hydrolysis::draw::kurbo::Rect,
     selected: bool,
     is_first: bool,
     is_last: bool,
@@ -336,7 +331,7 @@ pub fn draw_segmented_segment(
 pub fn draw_segmented_state_layer(
     colors: &MaterialColorScheme,
     draw: &mut Recorder,
-    bounds: waterui_graphics::draw::kurbo::Rect,
+    bounds: hydrolysis::draw::kurbo::Rect,
     selected: bool,
     is_first: bool,
     is_last: bool,
@@ -357,8 +352,8 @@ pub fn draw_segmented_state_layer(
 
 #[cfg(test)]
 mod tests {
-    use waterui_graphics::draw::kurbo::{Point, Rect, RoundedRectRadii};
-    use waterui_graphics::draw::{
+    use hydrolysis::draw::kurbo::{Point, Rect, RoundedRectRadii};
+    use hydrolysis::draw::{
         Command, Content, LayoutSize, Paint, Recorder, ShapeData, WorkingColor as Color,
     };
 

@@ -7,10 +7,10 @@ use crate::dimensions::{
 };
 use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::MaterialColorScheme;
-use waterui_graphics::draw::kurbo::RoundedRect;
-use waterui_graphics::draw::{Draw as _, Recorder};
+use hydrolysis::draw::kurbo::RoundedRect;
+use hydrolysis::draw::{Draw as _, Recorder};
 
-use waterui_graphics::draw::kurbo::{Rect, RoundedRectRadii};
+use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
 
 pub const fn text_context_metrics() -> TextContextMenuMetrics {
     TextContextMenuMetrics {

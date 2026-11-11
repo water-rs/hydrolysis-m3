@@ -234,7 +234,7 @@ impl MaterialListItem {
         // container and its state layer rest at corner-extra-small (8), morph
         // to corner-medium (12) hovered and corner-large (16)
         // pressed/focused/dragged.
-        let radii = |r: f64| waterui_graphics::draw::kurbo::RoundedRectRadii::from(r);
+        let radii = |r: f64| hydrolysis::draw::kurbo::RoundedRectRadii::from(r);
         let state_layer_radii = StateValue::new(radii(8.0))
             .when(InteractionState::DRAGGED, radii(16.0))
             .when(InteractionState::PRESSED, radii(16.0))

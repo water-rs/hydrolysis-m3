@@ -1,10 +1,10 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
+use hydrolysis::draw::Draw as _;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
-use waterui_graphics::draw::Draw as _;
 
 use crate::color::Shadow;
 
@@ -188,12 +188,12 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
 /// role, as the elevation of a control's chrome.
 pub(crate) fn chrome_elevation(
     level: MaterialElevationLevel,
-    shadow: waterui_graphics::draw::WorkingColor,
+    shadow: hydrolysis::draw::WorkingColor,
 ) -> hydrolysis::theme::Elevation {
     let tokens = ElevationTokens::for_level(level);
-    let cast = |token: ElevationShadow, base_opacity| waterui_graphics::draw::Shadow {
+    let cast = |token: ElevationShadow, base_opacity| hydrolysis::draw::Shadow {
         sigma: f64::from(token.blur),
-        offset: waterui_graphics::draw::kurbo::Vec2::new(0.0, f64::from(token.y)),
+        offset: hydrolysis::draw::kurbo::Vec2::new(0.0, f64::from(token.y)),
         spread: 0.0,
         color: shadow.with_alpha(token.opacity(base_opacity)),
     };
@@ -207,19 +207,19 @@ pub(crate) fn chrome_elevation(
 /// into `draw`. `colors` resolves the `shadow` role — the same role
 /// [`Shadow`] resolves through the environment — at draw time.
 pub(crate) fn draw_shadows(
-    draw: &mut waterui_graphics::draw::Recorder,
-    rect: waterui_graphics::draw::kurbo::Rect,
-    radii: waterui_graphics::draw::kurbo::RoundedRectRadii,
+    draw: &mut hydrolysis::draw::Recorder,
+    rect: hydrolysis::draw::kurbo::Rect,
+    radii: hydrolysis::draw::kurbo::RoundedRectRadii,
     level: MaterialElevationLevel,
     colors: &crate::theme::colors::MaterialColorScheme,
 ) {
     let tokens = ElevationTokens::for_level(level);
     for (shadow, base_opacity) in [(tokens.key, KEY_OPACITY), (tokens.ambient, AMBIENT_OPACITY)] {
         draw.shadow(
-            waterui_graphics::draw::kurbo::RoundedRect::from_rect(rect, radii),
-            waterui_graphics::draw::Shadow {
+            hydrolysis::draw::kurbo::RoundedRect::from_rect(rect, radii),
+            hydrolysis::draw::Shadow {
                 sigma: f64::from(shadow.blur),
-                offset: waterui_graphics::draw::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
+                offset: hydrolysis::draw::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
                 spread: 0.0,
                 color: colors
                     .shadow
