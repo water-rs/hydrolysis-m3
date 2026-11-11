@@ -27,13 +27,17 @@ fn install<T: 'static>(env: &mut Environment, value: ResolvedFont) {
     install_font_signal::<T>(env, Computed::constant(value));
 }
 
+/// Fills `WaterUI`'s slots with Material's type-scale tokens in the slots'
+/// order, Title > Headline > Body >= Subheadline > Footnote > Caption:
+/// headline-small, title-large, body-large, title-medium, body-small and
+/// label-small.
 pub fn defaults(env: &mut Environment) {
     install::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
-    install::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
-    install::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
+    install::<Title>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
+    install::<Headline>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
     install::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
-    install::<Caption>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
-    install::<Footnote>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
+    install::<Footnote>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
+    install::<Caption>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -266,16 +270,16 @@ mod tests {
         );
         assert_material_font(
             Title.resolve(&env).snapshot(),
-            22.0,
+            24.0,
             FontWeight::Normal,
-            28.0,
+            32.0,
             0.0,
         );
         assert_material_font(
             Headline.resolve(&env).snapshot(),
-            24.0,
+            22.0,
             FontWeight::Normal,
-            32.0,
+            28.0,
             0.0,
         );
         assert_material_font(
@@ -286,18 +290,56 @@ mod tests {
             0.15,
         );
         assert_material_font(
-            Caption.resolve(&env).snapshot(),
+            Footnote.resolve(&env).snapshot(),
             12.0,
             FontWeight::Normal,
             16.0,
             0.4,
         );
         assert_material_font(
-            Footnote.resolve(&env).snapshot(),
+            Caption.resolve(&env).snapshot(),
             11.0,
             FontWeight::Medium,
             16.0,
             0.5,
+        );
+    }
+
+    /// `WaterUI` ranks its slots Title > Headline > Body >= Subheadline >
+    /// Footnote > Caption, the order Markdown headings and the framework's
+    /// default scale follow; Material's tokens fill the slots in that order.
+    #[test]
+    fn font_slots_keep_the_framework_slot_order() {
+        let mut env = Environment::new();
+        defaults(&mut env);
+        let size = |font: waterui::text::font::ResolvedFont| font.size();
+
+        let title = size(Title.resolve(&env).snapshot());
+        let headline = size(Headline.resolve(&env).snapshot());
+        let body = size(Body.resolve(&env).snapshot());
+        let subheadline = size(Subheadline.resolve(&env).snapshot());
+        let footnote = size(Footnote.resolve(&env).snapshot());
+        let caption = size(Caption.resolve(&env).snapshot());
+
+        assert!(
+            title > headline,
+            "Title {title} must exceed Headline {headline}"
+        );
+        assert!(
+            headline > body,
+            "Headline {headline} must exceed Body {body}"
+        );
+        assert!(
+            body >= subheadline,
+            "Body {body} must be at least Subheadline {subheadline}"
+        );
+        assert!(
+            subheadline > footnote,
+            "Subheadline {subheadline} must exceed Footnote {footnote}"
+        );
+        assert!(
+            footnote > caption,
+            "Footnote {footnote} must exceed Caption {caption}"
         );
     }
 
@@ -335,9 +377,9 @@ mod tests {
         assert_eq!(resolved_body.family(), app_body.family());
         assert_material_font(
             Title.resolve(&assembled).snapshot(),
-            22.0,
+            24.0,
             FontWeight::Normal,
-            28.0,
+            32.0,
             0.0,
         );
     }
