@@ -9,7 +9,9 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
 use waterui_core::view::TupleViews;
 
 use crate::color::{
@@ -75,7 +77,7 @@ where
 }
 
 /// A Material Design 3 navigation tab.
-pub struct NavigationTab<Icon, Action = fn(&Environment)> {
+pub struct NavigationTab<Icon, Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     icon: Icon,
@@ -91,7 +93,7 @@ impl<Icon, Action> Debug for NavigationTab<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationTab<Icon, fn(&Environment)> {
+impl<Icon> NavigationTab<Icon, NoAction> {
     /// Creates a navigation tab with a semantic label, icon, and selected state.
     #[must_use]
     pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
@@ -110,7 +112,10 @@ impl<Icon> NavigationTab<Icon, fn(&Environment)> {
 impl<Icon, Action> NavigationTab<Icon, Action> {
     /// Sets the action performed when the navigation tab is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> NavigationTab<Icon, impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> NavigationTab<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -127,7 +132,7 @@ impl<Icon, Action> NavigationTab<Icon, Action> {
 impl<Icon, Action> View for NavigationTab<Icon, Action>
 where
     Icon: Clone + View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
@@ -178,7 +183,9 @@ where
         .min_width(NAVIGATION_BAR_ITEM_MIN_WIDTH)
         .max_width(f32::INFINITY)
         .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
-        .on_tap(move |env: Environment| action(&env))
+        .on_tap(move |env: Environment| {
+            action(&env).report_extraction();
+        })
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Tab)
         .a11y_state_signal(accessibility_state)
@@ -236,8 +243,6 @@ fn navigation_tab_content(
     ))
     .spacing(NAVIGATION_BAR_LABEL_TOP_SPACE)
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 navigation bar.
 #[must_use]

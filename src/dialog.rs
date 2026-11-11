@@ -14,7 +14,11 @@ use waterui::style::Anchor;
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::AnyView;
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
 use waterui_core::view::TupleViews;
 
 use crate::ModalInteraction;
@@ -38,7 +42,7 @@ const DIALOG_ACTION_SPACING: f32 = 8.0;
 const DIALOG_HIDDEN_OFFSET_Y: f32 = -30.0;
 
 /// A Material Design 3 dialog action button.
-pub struct DialogAction<Action = fn(&Environment)> {
+pub struct DialogAction<Action = NoAction> {
     label: Label,
     action: Action,
 }
@@ -51,7 +55,7 @@ impl<Action> Debug for DialogAction<Action> {
     }
 }
 
-impl DialogAction<fn(&Environment)> {
+impl DialogAction<NoAction> {
     /// Creates a dialog action with the given semantic label.
     #[must_use]
     pub fn new(label: impl IntoLabel) -> Self {
@@ -65,7 +69,10 @@ impl DialogAction<fn(&Environment)> {
 impl<Action> DialogAction<Action> {
     /// Sets the action performed when the dialog action is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> DialogAction<impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> DialogAction<impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -78,7 +85,7 @@ impl<Action> DialogAction<Action> {
 
 impl<Action> View for DialogAction<Action>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let accessibility_label = label_plain_text(&self.label);
@@ -88,7 +95,9 @@ where
             .foreground(Primary)
             .height(40.0)
             .padding_with(EdgeInsets::new(0.0, 12.0, 0.0, 12.0))
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
@@ -169,8 +178,7 @@ impl<Actions> Dialog<Actions> {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
-        self.overlay_action = SharedAction::new(move |env: Environment| action(&env));
+        self.overlay_action = SharedAction::new(action);
         self
     }
 
@@ -180,9 +188,8 @@ impl<Actions> Dialog<Actions> {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
         self.close_on_escape = true;
-        self.escape_action = SharedAction::new(move |env: Environment| action(&env));
+        self.escape_action = SharedAction::new(action);
         self
     }
 }
@@ -246,7 +253,9 @@ where
                 0.0,
                 crate::theme::colors::SCRIM_OPACITY,
             ))
-            .on_tap(move |env: Environment| overlay_action.call(&env))
+            .on_tap(move |env: Environment| {
+                overlay_action.run(&env);
+            })
             .a11y_hidden(true)
             .install(interaction_chrome_radius(Scrim.with_opacity(0.0), 0.0).pointer_only());
 
@@ -417,8 +426,6 @@ where
         waterui::component::hstack(self.actions).spacing(DIALOG_ACTION_SPACING)
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 dialog.
 #[must_use]

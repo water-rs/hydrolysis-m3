@@ -12,7 +12,7 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::{Binding, Computed, SignalExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{BoxedAction, Handler, boxed_action};
+use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 
 use crate::color::{OnPrimary, OnPrimaryContainer, Primary, PrimaryContainer};
 use crate::elevation::MaterialElevationLevel;
@@ -194,7 +194,9 @@ impl View for FloatingActionButtonMenu {
                 .foreground(OnPrimaryContainer)
                 .floating_with(item_style())
                 .opacity(opacity)
-                .on_tap(move |env: Environment| action(&env))
+                .on_tap(move |env: Environment| {
+                    action(&env).report_extraction();
+                })
                 .a11y_role(AccessibilityRole::Button)
                 .install(interaction_chrome_radius(
                     OnPrimaryContainer,

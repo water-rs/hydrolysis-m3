@@ -19,7 +19,9 @@ use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
 use waterui_graphics::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
@@ -93,11 +95,7 @@ impl SplitButtonVariantTokens for TonalSplitButton {
 }
 
 /// A Material Design 3 split button.
-pub struct SplitButton<
-    Action = fn(&Environment),
-    TrailingAction = fn(&Environment),
-    Tokens = FilledSplitButton,
-> {
+pub struct SplitButton<Action = NoAction, TrailingAction = NoAction, Tokens = FilledSplitButton> {
     label: Label,
     trailing_accessibility_label: Str,
     action: Action,
@@ -153,7 +151,7 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> SplitButton<impl FnMut(&Environment), TrailingAction, Tokens>
+    ) -> SplitButton<impl FnMut(&Environment) -> Result<(), ExtractionError>, TrailingAction, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -171,7 +169,7 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     pub fn trailing_action<F, Args>(
         self,
         action: F,
-    ) -> SplitButton<Action, impl FnMut(&Environment), Tokens>
+    ) -> SplitButton<Action, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -187,8 +185,8 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
 
 impl<Action, TrailingAction, Tokens> View for SplitButton<Action, TrailingAction, Tokens>
 where
-    Action: FnMut(&Environment) + 'static,
-    TrailingAction: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
+    TrailingAction: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: SplitButtonVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -237,7 +235,9 @@ where
                     shape: leading_shape,
                     color: Tokens::container_color(),
                 })
-                .on_tap(move |env: Environment| action(&env))
+                .on_tap(move |env: Environment| {
+                    action(&env).report_extraction();
+                })
                 .a11y_role(AccessibilityRole::Button)
                 .interaction_state(&leading_state)
                 .install(half_style(
@@ -274,7 +274,9 @@ where
                     shape: trailing_shape,
                     color: Tokens::container_color(),
                 })
-                .on_tap(move |env: Environment| trailing_action(&env))
+                .on_tap(move |env: Environment| {
+                    trailing_action(&env).report_extraction();
+                })
                 .a11y_label(self.trailing_accessibility_label)
                 .a11y_role(AccessibilityRole::Button)
                 .a11y_children(AccessibilityChildren::ExcludeDescendants)
@@ -364,8 +366,6 @@ where
         watch(self.shape, move |shape| shape.fill(color.clone()))
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 split button.
 #[must_use]

@@ -15,7 +15,9 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
 use waterui_core::view::TupleViews;
 
 use crate::color::{
@@ -171,7 +173,7 @@ where
 }
 
 /// One destination in a [`NavigationRail`].
-pub struct NavigationRailItem<Icon, Action = fn(&Environment)> {
+pub struct NavigationRailItem<Icon, Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     icon: Icon,
@@ -216,7 +218,10 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
 
     /// Sets the action performed when the item is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> NavigationRailItem<Icon, impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> NavigationRailItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -234,7 +239,7 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
 impl<Icon, Action> View for NavigationRailItem<Icon, Action>
 where
     Icon: Clone + View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
@@ -325,15 +330,15 @@ where
 
         content
             .max_width(f32::INFINITY)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Tab)
             .a11y_state_signal(accessibility_state)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 navigation rail.
 #[must_use]

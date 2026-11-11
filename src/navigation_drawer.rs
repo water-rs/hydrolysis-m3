@@ -14,7 +14,11 @@ use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
 
 use crate::ModalInteraction;
 use crate::color::{
@@ -109,8 +113,7 @@ impl<Content> NavigationDrawer<Content> {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
-        self.overlay_action = SharedAction::new(move |env: Environment| action(&env));
+        self.overlay_action = SharedAction::new(action);
         self
     }
 }
@@ -164,7 +167,7 @@ where
                     crate::theme::colors::SCRIM_OPACITY,
                 ))
                 .on_tap(move |env: Environment| {
-                    overlay_action.call(&env);
+                    overlay_action.run(&env);
                     if close_on_overlay_click {
                         opened_for_overlay.set(false);
                     }
@@ -240,7 +243,7 @@ impl Layout for NavigationDrawerPanelLayout {
 }
 
 /// A selectable Material Design 3 navigation drawer item.
-pub struct NavigationDrawerItem<Icon, Action = fn(&Environment)> {
+pub struct NavigationDrawerItem<Icon, Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     icon: Icon,
@@ -256,7 +259,7 @@ impl<Icon, Action> Debug for NavigationDrawerItem<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationDrawerItem<Icon, fn(&Environment)> {
+impl<Icon> NavigationDrawerItem<Icon, NoAction> {
     /// Creates a navigation drawer item.
     #[must_use]
     pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
@@ -275,7 +278,10 @@ impl<Icon> NavigationDrawerItem<Icon, fn(&Environment)> {
 impl<Icon, Action> NavigationDrawerItem<Icon, Action> {
     /// Sets the action performed when the drawer item is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> NavigationDrawerItem<Icon, impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> NavigationDrawerItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -292,7 +298,7 @@ impl<Icon, Action> NavigationDrawerItem<Icon, Action> {
 impl<Icon, Action> View for NavigationDrawerItem<Icon, Action>
 where
     Icon: Clone + View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
@@ -341,7 +347,9 @@ where
             background.into(),
             label_font,
         )
-        .on_tap(move |env: Environment| action(&env))
+        .on_tap(move |env: Environment| {
+            action(&env).report_extraction();
+        })
         .interaction_state(&state)
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
@@ -378,8 +386,6 @@ fn drawer_item_content(
     ))
     .background(Capsule.fill(background))
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 navigation drawer.
 #[must_use]

@@ -16,7 +16,7 @@ use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::Into
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction, boxed_action};
+use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
 
 use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer};
 use crate::dimensions::{LIST_ONE_LINE_ROW_HEIGHT, LIST_VERTICAL_INSET};
@@ -161,8 +161,7 @@ impl MaterialListItem {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
-        self.action = Some(SharedAction::new(move |env: Environment| action(&env)));
+        self.action = Some(SharedAction::new(action));
         self
     }
 
@@ -265,7 +264,9 @@ impl MaterialListItem {
 
         match self.action {
             Some(action) => {
-                let mut item = AnyView::new(item.on_tap(move |env: Environment| action.call(&env)));
+                let mut item = AnyView::new(item.on_tap(move |env: Environment| {
+                    action.run(&env);
+                }));
                 // `Selected` is installed only for an explicit selection: a
                 // selecting `List` inserts the scope per row, and a constant
                 // `false` here would shadow it.

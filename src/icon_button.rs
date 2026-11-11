@@ -10,7 +10,9 @@ use waterui::border::Border;
 use waterui::color::Color;
 use waterui::shape::{Circle, ShapeExt as _};
 use waterui::{Environment, Str, View, ViewExt as _};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
 
 use crate::button;
 use crate::color::{
@@ -316,7 +318,7 @@ impl IconButtonVariantTokens for SelectedOutlinedIconButton {
 }
 
 /// A Material Design 3 icon button.
-pub struct IconButton<Content, Action = fn(&Environment), Tokens = StandardIconButton> {
+pub struct IconButton<Content, Action = NoAction, Tokens = StandardIconButton> {
     accessibility_label: Str,
     content: Content,
     action: Action,
@@ -332,7 +334,7 @@ impl<Content, Action, Tokens> Debug for IconButton<Content, Action, Tokens> {
     }
 }
 
-impl<Content> IconButton<Content, fn(&Environment), StandardIconButton> {
+impl<Content> IconButton<Content, NoAction, StandardIconButton> {
     /// Creates a standard icon button with arbitrary visual icon content.
     #[must_use]
     pub fn new(accessibility_label: impl Into<Str>, content: Content) -> Self {
@@ -396,7 +398,10 @@ impl<Content, Action, Tokens> IconButton<Content, Action, Tokens> {
 
     /// Sets the action performed when the icon button is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> IconButton<Content, impl FnMut(&Environment), Tokens>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> IconButton<Content, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -413,7 +418,7 @@ impl<Content, Action, Tokens> IconButton<Content, Action, Tokens> {
 impl<Content, Action, Tokens> View for IconButton<Content, Action, Tokens>
 where
     Content: View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: IconButtonVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -431,7 +436,9 @@ where
                     .corner_radius(size.state_layer * 0.5),
             )
             .size(size.container, size.container)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
@@ -445,8 +452,6 @@ where
             )
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a standard icon button with arbitrary visual icon content.
 #[must_use]
@@ -465,7 +470,7 @@ where
 pub fn filled_icon_button<Content>(
     accessibility_label: impl Into<Str>,
     content: Content,
-) -> IconButton<Content, fn(&Environment), FilledIconButton>
+) -> IconButton<Content, NoAction, FilledIconButton>
 where
     Content: View + 'static,
 {
@@ -477,7 +482,7 @@ where
 pub fn filled_tonal_icon_button<Content>(
     accessibility_label: impl Into<Str>,
     content: Content,
-) -> IconButton<Content, fn(&Environment), FilledTonalIconButton>
+) -> IconButton<Content, NoAction, FilledTonalIconButton>
 where
     Content: View + 'static,
 {
@@ -489,7 +494,7 @@ where
 pub fn outlined_icon_button<Content>(
     accessibility_label: impl Into<Str>,
     content: Content,
-) -> IconButton<Content, fn(&Environment), OutlinedIconButton>
+) -> IconButton<Content, NoAction, OutlinedIconButton>
 where
     Content: View + 'static,
 {
