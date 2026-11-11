@@ -174,6 +174,13 @@ waterui-image = { git = "https://github.com/water-rs/image", branch = "dev" }
 waterui-chart = { git = "https://github.com/water-rs/chart", branch = "dev" }
 waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
 waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
+# `clipboard-rs` 0.3.5 (via waterkit-clipboard) pins `windows` 0.59, inside
+# gpu-allocator's `>=0.53, <=0.62` range, so a relock can settle
+# gpu-allocator on it instead of wgpu-hal's 0.62 and split the ID3D12 types
+# at the dx12 boundary (water-rs/waterui#2797). The fork's
+# `windows-0.62-signed` branch carries only the `windows = "0.62"` bump; drop
+# the pin once a release admits 0.62.
+clipboard-rs = { git = "https://github.com/water-rs/clipboard-rs", branch = "windows-0.62-signed" }
 waterkit-codec = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
 waterkit-core = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
 waterkit-dialog = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
