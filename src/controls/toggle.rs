@@ -49,8 +49,10 @@ use crate::theme::state_layer::{
 pub const STATE_LAYER_RADIUS: f64 = 20.0;
 
 /// The distance the switch thumb travels between its resting centres.
-const SWITCH_TRAVEL: f64 =
-    TOGGLE_SWITCH_WIDTH - 2.0 * (TOGGLE_SWITCH_THUMB_PADDING + SWITCH_SLOT_HALF);
+const SWITCH_TRAVEL: f64 = 2.0f64.mul_add(
+    -(TOGGLE_SWITCH_THUMB_PADDING + SWITCH_SLOT_HALF),
+    TOGGLE_SWITCH_WIDTH,
+);
 /// Half the slot the thumb centres in at each end of the track: Compose
 /// reserves the *selected* handle's width, so growing or shrinking the thumb
 /// never moves it sideways.

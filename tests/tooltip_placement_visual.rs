@@ -61,7 +61,7 @@ fn tooltip_placement_captures() {
         });
         capture_hover(&mut app, "+", &format!("top-edge-plain-{scheme}"), "after");
 
-        let mut app = mount(theme.clone(), || {
+        let mut app = mount(theme, || {
             scene(
                 rich_tooltip(RICH_SUBHEAD, RICH_TEXT).for_target(button("+").action(|| {})),
                 UnitPoint::new(0.5, 0.9),
@@ -85,7 +85,7 @@ fn tooltip_tab_strip_captures() {
     let light = Material3::defaults();
     let dark = Material3::with_colors(MaterialColorScheme::baseline_dark());
     for (theme, scheme) in [(light, "light"), (dark, "dark")] {
-        let mut app = mount(theme.clone(), || {
+        let mut app = mount(theme, || {
             vstack((
                 hstack((
                     text("Tab 1"),
