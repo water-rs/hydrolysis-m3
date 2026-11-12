@@ -7,6 +7,7 @@
 use hydrolysis::draw::WorkingColor;
 use waterui::View;
 use waterui::color::{Color, WithOpacity};
+use waterui::contract_violation;
 use waterui::reactive::{Computed, Signal, SignalExt as _, impl_constant};
 use waterui::theme::{ColorScheme, current_color_scheme};
 use waterui_core::{Environment, resolve::Resolvable};
@@ -25,11 +26,12 @@ fn resolve_role(
             .computed();
     }
 
-    let scheme = env.get::<MaterialColorScheme>().unwrap_or_else(|| {
-        panic!(
-            "hydrolysis_m3::color::{token} requires a hydrolysis_m3::Material3 style's tokens in the environment"
-        )
-    });
+    let Some(scheme) = env.get::<MaterialColorScheme>() else {
+        contract_violation!(
+            "hydrolysis_m3::color::{token} requires a hydrolysis_m3::Material3 style's tokens in the environment; resolving it in the baseline light scheme"
+        );
+        return Computed::constant(role(&MaterialColorScheme::baseline_light()).working());
+    };
     Computed::constant(role(scheme).working())
 }
 
@@ -212,6 +214,19 @@ mod tests {
         expected: MaterialRoleColor,
     ) {
         assert_resolved_color_eq(color.resolve(env).snapshot(), expected.working());
+    }
+
+    #[test]
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "hydrolysis_m3::color::Primary requires")
+    )]
+    fn a_role_without_a_style_resolves_in_the_baseline_light_scheme() {
+        let resolved = resolve_role(&Environment::new(), "Primary", |scheme| scheme.primary);
+        assert_resolved_color_eq(
+            resolved.snapshot(),
+            MaterialColorScheme::baseline_light().primary.working(),
+        );
     }
 
     #[test]

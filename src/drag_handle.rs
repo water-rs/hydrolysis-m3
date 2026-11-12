@@ -5,7 +5,7 @@
 //! being held, so the thing under the finger is unmistakably the thing that
 //! moves.
 
-use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
+use waterui::gesture::DragGesture;
 use waterui::layout::frame::Frame;
 use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{Capsule, ShapeExt as _};
@@ -14,7 +14,7 @@ use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, box
 
 use crate::action::{NoAction, noop};
 use crate::color::{OnSurface, Outline};
-use crate::semantics::conditional_color;
+use crate::semantics::{conditional_color, drag_held};
 
 /// `DragHandleTokens.Width`.
 const WIDTH: f32 = 4.0;
@@ -95,14 +95,10 @@ where
             .height(height)
             .width(CONTAINER_WIDTH)
             .gesture(DragGesture::new(0.0), move |env: Environment| {
-                let phase = env
-                    .get::<DragEvent>()
-                    .expect("drag handle gesture is missing its DragEvent")
-                    .phase();
-                held_for_gesture.set(matches!(
-                    phase,
-                    GesturePhase::Started | GesturePhase::Updated
-                ));
+                let Some(held) = drag_held(&env, "drag handle") else {
+                    return;
+                };
+                held_for_gesture.set(held);
                 on_drag(&env).report_extraction();
             })
             .a11y_label(self.accessibility_label)

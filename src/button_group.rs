@@ -11,7 +11,7 @@ use core::fmt::{self, Debug};
 use hydrolysis::draw::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
-use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
+use waterui::gesture::DragGesture;
 use waterui::layout::padding::EdgeInsets;
 use waterui::layout::{
     Layout, LayoutError, LayoutInvalidationCallback, PlacementInput, Point, ProposalSize, Rect,
@@ -27,7 +27,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
-use crate::semantics::{conditional_color, interaction_chrome};
+use crate::semantics::{conditional_color, drag_held, interaction_chrome};
 use hydrolysis::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
@@ -249,14 +249,9 @@ impl View for ConnectedButtonGroup {
                     // technology. The drag gesture rides alongside purely to
                     // track the press that tightens the inner corners.
                     .gesture(DragGesture::new(0.0), move |env: Environment| {
-                        let phase = env
-                            .get::<DragEvent>()
-                            .expect("connected button gesture is missing its DragEvent")
-                            .phase();
-                        pressed_for_gesture.set(matches!(
-                            phase,
-                            GesturePhase::Started | GesturePhase::Updated
-                        ));
+                        if let Some(held) = drag_held(&env, "connected button") {
+                            pressed_for_gesture.set(held);
+                        }
                     })
                     .on_tap(move |env: Environment| {
                         action(&env).report_extraction();
@@ -435,14 +430,9 @@ impl View for ButtonGroup {
                     // the press widens its container, so it needs one.
                     Button::new(button.label)
                         .gesture(DragGesture::new(0.0), move |env: Environment| {
-                            let phase = env
-                                .get::<DragEvent>()
-                                .expect("group button gesture is missing its DragEvent")
-                                .phase();
-                            pressed.set(matches!(
-                                phase,
-                                GesturePhase::Started | GesturePhase::Updated
-                            ));
+                            if let Some(held) = drag_held(&env, "group button") {
+                                pressed.set(held);
+                            }
                         })
                         .on_tap(move |env: Environment| {
                             action(&env).report_extraction();
@@ -529,7 +519,7 @@ impl Layout for ButtonGroupLayout {
         // A press only moves width between children, so the row measures the
         // same whether or not one is held.
         let gap_count = u16::try_from(children.len().saturating_sub(1))
-            .expect("a button group holds a sane number of buttons");
+            .expect("a button group holds a handful of buttons, far fewer than u16::MAX");
         let gaps = GROUP_BETWEEN_SPACE * f32::from(gap_count);
         Size::new(
             widths.iter().sum::<f32>() + gaps,

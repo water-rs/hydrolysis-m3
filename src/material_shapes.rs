@@ -305,7 +305,7 @@ fn normalized(radii: &[f64]) -> Vec<f64> {
     let widest = radii.iter().copied().fold(f64::MIN, f64::max);
     assert!(
         widest > 0.0,
-        "a shape with no extent cannot be normalized: it collapsed to a point"
+        "invariant: every built-in shape polygon reaches a positive radius, so none collapses to a point"
     );
     radii.iter().map(|radius| radius / widest).collect()
 }
