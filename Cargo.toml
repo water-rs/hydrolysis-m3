@@ -127,9 +127,9 @@ waterui-url = { git = "https://github.com/water-rs/waterui", branch = "dev" }
 waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "dev" }
 waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "dev" }
 
-# Component crates living in their own repositories, each at the rev
-# water-rs/waterui's own patch table pins.
-waterui-svg = { git = "https://github.com/water-rs/svg", rev = "16f99e021f735d0b1b31c95552b074e953d56418" }
+# Component crates living in their own repositories, on the branch
+# water-rs/waterui's own patch table tracks.
+waterui-svg = { git = "https://github.com/water-rs/svg", branch = "dev" }
 waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "dev" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.

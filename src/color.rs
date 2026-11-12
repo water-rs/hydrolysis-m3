@@ -307,6 +307,41 @@ mod tests {
     }
 
     #[test]
+    fn dynamic_tokens_follow_a_color_scheme_installed_on_a_subtree() {
+        let mut root = Environment::new();
+        Material3::defaults().install_tokens(&mut root);
+
+        let mut subtree = root.clone();
+        Theme::new()
+            .color_scheme(ColorScheme::Dark)
+            .install(&mut subtree);
+
+        let dark = MaterialColorScheme::baseline_dark();
+        let light = MaterialColorScheme::baseline_light();
+        assert_eq!(current_color_scheme(&subtree).snapshot(), ColorScheme::Dark);
+        assert_resolved_color_eq(
+            installed_color_signal::<theme_color::Background>(&subtree)
+                .expect("background token should be installed")
+                .snapshot(),
+            dark.background.working(),
+        );
+        assert_resolved_color_eq(
+            installed_color_signal::<theme_color::Accent>(&subtree)
+                .expect("accent token should be installed")
+                .snapshot(),
+            dark.primary.working(),
+        );
+
+        assert_eq!(current_color_scheme(&root).snapshot(), ColorScheme::Light);
+        assert_resolved_color_eq(
+            installed_color_signal::<theme_color::Background>(&root)
+                .expect("background token should be installed")
+                .snapshot(),
+            light.background.working(),
+        );
+    }
+
+    #[test]
     fn a_clone_binds_to_the_first_environment_it_is_installed_into() {
         let original = Material3::defaults();
         let mut env = Environment::new();

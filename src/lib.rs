@@ -69,7 +69,7 @@ pub use hydrolysis::theme::{
     WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
-use waterui::reactive::{Computed, Signal, SignalExt as _};
+use waterui::reactive::{Computed, Signal};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_core::Environment;
@@ -362,7 +362,7 @@ fn insert_dynamic_tokens(
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
 ) {
-    project_color_tokens(env, scheme, light, dark);
+    project_color_tokens(env, light, dark);
     theme::typography::defaults(env);
     let initial = material_scheme_for_color_scheme(light, dark, scheme.snapshot());
     env.insert(initial);
@@ -377,10 +377,9 @@ fn insert_dynamic_tokens(
 }
 
 /// Projects each `WaterUI` color token onto the Material role that carries it,
-/// as a signal that re-resolves when the color scheme flips.
+/// as a derivation that follows the color scheme installed on any subtree.
 fn project_color_tokens(
     env: &mut Environment,
-    scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
 ) {
@@ -389,7 +388,6 @@ fn project_color_tokens(
             $(
                 project_color_token::<waterui_theme::color::$token>(
                     env,
-                    scheme,
                     light,
                     dark,
                     |colors| colors.$role,
@@ -417,17 +415,18 @@ fn project_color_tokens(
     }
 }
 
-fn project_color_token<T: 'static>(
+fn project_color_token<T: waterui_theme::ColorSlot>(
     env: &mut Environment,
-    scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
     role: fn(MaterialColorScheme) -> MaterialRoleColor,
 ) {
-    let signal = scheme
-        .map(move |scheme| role(material_scheme_for_color_scheme(light, dark, scheme)).working())
-        .computed();
-    waterui_theme::install_color_signal::<T>(env, signal);
+    waterui_theme::install_color_derivation::<T>(
+        env,
+        waterui_theme::ColorDerivation::new(move |scheme| {
+            role(material_scheme_for_color_scheme(light, dark, scheme)).working()
+        }),
+    );
 }
 
 const fn material_scheme_for_color_scheme(
