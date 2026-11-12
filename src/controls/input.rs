@@ -140,7 +140,7 @@ pub fn indicator_colors(env: &Environment) -> Computed<IndicatorColors> {
 
 /// The active indicator's colour in `state`: disabled outranks focused,
 /// which outranks hovered.
-pub fn indicator_color(
+pub const fn indicator_color(
     &[rest, hovered, focused, dim]: &IndicatorColors,
     state: InteractionState,
 ) -> WorkingColor {

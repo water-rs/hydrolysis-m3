@@ -152,7 +152,7 @@ pub fn progress_circular() -> Motion {
 
 /// The inside label floating between resting and floating: `short3` with
 /// standard easing, unless the change that floats it names an animation.
-pub fn text_field_label() -> ValueMotion {
+pub const fn text_field_label() -> ValueMotion {
     ValueMotion::Follow(material_standard(duration::SHORT_3))
 }
 

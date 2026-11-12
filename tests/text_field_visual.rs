@@ -53,7 +53,7 @@ fn mount(theme: Material3, view: impl Fn() -> AnyView + 'static) -> OffscreenApp
     app
 }
 
-fn schemes() -> [(&'static str, Material3); 2] {
+const fn schemes() -> [(&'static str, Material3); 2] {
     [
         ("light", Material3::defaults()),
         ("dark", Material3::dark()),
@@ -74,7 +74,7 @@ fn centre(app: &mut OffscreenApp) -> (f32, f32) {
 fn text_field_rest_material3_snapshots() {
     for (scheme, theme) in schemes() {
         let mut app = mount(theme, labelled_field("", false));
-        app.capture_snapshot("material3-preview", "text-field", &format!("rest-{scheme}"));
+        app.capture_snapshot("material3-preview", "text-field", format!("rest-{scheme}"));
     }
 }
 
@@ -90,7 +90,7 @@ fn text_field_hovered_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("hovered-{scheme}"),
+            format!("hovered-{scheme}"),
         );
     }
 }
@@ -107,7 +107,7 @@ fn text_field_focused_with_text_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("focused-text-{scheme}"),
+            format!("focused-text-{scheme}"),
         );
     }
 }
@@ -121,7 +121,7 @@ fn text_field_floated_label_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("floated-label-{scheme}"),
+            format!("floated-label-{scheme}"),
         );
     }
 }
@@ -137,7 +137,7 @@ fn text_field_focused_empty_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("focused-empty-{scheme}"),
+            format!("focused-empty-{scheme}"),
         );
     }
 }
@@ -155,7 +155,7 @@ fn text_field_disabled_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("disabled-{scheme}"),
+            format!("disabled-{scheme}"),
         );
     }
 }
@@ -169,14 +169,14 @@ fn text_field_prompt_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("prompt-rest-{scheme}"),
+            format!("prompt-rest-{scheme}"),
         );
         app.query().role(Role::TEXT_INPUT).focus();
         app.pump_for(SETTLE);
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("prompt-focused-{scheme}"),
+            format!("prompt-focused-{scheme}"),
         );
     }
 }
@@ -189,14 +189,14 @@ fn secure_field_material3_snapshots() {
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("secure-rest-{scheme}"),
+            format!("secure-rest-{scheme}"),
         );
         app.query().role(Role::PASSWORD_INPUT).focus();
         app.pump_for(SETTLE);
         app.capture_snapshot(
             "material3-preview",
             "text-field",
-            &format!("secure-focused-{scheme}"),
+            format!("secure-focused-{scheme}"),
         );
     }
 }
