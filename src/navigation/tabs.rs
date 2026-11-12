@@ -383,7 +383,7 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let env = environment();
         let selected = Binding::container(false);
-        let chrome = item_chrome(&item(false, horizontal_item()), selected.clone().computed());
+        let chrome = item_chrome(&item(false, horizontal_item()), selected.computed());
         let color = || chrome.state_layer().color.resolve(&env).snapshot();
 
         assert_eq!(color(), colors.on_surface.working());

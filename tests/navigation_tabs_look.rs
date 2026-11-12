@@ -16,7 +16,7 @@ use waterui_testing::{OffscreenApp, Role, ui};
 /// 40 point button sits 4 points in and 12 points down.
 const BACK: (f32, f32) = (24.0, 32.0);
 
-fn schemes() -> [(&'static str, MaterialColorScheme); 2] {
+const fn schemes() -> [(&'static str, MaterialColorScheme); 2] {
     [
         ("light", MaterialColorScheme::baseline_light()),
         ("dark", MaterialColorScheme::baseline_dark()),
@@ -47,15 +47,15 @@ fn navigation_back_button_material3_snapshots() {
     for (scheme_name, scheme) in schemes() {
         let stage = |state: &str| format!("{scheme_name}-{state}");
         let mut app = pushed(scheme);
-        let _ = app.capture_snapshot("hydrolysis", "navigation-back-button", &stage("rest"));
+        let _ = app.capture_snapshot("hydrolysis", "navigation-back-button", stage("rest"));
 
         app.queue_pointer_move(BACK.0, BACK.1);
         app.pump_for(Duration::from_millis(600));
-        let _ = app.capture_snapshot("hydrolysis", "navigation-back-button", &stage("hovered"));
+        let _ = app.capture_snapshot("hydrolysis", "navigation-back-button", stage("hovered"));
 
         app.queue_pointer_down(BACK.0, BACK.1);
         app.pump_for(Duration::from_millis(600));
-        let _ = app.capture_snapshot("hydrolysis", "navigation-back-button", &stage("pressed"));
+        let _ = app.capture_snapshot("hydrolysis", "navigation-back-button", stage("pressed"));
     }
 }
 
@@ -85,15 +85,15 @@ fn tabs_selection_material3_snapshots() {
                 )
             });
         app.pump_for(Duration::from_millis(800));
-        let _ = app.capture_snapshot("hydrolysis", "tabs-selection", &stage("rest"));
+        let _ = app.capture_snapshot("hydrolysis", "tabs-selection", stage("rest"));
 
         // The highlight grows into the new item while it fades out of the
         // old one.
         selection.set(1);
         app.pump_for(Duration::from_millis(70));
-        let _ = app.capture_snapshot("hydrolysis", "tabs-selection", &stage("mid-transition"));
+        let _ = app.capture_snapshot("hydrolysis", "tabs-selection", stage("mid-transition"));
 
         app.pump_for(Duration::from_millis(800));
-        let _ = app.capture_snapshot("hydrolysis", "tabs-selection", &stage("settled"));
+        let _ = app.capture_snapshot("hydrolysis", "tabs-selection", stage("settled"));
     }
 }
