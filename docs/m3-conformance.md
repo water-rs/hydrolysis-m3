@@ -162,8 +162,13 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/navigation_rail.rs:40-63,294-300 | expanded item 64h with 56h horizontal indicator; collapsed 56h item + 56×32 pill; expanded label label-large(-prominent) | was 32h pill | `md.comp.nav-rail.{collapsed,expanded}.*` | fixed |
 | src/navigation_drawer.rs:301-308 | active layer on-secondary-container; inactive layer on-surface; active label label-large-prominent | added prominent weight | `md.comp.navigation-drawer.*` | fixed |
 | src/navigation_drawer.rs | inactive pressed layer on-secondary-container (vs on-surface for hover/focus) | split per state | `md.comp.navigation-drawer.inactive.*.state-layer.color` | fixed: `.interaction_state` report + `conditional_color` — inactive pressed takes on-secondary-container, hover/focus on-surface |
-| src/navigation/tabs.rs:33 | tab strip separator surface-variant | was outline | `md.comp.primary-navigation-tab.divider.color` | fixed |
-| src/navigation/navigation.rs | app-bar separator removed | none | `md.comp.app-bar` defines no divider token | fixed (separator now a no-op) |
+| src/navigation/tabs.rs | tab bar container surface, divider surface-variant | was outline | `md.comp.primary-navigation-tab.container.color`, `md.comp.primary-navigation-tab.divider.color` | fixed |
+| src/navigation/tabs.rs | the active indicator is a part driven by the item's selection: it grows out of the item's centre while its secondary-container fades in, and the old one shrinks and fades out, under the 280ms standard-easing chrome motion | was a pill that snapped | `md.comp.nav-bar.item.active-indicator.color` (secondary-container); the grow and fade follow Compose `NavigationBarItem`'s indicator | fixed |
+| src/navigation/tabs.rs | item chrome in the pill's shape: state layer primary while selected, on-surface otherwise, 0.08/0.10/0.10, press ripple, focus ring | same | `md.comp.primary-navigation-tab.{active,inactive}.*.state-layer.*` | conforms except the inactive pressed layer: the token is primary and the look's one state-layer colour cannot differ by state, so it stays on-surface |
+| src/navigation/tabs.rs | bar 48dp with vertical items; from the 600dp medium width class a 64dp bar with horizontal items, 40dp indicator | same | `md.comp.primary-navigation-tab.container.height`, `md.comp.nav-bar.container.height`, `md.comp.nav-bar.item.horizontal.*` | conforms |
+| src/navigation/navigation.rs | top app bar container: the application's colour, else surface; no separator | none | `md.comp.app-bar` defines no divider token | conforms |
+| src/navigation/navigation.rs | leading navigation icon: the standard icon button's chrome in its own 40dp state layer (corner-full, pressed corner-small), state layer and 24dp `arrow_back` in on-surface, 0.08/0.10/0.10, press ripple, focus ring | same | `md.comp.top-app-bar.small.leading-icon.color`; `md.comp.icon-button.standard.*` | fixed: the back button showed no interaction feedback |
+| src/navigation/navigation.rs | page transition: long1 on the emphasized easing, 30dp shared-axis travel, fade-through at 35% | same | `md.sys.motion.duration.long1`, `md.sys.motion.easing.emphasized` | conforms |
 | src/toolbar.rs | toolbar row | — | `md.comp.toolbar.*` exists (docked/floating) | no token implemented: file exposes plain row layout, no M3 chrome claimed |
 | src/material_navigation.rs | app-bar scrolled container: surface-container once `offset.y > 0`, surface at rest | on-scroll L2 expressed tonally via surface-container | `md.comp.app-bar.scrolled.container.color/elevation` | fixed (`material_scrolled_app_bar` + `ScrollView::report_offset`) |
 
@@ -181,11 +186,11 @@ Former items 1–5 and 9 are implemented through the per-state interaction
 styling API (`InteractionState`/`StateValue`, `.interaction_state`,
 `.selected`, the `Chrome` surface's driven corners and focus indicator,
 `FloatingStyle.elevation: StateValue<FloatingElevation>`). Item 6 is
-implemented too: `tabs_item_layout` returns `Horizontal` at the 600dp medium
-window width boundary, `tabs_metrics` answers the `md.comp.nav-bar` container
-(64dp bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp)
-values, and `draw_tabs_highlight` draws the secondary-container corner-full
-capsule spanning the item.
+implemented too: the tabs look switches to horizontal items at the 600dp
+medium window width boundary, answers the `md.comp.nav-bar` container (64dp
+bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp) values
+there, and its highlight draws the secondary-container corner-full capsule
+spanning the item.
 
 1. ~~**Slider size variants and value indicator**~~ — implemented: `slider(&SliderSpec)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and its value indicator is the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
 2. ~~**App-bar scrolled state**~~ — fixed: `material_scrolled_app_bar(view, &offset)` binds a `ScrollView::report_offset` binding and drives `md.comp.app-bar.scrolled.container.color` (surface-container, the tonal L2 elevation expression) once `offset.y > 0`.
@@ -198,7 +203,9 @@ capsule spanning the item.
 - `src/layout/menu.rs`, `src/controls/picker.rs`, `src/controls/radio.rs`: the menu, menu picker and radio group looks' layouts, shapes and per-state paints.
 - `src/controls/input.rs`: the filled text field look's metrics, top-rounded container, active indicator width and colour per state, label and placeholder colours, floated label scale, and the primary caret and selection.
 - `src/navigation_bar.rs`: indicator width 56.
-- `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values.
+- `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values; the item layer, the pill's grow and fade and its placement in the item are asserted per input.
+- `src/navigation/navigation.rs`: the metrics and motion tokens, the bar's colour and the back button's chrome (state layer, opacities, pressed corner morph).
+- `tests/navigation_tabs_look.rs`: captures of the back button (rest, hovered, pressed) and of the tabs highlight (rest, mid-transition, settled), light and dark.
 - `src/navigation_rail.rs`: expanded indicator height 56.
 - `src/material_list.rs`: icon sizes 20.
 - `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions; per-size token tables (`the_look_follows_the_size_token_tables`), the track split around the handle, the state-layer opacities and the value indicator's tokens; the look's parts draw in the spec's tint.

@@ -55,7 +55,7 @@ pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use hydrolysis::draw::{Paint, Recorder, WorkingColor};
+use hydrolysis::draw::{Recorder, WorkingColor};
 
 use hydrolysis::draw::kurbo::{Point, Rect};
 pub use hydrolysis::theme::{
@@ -63,10 +63,11 @@ pub use hydrolysis::theme::{
     InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
     ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
     ListTrailingControlMetrics, MenuLook, MenuPickerLook, MenuSpec, ModalInteraction,
-    NavigationMetrics, NavigationMotion, PickerSpec, PressWave, PressWaves, ProgressSpec,
-    RadioGroupLook, SegmentedLook, SegmentedSpec, SliderLook, SliderSpec, StepperLook, StepperSpec,
-    SwitchLook, TabItemGeometry, TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion,
-    TextFieldLook, TextFieldSpec, ToggleSpec, WidgetInteractionState, WidgetTheme,
+    NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, PickerSpec, PressWave,
+    PressWaves, ProgressSpec, RadioGroupLook, SegmentedLook, SegmentedSpec, SliderLook, SliderSpec,
+    StepperLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout, TableMetrics, TabsLook,
+    TabsMetrics, TabsSpec, TextCaretMotion, TextFieldLook, TextFieldSpec, ToggleSpec,
+    WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
@@ -450,10 +451,6 @@ impl WidgetTheme for Material3 {
         theme::motion::interaction()
     }
 
-    fn navigation_motion(&self) -> NavigationMotion {
-        theme::motion::navigation()
-    }
-
     fn button(&self, spec: &ButtonSpec, env: &Environment) -> ButtonLook {
         if spec.icon_only() {
             icon_button::look(spec, env)
@@ -510,51 +507,12 @@ impl WidgetTheme for Material3 {
         progress::loading(spec, env)
     }
 
-    fn navigation_metrics(&self) -> NavigationMetrics {
-        navigation_chrome::metrics()
+    fn navigation_bar(&self, _spec: &NavigationSpec, env: &Environment) -> NavigationBarLook {
+        navigation_chrome::look(env)
     }
 
-    fn draw_navigation_bar(&self, draw: &mut Recorder, bounds: Rect, background: &Paint) {
-        navigation_chrome::draw_bar(draw, bounds, background);
-    }
-
-    fn draw_navigation_bar_separator(&self, draw: &mut Recorder, bounds: Rect) {
-        navigation_chrome::draw_bar_separator(&self.colors(), draw, bounds);
-    }
-
-    fn draw_navigation_back_button(&self, draw: &mut Recorder, bounds: Rect) {
-        navigation_chrome::draw_back_button(&self.colors(), draw, bounds);
-    }
-
-    fn tabs_item_layout(&self, bar_width: f64, item_count: usize) -> TabItemLayout {
-        let _ = item_count;
-        tabs::item_layout(bar_width)
-    }
-
-    fn tabs_metrics(&self, layout: TabItemLayout) -> TabsMetrics {
-        tabs::metrics(layout)
-    }
-
-    fn draw_tabs_bar(&self, draw: &mut Recorder, surface: Rect) {
-        tabs::draw_bar(&self.colors(), draw, surface);
-    }
-
-    fn draw_tabs_bar_divider(&self, draw: &mut Recorder, divider: Rect) {
-        tabs::draw_bar_divider(&self.colors(), draw, divider);
-    }
-
-    fn draw_tabs_highlight(&self, draw: &mut Recorder, item: TabItemGeometry) {
-        tabs::draw_highlight(&self.colors(), draw, item);
-    }
-
-    fn draw_tabs_button_state_layer(
-        &self,
-        draw: &mut Recorder,
-        item: TabItemGeometry,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        tabs::draw_button_state_layer(&self.colors(), draw, item, selected, state);
+    fn tabs(&self, _spec: &TabsSpec, env: &Environment) -> TabsLook {
+        tabs::look(env)
     }
 
     fn draw_scroll_indicator(&self, draw: &mut Recorder, bounds: Rect) {
