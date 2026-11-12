@@ -31,6 +31,16 @@ use waterui::{Binding, Str};
 use waterui_controls::field;
 use waterui_testing::{OffscreenApp, Role};
 
+/// The band the floated label's ink lies in, in field-relative y: its line
+/// box starts at the field's 8 dp top padding and is the 16 dp `body-small`
+/// line (`md.comp.filled-text-field.label-text-populated.line-height`) tall.
+const FLOATED_LABEL_BAND: (f64, f64) = (8.0, 8.0 + 16.0);
+
+/// Whether `run` lies within the floated label's band.
+fn in_floated_label_band(run: (f64, f64)) -> bool {
+    run.0 >= FLOATED_LABEL_BAND.0 && run.1 <= FLOATED_LABEL_BAND.1
+}
+
 /// The issue's reproduction: a filled field whose label is hidden, carrying
 /// only a prompt.
 fn hidden_label_prompt_field() -> impl View {
@@ -155,11 +165,11 @@ fn focused_prompt_label_floats_to_the_top(app: &mut OffscreenApp) {
         .first()
         .unwrap_or_else(|| panic!("focused field should still draw the label: {runs:?}"));
     assert!(
-        floating_label.0 <= 8.0 && floating_label.1 <= 20.0,
+        in_floated_label_band(*floating_label),
         "the floating label should sit at the top of the container: {runs:?}"
     );
     assert!(
-        runs.iter().all(|&(y0, _)| !(20.0..36.0).contains(&y0)),
+        runs.iter().all(|&(y0, _)| !(24.0..36.0).contains(&y0)),
         "nothing should remain at the resting position once the label floats: {runs:?}"
     );
 }
@@ -177,7 +187,7 @@ fn filled_prompt_label_floats_to_the_top(app: &mut OffscreenApp) {
         "a filled field draws the floated label and the input text: {runs:?}"
     );
     assert!(
-        runs[0].0 <= 8.0 && runs[0].1 <= 20.0,
+        in_floated_label_band(runs[0]),
         "the floated label should sit at the top: {runs:?}"
     );
     let input = runs[1];
@@ -207,7 +217,7 @@ fn focused_label_floats_to_the_top(app: &mut OffscreenApp) {
         .first()
         .unwrap_or_else(|| panic!("focused field should still draw the label: {runs:?}"));
     assert!(
-        floating_label.0 <= 8.0 && floating_label.1 <= 20.0,
+        in_floated_label_band(*floating_label),
         "the floating label should sit at the top of the container: {runs:?}"
     );
 }

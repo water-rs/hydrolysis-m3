@@ -150,6 +150,12 @@ pub fn progress_circular() -> Motion {
     })
 }
 
+/// The inside label floating between resting and floating: `short3` with
+/// standard easing, unless the change that floats it names an animation.
+pub const fn text_field_label() -> ValueMotion {
+    ValueMotion::Follow(material_standard(duration::SHORT_3))
+}
+
 /// The caret blinks on the platform text-cursor cadence (530ms per half cycle),
 /// which is a system convention rather than an M3 motion token.
 const CARET_HALF_CYCLE: Duration = Duration::from_millis(530);
