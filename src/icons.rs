@@ -1,22 +1,19 @@
 //! Material icon views drawn straight into the scene.
 //!
 //! These icons are stroked outlines rather than glyphs, so they are authored as
-//! [`SceneContent`]: the icon owns its path and re-strokes it whenever the
-//! colour token it resolved against changes, which is the precise update the
-//! reactive contract asks for.
+//! [`Canvas`] drawings: the icon records its path once and the canvas restrokes
+//! it whenever the colour signal it resolved against changes, which is the
+//! precise update the reactive contract asks for.
 
-use core::cell::Cell;
-use std::rc::Rc;
-
-use hydrolysis::draw::kurbo::{BezPath, Cap, Join, Point, Stroke};
-use hydrolysis::draw::{Draw as _, Recorder, WorkingColor};
-use waterui::{Environment, View, ViewExt as _};
-use waterui_core::Signal;
+use hydrolysis::draw::WorkingColor;
+use waterui::{Environment, View};
+use waterui_core::layout::{Point, Size};
+use waterui_core::reactive::SignalExt as _;
 use waterui_core::resolve::Resolvable;
-use waterui_graphics::backend::{RecordingResources, SceneContent, SceneInvalidator, SceneView};
+use waterui_graphics::canvas::{Canvas, Cap, Join, Path, StrokeStyle};
 
 /// The miter limit Material icon strokes are authored against.
-const MITER_LIMIT: f64 = 10.0;
+const MITER_LIMIT: f32 = 10.0;
 
 /// A shared Material checkmark, drawn as a stroked polyline.
 #[derive(Debug, Clone, Copy)]
@@ -48,91 +45,101 @@ where
     ColorToken: Resolvable<Resolved = WorkingColor> + 'static,
 {
     fn body(self, env: &Environment) -> impl View {
-        SceneView::new(CheckmarkContent {
-            stroke: self.color.resolve(env),
-            size: self.size,
-            line_width: self.line_width,
-            container_height: self.container_height,
-            invalidator: None,
-            pending_redraw: Rc::new(Cell::new(false)),
-            guard: None,
+        let Self {
+            color,
+            size,
+            line_width,
+            container_height,
+        } = self;
+        let stroke = color
+            .resolve(env)
+            .map(|color: WorkingColor| color.with_alpha(color.components[3].clamp(0.0, 1.0)));
+
+        Canvas::new(move |cx| {
+            // The polyline is authored in the icon's own box, which is centred
+            // on the width layout gives the canvas and on the container height.
+            let path = cx.size().map(move |canvas: Size| {
+                let x = (canvas.width - size) * 0.5;
+                let y = (container_height - size) * 0.5;
+                Path::builder()
+                    .move_to(Point::new(x + 4.25, y + 9.25))
+                    .line_to(Point::new(x + 7.25, y + 12.25))
+                    .line_to(Point::new(x + 14.0, y + 5.5))
+                    .build()
+            });
+            cx.stroke(
+                path,
+                StrokeStyle::new(line_width)
+                    .cap(Cap::Round)
+                    .join(Join::Round)
+                    .miter_limit(MITER_LIMIT),
+                stroke,
+            );
         })
-        .size(self.size, self.size)
+        .intrinsic_size(Some(Size::new(size, size)))
     }
 }
 
-/// The checkmark's scene content: one stroked polyline whose colour follows a
-/// signal, re-encoded when that signal fires.
-struct CheckmarkContent<S: Signal> {
-    stroke: S,
-    size: f32,
-    line_width: f32,
-    container_height: f32,
-    invalidator: Option<SceneInvalidator>,
-    pending_redraw: Rc<Cell<bool>>,
-    guard: Option<S::Guard>,
-}
+#[cfg(test)]
+mod tests {
+    use core::time::Duration;
 
-impl<S> SceneContent for CheckmarkContent<S>
-where
-    S: Signal<Output = WorkingColor> + 'static,
-    S::Guard: 'static,
-{
-    fn build_scene(
-        &mut self,
-        recorder: &mut Recorder,
-        _resources: &mut RecordingResources<'_>,
-        width: f32,
-        _height: f32,
-    ) -> bool {
-        self.pending_redraw.set(false);
-        let pending_redraw = Rc::clone(&self.pending_redraw);
-        let invalidator = self.invalidator.clone();
-        self.guard = Some(self.stroke.watch(move |_| {
-            pending_redraw.set(true);
-            if let Some(invalidator) = &invalidator {
-                invalidator();
-            }
-        }));
+    use hydrolysis::draw::WorkingColor;
+    use waterui::Environment;
+    use waterui::reactive::binding;
+    use waterui_core::reactive::SignalExt as _;
+    use waterui_core::reactive::signal::Computed;
+    use waterui_core::resolve::Resolvable;
+    use waterui_testing::{Snapshot, UiBuilder};
 
-        let x = (width - self.size) * 0.5;
-        let y = (self.container_height - self.size) * 0.5;
-        let mut path = BezPath::new();
-        path.move_to(point(x + 4.25, y + 9.25));
-        path.line_to(point(x + 7.25, y + 12.25));
-        path.line_to(point(x + 14.0, y + 5.5));
+    use super::CheckmarkIcon;
+    use crate::Material3;
 
-        let stroke = Stroke::new(f64::from(self.line_width))
-            .with_caps(Cap::Round)
-            .with_join(Join::Round)
-            .with_miter_limit(MITER_LIMIT);
-        let color = self.stroke.snapshot();
-        recorder.stroke(
-            path,
-            stroke,
-            WorkingColor::new(color.components).with_alpha(color.components[3].clamp(0.0, 1.0)),
+    /// A colour token backed by a signal the test drives.
+    #[derive(Debug, Clone)]
+    struct Live(Computed<WorkingColor>);
+
+    impl Resolvable for Live {
+        type Resolved = WorkingColor;
+
+        fn resolve(&self, _env: &Environment) -> impl waterui_core::Signal<Output = WorkingColor> {
+            self.0.clone()
+        }
+    }
+
+    /// The checkmark's stroke colour at the middle of its first segment, where
+    /// the line is fully covered.
+    fn stroke_pixel(snapshot: &Snapshot) -> [u8; 3] {
+        // The icon is 18x18 and fills the viewport; (5.75, 10.75) is the
+        // midpoint of the first segment in icon space.
+        let (x, y) = (6_usize, 11_usize);
+        let index = (y * snapshot.width() as usize + x) * 4;
+        let pixel = &snapshot.rgba8()[index..index + 3];
+        [pixel[0], pixel[1], pixel[2]]
+    }
+
+    #[test]
+    fn checkmark_recolours_when_its_signal_changes() {
+        let color = binding(WorkingColor::new([1.0, 0.0, 0.0, 1.0]));
+        let token = Live(color.computed());
+        let mut app = UiBuilder::new()
+            .viewport(18, 18)
+            .theme(Material3::defaults())
+            .mount_offscreen(move || CheckmarkIcon::new(token.clone(), 18.0, 2.0));
+
+        app.pump_for(Duration::from_millis(50));
+        let red = stroke_pixel(&app.snapshot());
+        assert!(
+            red[0] > 200 && red[1] < 60 && red[2] < 60,
+            "initial stroke should be red, got {red:?}"
         );
 
-        self.pending_redraw.replace(false)
+        color.set(WorkingColor::new([0.0, 0.0, 1.0, 1.0]));
+        app.pump_for(Duration::from_millis(50));
+        let blue = stroke_pixel(&app.snapshot());
+        assert!(
+            blue[2] > 200 && blue[0] < 60 && blue[1] < 60,
+            "stroke should follow the signal to blue, got {blue:?}"
+        );
     }
-
-    // The invalidator and the stroke watch armed on it belong to the engine
-    // that minted them; the replacement engine installs its own via
-    // `set_invalidator`, and the next `build_scene` re-arms the watch
-    // against it. The stroke signal, geometry and the shared redraw flag
-    // are semantic source and stay.
-    fn rebuild_for_engine(&mut self) {
-        self.invalidator = None;
-        self.guard = None;
-    }
-
-    fn set_invalidator(&mut self, invalidator: Option<SceneInvalidator>) {
-        self.invalidator = invalidator;
-    }
-}
-
-/// Widens an icon-space coordinate pair, authored in `f32`, into the `f64` the
-/// path builder takes.
-fn point(x: f32, y: f32) -> Point {
-    Point::new(f64::from(x), f64::from(y))
 }
