@@ -1,6 +1,7 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
 use hydrolysis::draw::Draw as _;
+use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
@@ -49,12 +50,14 @@ impl MaterialElevationLevel {
 
     /// Creates a Material elevation level.
     ///
-    /// # Panics
-    ///
-    /// Panics when `level` is outside Material's 0..=5 elevation range.
+    /// A `level` outside Material's 0..=5 elevation range is a contract
+    /// violation; a release build uses level 5, the nearest valid level.
     #[must_use]
-    pub const fn new(level: u8) -> Self {
-        assert!(level <= 5, "Material elevation level must be in 0..=5");
+    pub fn new(level: u8) -> Self {
+        if level > 5 {
+            contract_violation!("Material elevation level {level} must be in 0..=5; using level 5");
+            return Self::LEVEL5;
+        }
         Self(level)
     }
 
@@ -329,8 +332,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Material elevation level must be in 0..=5")]
-    fn elevation_level_rejects_out_of_range_values() {
-        let _ = MaterialElevationLevel::new(6);
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "Material elevation level 6 must be in 0..=5")
+    )]
+    fn elevation_level_clamps_out_of_range_values() {
+        assert_eq!(
+            MaterialElevationLevel::new(6),
+            MaterialElevationLevel::LEVEL5
+        );
     }
 }

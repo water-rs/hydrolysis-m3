@@ -1,3 +1,5 @@
+use waterui::contract_violation;
+
 use super::typography::BODY_SMALL_LINE_HEIGHT;
 
 /// `ShapeTokens.CornerSmall`.
@@ -87,9 +89,10 @@ pub const BUTTON_EXTRA_LARGE: ButtonSizeTokens = ButtonSizeTokens {
     outline_width: 3.0, // md.comp.button.xlarge.outlined.outline-width
 };
 
-/// The token set for `size`.
+/// The token set for `size`. A `ControlSize` this theme does not implement is
+/// a contract violation; a release build uses the medium set.
 #[must_use]
-pub const fn button_size_tokens(size: waterui_controls::ControlSize) -> ButtonSizeTokens {
+pub fn button_size_tokens(size: waterui_controls::ControlSize) -> ButtonSizeTokens {
     use waterui_controls::ControlSize;
     match size {
         ControlSize::ExtraSmall => BUTTON_EXTRA_SMALL,
@@ -97,7 +100,12 @@ pub const fn button_size_tokens(size: waterui_controls::ControlSize) -> ButtonSi
         ControlSize::Medium => BUTTON_MEDIUM,
         ControlSize::Large => BUTTON_LARGE,
         ControlSize::ExtraLarge => BUTTON_EXTRA_LARGE,
-        _ => panic!("hydrolysis ControlSize variant is not implemented"),
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement ControlSize {size:?} for a button; using the medium token set"
+            );
+            BUTTON_MEDIUM
+        }
     }
 }
 
@@ -257,9 +265,11 @@ const SLIDER_EXTRA_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
     track_corner: 28.0,
 };
 
-/// The `md.comp.slider.<size>.*` token set for `size`.
+/// The `md.comp.slider.<size>.*` token set for `size`. A `ControlSize` this
+/// theme does not implement is a contract violation; a release build uses the
+/// medium set.
 #[must_use]
-pub const fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeTokens {
+pub fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeTokens {
     use waterui_controls::ControlSize;
     match size {
         ControlSize::ExtraSmall => SLIDER_EXTRA_SMALL_TOKENS,
@@ -267,7 +277,12 @@ pub const fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSi
         ControlSize::Medium => SLIDER_MEDIUM_TOKENS,
         ControlSize::Large => SLIDER_LARGE_TOKENS,
         ControlSize::ExtraLarge => SLIDER_EXTRA_LARGE_TOKENS,
-        _ => panic!("hydrolysis ControlSize variant is not implemented"),
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement ControlSize {size:?} for a slider; using the medium token set"
+            );
+            SLIDER_MEDIUM_TOKENS
+        }
     }
 }
 

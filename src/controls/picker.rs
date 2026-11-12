@@ -14,14 +14,23 @@ use crate::{PickerMetrics, RadioIndicatorState, WidgetInteractionState};
 use hydrolysis::draw::kurbo::{Circle, Line, RoundedRect, RoundedRectRadii, Stroke};
 use hydrolysis::draw::{Draw as _, Recorder, WorkingColor};
 use num_traits::ToPrimitive;
+use waterui::contract_violation;
 use waterui_form::picker::PickerStyle;
 
+/// The metrics of `style`. A `PickerStyle` this theme does not implement is
+/// a contract violation; a release build uses the menu metrics, the
+/// automatic style's.
 pub fn metrics(style: PickerStyle) -> PickerMetrics {
     match style {
         PickerStyle::Automatic | PickerStyle::Menu => menu_metrics(),
         PickerStyle::Radio => radio_metrics(),
         PickerStyle::Segmented => segmented_metrics(),
-        _ => panic!("hydrolysis PickerStyle variant is not implemented"),
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement PickerStyle {style:?}; using the menu metrics"
+            );
+            menu_metrics()
+        }
     }
 }
 

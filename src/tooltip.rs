@@ -88,9 +88,9 @@ impl TooltipVisibility {
 
     fn next_generation(&self) -> u64 {
         self.generation.with_mut(|generation| {
-            *generation = generation
-                .checked_add(1)
-                .expect("Material tooltip generation overflow");
+            *generation = generation.checked_add(1).expect(
+                "a u64 generation counter, bumped once per hover or focus change, cannot overflow",
+            );
             *generation
         })
     }

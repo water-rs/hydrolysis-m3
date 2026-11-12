@@ -7,6 +7,7 @@ use hydrolysis::theme::{
     Border, ButtonLook, ButtonSpec, Chrome, CornerShape, Corners, Custom, Driven, Elevation,
     Inputs, Label, PressFeedback, Surface,
 };
+use waterui::contract_violation;
 use waterui::interaction::InteractionState;
 use waterui::reactive::zip::zip;
 use waterui_controls::button::ButtonStyle;
@@ -25,14 +26,33 @@ use crate::semantics::{focus_indicator, state_layer};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
 use crate::theme::{motion, typography};
 
+/// `style` when this theme implements it. `ButtonStyle` is `#[non_exhaustive]`,
+/// so a variant added to the framework after this theme is a contract
+/// violation; it draws as [`ButtonStyle::Automatic`], the theme's default.
+pub fn supported_style(style: ButtonStyle) -> ButtonStyle {
+    match style {
+        ButtonStyle::Automatic
+        | ButtonStyle::BorderedProminent
+        | ButtonStyle::Bordered
+        | ButtonStyle::Plain
+        | ButtonStyle::Borderless
+        | ButtonStyle::Link => style,
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement ButtonStyle {style:?}; drawing ButtonStyle::Automatic"
+            );
+            ButtonStyle::Automatic
+        }
+    }
+}
+
 /// The look of a text button in `spec`.
 ///
-/// # Panics
-///
-/// Panics on a `ButtonStyle` or `ControlSize` variant this theme does not
-/// implement.
+/// A `ButtonStyle` or `ControlSize` variant this theme does not implement is
+/// a contract violation; a release build draws the automatic style and the
+/// medium size.
 pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
-    let style = spec.style();
+    let style = supported_style(spec.style());
     let tint = spec.tint();
     let shape = CornerShape::new(container_corners(pressed_corner_radius));
     let surface = match style {
@@ -53,7 +73,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
             Surface::clear(shape).border(outline(OutlineVariant, outline_width, env))
         }
         ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => Surface::clear(shape),
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+        _ => unreachable!("`supported_style` maps every unimplemented variant to a known one"),
     };
     // md.comp.button.filled.*.state-layer.color = on-primary;
     // md.comp.button.outlined.*.state-layer.color = on-surface-variant;
@@ -62,7 +82,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
         ButtonStyle::Automatic | ButtonStyle::BorderedProminent => Color::from(OnPrimary),
         ButtonStyle::Bordered => Color::from(OnSurfaceVariant),
         ButtonStyle::Plain | ButtonStyle::Borderless | ButtonStyle::Link => tint.clone(),
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+        _ => unreachable!("`supported_style` maps every unimplemented variant to a known one"),
     };
     let mut chrome = interactive(surface, layer);
     if style == ButtonStyle::Link {
@@ -108,11 +128,10 @@ pub fn label(spec: &ButtonSpec) -> Label {
 /// The label colour of `style`, `icon_only` or not, in every state; the
 /// text-like variants draw in `tint`.
 ///
-/// # Panics
-///
-/// Panics on a `ButtonStyle` variant this theme does not implement.
+/// A `ButtonStyle` variant this theme does not implement is a contract
+/// violation; a release build draws the automatic style.
 pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<Color> {
-    let rest = match style {
+    let rest = match supported_style(style) {
         // The filled button's on-primary content for a text label; the
         // standard icon button's on-surface-variant over no container for
         // an icon-only one.
@@ -122,7 +141,7 @@ pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<C
         ButtonStyle::Bordered => Color::from(OnSurfaceVariant),
         // md.comp.button.text.label-text.color
         ButtonStyle::Plain | ButtonStyle::Link | ButtonStyle::Borderless => tint,
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+        _ => unreachable!("`supported_style` maps every unimplemented variant to a known one"),
     };
     // MD3 disabled button label: on-surface at the 38% disabled-content
     // opacity, regardless of variant.

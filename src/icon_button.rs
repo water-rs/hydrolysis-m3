@@ -8,6 +8,7 @@ use hydrolysis::theme::{ButtonLook, ButtonSpec, CornerShape, Corners, Surface};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::border::Border;
 use waterui::color::Color;
+use waterui::contract_violation;
 use waterui::shape::{Circle, ShapeExt as _};
 use waterui::{Environment, Str, View, ViewExt as _};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
@@ -121,13 +122,12 @@ impl IconButtonSize {
 /// variant, the Material default for icon buttons. A link keeps no
 /// minimum box.
 ///
-/// # Panics
-///
-/// Panics on a `ButtonStyle` or `ControlSize` variant this theme does not
-/// implement.
+/// A `ButtonStyle` or `ControlSize` variant this theme does not implement is
+/// a contract violation; a release build draws the automatic style and the
+/// medium size.
 #[must_use]
 pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
-    let style = spec.style();
+    let style = button::supported_style(spec.style());
     let tokens = icon_button_size(spec.size()).tokens();
     let shape = CornerShape::new(button::container_corners(pressed_corner_radius));
     let surface = match style {
@@ -150,7 +150,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
         | ButtonStyle::Plain
         | ButtonStyle::Borderless
         | ButtonStyle::Link => Surface::clear(shape),
-        _ => panic!("hydrolysis ButtonStyle variant is not implemented"),
+        _ => unreachable!("`supported_style` maps every unimplemented variant to a known one"),
     };
     // md.comp.icon-button.filled.*.state-layer.color = on-primary;
     // standard and outlined both use on-surface-variant.
@@ -194,14 +194,21 @@ fn outline_width(side: f64) -> f64 {
     }
 }
 
-const fn icon_button_size(size: ControlSize) -> IconButtonSize {
+/// The icon button size of `size`; a `ControlSize` this theme does not
+/// implement is a contract violation and draws as medium.
+fn icon_button_size(size: ControlSize) -> IconButtonSize {
     match size {
         ControlSize::ExtraSmall => IconButtonSize::ExtraSmall,
         ControlSize::Small => IconButtonSize::Small,
         ControlSize::Medium => IconButtonSize::Medium,
         ControlSize::Large => IconButtonSize::Large,
         ControlSize::ExtraLarge => IconButtonSize::ExtraLarge,
-        _ => panic!("hydrolysis ControlSize variant is not implemented"),
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement ControlSize {size:?} for an icon button; drawing ControlSize::Medium"
+            );
+            IconButtonSize::Medium
+        }
     }
 }
 

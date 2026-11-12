@@ -3,6 +3,8 @@ use hydrolysis::theme::{
     Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
 use waterui::color::Color;
+use waterui::contract_violation;
+use waterui::gesture::{DragEvent, GesturePhase};
 use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
 use waterui::{Environment, Signal as _, Str};
@@ -135,5 +137,39 @@ impl Resolvable for ConditionalFont {
                 if condition { when_true } else { when_false }
             },
         )
+    }
+}
+
+/// Whether the drag gesture `env` delivers holds its press (started or
+/// updated), for `owner`'s press tracking.
+///
+/// A backend places a `DragEvent` in the environment before it runs a drag
+/// handler; a handler that finds none is a backend contract violation. A
+/// release build reports it and returns `None`, and the caller leaves its
+/// press state as it was.
+pub fn drag_held(env: &Environment, owner: &str) -> Option<bool> {
+    let Some(event) = env.get::<DragEvent>() else {
+        contract_violation!(
+            "{owner} drag gesture ran without a DragEvent in its environment; its press state is left unchanged"
+        );
+        return None;
+    };
+    Some(matches!(
+        event.phase(),
+        GesturePhase::Started | GesturePhase::Updated
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "test owner drag gesture ran without a DragEvent")
+    )]
+    fn a_drag_handler_without_an_event_leaves_the_press_unchanged() {
+        assert_eq!(drag_held(&Environment::new(), "test owner"), None);
     }
 }
