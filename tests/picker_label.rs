@@ -190,4 +190,15 @@ fn segmented_picker_state_layer_material3_snapshots() {
     app.queue_pointer_down(LARGE.0, LARGE.1);
     app.pump_for(Duration::from_millis(600));
     app.capture_snapshot("hydrolysis", "segmented-picker-state", "pressed");
+
+    // A press near the "Large" segment's trailing edge, sampled early in the
+    // ripple's growth: the wave starts at the press point and drifts to the
+    // segment's centre as it grows.
+    let mut app = ui()
+        .viewport(360, 120)
+        .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+        .mount_offscreen(labelled_group_picker(PickerStyle::Segmented, false));
+    app.queue_pointer_down(LARGE.0 + 40.0, LARGE.1);
+    app.pump_for(Duration::from_millis(80));
+    app.capture_snapshot("hydrolysis", "segmented-picker-state", "pressed-off-centre");
 }

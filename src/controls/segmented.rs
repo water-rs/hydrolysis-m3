@@ -2,19 +2,19 @@
 //! tokens.
 //!
 //! The container outline and its separators are one control part over the
-//! row. Each segment records three parts of its own, in its own shape: the
-//! selected container, the hover and focus state layer, and the press
-//! ripple. Material segmented buttons have no drag, so the look takes taps
-//! only, and every part is a function of the segment's interaction state, so
-//! a hover, a press or a selection change records nothing.
+//! row. Each segment has a chrome of its own, in its own shape, that
+//! Hydrolysis realizes the way a button's is — the hover and focus state
+//! layer, one press ripple wave per press from the press point, and the
+//! focus indicator — and a selected container part. Material segmented
+//! buttons have no drag, so the look takes taps only, and every part is a
+//! function of the segment's interaction state, so a hover, a press or a
+//! selection change records nothing.
 
-use hydrolysis::draw::kurbo::{
-    BezPath, Circle, Point, RoundedRect, RoundedRectRadii, Stroke, Vec2,
-};
+use hydrolysis::draw::kurbo::{BezPath, Point, RoundedRect, RoundedRectRadii, Stroke, Vec2};
 use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
 use hydrolysis::theme::{
-    Custom, Driven, Inputs, Motion, Segment, SegmentLabel, SegmentedLayout, SegmentedLook,
-    SegmentedSpec, SegmentedValue, Transition,
+    Chrome, CornerShape, Corners, Custom, Driven, Inputs, PressFeedback, Segment, SegmentLabel,
+    SegmentedLayout, SegmentedLook, SegmentedSpec, SegmentedValue, Surface,
 };
 use num_traits::ToPrimitive;
 use waterui::interaction::InteractionState;
@@ -28,25 +28,12 @@ use crate::dimensions::{
     PICKER_LABEL_SPACING, PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
     PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_MIN_WIDTH, PICKER_SEGMENTED_OUTLINE_WIDTH,
 };
+use crate::semantics::{focus_indicator, state_layer};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
-use crate::theme::state_layer::{
-    FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
-    RIPPLE_INITIAL_SCALE, ripple_diameter,
-};
 use crate::theme::{motion, typography};
 
 /// A segment's shape over the segment, and its paint.
 type ShapePart = Custom<Segment, (Driven<RoundedRect, Segment>, Driven<Paint, Segment>)>;
-/// A segment's press ripple: the shape it is clipped to, the wave and its
-/// paint.
-type RipplePart = Custom<
-    Segment,
-    (
-        Driven<RoundedRect, Segment>,
-        Driven<Circle, Segment>,
-        Driven<Paint, Segment>,
-    ),
->;
 
 /// The look of a segmented picker in `spec`.
 ///
@@ -70,9 +57,8 @@ pub fn look(spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {
         .hit(motion::hit_region())
         .part(container(env))
         .part(separators(spec.segment_count(), env))
+        .segment_chrome(segment_chrome)
         .segment_part(selected_container(env))
-        .segment_part(state_layer(env))
-        .segment_part(ripple(env))
 }
 
 /// A segment's label colour: `on-secondary-container` while selected,
@@ -113,11 +99,6 @@ fn segment_shape() -> Driven<RoundedRect, Segment> {
 
 const fn disabled<V>(inputs: &Inputs<'_, V>) -> bool {
     inputs.state.contains(InteractionState::DISABLED)
-}
-
-/// `color` at `opacity`.
-fn faded(color: WorkingColor, opacity: f32) -> WorkingColor {
-    color.with_alpha(color.components[3] * opacity)
 }
 
 /// The outline paint: `outline`, on-surface at 12% while disabled.
@@ -193,90 +174,17 @@ fn selected_container(env: &Environment) -> ShapePart {
     )
 }
 
-/// The state-layer colour: `on-secondary-container` while selected,
-/// `on-surface` otherwise, at `opacity`.
-fn layer_paint(
-    env: &Environment,
-    opacity: impl Fn(&Inputs<'_, Segment>) -> f32 + 'static,
-) -> Driven<Paint, Segment> {
-    Driven::follow(
-        zip(
-            Color::from(OnSecondaryContainer).resolve(env),
-            Color::from(OnSurface).resolve(env),
-        ),
-        move |&(selected, unselected): &(WorkingColor, WorkingColor),
-              inputs: &Inputs<'_, Segment>| {
-            let color = if inputs.state.contains(InteractionState::SELECTED) {
-                selected
-            } else {
-                unselected
-            };
-            Paint::from(faded(color, opacity(inputs)))
-        },
-    )
-}
-
-/// The state layer's opacity while hovered or focused; the press is the
-/// ripple's.
-const fn state_layer_opacity(inputs: &Inputs<'_, Segment>) -> f32 {
-    if disabled(inputs) {
-        0.0
-    } else if inputs.state.contains(InteractionState::FOCUSED) {
-        FOCUS_STATE_LAYER_OPACITY
-    } else if inputs.state.contains(InteractionState::HOVERED) {
-        HOVER_STATE_LAYER_OPACITY
-    } else {
-        0.0
-    }
-}
-
-/// The hover and focus layer over the segment's own shape.
-fn state_layer(env: &Environment) -> ShapePart {
-    Custom::new(
-        (segment_shape(), layer_paint(env, state_layer_opacity)),
-        |recorder, _frame, (shape, paint)| recorder.fill(shape, paint),
-    )
-}
-
-/// The press ripple's opacity.
-const fn ripple_opacity(inputs: &Inputs<'_, Segment>) -> f32 {
-    if inputs.state.contains(InteractionState::PRESSED) && !disabled(inputs) {
-        PRESSED_STATE_LAYER_OPACITY
-    } else {
-        0.0
-    }
-}
-
-/// The ripple's wave, centred on the segment: it grows from the initial
-/// scale to the full ripple diameter while pressed.
-fn ripple_wave(inputs: &Inputs<'_, Segment>) -> Circle {
-    let full = ripple_diameter(inputs.frame) / 2.0;
-    let radius = if inputs.state.contains(InteractionState::PRESSED) {
-        full
-    } else {
-        full * RIPPLE_INITIAL_SCALE
-    };
-    Circle::new(inputs.frame.center(), radius)
-}
-
-/// The press ripple's motion: the wave grows with the ripple's growth and
-/// fades in, and a release fades it out.
-fn ripple_motion() -> Motion {
-    let ripple = motion::ripple();
-    let mut motion = motion::chrome();
-    motion.press = Transition::new(ripple.grow, ripple.fade_out);
-    motion
-}
-
-/// The press ripple, clipped to the segment's shape.
-fn ripple(env: &Environment) -> RipplePart {
-    let wave = Driven::new(ripple_wave).motion(ripple_motion());
-    let paint = layer_paint(env, ripple_opacity).motion(ripple_motion());
-    Custom::new(
-        (segment_shape(), wave, paint),
-        |recorder, _frame, (clip, wave, paint)| {
-            recorder.clip(clip, |recorder| recorder.fill(wave, paint));
-        },
+/// A segment's chrome: no container of its own — the selected container is
+/// a segment part — and the on-surface state layer at the Material
+/// opacities, the press ripple growing from the press point, and the focus
+/// indicator, all in the segment's own shape.
+fn segment_chrome(segment: Segment) -> Chrome {
+    Chrome::new(
+        Surface::clear(CornerShape::new(Corners::from(segment_radii(segment)))),
+        state_layer(OnSurface),
+        PressFeedback::new().ripple(motion::ripple()),
+        focus_indicator(),
+        motion::chrome(),
     )
 }
 
