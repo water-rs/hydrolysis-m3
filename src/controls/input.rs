@@ -47,7 +47,9 @@ pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
         container(env),
         metrics(),
         FloatingLabel::new(
-            Label::new().color(label_color()),
+            Label::new()
+                .font(typography::body_large())
+                .color(label_color()),
             motion::text_field_label(),
         )
         .scale(INPUT_LABEL_FLOAT_SCALE)
@@ -391,6 +393,7 @@ mod tests {
             colors.on_surface.working().with_alpha(0.38)
         );
         assert!(look.get_placeholder().get_font().is_some());
+        assert!(look.floating_label().label().get_font().is_some());
     }
 
     /// The populated label is `body-small` (12) where the resting label is
