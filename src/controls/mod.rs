@@ -2,6 +2,7 @@ pub mod button;
 pub mod input;
 pub mod picker;
 pub mod progress;
+pub mod radio;
 pub mod segmented;
 pub mod slider;
 pub mod stepper;

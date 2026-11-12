@@ -95,10 +95,13 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 |---|---|---|---|---|
 | src/controls/input.rs:107-127 | filled text field draws hover-only state layer on-surface@0.08 clipped to top-rounded (4,4,0,0) | hover layer only | `md.comp.filled-text-field.hover.state-layer.{color,opacity}` | fixed |
 | src/controls/input.rs:61-76 | container surface-container-highest, caret/indicator per state | same | `md.comp.filled-text-field.*` | conforms |
-| src/controls/picker.rs:108 | select-field layer clipped to (4,4,0,0) | top-rounded | `md.comp.filled-select.text-field.container.shape` | fixed |
-| src/controls/picker.rs:176 | menu row layer on-surface (all states) | on-surface | `md.comp.filled-select.menu.list-item.*.state-layer.color` | fixed |
-| src/controls/picker.rs:185 | menu separator surface-variant | was outline-variant | `md.comp.filled-select.menu.divider.color` | fixed |
-| src/controls/picker.rs | selected menu row surface-container-highest | surface-container-highest | `md.comp.filled-select.menu.list-item.selected.container.color` | conforms |
+| src/controls/picker.rs | select field container surface-container-highest on (4,4,0,0), hover layer on-surface@0.08 clipped to it, active indicator 1dp on-surface-variant (hover on-surface, focus 2dp primary, disabled on-surface@0.38), chevron on-surface-variant | same | `md.comp.filled-select.text-field.{container.shape,hover.state-layer.*,active-indicator.*,trailing-icon.color}` | conforms |
+| src/controls/picker.rs | select field value body-large on-surface | same | `md.comp.filled-select.text-field.input-text.*` | conforms |
+| src/layout/menu.rs | menu row layer on-surface (all states): the menu's rows are buttons, whose look the renderer lowers to a foreground state layer | on-surface | `md.comp.filled-select.menu.list-item.*.state-layer.color` | fixed |
+| src/layout/menu.rs | menu separator surface-variant, one divider for the picker popup and every other menu | was outline-variant | `md.comp.menu.divider.color`, `md.comp.filled-select.menu.divider.color` | fixed |
+| src/layout/menu.rs | selected menu row surface-container-highest | surface-container-highest | `md.comp.filled-select.menu.list-item.selected.container.color` | conforms |
+| src/controls/radio.rs | ring 2dp on-surface-variant (on-surface hovered/focused/pressed, tint selected, on-surface@0.38 disabled), dot 12dp across in the tint | same | `md.comp.radio-button.{selected,unselected,disabled}.*.icon.color` | conforms |
+| src/controls/radio.rs | radio state layer 40dp, tint selected / on-surface unselected, 0.08/0.10/0.10, press ripple | same | `md.comp.radio-button.*.state-layer.*` | conforms |
 | src/controls/segmented.rs | segmented layer on-secondary-container (selected) | on-secondary-container | `md.comp.segmented-button.selected.*.state-layer.color` | conforms |
 | src/controls/progress.rs | track/active-indicator heights, gap, shapes per expressive progress | same | `md.comp.{linear,circular}-progress-indicator.*` | conforms |
 | src/controls/slider.rs:147 | handle elevation level1 (disabled level0) | was level0 | `md.comp.slider.handle.elevation` / `disabled.handle.elevation` | fixed |
@@ -127,8 +130,8 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 
 | file:line | our value | spec value | token name | status |
 |---|---|---|---|---|
-| src/layout/menu.rs:34 | context panel level2, surface-container, corner 4 | same | `md.comp.menu.container.*` | conforms |
-| src/layout/menu.rs:48 | separator surface-variant 1px | was outline-variant | `md.comp.menu.divider.color` | fixed |
+| src/layout/menu.rs | menu panel level2, surface-container, corner 4: the picker popup, the text context menu and the popup window share it | same | `md.comp.menu.container.*` | conforms |
+| src/layout/menu.rs | separator surface-variant 1px | was outline-variant | `md.comp.menu.divider.color` | fixed |
 | src/material_menu.rs | row 48h, padding 12/8, width 112–280 | same | `md.comp.menu.list-item.*` | conforms |
 
 ## Cards, snackbar, divider, table, scroll (`src/layout/*`, `src/material_*`)
@@ -188,7 +191,7 @@ capsule spanning the item.
 - `src/controls/button.rs` unit tests: disabled filled container opacity 0.1; outlined outline-variant + banded widths; pressed corner morph.
 - `src/icon_button.rs` unit tests: xs/xl size map, outline width table.
 - `src/fab.rs` unit test: `FabSize` = Baseline 56/Medium 80/Large 96 only (no `Small`).
-- `src/controls/picker.rs`: `menu_selected_row_and_divider_use_filled_select_tokens` → surface-variant divider.
+- `src/layout/menu.rs`, `src/controls/picker.rs`, `src/controls/radio.rs`: the menu, menu picker and radio group looks' layouts, shapes and per-state paints.
 - `src/navigation_bar.rs`: indicator width 56.
 - `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values.
 - `src/navigation_rail.rs`: expanded indicator height 56.

@@ -49,7 +49,9 @@ mod semantics;
 pub mod split_button;
 mod theme;
 
-pub(crate) use controls::{button, input, picker, progress, segmented, slider, stepper, toggle};
+pub(crate) use controls::{
+    button, input, picker, progress, radio, segmented, slider, stepper, toggle,
+};
 pub(crate) use layout::{badge, card, divider, list, menu, scroll, snackbar, table};
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
@@ -62,18 +64,17 @@ pub use hydrolysis::theme::{
     BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, IndicatorLook,
     InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
     ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
-    ListTrailingControlMetrics, ModalInteraction, NavigationMetrics, NavigationMotion,
-    PickerMetrics, PressWave, PressWaves, ProgressSpec, RadioIndicatorState, RadioSelectionMotion,
-    SegmentedLook, SegmentedSpec, SliderLook, SliderSpec, StepperLook, StepperSpec, SwitchLook,
-    TabItemGeometry, TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion,
-    TextContextMenuMetrics, ToggleSpec, WidgetInteractionState, WidgetTheme,
+    ListTrailingControlMetrics, MenuLook, MenuPickerLook, MenuSpec, ModalInteraction,
+    NavigationMetrics, NavigationMotion, PickerSpec, PressWave, PressWaves, ProgressSpec,
+    RadioGroupLook, SegmentedLook, SegmentedSpec, SliderLook, SliderSpec, StepperLook, StepperSpec,
+    SwitchLook, TabItemGeometry, TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion,
+    ToggleSpec, WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
 use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_core::Environment;
-use waterui_form::picker::PickerStyle;
 use waterui_graphics::color::Color;
 
 pub use button_group::{
@@ -508,85 +509,16 @@ impl WidgetTheme for Material3 {
         input::draw_state_layer(&self.colors(), draw, bounds, state);
     }
 
-    fn text_context_menu_metrics(&self) -> TextContextMenuMetrics {
-        menu::text_context_metrics()
+    fn menu(&self, spec: &MenuSpec, env: &Environment) -> MenuLook {
+        menu::look(*spec, env)
     }
 
-    fn draw_text_context_menu_panel(&self, draw: &mut Recorder, bounds: Rect) {
-        menu::draw_text_context_panel(&self.colors(), draw, bounds);
+    fn menu_picker(&self, spec: &PickerSpec, env: &Environment) -> MenuPickerLook {
+        picker::look(spec, env)
     }
 
-    fn draw_text_context_menu_separator(&self, draw: &mut Recorder, bounds: Rect) {
-        menu::draw_text_context_separator(&self.colors(), draw, bounds);
-    }
-
-    fn picker_metrics(&self, style: PickerStyle) -> PickerMetrics {
-        picker::metrics(style)
-    }
-
-    fn radio_selection_motion(&self) -> RadioSelectionMotion {
-        theme::motion::radio_selection()
-    }
-
-    fn draw_picker_indicator(&self, draw: &mut Recorder, bounds: Rect) {
-        picker::draw_indicator(&self.colors(), draw, bounds);
-    }
-
-    fn draw_picker_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_picker_popup(&self, draw: &mut Recorder, popup_rect: Rect) {
-        picker::draw_popup(&self.colors(), draw, popup_rect);
-    }
-
-    fn draw_picker_popup_row_background(
-        &self,
-        draw: &mut Recorder,
-        row_rect: Rect,
-        selected: bool,
-    ) {
-        picker::draw_popup_row_background(&self.colors(), draw, row_rect, selected);
-    }
-
-    fn draw_picker_popup_row_state_layer(
-        &self,
-        draw: &mut Recorder,
-        row_rect: Rect,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_popup_row_state_layer(&self.colors(), draw, row_rect, selected, state);
-    }
-
-    fn draw_picker_separator(&self, draw: &mut Recorder, separator: Rect) {
-        picker::draw_separator(&self.colors(), draw, separator);
-    }
-
-    fn draw_radio_indicator(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        state: RadioIndicatorState,
-    ) {
-        picker::draw_radio_indicator(&self.colors(), draw, center, radius, state);
-    }
-
-    fn draw_radio_state_layer(
-        &self,
-        draw: &mut Recorder,
-        center: Point,
-        radius: f64,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_radio_state_layer(&self.colors(), draw, center, radius, selected, state);
+    fn radio_group(&self, spec: &PickerSpec, env: &Environment) -> RadioGroupLook {
+        radio::look(spec, env)
     }
 
     fn segmented_picker(&self, spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {

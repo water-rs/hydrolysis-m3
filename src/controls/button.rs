@@ -153,6 +153,14 @@ pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<C
         .into()
 }
 
+/// `color` as a paint that follows it.
+pub fn solid_paint<V: 'static>(color: impl Into<Color>, env: &Environment) -> Driven<Paint, V> {
+    Driven::follow(
+        color.into().resolve(env),
+        |color: &WorkingColor, _inputs: &Inputs<'_, V>| Paint::from(*color),
+    )
+}
+
 /// `rest` resolved in `env` as a paint, `disabled` while the widget is
 /// disabled.
 pub fn disabled_paint<V: 'static>(

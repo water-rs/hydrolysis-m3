@@ -1,501 +1,319 @@
-use crate::dimensions::{
-    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING, PICKER_MENU_MIN_WIDTH,
-    PICKER_MENU_POPUP_CORNER_RADIUS, PICKER_MENU_POPUP_ROW_HEIGHT, PICKER_MENU_POPUP_TOP_SPACING,
-    PICKER_MIN_HEIGHT, PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS,
-    PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_MIN_WIDTH, PICKER_RADIO_OUTER_RING_WIDTH,
-    PICKER_RADIO_ROW_SPACING, PICKER_VERTICAL_INSET,
-};
-use crate::elevation::MaterialElevationLevel;
-use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
-use crate::theme::state_layer;
-use crate::{PickerMetrics, RadioIndicatorState, WidgetInteractionState};
-use hydrolysis::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
-use hydrolysis::draw::{Draw as _, Recorder, WorkingColor};
-use waterui::contract_violation;
-use waterui_form::picker::PickerStyle;
+//! The Material 3 menu picker look: the exposed dropdown menu's field from
+//! the `md.comp.filled-select.*` tokens, which are the filled text field's.
+//!
+//! The field is a `surface-container-highest` container rounded on top only,
+//! with its active indicator along the bottom edge and the dropdown chevron
+//! at the trailing end. Its hover tint is the only state layer a filled
+//! field has: focus shows through the active indicator, and a press has no
+//! ripple. Every part is a function of the field's interaction state, so a
+//! hover or a focus records nothing. The popup the field opens is the
+//! [menu look](crate::layout::menu).
 
-/// The metrics of `style`. A `PickerStyle` this theme does not implement is
-/// a contract violation; a release build uses the menu metrics, the
-/// automatic style's.
-pub fn metrics(style: PickerStyle) -> PickerMetrics {
-    match style {
-        PickerStyle::Automatic | PickerStyle::Menu => menu_metrics(),
-        PickerStyle::Radio => radio_metrics(),
-        // A segmented picker is measured by its look
-        // ([`super::segmented::look`]), not by picker metrics.
-        _ => {
-            contract_violation!(
-                "hydrolysis-m3 does not implement PickerStyle {style:?}; using the menu metrics"
-            );
-            menu_metrics()
-        }
-    }
+use hydrolysis::draw::kurbo::{BezPath, Point, Rect, RoundedRectRadii, Stroke};
+use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis::theme::{
+    Chrome, CornerShape, Corners, Custom, Driven, FocusIndicator, Inputs, Label, MenuPickerLayout,
+    MenuPickerLook, PickerSpec, PressFeedback, StateLayer, Surface,
+};
+use waterui::interaction::InteractionState;
+use waterui_core::Environment;
+use waterui_graphics::color::Color;
+
+use crate::color::{OnSurface, OnSurfaceVariant, Primary, SurfaceContainerHighest};
+use crate::controls::button::disabled_paint;
+use crate::controls::toggle::gather;
+use crate::dimensions::{
+    INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
+    INPUT_FILLED_DISABLED_CONTAINER_OPACITY, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
+    PICKER_CHEVRON_HALF_HEIGHT, PICKER_CHEVRON_HALF_WIDTH, PICKER_CHEVRON_STROKE_WIDTH,
+    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING, PICKER_MENU_MIN_WIDTH,
+    PICKER_MENU_POPUP_TOP_SPACING, PICKER_MIN_HEIGHT, PICKER_VERTICAL_INSET,
+};
+use crate::theme::colors::DISABLED_CONTENT_OPACITY;
+use crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY;
+use crate::theme::{motion, typography};
+
+/// The look of a menu picker's field in `spec`.
+///
+/// The selected value reads in `body-large` over `on-surface`
+/// (`md.comp.filled-select.text-field.input-text.*`).
+pub fn look(_spec: &PickerSpec, env: &Environment) -> MenuPickerLook {
+    MenuPickerLook::new(chrome(env), layout()).value(
+        Label::new()
+            .font(typography::body_large())
+            .color(Color::from(OnSurface)),
+    )
 }
 
-const fn menu_metrics() -> PickerMetrics {
-    PickerMetrics {
+/// The measures of the field: at least 280 wide
+/// (`TextFieldDefaults.MinWidth`, which `ExposedDropdownMenuBox` inherits)
+/// and 56 tall, inset 16 by 8, with 18 reserved for the chevron.
+const fn layout() -> MenuPickerLayout {
+    MenuPickerLayout {
         min_width: PICKER_MENU_MIN_WIDTH,
         min_height: PICKER_MIN_HEIGHT,
         horizontal_inset: PICKER_HORIZONTAL_INSET,
         vertical_inset: PICKER_VERTICAL_INSET,
         label_spacing: PICKER_LABEL_SPACING,
         indicator_space: PICKER_INDICATOR_SPACE,
-        radio_indicator_size: PICKER_RADIO_INDICATOR_SIZE,
-        radio_label_spacing: PICKER_RADIO_LABEL_SPACING,
-        radio_row_spacing: PICKER_RADIO_ROW_SPACING,
-        popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
-        popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
-        popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
+        popup_gap: PICKER_MENU_POPUP_TOP_SPACING,
     }
 }
 
-const fn radio_metrics() -> PickerMetrics {
-    PickerMetrics {
-        min_width: PICKER_RADIO_MIN_WIDTH,
-        min_height: PICKER_MIN_HEIGHT,
-        horizontal_inset: PICKER_HORIZONTAL_INSET,
-        vertical_inset: PICKER_VERTICAL_INSET,
-        label_spacing: PICKER_LABEL_SPACING,
-        indicator_space: PICKER_INDICATOR_SPACE,
-        radio_indicator_size: PICKER_RADIO_INDICATOR_SIZE,
-        radio_label_spacing: PICKER_RADIO_LABEL_SPACING,
-        radio_row_spacing: PICKER_RADIO_ROW_SPACING,
-        popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
-        popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
-        popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
-    }
+/// The field's container: `corner-extra-small-top`, square below the active
+/// indicator (`md.comp.filled-select.text-field.container.shape`).
+const fn container_radii() -> RoundedRectRadii {
+    RoundedRectRadii::new(
+        INPUT_FILLED_CONTAINER_TOP_RADIUS,
+        INPUT_FILLED_CONTAINER_TOP_RADIUS,
+        0.0,
+        0.0,
+    )
 }
 
-pub fn draw_indicator(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: hydrolysis::draw::kurbo::Rect,
-) {
-    let center_x = PICKER_INDICATOR_SPACE.mul_add(-0.5, bounds.x1 - PICKER_HORIZONTAL_INSET);
-    let center_y = bounds.height().mul_add(0.5, bounds.y0);
-    let chevron = hydrolysis::draw::kurbo::BezPath::from_vec(vec![
-        hydrolysis::draw::kurbo::PathEl::MoveTo(hydrolysis::draw::kurbo::Point::new(
-            center_x - 4.0,
-            center_y - 2.0,
-        )),
-        hydrolysis::draw::kurbo::PathEl::LineTo(hydrolysis::draw::kurbo::Point::new(
-            center_x,
-            center_y + 2.0,
-        )),
-        hydrolysis::draw::kurbo::PathEl::LineTo(hydrolysis::draw::kurbo::Point::new(
-            center_x + 4.0,
-            center_y - 2.0,
-        )),
-    ]);
-    draw.stroke(
-        chevron,
-        Stroke::new(1.5),
-        colors.on_surface_variant.working(),
+/// The field's chrome: the container, the on-surface hover tint clipped to
+/// it, no ripple and no ring, with the active indicator and the chevron.
+fn chrome(env: &Environment) -> Chrome {
+    let container = disabled_paint(
+        SurfaceContainerHighest,
+        OnSurface.with_opacity(INPUT_FILLED_DISABLED_CONTAINER_OPACITY),
+        env,
     );
-}
-
-pub fn draw_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: hydrolysis::draw::kurbo::Rect,
-    state: WidgetInteractionState,
-) {
-    // md.comp.filled-select menu field: container shape is
-    // corner-extra-small-top — 4dp on top, square below the active indicator.
-    state_layer::draw_bounded(
-        draw,
-        bounds,
-        RoundedRectRadii::new(4.0, 4.0, 0.0, 0.0),
-        colors.on_surface.working(),
-        state,
-    );
-}
-
-pub fn draw_popup(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    popup_rect: hydrolysis::draw::kurbo::Rect,
-) {
-    let radii = PICKER_MENU_POPUP_CORNER_RADIUS.into();
-    // `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`; Material
-    // menus carry no outline.
-    crate::elevation::draw_shadows(
-        draw,
-        popup_rect,
-        radii,
-        MaterialElevationLevel::LEVEL2,
-        colors,
-    );
-    draw.fill(
-        RoundedRect::from_rect(popup_rect, radii),
-        colors.surface_container.working(),
-    );
-}
-
-pub fn draw_popup_row_background(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    row_rect: hydrolysis::draw::kurbo::Rect,
-    selected: bool,
-) {
-    if !selected {
-        return;
-    }
-    let inset = hydrolysis::draw::kurbo::Rect::new(
-        row_rect.x0 + 2.0,
-        row_rect.y0 + 1.0,
-        row_rect.x1 - 2.0,
-        row_rect.y1 - 1.0,
-    );
-    draw.fill(inset, colors.surface_container_highest.working());
-}
-
-pub fn draw_popup_row_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    row_rect: hydrolysis::draw::kurbo::Rect,
-    _selected: bool,
-    state: WidgetInteractionState,
-) {
-    let inset = hydrolysis::draw::kurbo::Rect::new(
-        row_rect.x0 + 2.0,
-        row_rect.y0 + 1.0,
-        row_rect.x1 - 2.0,
-        row_rect.y1 - 1.0,
-    );
-    // md.comp.filled-select.menu.item.selected.container.color =
-    // surface-container-highest, so a selected row takes on-surface like
-    // every other row.
-    state_layer::draw_bounded(draw, inset, 0.0.into(), colors.on_surface.working(), state);
-}
-
-pub fn draw_separator(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    separator: hydrolysis::draw::kurbo::Rect,
-) {
-    // md.comp.filled-select.menu.divider.color = surface-variant.
-    draw.fill(separator, colors.surface_variant.working());
-}
-
-pub fn draw_radio_indicator(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    center: hydrolysis::draw::kurbo::Point,
-    radius: f64,
-    state: RadioIndicatorState,
-) {
-    let outer_selected_progress = state.outer_selected_progress.clamp(0.0, 1.0);
-    let inner_scale = state.inner_scale.clamp(0.0, 1.0);
-    let inner_opacity = state.inner_opacity.clamp(0.0, 1.0);
-    let outer_ring_center_radius = radius - PICKER_RADIO_OUTER_RING_WIDTH / 2.0;
-    draw.stroke(
-        Circle::new(center, outer_ring_center_radius),
-        Stroke::new(PICKER_RADIO_OUTER_RING_WIDTH),
-        blend_role_color(
-            colors.on_surface_variant,
-            colors.primary,
-            outer_selected_progress,
+    Chrome::new(
+        Surface::new(
+            CornerShape::new(Corners::from(container_radii())),
+            container,
         ),
-    );
-    let inner_radius = PICKER_RADIO_INNER_DOT_RADIUS * f64::from(inner_scale);
-    if inner_radius > 0.0 && inner_opacity > 0.0 {
-        draw.fill(
-            Circle::new(center, inner_radius),
-            colors.primary.working().with_alpha(inner_opacity),
-        );
-    }
+        StateLayer::new(OnSurface).opacities(HOVER_STATE_LAYER_OPACITY, 0.0, 0.0, 0.0),
+        PressFeedback::new(),
+        FocusIndicator::Tint,
+        motion::chrome(),
+    )
+    .hit(motion::hit_region())
+    .custom(active_indicator(env))
+    .custom(chevron(env))
 }
 
-fn blend_role_color(from: MaterialRoleColor, to: MaterialRoleColor, progress: f32) -> WorkingColor {
-    crate::lerp_color(from.working(), to.working(), progress)
+/// The active indicator's rect: a line along the field's bottom edge, 1 tall
+/// and 2 while focused.
+fn indicator_rect(inputs: &Inputs<'_, ()>) -> Rect {
+    let height = if inputs.state.contains(InteractionState::FOCUSED) {
+        INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT
+    } else {
+        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT
+    };
+    Rect::new(
+        inputs.frame.x0,
+        inputs.frame.y1 - height,
+        inputs.frame.x1,
+        inputs.frame.y1,
+    )
 }
 
-pub fn draw_radio_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    center: hydrolysis::draw::kurbo::Point,
-    _radius: f64,
-    selected: bool,
-    state: WidgetInteractionState,
-) {
-    state_layer::draw_unbounded_circle(
-        draw,
-        center,
-        20.0,
-        if selected {
-            colors.primary.working()
-        } else {
-            colors.on_surface.working()
+/// The active indicator's paint: `on-surface-variant`, `on-surface` while
+/// hovered and `primary` while focused
+/// (`md.comp.filled-select.text-field.*active-indicator.color`), on-surface
+/// at 38% while disabled.
+fn indicator_paint(env: &Environment) -> Driven<Paint> {
+    Driven::follow(
+        gather(
+            [
+                OnSurfaceVariant.into(),
+                OnSurface.into(),
+                Primary.into(),
+                OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
+            ],
+            env,
+        ),
+        |&[rest, hovered, focused, dim]: &[WorkingColor; 4], inputs: &Inputs<'_, ()>| {
+            Paint::from(if inputs.state.contains(InteractionState::DISABLED) {
+                dim
+            } else if inputs.state.contains(InteractionState::FOCUSED) {
+                focused
+            } else if inputs.state.contains(InteractionState::HOVERED) {
+                hovered
+            } else {
+                rest
+            })
         },
-        state,
-    );
+    )
+}
+
+fn active_indicator(env: &Environment) -> Custom<(), (Driven<Rect>, Driven<Paint>)> {
+    Custom::new(
+        (Driven::new(indicator_rect), indicator_paint(env)),
+        |recorder, _frame, (rect, paint)| recorder.fill(rect, paint),
+    )
+}
+
+/// The dropdown chevron, centred in the indicator space at the trailing end.
+fn chevron_path(frame: Rect) -> BezPath {
+    let x = PICKER_INDICATOR_SPACE.mul_add(-0.5, frame.x1 - PICKER_HORIZONTAL_INSET);
+    let y = frame.center().y;
+    let mut path = BezPath::new();
+    path.move_to(Point::new(
+        x - PICKER_CHEVRON_HALF_WIDTH,
+        y - PICKER_CHEVRON_HALF_HEIGHT,
+    ));
+    path.line_to(Point::new(x, y + PICKER_CHEVRON_HALF_HEIGHT));
+    path.line_to(Point::new(
+        x + PICKER_CHEVRON_HALF_WIDTH,
+        y - PICKER_CHEVRON_HALF_HEIGHT,
+    ));
+    path
+}
+
+/// The chevron: `on-surface-variant`, on-surface at 38% while disabled
+/// (`md.comp.filled-select.text-field.trailing-icon.color`).
+fn chevron(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new(
+        (disabled_paint(
+            OnSurfaceVariant,
+            OnSurface.with_opacity(DISABLED_CONTENT_OPACITY),
+            env,
+        ),),
+        |recorder, frame, (paint,)| {
+            recorder.stroke(
+                chevron_path(frame),
+                Stroke::new(PICKER_CHEVRON_STROKE_WIDTH),
+                paint,
+            );
+        },
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use hydrolysis::draw::kurbo::{Point, Rect, RoundedRectRadii};
-    use hydrolysis::draw::{
-        Command, Content, LayoutSize, Paint, Recorder, ShapeData, WorkingColor as Color,
-    };
-
-    use super::{
-        MaterialColorScheme, RadioIndicatorState, blend_role_color, draw_popup_row_background,
-        draw_radio_indicator, draw_separator, menu_metrics, radio_metrics,
-    };
+    use super::{chevron_path, container_radii, indicator_paint, indicator_rect, layout, look};
+    use crate::MaterialColorScheme;
     use crate::dimensions::{
-        PICKER_LABEL_SPACING, PICKER_MENU_POPUP_CORNER_RADIUS, PICKER_MENU_POPUP_ROW_HEIGHT,
-        PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS, PICKER_RADIO_OUTER_RING_WIDTH,
+        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
+        INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT, PICKER_INDICATOR_SPACE,
     };
+    use hydrolysis::Style as _;
+    use hydrolysis::draw::Paint;
+    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
+    use hydrolysis::theme::{Inputs, PickerSpec, SpecTint};
+    use waterui::interaction::InteractionState;
+    use waterui_controls::ControlSize;
+    use waterui_core::layout::LayoutDirection;
+    use waterui_core::{Environment, Signal as _};
 
-    /// The solid-colour commands a theme draw recorded, sorted by shape.
-    #[derive(Default)]
-    struct Recorded {
-        circle_fills: Vec<(f64, Color)>,
-        circle_strokes: Vec<(f64, f64, Color)>,
-        rect_fills: Vec<Color>,
-        rounded_fills: Vec<(RoundedRectRadii, Color)>,
-        rounded_strokes: Vec<(RoundedRectRadii, Color, f64)>,
-        line_strokes: Vec<(Color, f64)>,
-        shadows: Vec<(f64, f64, Color)>,
+    const FIELD: Rect = Rect::new(0.0, 0.0, 280.0, 56.0);
+
+    fn env() -> Environment {
+        let mut env = Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        env
     }
 
-    fn solid(paint: &Paint) -> Color {
-        let Paint::Solid(color) = paint else {
-            panic!("Material picker token paints must be solid colors");
+    fn at(state: InteractionState) -> Inputs<'static, ()> {
+        Inputs::at_rest(FIELD, state, &())
+    }
+
+    /// The menu-style field is filled-TextField chrome:
+    /// `ExposedDropdownMenuBox` inherits `TextFieldDefaults.MinWidth`.
+    #[test]
+    fn the_field_matches_the_filled_text_field_tokens() {
+        let layout = layout();
+
+        assert_eq!(layout.min_width, 280.0);
+        assert_eq!(layout.min_height, 56.0);
+        assert_eq!(layout.horizontal_inset, 16.0);
+        assert_eq!(layout.vertical_inset, 8.0);
+        assert_eq!(layout.indicator_space, 18.0);
+        assert_eq!(layout.popup_gap, 4.0);
+    }
+
+    /// `md.comp.filled-select.text-field.container.shape` is rounded on top
+    /// only.
+    #[test]
+    fn the_container_rounds_only_its_top() {
+        assert_eq!(
+            container_radii(),
+            RoundedRectRadii::new(
+                INPUT_FILLED_CONTAINER_TOP_RADIUS,
+                INPUT_FILLED_CONTAINER_TOP_RADIUS,
+                0.0,
+                0.0
+            )
+        );
+        assert_eq!(INPUT_FILLED_CONTAINER_TOP_RADIUS, 4.0);
+    }
+
+    #[test]
+    fn the_active_indicator_thickens_while_focused() {
+        let rest = indicator_rect(&at(InteractionState::empty()));
+        let focused = indicator_rect(&at(InteractionState::FOCUSED));
+
+        assert_eq!(rest.height(), INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT);
+        assert_eq!(focused.height(), INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT);
+        assert_eq!(rest.y1, FIELD.y1);
+        assert_eq!(focused.y1, FIELD.y1);
+        assert_eq!(rest.width(), FIELD.width());
+    }
+
+    #[test]
+    fn the_active_indicator_is_coloured_by_state() {
+        let colors = MaterialColorScheme::baseline_light();
+        let paint = indicator_paint(&env());
+        let at = |state| paint.target(&at(state));
+        let solid = |color: hydrolysis::draw::WorkingColor| Paint::from(color);
+
+        assert_eq!(
+            at(InteractionState::empty()),
+            solid(colors.on_surface_variant.working())
+        );
+        assert_eq!(
+            at(InteractionState::HOVERED),
+            solid(colors.on_surface.working())
+        );
+        assert_eq!(
+            at(InteractionState::HOVERED | InteractionState::FOCUSED),
+            solid(colors.primary.working())
+        );
+        let Paint::Solid(disabled) = at(InteractionState::DISABLED) else {
+            panic!("the active indicator paints solid colours");
         };
-        *color
-    }
-
-    /// Records `body` on a fresh recorder and sorts its commands.
-    fn recorded(body: impl FnOnce(&mut Recorder)) -> Recorded {
-        let mut content = Content::record(&LayoutSize::new(), body);
-        Recorded::from(&mut content)
-    }
-
-    impl Recorded {
-        fn from(content: &mut Content) -> Self {
-            let mut recorded = Self::default();
-            for command in content.snapshot().commands() {
-                match command {
-                    Command::Fill { shape, paint } => match shape {
-                        ShapeData::Circle(circle) => {
-                            recorded.circle_fills.push((circle.radius, solid(paint)));
-                        }
-                        ShapeData::Rect(_) => recorded.rect_fills.push(solid(paint)),
-                        ShapeData::RoundedRect(rounded) => {
-                            recorded.rounded_fills.push((rounded.radii(), solid(paint)));
-                        }
-                        _ => {}
-                    },
-                    Command::Stroke {
-                        shape,
-                        stroke,
-                        paint,
-                    } => match shape {
-                        ShapeData::Circle(circle) => {
-                            recorded.circle_strokes.push((
-                                circle.radius,
-                                stroke.width,
-                                solid(paint),
-                            ));
-                        }
-                        ShapeData::RoundedRect(rounded) => {
-                            recorded.rounded_strokes.push((
-                                rounded.radii(),
-                                solid(paint),
-                                stroke.width,
-                            ));
-                        }
-                        ShapeData::Line(_) => {
-                            recorded.line_strokes.push((solid(paint), stroke.width));
-                        }
-                        _ => {}
-                    },
-                    Command::Shadow { shadow, .. } => {
-                        recorded
-                            .shadows
-                            .push((shadow.sigma, shadow.offset.y, shadow.color));
-                    }
-                    _ => {}
-                }
-            }
-            recorded
-        }
-    }
-
-    #[test]
-    /// Values from `androidx.compose.material3.tokens.RadioButtonTokens` and
-    /// the private dimensions in `RadioButton.kt`.
-    fn radio_metrics_match_compose_radio_tokens() {
-        let metrics = radio_metrics();
-
-        assert_eq!(metrics.radio_indicator_size, PICKER_RADIO_INDICATOR_SIZE);
-        assert_eq!(metrics.label_spacing, PICKER_LABEL_SPACING);
-        assert_eq!(PICKER_RADIO_INDICATOR_SIZE, 20.0);
-        assert_eq!(PICKER_RADIO_OUTER_RING_WIDTH, 2.0);
-        // RadioButtonDotSize is 12dp across, so half of it here.
-        assert_eq!(PICKER_RADIO_INNER_DOT_RADIUS, 6.0);
-        assert_eq!(metrics.popup_row_height, PICKER_MENU_POPUP_ROW_HEIGHT);
-        assert_eq!(metrics.popup_corner_radius, PICKER_MENU_POPUP_CORNER_RADIUS);
-        assert_eq!(PICKER_MENU_POPUP_ROW_HEIGHT, 48.0);
-        assert_eq!(PICKER_MENU_POPUP_CORNER_RADIUS, 4.0);
-    }
-
-    #[test]
-    fn radio_indicator_draws_the_compose_donut_icon() {
-        let colors = MaterialColorScheme::baseline_light();
-        let center = Point::new(10.0, 10.0);
-
-        let unselected = recorded(|draw| {
-            draw_radio_indicator(
-                &colors,
-                draw,
-                center,
-                10.0,
-                RadioIndicatorState {
-                    selected: false,
-                    outer_selected_progress: 0.0,
-                    inner_scale: 1.0,
-                    inner_opacity: 0.0,
-                },
-            );
-        });
-
-        let selected = recorded(|draw| {
-            draw_radio_indicator(
-                &colors,
-                draw,
-                center,
-                10.0,
-                RadioIndicatorState {
-                    selected: true,
-                    outer_selected_progress: 1.0,
-                    inner_scale: 1.0,
-                    inner_opacity: 1.0,
-                },
-            );
-        });
-
-        assert_eq!(unselected.circle_fills, Vec::<(f64, Color)>::new());
         assert_eq!(
-            unselected.circle_strokes,
-            vec![(9.0, 2.0, colors.on_surface_variant.working())]
+            disabled.components[3],
+            colors.on_surface.working().components[3] * 0.38
         );
-        assert_eq!(
-            selected.circle_strokes,
-            vec![(9.0, 2.0, colors.primary.working())]
-        );
-        assert_eq!(selected.circle_fills, vec![(6.0, colors.primary.working())]);
     }
 
+    /// The chevron sits in the space reserved at the trailing end, centred
+    /// on the field's height.
     #[test]
-    fn radio_indicator_inner_dot_scales_and_fades() {
-        let colors = MaterialColorScheme::baseline_light();
-        let center = Point::new(10.0, 10.0);
-        let draw = recorded(|draw| {
-            draw_radio_indicator(
-                &colors,
-                draw,
-                center,
-                10.0,
-                RadioIndicatorState {
-                    selected: true,
-                    outer_selected_progress: 1.0,
-                    inner_scale: 0.4,
-                    inner_opacity: 0.25,
-                },
-            );
-        });
+    fn the_chevron_is_centred_in_the_indicator_space() {
+        let bounds = chevron_path(FIELD).bounding_box();
 
-        assert_eq!(draw.circle_fills.len(), 1);
+        assert!((bounds.center().y - FIELD.center().y).abs() < 1e-6);
         assert!(
-            PICKER_RADIO_INNER_DOT_RADIUS
-                .mul_add(-0.4, draw.circle_fills[0].0)
-                .abs()
-                < 0.000_001
+            (bounds.center().x - (FIELD.x1 - 16.0 - PICKER_INDICATOR_SPACE / 2.0)).abs() < 1e-6
         );
+    }
+
+    #[test]
+    fn the_look_reports_its_layout() {
+        let spec = PickerSpec::new(
+            ControlSize::Small,
+            LayoutDirection::LeftToRight,
+            SpecTint::default(),
+        );
+        let look = look(&spec, &env());
+
+        assert_eq!(look.layout(), layout());
+        assert!(look.get_value().get_font().is_some());
+        let value_color = look
+            .get_value()
+            .get_color()
+            .expect("the value has a colour")
+            .target(&Inputs::at_rest(Rect::ZERO, InteractionState::empty(), &()))
+            .resolve(&env())
+            .snapshot();
         assert_eq!(
-            draw.circle_fills[0].1,
-            colors.primary.working().with_alpha(0.25)
-        );
-    }
-
-    #[test]
-    fn radio_indicator_outer_ring_color_interpolates() {
-        let colors = MaterialColorScheme::baseline_light();
-        let center = Point::new(10.0, 10.0);
-        let draw = recorded(|draw| {
-            draw_radio_indicator(
-                &colors,
-                draw,
-                center,
-                10.0,
-                RadioIndicatorState {
-                    selected: true,
-                    outer_selected_progress: 0.5,
-                    inner_scale: 0.0,
-                    inner_opacity: 0.0,
-                },
-            );
-        });
-
-        assert_eq!(
-            draw.circle_strokes,
-            vec![(
-                9.0,
-                2.0,
-                blend_role_color(colors.on_surface_variant, colors.primary, 0.5)
-            )]
-        );
-    }
-
-    #[test]
-    fn menu_selected_row_and_divider_use_filled_select_tokens() {
-        let colors = MaterialColorScheme::baseline_light();
-        let draw = recorded(|draw| {
-            draw_popup_row_background(&colors, draw, Rect::new(0.0, 0.0, 120.0, 48.0), true);
-            draw_separator(&colors, draw, Rect::new(0.0, 48.0, 120.0, 49.0));
-        });
-
-        assert_eq!(
-            draw.rect_fills,
-            vec![
-                colors.surface_container_highest.working(),
-                colors.surface_variant.working(),
-            ]
-        );
-    }
-
-    #[test]
-    fn menu_picker_min_width_matches_text_field() {
-        // The menu style is filled-TextField chrome; `ExposedDropdownMenuBox`
-        // inherits `TextFieldDefaults.MinWidth` = 280dp.
-        assert_eq!(menu_metrics().min_width, 280.0);
-        assert_eq!(radio_metrics().min_width, 72.0);
-    }
-
-    #[test]
-    /// `MenuTokens.ContainerElevation` is `ElevationTokens.Level2`: the popup
-    /// casts the level-2 key and ambient shadows and carries no outline.
-    fn popup_casts_the_level_two_elevation_shadows() {
-        use super::draw_popup;
-
-        let colors = MaterialColorScheme::baseline_light();
-        let draw = recorded(|draw| {
-            draw_popup(&colors, draw, Rect::new(0.0, 0.0, 112.0, 96.0));
-        });
-
-        assert_eq!(draw.shadows.len(), 2, "key then ambient shadow");
-        let (key_blur, key_y, _) = draw.shadows[0];
-        let (ambient_blur, ambient_y, _) = draw.shadows[1];
-        assert_eq!(key_blur, f64::from(3.0f32));
-        assert_eq!(key_y, f64::from(0.85f32));
-        assert_eq!(ambient_blur, f64::from(1.0f32));
-        assert_eq!(ambient_y, f64::from(0.25f32));
-        assert!(
-            draw.rounded_strokes.is_empty(),
-            "Material menus carry no outline"
+            value_color,
+            MaterialColorScheme::baseline_light().on_surface.working()
         );
     }
 }
