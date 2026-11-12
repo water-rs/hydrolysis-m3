@@ -10,8 +10,8 @@ use core::time::Duration;
 
 use hydrolysis::draw::kurbo::Size;
 use hydrolysis::theme::{
-    HitRegion, InteractionMotion, Motion, NavigationMotion, RadioSelectionMotion, Ripple,
-    TextCaretMotion, Transition, ValueMotion,
+    HitRegion, InteractionMotion, Motion, NavigationMotion, Ripple, TextCaretMotion, Transition,
+    ValueMotion,
 };
 use waterui::animation::Animation;
 use waterui::easing::EasingCurve;
@@ -349,12 +349,23 @@ pub fn dialog_opacity(
     )
 }
 
-pub const fn radio_selection() -> RadioSelectionMotion {
-    RadioSelectionMotion {
-        inner_grow: motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2),
-        inner_opacity: Animation::linear(duration::SHORT_1),
-        outer_color: Animation::linear(duration::SHORT_1),
-    }
+/// The radio dot's growth on selection: emphasized decelerate over `medium2`,
+/// so the dot arrives rather than fades up.
+pub const fn radio_dot_grow() -> Animation {
+    motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2)
+}
+
+/// The radio dot's opacity and the ring's colour on selection: linear over
+/// `short1`, snapping over while the dot grows.
+pub const fn radio_snap() -> Animation {
+    Animation::linear(duration::SHORT_1)
+}
+
+/// The control chrome's motion with a value change running `value`.
+pub fn value(value: Animation) -> Motion {
+    let mut motion = chrome();
+    motion.value = ValueMotion::Own(value);
+    motion
 }
 
 #[cfg(test)]
@@ -363,7 +374,7 @@ mod tests {
     use super::{
         RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN, RIPPLE_STATE_LAYER_FADE,
         dialog_opacity, dialog_transform, fast_spatial, interaction, navigation, navigation_drawer,
-        navigation_drawer_scrim, radio_selection, toggle_value, tooltip,
+        navigation_drawer_scrim, radio_dot_grow, radio_snap, toggle_value, tooltip,
     };
     use core::time::Duration;
     use std::cell::RefCell;
@@ -531,20 +542,11 @@ mod tests {
     /// than to fade up.
     #[test]
     fn radio_dot_grows_slower_than_its_colour_changes() {
-        let motion_spec = radio_selection();
-
         assert_eq!(
-            motion_spec.inner_grow,
+            radio_dot_grow(),
             motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2)
         );
-        assert_eq!(
-            motion_spec.inner_opacity,
-            Animation::linear(duration::SHORT_1)
-        );
-        assert_eq!(
-            motion_spec.outer_color,
-            Animation::linear(duration::SHORT_1)
-        );
+        assert_eq!(radio_snap(), Animation::linear(duration::SHORT_1));
     }
 
     /// Navigation is a full-screen transition, so it uses the emphasized curve

@@ -28,6 +28,7 @@ use waterui_graphics::color::Color;
 use crate::color::{
     Primary, PrimaryContainer, SurfaceContainerHighest, Tertiary, TertiaryContainer,
 };
+use crate::controls::button::solid_paint;
 use crate::dimensions::{
     PROGRESS_CIRCULAR_DIAMETER, PROGRESS_CIRCULAR_STROKE_WIDTH,
     PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE, PROGRESS_LINEAR_BAR_HEIGHT,
@@ -229,21 +230,13 @@ pub fn loading(spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
 // Paints
 // ---------------------------------------------------------------------------
 
-/// `color` as a paint that follows it.
-fn solid(color: impl Into<Color>, env: &Environment) -> Driven<Paint, f64> {
-    Driven::follow(
-        color.into().resolve(env),
-        |color: &WorkingColor, _inputs: &Inputs<'_, f64>| Paint::from(*color),
-    )
-}
-
 /// The indicator's active colour: the tint, or the four accent colours in
 /// turn over `cycle` when the spec asks for them. The four follow their
 /// theme tokens: a colour-scheme change starts the cycle again from the new
 /// colours.
 fn active_paint(spec: &ProgressSpec, cycle: Duration, env: &Environment) -> Driven<Paint, f64> {
     if !spec.four_color() {
-        return solid(spec.tint(), env);
+        return solid_paint(spec.tint(), env);
     }
     let [primary, primary_container, tertiary, tertiary_container] = [
         Color::from(Primary),
@@ -447,11 +440,11 @@ fn linear_determinate(spec: &ProgressSpec, rtl: bool, env: &Environment) -> Line
     Custom::new(
         (
             piece(|(track, ..)| track),
-            solid(SurfaceContainerHighest, env),
+            solid_paint(SurfaceContainerHighest, env),
             piece(|(_, active, _)| active),
-            solid(spec.tint(), env),
+            solid_paint(spec.tint(), env),
             piece(|(.., stop)| stop),
-            solid(spec.tint(), env),
+            solid_paint(spec.tint(), env),
         ),
         |recorder, _frame, (track, track_paint, active, active_paint, stop, stop_paint)| {
             recorder.fill(track, track_paint);
@@ -507,7 +500,7 @@ fn linear_indeterminate(spec: &ProgressSpec, rtl: bool, env: &Environment) -> Mo
     let paint = active_paint(spec, LINEAR_INDETERMINATE_CYCLE * 2, env);
     Custom::new(
         (
-            solid(SurfaceContainerHighest, env),
+            solid_paint(SurfaceContainerHighest, env),
             Driven::repeating(|frame| bar_start(frame, PRIMARY_TRANSLATE), Repeat::Forever),
             Driven::repeating(|frame| bar_length(frame, PRIMARY_SCALE), Repeat::Forever),
             paint.clone(),
@@ -604,11 +597,11 @@ fn circular_determinate(spec: &ProgressSpec, env: &Environment) -> Ring {
                 let (_, circumference) = ring(inputs.frame);
                 track_stroke(circumference, *inputs.value)
             }),
-            solid(SurfaceContainerHighest, env),
+            solid_paint(SurfaceContainerHighest, env),
             Driven::new(|inputs: &Inputs<'_, f64>| {
                 active_stroke(ring(inputs.frame).1, *inputs.value)
             }),
-            solid(spec.tint(), env),
+            solid_paint(spec.tint(), env),
         ),
         |recorder, frame, (track, track_paint, active, active_paint)| {
             let (path, _) = ring(frame);
@@ -691,7 +684,7 @@ fn circular_indeterminate(spec: &ProgressSpec, env: &Environment) -> Ring {
     Custom::new(
         (
             Driven::new(|_inputs: &Inputs<'_, f64>| Stroke::new(PROGRESS_CIRCULAR_STROKE_WIDTH)),
-            solid(SurfaceContainerHighest, env),
+            solid_paint(SurfaceContainerHighest, env),
             Driven::repeating(|frame| arc_keyframes(ring(frame).1), Repeat::Forever),
             active_paint(spec, CIRCULAR_CYCLE_DURATION, env),
         ),

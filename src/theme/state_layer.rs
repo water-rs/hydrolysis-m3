@@ -153,31 +153,6 @@ pub fn draw_bounded(
     });
 }
 
-pub fn draw_unbounded_circle(
-    draw: &mut Recorder,
-    center: Point,
-    radius: f64,
-    color: WorkingColor,
-    state: WidgetInteractionState,
-) {
-    let state_opacity = resolved_state_layer_opacity(state);
-    if state_opacity > 0.0 {
-        draw.fill(
-            Circle::new(center, radius),
-            color.with_alpha(color.components[3] * state_opacity),
-        );
-    }
-
-    let waves = resolved_press_waves(state);
-    if waves.is_empty() {
-        return;
-    }
-    // An unbounded halo caps the wave at exactly `radius` — not the disc's
-    // diagonal and not the bounded-ripple minimum diameter — so the wave
-    // target is the requested diameter directly.
-    fill_waves(draw, center, radius * 2.0, color, waves);
-}
-
 #[cfg(test)]
 mod tests {
     use super::{PRESSED_STATE_LAYER_OPACITY, RIPPLE_MINIMUM_DIAMETER, ripple_diameter};
@@ -275,35 +250,6 @@ mod tests {
         assert!(
             matches!(circle.brush, RecordedBrush::Solid(alpha) if (alpha - 0.12).abs() < 1e-6),
             "ripple is a solid color at the press opacity, not a gradient"
-        );
-    }
-
-    #[test]
-    fn unbounded_circle_ripple_converges_to_the_requested_radius() {
-        // Compose caps an unbounded ripple at `StateLayerSize / 2`: the wave
-        // converges to the halo radius itself, not the disc's diagonal.
-        let center = Point::new(50.0, 30.0);
-        let radius = 20.0;
-        let circle = single_circle(|draw| {
-            state_layer::draw_unbounded_circle(
-                draw,
-                center,
-                radius,
-                WorkingColor::new([1.0, 1.0, 1.0, 1.0]),
-                pressed_state(&[PressWave {
-                    origin: None,
-                    progress: 1.0,
-                    opacity: 0.12,
-                }]),
-            );
-        })
-        .expect("press ripple must fill a solid circle");
-        assert_eq!(circle.center, center, "wave converges on the halo center");
-        assert!(
-            (circle.radius - radius).abs() < 1e-6,
-            "wave radius {} must converge to the halo radius {}",
-            circle.radius,
-            radius
         );
     }
 

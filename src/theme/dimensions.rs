@@ -168,15 +168,25 @@ pub const INPUT_FILLED_CONTAINER_TOP_RADIUS: f64 = 4.0;
 pub const INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT: f64 = 1.0;
 pub const INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT: f64 = 2.0;
 
-pub const TEXT_CONTEXT_MENU_ROW_HEIGHT: f64 = 48.0;
-pub const TEXT_CONTEXT_MENU_HORIZONTAL_PADDING: f64 = 12.0;
-pub const TEXT_CONTEXT_MENU_VERTICAL_PADDING: f64 = 8.0;
-pub const TEXT_CONTEXT_MENU_MIN_WIDTH: f64 = 112.0;
-pub const TEXT_CONTEXT_MENU_MAX_WIDTH: f64 = 280.0;
-pub const TEXT_CONTEXT_MENU_WIDTH_PER_CHAR: f64 = 8.5;
-pub const TEXT_CONTEXT_MENU_CONTAINER_SHAPE: f64 = 4.0;
-pub const TEXT_CONTEXT_MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
-pub const TEXT_CONTEXT_MENU_SEPARATOR_THICKNESS: f64 = 1.0;
+/// The opacity of a disabled filled text field's container
+/// (`md.comp.filled-text-field.disabled.container.opacity`), which the
+/// menu-style picker's field takes.
+pub const INPUT_FILLED_DISABLED_CONTAINER_OPACITY: f32 = 0.04;
+
+pub const MENU_ROW_HEIGHT: f64 = 48.0;
+pub const MENU_HORIZONTAL_PADDING: f64 = 12.0;
+pub const MENU_VERTICAL_PADDING: f64 = 8.0;
+pub const MENU_MIN_WIDTH: f64 = 112.0;
+pub const MENU_MAX_WIDTH: f64 = 280.0;
+pub const MENU_WIDTH_PER_CHAR: f64 = 8.5;
+pub const MENU_CONTAINER_SHAPE: f64 = 4.0;
+pub const MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
+pub const MENU_SEPARATOR_THICKNESS: f64 = 1.0;
+/// A picker popup's selected row sits this far in from the row's sides.
+pub const MENU_SELECTED_ROW_HORIZONTAL_INSET: f64 = 2.0;
+/// A picker popup's selected row sits this far in from the row's top and
+/// bottom.
+pub const MENU_SELECTED_ROW_VERTICAL_INSET: f64 = 1.0;
 
 /// Compose `TextFieldDefaults.MinWidth`, which the menu-style picker's
 /// filled-field chrome inherits via `ExposedDropdownMenuBox`.
@@ -197,8 +207,12 @@ pub const PICKER_RADIO_INNER_DOT_RADIUS: f64 = 6.0;
 pub const PICKER_RADIO_LABEL_SPACING: f64 = 8.0;
 pub const PICKER_RADIO_ROW_SPACING: f64 = 6.0;
 pub const PICKER_MENU_POPUP_TOP_SPACING: f64 = 4.0;
-pub const PICKER_MENU_POPUP_ROW_HEIGHT: f64 = 48.0;
-pub const PICKER_MENU_POPUP_CORNER_RADIUS: f64 = 4.0;
+/// The dropdown chevron's half width.
+pub const PICKER_CHEVRON_HALF_WIDTH: f64 = 4.0;
+/// The dropdown chevron's half height.
+pub const PICKER_CHEVRON_HALF_HEIGHT: f64 = 2.0;
+/// The dropdown chevron's stroke width.
+pub const PICKER_CHEVRON_STROKE_WIDTH: f64 = 1.5;
 /// Compose `ButtonDefaults.MinWidth`, enforced per segment.
 pub const PICKER_SEGMENTED_MIN_WIDTH: f64 = 58.0;
 pub const PICKER_SEGMENTED_MIN_HEIGHT: f64 = 40.0;

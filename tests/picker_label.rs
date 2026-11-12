@@ -215,3 +215,58 @@ fn segmented_picker_state_layer_material3_snapshots() {
     app.pump_for(Duration::from_millis(80));
     app.capture_snapshot("hydrolysis", "segmented-picker-state", "pressed-off-centre");
 }
+
+/// Visual evidence for the radio look's interaction states: an unselected
+/// item hovered and pressed, the selected item hovered, and the selection
+/// moving between items part way through the dot's growth.
+#[test]
+fn radio_picker_state_material3_snapshots() {
+    // The selected "Small" indicator's centre in the 360 by 200 viewport.
+    const SMALL: (f32, f32) = (155.0, 100.0);
+    // The unselected "Large" indicator's centre in the same viewport.
+    const LARGE: (f32, f32) = (155.0, 130.0);
+    let mount = || {
+        ui().viewport(360, 200)
+            .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+            .mount_offscreen(labelled_group_picker(PickerStyle::Radio, false))
+    };
+
+    let mut app = mount();
+    app.queue_pointer_move(LARGE.0, LARGE.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "radio-picker-state", "hovered");
+
+    app.queue_pointer_down(LARGE.0, LARGE.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "radio-picker-state", "pressed");
+
+    // Released: "Large" becomes the selected item. Sampled mid-growth, the
+    // new dot is partway up while the old one is partway down.
+    app.queue_pointer_up(LARGE.0, LARGE.1);
+    app.pump_for(Duration::from_millis(60));
+    app.capture_snapshot("hydrolysis", "radio-picker-state", "selecting-60ms");
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "radio-picker-state", "selected-large");
+
+    // The selected "Small" item hovered: its state layer is the tint.
+    let mut app = mount();
+    app.queue_pointer_move(SMALL.0, SMALL.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "radio-picker-state", "hovered-selected");
+}
+
+/// Visual evidence for the menu picker field's hover tint and active
+/// indicator.
+#[test]
+fn menu_picker_state_material3_snapshots() {
+    // The field's centre in the 360 by 140 viewport.
+    const FIELD: (f32, f32) = (180.0, 70.0);
+    let mut app = ui()
+        .viewport(360, 140)
+        .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+        .mount_offscreen(labelled_menu_picker());
+
+    app.queue_pointer_move(FIELD.0, FIELD.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "menu-picker-state", "hovered");
+}

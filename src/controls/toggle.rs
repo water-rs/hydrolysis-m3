@@ -46,7 +46,7 @@ use crate::theme::state_layer::{
 
 /// `md.comp.switch.state-layer.size` / `md.comp.checkbox.state-layer.size`
 /// over two: the unbounded state layer's radius.
-const STATE_LAYER_RADIUS: f64 = 20.0;
+pub const STATE_LAYER_RADIUS: f64 = 20.0;
 
 /// The distance the switch thumb travels between its resting centres.
 const SWITCH_TRAVEL: f64 =
@@ -57,10 +57,10 @@ const SWITCH_TRAVEL: f64 =
 const SWITCH_SLOT_HALF: f64 = TOGGLE_SWITCH_SELECTED_HANDLE_SIZE / 2.0;
 
 /// A `bool`-valued [`Driven`].
-type Toggled<T> = Driven<T, bool>;
+pub type Toggled<T> = Driven<T, bool>;
 
 /// A part drawing a shape and its paint.
-type ShapePart = Custom<bool, (Toggled<Circle>, Toggled<Paint>)>;
+pub type ShapePart = Custom<bool, (Toggled<Circle>, Toggled<Paint>)>;
 /// The switch outline: its shape, stroke and paint.
 type OutlinePart = Custom<bool, (Toggled<RoundedRect>, Toggled<Stroke>, Toggled<Paint>)>;
 /// The thumb's key and ambient shadows, each over its own copy of the
@@ -79,14 +79,15 @@ type ContainerPart = Custom<bool, (Toggled<Affine>, Toggled<Paint>, Toggled<Pain
 
 /// The Material toggle's motion: the control chrome's, with the value
 /// running the 200 ms standard easing whatever animation the change names.
-fn toggle_motion() -> Motion {
-    let mut motion = motion::chrome();
-    motion.value = ValueMotion::Own(motion::toggle_value());
-    motion
+pub fn toggle_motion() -> Motion {
+    motion::value(motion::toggle_value())
 }
 
 /// `colors` resolved in `env` together, so one [`Driven`] reads them all.
-fn gather<const N: usize>(colors: [Color; N], env: &Environment) -> Computed<[WorkingColor; N]> {
+pub fn gather<const N: usize>(
+    colors: [Color; N],
+    env: &Environment,
+) -> Computed<[WorkingColor; N]> {
     let mut gathered: Computed<Vec<WorkingColor>> = Computed::constant(Vec::with_capacity(N));
     for color in colors {
         gathered = zip(gathered, color.resolve(env))
@@ -101,7 +102,7 @@ fn gather<const N: usize>(colors: [Color; N], env: &Environment) -> Computed<[Wo
         .computed()
 }
 
-const fn disabled(inputs: &Inputs<'_, bool>) -> bool {
+pub const fn disabled(inputs: &Inputs<'_, bool>) -> bool {
     inputs.state.contains(InteractionState::DISABLED)
 }
 
@@ -123,7 +124,7 @@ fn blend(start: WorkingColor, end: WorkingColor, t: f64) -> WorkingColor {
 }
 
 /// `color` at `opacity` of its own alpha.
-fn faded(color: WorkingColor, opacity: f64) -> WorkingColor {
+pub fn faded(color: WorkingColor, opacity: f64) -> WorkingColor {
     color.with_alpha(color.components[3] * narrow(opacity))
 }
 
@@ -214,8 +215,8 @@ pub fn checkbox(spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
     .hit(motion::hit_region())
     .part(checkbox_outline(progress, env))
     .part(checkbox_container(progress, &tint, env))
-    .part(checkbox_state_layer(&tint, env))
-    .part(checkbox_ripple(&tint, env));
+    .part(centered_state_layer(&tint, env))
+    .part(centered_ripple(&tint, env));
     CheckboxLook::new(control)
 }
 
@@ -625,7 +626,10 @@ fn checkbox_container(progress: Progress, tint: &Color, env: &Environment) -> Co
     )
 }
 
-fn checkbox_state_layer(tint: &Color, env: &Environment) -> ShapePart {
+/// The hover and focus state layer of a toggle-like control: an unbounded
+/// circle of [`STATE_LAYER_RADIUS`] centred on the control, in the tint while
+/// on and on-surface while off.
+pub fn centered_state_layer(tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
         Circle::new(inputs.frame.center(), STATE_LAYER_RADIUS)
     });
@@ -635,7 +639,9 @@ fn checkbox_state_layer(tint: &Color, env: &Environment) -> ShapePart {
     )
 }
 
-fn checkbox_ripple(tint: &Color, env: &Environment) -> ShapePart {
+/// The press ripple of a toggle-like control, over the same circle as
+/// [`centered_state_layer`].
+pub fn centered_ripple(tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
         Circle::new(inputs.frame.center(), ripple_radius(inputs))
     })

@@ -1,11 +1,13 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
 use hydrolysis::draw::Draw as _;
+use hydrolysis::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
+use waterui_graphics::color::Color;
 
 use crate::color::Shadow;
 
@@ -204,6 +206,31 @@ pub(crate) fn chrome_elevation(
         cast(tokens.key, KEY_OPACITY),
         cast(tokens.ambient, AMBIENT_OPACITY),
     )
+}
+
+/// `level`'s key and ambient shadows as live values of a look part, in the
+/// `shadow` role `env` resolves and following it.
+pub(crate) fn cast_shadows<V: 'static>(
+    level: MaterialElevationLevel,
+    env: &Environment,
+) -> (
+    Driven<hydrolysis::draw::Shadow, V>,
+    Driven<hydrolysis::draw::Shadow, V>,
+) {
+    let cast = |key: bool| {
+        Driven::follow(
+            Color::from(Shadow).resolve(env),
+            move |shadow: &hydrolysis::draw::WorkingColor, _inputs: &Inputs<'_, V>| {
+                let elevation = chrome_elevation(level, *shadow);
+                if key {
+                    elevation.key
+                } else {
+                    elevation.ambient
+                }
+            },
+        )
+    };
+    (cast(true), cast(false))
 }
 
 /// Casts `level`'s key and ambient shadows for a rounded-rect surface drawn
