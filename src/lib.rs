@@ -510,7 +510,7 @@ impl WidgetTheme for Material3 {
     }
 
     fn menu(&self, spec: &MenuSpec, env: &Environment) -> MenuLook {
-        menu::look(spec, env)
+        menu::look(*spec, env)
     }
 
     fn menu_picker(&self, spec: &PickerSpec, env: &Environment) -> MenuPickerLook {

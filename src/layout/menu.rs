@@ -45,12 +45,16 @@ pub const fn layout() -> MenuLayout {
 /// `surface-variant` (`md.comp.menu.divider.color`); a picker popup's
 /// selected row is `surface-container-highest`
 /// (`md.comp.filled-select.menu.list-item.selected.container.color`).
-pub fn look(_spec: &MenuSpec, env: &Environment) -> MenuLook {
+pub fn look(_spec: MenuSpec, env: &Environment) -> MenuLook {
     MenuLook::new(layout(), panel(env), separator(env)).selected_row(selected_row(env))
 }
 
+/// The panel's operands: its level-2 key and ambient shadows, then its
+/// container paint.
+type PanelOperands = (Driven<ShadowCast>, Driven<ShadowCast>, Driven<Paint>);
+
 /// The panel: its level-2 key and ambient shadows, then its container.
-fn panel(env: &Environment) -> Custom<(), (Driven<ShadowCast>, Driven<ShadowCast>, Driven<Paint>)> {
+fn panel(env: &Environment) -> Custom<(), PanelOperands> {
     let (key, ambient) = cast_shadows(MaterialElevationLevel::LEVEL2, env);
     Custom::new(
         (key, ambient, solid_paint(SurfaceContainer, env)),
@@ -126,7 +130,7 @@ mod tests {
     fn the_look_measures_by_the_layout_and_draws_its_selected_row() {
         let mut env = Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
-        let look = look(&MenuSpec::new(LayoutDirection::LeftToRight), &env);
+        let look = look(MenuSpec::new(LayoutDirection::LeftToRight), &env);
 
         assert_eq!(look.layout(), layout());
         assert!(look.has_selected_row());
