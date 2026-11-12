@@ -9,29 +9,24 @@
 //! hover or a focus records nothing. The popup the field opens is the
 //! [menu look](crate::layout::menu).
 
-use hydrolysis::draw::kurbo::{BezPath, Point, Rect, RoundedRectRadii, Stroke};
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis::draw::kurbo::{BezPath, Point, Rect, Stroke};
+use hydrolysis::draw::{Draw as _, Paint};
 use hydrolysis::theme::{
-    Chrome, CornerShape, Corners, Custom, Driven, FocusIndicator, Inputs, Label, MenuPickerLayout,
-    MenuPickerLook, PickerSpec, PressFeedback, StateLayer, Surface,
+    Chrome, Custom, Driven, Inputs, Label, MenuPickerLayout, MenuPickerLook, PickerSpec,
 };
-use waterui::interaction::InteractionState;
 use waterui_core::Environment;
 use waterui_graphics::color::Color;
 
-use crate::color::{OnSurface, OnSurfaceVariant, Primary, SurfaceContainerHighest};
+use crate::color::{OnSurface, OnSurfaceVariant};
 use crate::controls::button::disabled_paint;
-use crate::controls::toggle::gather;
+use crate::controls::input::{self, IndicatorColors};
 use crate::dimensions::{
-    INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
-    INPUT_FILLED_DISABLED_CONTAINER_OPACITY, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
     PICKER_CHEVRON_HALF_HEIGHT, PICKER_CHEVRON_HALF_WIDTH, PICKER_CHEVRON_STROKE_WIDTH,
     PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING, PICKER_MENU_MIN_WIDTH,
     PICKER_MENU_POPUP_TOP_SPACING, PICKER_MIN_HEIGHT, PICKER_VERTICAL_INSET,
 };
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
-use crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY;
-use crate::theme::{motion, typography};
+use crate::theme::typography;
 
 /// The look of a menu picker's field in `spec`.
 ///
@@ -60,48 +55,20 @@ const fn layout() -> MenuPickerLayout {
     }
 }
 
-/// The field's container: `corner-extra-small-top`, square below the active
-/// indicator (`md.comp.filled-select.text-field.container.shape`).
-const fn container_radii() -> RoundedRectRadii {
-    RoundedRectRadii::new(
-        INPUT_FILLED_CONTAINER_TOP_RADIUS,
-        INPUT_FILLED_CONTAINER_TOP_RADIUS,
-        0.0,
-        0.0,
-    )
-}
-
-/// The field's chrome: the container, the on-surface hover tint clipped to
-/// it, no ripple and no ring, with the active indicator and the chevron.
+/// The field's chrome: the filled text field's container
+/// (`md.comp.filled-select.text-field.container.*` and
+/// `hover.state-layer.*` repeat its values), with the active indicator and
+/// the chevron.
 fn chrome(env: &Environment) -> Chrome {
-    let container = disabled_paint(
-        SurfaceContainerHighest,
-        OnSurface.with_opacity(INPUT_FILLED_DISABLED_CONTAINER_OPACITY),
-        env,
-    );
-    Chrome::new(
-        Surface::new(
-            CornerShape::new(Corners::from(container_radii())),
-            container,
-        ),
-        StateLayer::new(OnSurface).opacities(HOVER_STATE_LAYER_OPACITY, 0.0, 0.0, 0.0),
-        PressFeedback::new(),
-        FocusIndicator::Tint,
-        motion::chrome(),
-    )
-    .hit(motion::hit_region())
-    .custom(active_indicator(env))
-    .custom(chevron(env))
+    input::container(env)
+        .custom(active_indicator(env))
+        .custom(chevron(env))
 }
 
 /// The active indicator's rect: a line along the field's bottom edge, 1 tall
 /// and 2 while focused.
 fn indicator_rect(inputs: &Inputs<'_, ()>) -> Rect {
-    let height = if inputs.state.contains(InteractionState::FOCUSED) {
-        INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT
-    } else {
-        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT
-    };
+    let height = input::indicator_height(inputs.state);
     Rect::new(
         inputs.frame.x0,
         inputs.frame.y1 - height,
@@ -110,31 +77,13 @@ fn indicator_rect(inputs: &Inputs<'_, ()>) -> Rect {
     )
 }
 
-/// The active indicator's paint: `on-surface-variant`, `on-surface` while
-/// hovered and `primary` while focused
-/// (`md.comp.filled-select.text-field.*active-indicator.color`), on-surface
-/// at 38% while disabled.
+/// The active indicator's paint, the filled text field's
+/// (`md.comp.filled-select.text-field.*active-indicator.color` repeats it).
 fn indicator_paint(env: &Environment) -> Driven<Paint> {
     Driven::follow(
-        gather(
-            [
-                OnSurfaceVariant.into(),
-                OnSurface.into(),
-                Primary.into(),
-                OnSurface.with_opacity(DISABLED_CONTENT_OPACITY).into(),
-            ],
-            env,
-        ),
-        |&[rest, hovered, focused, dim]: &[WorkingColor; 4], inputs: &Inputs<'_, ()>| {
-            Paint::from(if inputs.state.contains(InteractionState::DISABLED) {
-                dim
-            } else if inputs.state.contains(InteractionState::FOCUSED) {
-                focused
-            } else if inputs.state.contains(InteractionState::HOVERED) {
-                hovered
-            } else {
-                rest
-            })
+        input::indicator_colors(env),
+        |colors: &IndicatorColors, inputs: &Inputs<'_, ()>| {
+            Paint::from(input::indicator_color(colors, inputs.state))
         },
     )
 }
@@ -184,15 +133,15 @@ fn chevron(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
 
 #[cfg(test)]
 mod tests {
-    use super::{chevron_path, container_radii, indicator_paint, indicator_rect, layout, look};
+    use super::{chevron_path, indicator_paint, indicator_rect, layout, look};
     use crate::MaterialColorScheme;
     use crate::dimensions::{
-        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
-        INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT, PICKER_INDICATOR_SPACE,
+        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
+        PICKER_INDICATOR_SPACE,
     };
     use hydrolysis::Style as _;
     use hydrolysis::draw::Paint;
-    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
+    use hydrolysis::draw::kurbo::{Rect, Shape as _};
     use hydrolysis::theme::{Inputs, PickerSpec, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
@@ -223,22 +172,6 @@ mod tests {
         assert_eq!(layout.vertical_inset, 8.0);
         assert_eq!(layout.indicator_space, 18.0);
         assert_eq!(layout.popup_gap, 4.0);
-    }
-
-    /// `md.comp.filled-select.text-field.container.shape` is rounded on top
-    /// only.
-    #[test]
-    fn the_container_rounds_only_its_top() {
-        assert_eq!(
-            container_radii(),
-            RoundedRectRadii::new(
-                INPUT_FILLED_CONTAINER_TOP_RADIUS,
-                INPUT_FILLED_CONTAINER_TOP_RADIUS,
-                0.0,
-                0.0
-            )
-        );
-        assert_eq!(INPUT_FILLED_CONTAINER_TOP_RADIUS, 4.0);
     }
 
     #[test]

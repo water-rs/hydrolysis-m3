@@ -93,8 +93,12 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 
 | file:line | our value | spec value | token name | status |
 |---|---|---|---|---|
-| src/controls/input.rs:107-127 | filled text field draws hover-only state layer on-surface@0.08 clipped to top-rounded (4,4,0,0) | hover layer only | `md.comp.filled-text-field.hover.state-layer.{color,opacity}` | fixed |
-| src/controls/input.rs:61-76 | container surface-container-highest, caret/indicator per state | same | `md.comp.filled-text-field.*` | conforms |
+| src/controls/input.rs | filled text field draws hover-only state layer on-surface@0.08 clipped to top-rounded (4,4,0,0) | hover layer only | `md.comp.filled-text-field.hover.state-layer.{color,opacity}` | fixed |
+| src/controls/input.rs | container surface-container-highest on (4,4,0,0), on-surface@0.04 disabled; the picker's select field wears the same container | same | `md.comp.filled-text-field.{container.color,container.shape,disabled.container.*}` | conforms |
+| src/controls/input.rs | active indicator 1dp on-surface-variant (hover on-surface, focus 2dp primary, disabled 1dp on-surface@0.38); the picker's select field wears the same indicator | same | `md.comp.filled-text-field.{active-indicator,hover.active-indicator,focus.active-indicator,disabled.active-indicator}.*` | conforms |
+| src/controls/input.rs | label rests body-large and floats scaled 12/16 (body-small), on-surface-variant (primary focused, on-surface@0.38 disabled), over short3 with standard easing; the floated box starts 4dp below the top edge | same sizes and colours; the floated line box starts 8dp below the top edge | `md.comp.filled-text-field.{label-text,label-text-populated,hover.label-text,focus.label-text,disabled.label-text}.*` | deviates: float offset 4dp kept from the renderer's previous placement, pinned by `tests/text_field_label.rs` |
+| src/controls/input.rs | placeholder body-large on-surface-variant (on-surface@0.38 disabled) | same | `md.comp.filled-text-field.{input-text.placeholder,disabled.input-text}.*` | conforms |
+| src/controls/input.rs | caret primary, blinking on the platform cadence; selection primary@0.28 | caret primary; no `md.comp` token for the selection | `md.comp.filled-text-field.caret.color` | conforms |
 | src/controls/picker.rs | select field container surface-container-highest on (4,4,0,0), hover layer on-surface@0.08 clipped to it, active indicator 1dp on-surface-variant (hover on-surface, focus 2dp primary, disabled on-surface@0.38), chevron on-surface-variant | same | `md.comp.filled-select.text-field.{container.shape,hover.state-layer.*,active-indicator.*,trailing-icon.color}` | conforms |
 | src/controls/picker.rs | select field value body-large on-surface | same | `md.comp.filled-select.text-field.input-text.*` | conforms |
 | src/layout/menu.rs | menu row layer on-surface (all states): the menu's rows are buttons, whose look the renderer lowers to a foreground state layer | on-surface | `md.comp.filled-select.menu.list-item.*.state-layer.color` | fixed |
@@ -192,6 +196,7 @@ capsule spanning the item.
 - `src/icon_button.rs` unit tests: xs/xl size map, outline width table.
 - `src/fab.rs` unit test: `FabSize` = Baseline 56/Medium 80/Large 96 only (no `Small`).
 - `src/layout/menu.rs`, `src/controls/picker.rs`, `src/controls/radio.rs`: the menu, menu picker and radio group looks' layouts, shapes and per-state paints.
+- `src/controls/input.rs`: the filled text field look's metrics, top-rounded container, active indicator width and colour per state, label and placeholder colours, floated label scale, and the primary caret and selection.
 - `src/navigation_bar.rs`: indicator width 56.
 - `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values.
 - `src/navigation_rail.rs`: expanded indicator height 56.

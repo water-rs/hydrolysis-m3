@@ -30,8 +30,6 @@ pub mod navigation_bar;
 pub mod navigation_drawer;
 pub mod navigation_rail;
 pub mod segmented_button;
-#[cfg(test)]
-mod test_support;
 pub mod toolbar;
 pub mod tooltip;
 
@@ -68,7 +66,7 @@ pub use hydrolysis::theme::{
     NavigationMetrics, NavigationMotion, PickerSpec, PressWave, PressWaves, ProgressSpec,
     RadioGroupLook, SegmentedLook, SegmentedSpec, SliderLook, SliderSpec, StepperLook, StepperSpec,
     SwitchLook, TabItemGeometry, TabItemLayout, TableMetrics, TabsMetrics, TextCaretMotion,
-    ToggleSpec, WidgetInteractionState, WidgetTheme,
+    TextFieldLook, TextFieldSpec, ToggleSpec, WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
@@ -452,10 +450,6 @@ impl WidgetTheme for Material3 {
         theme::motion::interaction()
     }
 
-    fn text_caret_motion(&self) -> TextCaretMotion {
-        theme::motion::text_caret()
-    }
-
     fn navigation_motion(&self) -> NavigationMotion {
         theme::motion::navigation()
     }
@@ -480,33 +474,8 @@ impl WidgetTheme for Material3 {
         stepper::look(spec, env)
     }
 
-    fn input_field_metrics(&self) -> InputFieldMetrics {
-        input::metrics()
-    }
-
-    fn input_placeholder_color(&self) -> Color {
-        input::placeholder_color(&self.colors())
-    }
-
-    fn input_selection_paint(&self) -> Paint {
-        input::selection_brush(&self.colors())
-    }
-
-    fn input_caret_paint(&self, opacity: f32) -> Paint {
-        input::caret_brush(&self.colors(), opacity)
-    }
-
-    fn draw_input_field(&self, draw: &mut Recorder, bounds: Rect, state: WidgetInteractionState) {
-        input::draw_field(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_input_field_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        input::draw_state_layer(&self.colors(), draw, bounds, state);
+    fn text_field(&self, spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
+        input::look(spec, env)
     }
 
     fn menu(&self, spec: &MenuSpec, env: &Environment) -> MenuLook {

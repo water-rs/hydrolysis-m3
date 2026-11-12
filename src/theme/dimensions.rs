@@ -167,6 +167,19 @@ pub const INPUT_FIELD_VERTICAL_INSET: f64 = 8.0;
 pub const INPUT_FILLED_CONTAINER_TOP_RADIUS: f64 = 4.0;
 pub const INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT: f64 = 1.0;
 pub const INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT: f64 = 2.0;
+/// The populated label over the resting one: `body-small` is 12sp where
+/// `body-large` is 16sp (`md.comp.filled-text-field.{label-text-populated,
+/// label-text}.size`).
+pub const INPUT_LABEL_FLOAT_SCALE: f64 = 12.0 / 16.0;
+/// How far below the container's top edge the floated label's box starts:
+/// the offset this theme has always floated the label to, which
+/// `tests/text_field_label.rs` pins. It is not the token's 8dp top padding
+/// (`md.comp.filled-text-field.container` with a 16dp `body-small` label
+/// line), which would start the label's line box at 8.
+pub const INPUT_LABEL_FLOAT_TOP: f64 = 4.0;
+/// The opacity of the selection's `primary` highlight. Material 3 has no
+/// `md.comp` token for it; the value is the one this theme has always drawn.
+pub const INPUT_SELECTION_OPACITY: f32 = 0.28;
 
 /// The opacity of a disabled filled text field's container
 /// (`md.comp.filled-text-field.disabled.container.opacity`), which the
