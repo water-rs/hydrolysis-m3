@@ -172,7 +172,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
 /// `md.comp.icon-button.<size>.pressed.container.shape` by the state
 /// layer's side: corner-small up to 40dp, corner-medium to 56,
 /// corner-large beyond.
-fn pressed_corner_radius(side: f64) -> f64 {
+pub(crate) fn pressed_corner_radius(side: f64) -> f64 {
     if side <= f64::from(ICON_BUTTON_STATE_LAYER_SIZE) {
         8.0 // md.sys.shape.corner-small
     } else if side <= 56.0 {
