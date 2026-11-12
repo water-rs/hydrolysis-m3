@@ -178,6 +178,8 @@ fn segmented_picker_label_material3_snapshots() {
 fn segmented_picker_state_layer_material3_snapshots() {
     // The unselected "Large" segment's centre in the 360 by 120 viewport.
     const LARGE: (f32, f32) = (270.0, 76.0);
+    // The selected "Small" segment's centre in the same viewport.
+    const SMALL: (f32, f32) = (90.0, 76.0);
     let mut app = ui()
         .viewport(360, 120)
         .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
@@ -190,6 +192,17 @@ fn segmented_picker_state_layer_material3_snapshots() {
     app.queue_pointer_down(LARGE.0, LARGE.1);
     app.pump_for(Duration::from_millis(600));
     app.capture_snapshot("hydrolysis", "segmented-picker-state", "pressed");
+
+    // The selected "Small" segment hovered: its state layer is
+    // on-secondary-container over the secondary-container fill, where the
+    // unselected segment's is on-surface.
+    let mut app = ui()
+        .viewport(360, 120)
+        .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+        .mount_offscreen(labelled_group_picker(PickerStyle::Segmented, false));
+    app.queue_pointer_move(SMALL.0, SMALL.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "segmented-picker-state", "hovered-selected");
 
     // A press near the "Large" segment's trailing edge, sampled early in the
     // ripple's growth: the wave starts at the press point and drifts to the

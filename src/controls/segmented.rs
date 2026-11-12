@@ -19,8 +19,8 @@ use hydrolysis::theme::{
 use num_traits::ToPrimitive;
 use waterui::interaction::InteractionState;
 use waterui::reactive::zip::zip;
-use waterui_core::Environment;
-use waterui_graphics::color::Color;
+use waterui_core::{Computed, Environment, SignalExt};
+use waterui_graphics::color::{Color, signal_color};
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer};
 use crate::controls::button::disabled_paint;
@@ -175,13 +175,26 @@ fn selected_container(env: &Environment) -> ShapePart {
 }
 
 /// A segment's chrome: no container of its own — the selected container is
-/// a segment part — and the on-surface state layer at the Material
-/// opacities, the press ripple growing from the press point, and the focus
-/// indicator, all in the segment's own shape.
-fn segment_chrome(segment: Segment) -> Chrome {
+/// a segment part — and the state layer at the Material opacities, in
+/// `on-secondary-container` while the segment is selected and `on-surface`
+/// otherwise and following the segment's selection in place, the press
+/// ripple growing from the press point, and the focus indicator, all in the
+/// segment's own shape.
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "`SegmentedLook::segment_chrome` fixes the callback signature, which hands the flag over by value"
+)]
+fn segment_chrome(segment: Segment, selected: Computed<bool>) -> Chrome {
+    let tint = signal_color(selected.map(|selected| {
+        if selected {
+            Color::from(OnSecondaryContainer)
+        } else {
+            Color::from(OnSurface)
+        }
+    }));
     Chrome::new(
         Surface::clear(CornerShape::new(Corners::from(segment_radii(segment)))),
-        state_layer(OnSurface),
+        state_layer(tint),
         PressFeedback::new().ripple(motion::ripple()),
         focus_indicator(),
         motion::chrome(),
