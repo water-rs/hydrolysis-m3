@@ -12,6 +12,8 @@
     reason = "the binding is moved into the mounted body, which must own it"
 )]
 
+use core::time::Duration;
+
 use hydrolysis_m3::{Material3, MaterialColorScheme};
 use waterui::component::vstack;
 use waterui::form::{Picker, PickerItem, PickerStyle};
@@ -168,4 +170,48 @@ fn segmented_picker_label_material3_snapshots() {
         .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
         .mount_offscreen(labelled_group_picker(PickerStyle::Segmented, true));
     nolabel.capture_snapshot("hydrolysis", "segmented-picker-nolabel", "light");
+}
+
+/// Visual evidence for the segmented look's per-segment state layer and press
+/// ripple: the unselected segment hovered, then pressed.
+#[test]
+fn segmented_picker_state_layer_material3_snapshots() {
+    // The unselected "Large" segment's centre in the 360 by 120 viewport.
+    const LARGE: (f32, f32) = (270.0, 76.0);
+    // The selected "Small" segment's centre in the same viewport.
+    const SMALL: (f32, f32) = (90.0, 76.0);
+    let mut app = ui()
+        .viewport(360, 120)
+        .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+        .mount_offscreen(labelled_group_picker(PickerStyle::Segmented, false));
+
+    app.queue_pointer_move(LARGE.0, LARGE.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "segmented-picker-state", "hovered");
+
+    app.queue_pointer_down(LARGE.0, LARGE.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "segmented-picker-state", "pressed");
+
+    // The selected "Small" segment hovered: its state layer is
+    // on-secondary-container over the secondary-container fill, where the
+    // unselected segment's is on-surface.
+    let mut app = ui()
+        .viewport(360, 120)
+        .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+        .mount_offscreen(labelled_group_picker(PickerStyle::Segmented, false));
+    app.queue_pointer_move(SMALL.0, SMALL.1);
+    app.pump_for(Duration::from_millis(600));
+    app.capture_snapshot("hydrolysis", "segmented-picker-state", "hovered-selected");
+
+    // A press near the "Large" segment's trailing edge, sampled early in the
+    // ripple's growth: the wave starts at the press point and drifts to the
+    // segment's centre as it grows.
+    let mut app = ui()
+        .viewport(360, 120)
+        .theme(Material3::with_colors(MaterialColorScheme::baseline_light()))
+        .mount_offscreen(labelled_group_picker(PickerStyle::Segmented, false));
+    app.queue_pointer_down(LARGE.0 + 40.0, LARGE.1);
+    app.pump_for(Duration::from_millis(80));
+    app.capture_snapshot("hydrolysis", "segmented-picker-state", "pressed-off-centre");
 }

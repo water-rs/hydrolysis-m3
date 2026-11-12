@@ -59,7 +59,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/fab_menu.rs:258-273 | close button 56×56, corner-full, icon 20, level3, primary/on-primary | was primary-container | `md.comp.fab-menu.primary.close-button.*` | fixed |
 | fab-menu item per-state elevation | — | level0 → higher on press | `md.comp.fab-menu.menu-item.*.container.elevation` | fixed (rest level0, hover/focus level4, pressed level3 via `StateValue<FloatingElevation>`) |
 
-## Button group & segmented & split buttons (`src/button_group.rs`, `src/segmented_button.rs`, `src/split_button.rs`, `src/controls/picker.rs`)
+## Button group & segmented & split buttons (`src/button_group.rs`, `src/segmented_button.rs`, `src/split_button.rs`, `src/controls/picker.rs`, `src/controls/segmented.rs`)
 
 | file:line | our value | spec value | token name | status |
 |---|---|---|---|---|
@@ -99,7 +99,7 @@ Status legend: `conforms` = value already matched the token; `fixed` = deviation
 | src/controls/picker.rs:176 | menu row layer on-surface (all states) | on-surface | `md.comp.filled-select.menu.list-item.*.state-layer.color` | fixed |
 | src/controls/picker.rs:185 | menu separator surface-variant | was outline-variant | `md.comp.filled-select.menu.divider.color` | fixed |
 | src/controls/picker.rs | selected menu row surface-container-highest | surface-container-highest | `md.comp.filled-select.menu.list-item.selected.container.color` | conforms |
-| src/controls/picker.rs:340-349 | segmented layer on-secondary-container (selected) | on-secondary-container | `md.comp.segmented-button.selected.*.state-layer.color` | conforms |
+| src/controls/segmented.rs | segmented layer on-secondary-container (selected) | on-secondary-container | `md.comp.segmented-button.selected.*.state-layer.color` | conforms |
 | src/controls/progress.rs | track/active-indicator heights, gap, shapes per expressive progress | same | `md.comp.{linear,circular}-progress-indicator.*` | conforms |
 | src/controls/slider.rs:147 | handle elevation level1 (disabled level0) | was level0 | `md.comp.slider.handle.elevation` / `disabled.handle.elevation` | fixed |
 | src/controls/slider.rs:83-103 | single stop dot at the track's trailing end, offset = trailing-space 4 + r2, on-secondary-container | trailing only | `md.comp.slider.{stop-indicator.trailing-space,inactive.stop-indicator.container.color}` | fixed — leading dot removed: no `leading-space`/`leading stop-indicator` token exists; Compose `SliderDefaults.TrackStopIndicatorSize` is "at the end of the track" and the M3 accessibility page places the dot at the end of the inactive track; MDC-Android's `trackStopIndicatorSize` doc says "edges" but is one attr shared across Slider/RangeSlider/CenteredSlider |

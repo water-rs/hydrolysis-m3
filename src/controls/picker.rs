@@ -3,17 +3,14 @@ use crate::dimensions::{
     PICKER_MENU_POPUP_CORNER_RADIUS, PICKER_MENU_POPUP_ROW_HEIGHT, PICKER_MENU_POPUP_TOP_SPACING,
     PICKER_MIN_HEIGHT, PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS,
     PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_MIN_WIDTH, PICKER_RADIO_OUTER_RING_WIDTH,
-    PICKER_RADIO_ROW_SPACING, PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
-    PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_MIN_WIDTH, PICKER_SEGMENTED_OUTLINE_WIDTH,
-    PICKER_VERTICAL_INSET,
+    PICKER_RADIO_ROW_SPACING, PICKER_VERTICAL_INSET,
 };
 use crate::elevation::MaterialElevationLevel;
 use crate::theme::colors::{MaterialColorScheme, MaterialRoleColor};
 use crate::theme::state_layer;
 use crate::{PickerMetrics, RadioIndicatorState, WidgetInteractionState};
-use hydrolysis::draw::kurbo::{Circle, Line, RoundedRect, RoundedRectRadii, Stroke};
+use hydrolysis::draw::kurbo::{Circle, RoundedRect, RoundedRectRadii, Stroke};
 use hydrolysis::draw::{Draw as _, Recorder, WorkingColor};
-use num_traits::ToPrimitive;
 use waterui::contract_violation;
 use waterui_form::picker::PickerStyle;
 
@@ -24,7 +21,8 @@ pub fn metrics(style: PickerStyle) -> PickerMetrics {
     match style {
         PickerStyle::Automatic | PickerStyle::Menu => menu_metrics(),
         PickerStyle::Radio => radio_metrics(),
-        PickerStyle::Segmented => segmented_metrics(),
+        // A segmented picker is measured by its look
+        // ([`super::segmented::look`]), not by picker metrics.
         _ => {
             contract_violation!(
                 "hydrolysis-m3 does not implement PickerStyle {style:?}; using the menu metrics"
@@ -48,7 +46,6 @@ const fn menu_metrics() -> PickerMetrics {
         popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
         popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
         popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
-        segment_min_width: 0.0,
     }
 }
 
@@ -66,25 +63,6 @@ const fn radio_metrics() -> PickerMetrics {
         popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
         popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
         popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
-        segment_min_width: 0.0,
-    }
-}
-
-const fn segmented_metrics() -> PickerMetrics {
-    PickerMetrics {
-        min_width: PICKER_SEGMENTED_MIN_WIDTH,
-        min_height: PICKER_SEGMENTED_MIN_HEIGHT,
-        horizontal_inset: PICKER_SEGMENTED_HORIZONTAL_INSET,
-        vertical_inset: 0.0,
-        label_spacing: PICKER_LABEL_SPACING,
-        indicator_space: 0.0,
-        radio_indicator_size: PICKER_RADIO_INDICATOR_SIZE,
-        radio_label_spacing: PICKER_RADIO_LABEL_SPACING,
-        radio_row_spacing: PICKER_RADIO_ROW_SPACING,
-        popup_top_spacing: PICKER_MENU_POPUP_TOP_SPACING,
-        popup_row_height: PICKER_MENU_POPUP_ROW_HEIGHT,
-        popup_corner_radius: PICKER_MENU_POPUP_CORNER_RADIUS,
-        segment_min_width: PICKER_SEGMENTED_MIN_WIDTH,
     }
 }
 
@@ -254,111 +232,6 @@ pub fn draw_radio_state_layer(
     );
 }
 
-pub fn segmented_label_color(
-    colors: &MaterialColorScheme,
-    selected: bool,
-) -> waterui_graphics::color::Color {
-    if selected {
-        colors.on_secondary_container.view_color()
-    } else {
-        colors.on_surface.view_color()
-    }
-}
-
-pub fn draw_segmented_container(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: hydrolysis::draw::kurbo::Rect,
-    segment_count: usize,
-) {
-    draw.stroke(
-        RoundedRect::from_rect(
-            bounds,
-            RoundedRectRadii::from_single_radius(PICKER_SEGMENTED_CONTAINER_RADIUS),
-        ),
-        Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH),
-        colors.outline.working(),
-    );
-    if segment_count <= 1 {
-        return;
-    }
-    let segment_width = bounds.width()
-        / segment_count
-            .to_f64()
-            .expect("picker segment count must be representable as f64");
-    for index in 1..segment_count {
-        let x = segment_width.mul_add(
-            index
-                .to_f64()
-                .expect("picker segment index must be representable as f64"),
-            bounds.x0,
-        );
-        draw.stroke(
-            Line::new(
-                hydrolysis::draw::kurbo::Point::new(x, bounds.y0),
-                hydrolysis::draw::kurbo::Point::new(x, bounds.y1),
-            ),
-            Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH),
-            colors.outline.working(),
-        );
-    }
-}
-
-/// One segment's item shape, per Compose `itemShape(index, count)`: only the
-/// outside edge of each end segment takes the group's full rounding — the
-/// first item rounds its leading corners, the last its trailing corners, and
-/// middle items stay square against the separator strokes.
-const fn segment_radii(is_first: bool, is_last: bool) -> hydrolysis::draw::kurbo::RoundedRectRadii {
-    let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
-    match (is_first, is_last) {
-        (true, true) => {
-            hydrolysis::draw::kurbo::RoundedRectRadii::new(radius, radius, radius, radius)
-        }
-        (true, false) => hydrolysis::draw::kurbo::RoundedRectRadii::new(radius, 0.0, 0.0, radius),
-        (false, true) => hydrolysis::draw::kurbo::RoundedRectRadii::new(0.0, radius, radius, 0.0),
-        (false, false) => hydrolysis::draw::kurbo::RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
-    }
-}
-
-pub fn draw_segmented_segment(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: hydrolysis::draw::kurbo::Rect,
-    selected: bool,
-    is_first: bool,
-    is_last: bool,
-) {
-    if !selected {
-        return;
-    }
-    draw.fill(
-        RoundedRect::from_rect(bounds, segment_radii(is_first, is_last)),
-        colors.secondary_container.working(),
-    );
-}
-
-pub fn draw_segmented_state_layer(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    bounds: hydrolysis::draw::kurbo::Rect,
-    selected: bool,
-    is_first: bool,
-    is_last: bool,
-    state: WidgetInteractionState,
-) {
-    state_layer::draw_bounded(
-        draw,
-        bounds,
-        segment_radii(is_first, is_last),
-        if selected {
-            colors.on_secondary_container.working()
-        } else {
-            colors.on_surface.working()
-        },
-        state,
-    );
-}
-
 #[cfg(test)]
 mod tests {
     use hydrolysis::draw::kurbo::{Point, Rect, RoundedRectRadii};
@@ -368,14 +241,11 @@ mod tests {
 
     use super::{
         MaterialColorScheme, RadioIndicatorState, blend_role_color, draw_popup_row_background,
-        draw_radio_indicator, draw_segmented_container, draw_segmented_segment, draw_separator,
-        menu_metrics, radio_metrics, segment_radii, segmented_metrics,
+        draw_radio_indicator, draw_separator, menu_metrics, radio_metrics,
     };
     use crate::dimensions::{
         PICKER_LABEL_SPACING, PICKER_MENU_POPUP_CORNER_RADIUS, PICKER_MENU_POPUP_ROW_HEIGHT,
         PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS, PICKER_RADIO_OUTER_RING_WIDTH,
-        PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
-        PICKER_SEGMENTED_MIN_HEIGHT,
     };
 
     /// The solid-colour commands a theme draw recorded, sorted by shape.
@@ -603,73 +473,6 @@ mod tests {
         // inherits `TextFieldDefaults.MinWidth` = 280dp.
         assert_eq!(menu_metrics().min_width, 280.0);
         assert_eq!(radio_metrics().min_width, 72.0);
-    }
-
-    #[test]
-    fn segmented_metrics_match_compose_segmented_button_tokens() {
-        let metrics = segmented_metrics();
-
-        assert_eq!(metrics.min_height, PICKER_SEGMENTED_MIN_HEIGHT);
-        assert_eq!(metrics.horizontal_inset, PICKER_SEGMENTED_HORIZONTAL_INSET);
-        assert_eq!(metrics.segment_min_width, 58.0);
-        assert_eq!(PICKER_SEGMENTED_MIN_HEIGHT, 40.0);
-        assert_eq!(PICKER_SEGMENTED_CONTAINER_RADIUS, 20.0);
-    }
-
-    /// Compose `itemShape(index, count)`: only the outside edge of each end
-    /// segment rounds; middle segments are square.
-    #[test]
-    fn segmented_item_shape_rounds_only_the_outside_edge() {
-        let radius = PICKER_SEGMENTED_CONTAINER_RADIUS;
-        let zero = RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0);
-
-        assert_eq!(
-            segment_radii(true, false),
-            RoundedRectRadii::new(radius, 0.0, 0.0, radius)
-        );
-        assert_eq!(
-            segment_radii(false, true),
-            RoundedRectRadii::new(0.0, radius, radius, 0.0)
-        );
-        assert_eq!(segment_radii(false, false), zero);
-        assert_eq!(
-            segment_radii(true, true),
-            RoundedRectRadii::new(radius, radius, radius, radius)
-        );
-    }
-
-    #[test]
-    fn segmented_container_and_selected_segment_use_material_tokens() {
-        let colors = MaterialColorScheme::baseline_light();
-        let draw = recorded(|draw| {
-            draw_segmented_segment(
-                &colors,
-                draw,
-                Rect::new(0.0, 0.0, 80.0, 40.0),
-                true,
-                false,
-                false,
-            );
-            draw_segmented_container(&colors, draw, Rect::new(0.0, 0.0, 240.0, 40.0), 3);
-        });
-
-        assert_eq!(
-            draw.rounded_fills,
-            vec![(
-                RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
-                colors.secondary_container.working()
-            )]
-        );
-        assert_eq!(draw.rounded_strokes.len(), 1);
-        assert_eq!(draw.rounded_strokes[0].1, colors.outline.working());
-        assert_eq!(draw.rounded_strokes[0].2, 1.0);
-        assert_eq!(
-            draw.line_strokes,
-            vec![
-                (colors.outline.working(), 1.0),
-                (colors.outline.working(), 1.0)
-            ]
-        );
     }
 
     #[test]
