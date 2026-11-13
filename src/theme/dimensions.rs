@@ -345,8 +345,6 @@ pub const PROGRESS_LINEAR_TRACK_ACTIVE_SPACE: f64 = 4.0;
 /// `LinearProgressIndicatorTokens.StopSize`: the dot marking the bar's end.
 pub const PROGRESS_LINEAR_STOP_SIZE: f64 = 4.0;
 
-pub const DIVIDER_THICKNESS: f64 = 1.0;
-
 pub const NAVIGATION_BAR_AUTOMATIC_HEIGHT: f64 = 64.0;
 pub const NAVIGATION_BAR_INLINE_HEIGHT: f64 = 64.0;
 pub const NAVIGATION_BAR_MEDIUM_HEIGHT: f64 = 112.0;
@@ -366,6 +364,21 @@ pub const NAVIGATION_BACK_BUTTON_LEADING_INSET: f64 = 4.0;
 pub const NAVIGATION_BACK_BUTTON_TOP_INSET: f64 = 12.0;
 pub const NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE: f64 = 30.0;
 pub const SCROLL_INDICATOR_CORNER_RADIUS: f64 = 1.25;
+/// Thickness of the scroll indicator's thumb at rest. Material has no scroll
+/// indicator component; this is the thumb the renderer drew before the theme
+/// owned it.
+pub const SCROLL_INDICATOR_THICKNESS: f64 = 2.5;
+/// Thickness of the thumb while it is dragged.
+pub const SCROLL_INDICATOR_DRAG_THICKNESS: f64 = 6.5;
+/// Inset of the thumb from the scrolling surface's edge.
+pub const SCROLL_INDICATOR_EDGE_INSET: f64 = 1.5;
+/// The shortest the thumb gets along its track.
+pub const SCROLL_INDICATOR_MIN_EXTENT: f64 = 12.0;
+/// Width of the gutter along the edge that takes a thumb drag, wider than
+/// the drawn thumb so it is comfortable to pick up.
+pub const SCROLL_INDICATOR_GUTTER: f64 = 12.0;
+/// Opacity of the thumb's `on-surface-variant` colour.
+pub const SCROLL_INDICATOR_OPACITY: f32 = 0.55;
 pub const TABS_BAR_HEIGHT: f64 = 48.0;
 pub const TABS_BUTTON_MIN_WIDTH: f64 = 48.0;
 pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
@@ -395,6 +408,35 @@ pub const LIST_MOVE_CONTROL_WIDTH: f64 = 48.0;
 pub const LIST_DELETE_CONTROL_WIDTH: f64 = 48.0;
 pub const LIST_TRAILING_CONTROL_SPACING: f64 = 8.0;
 pub const LIST_TRAILING_CONTROL_VERTICAL_INSET: f64 = 4.0;
+/// Diameter of a trailing control's state layer, matching
+/// `IconButtonTokens.StateLayerSize`.
+pub const LIST_CONTROL_STATE_LAYER_SIZE: f64 = 40.0;
+/// Size of the icons the trailing controls draw (Material's 24dp icon).
+pub const LIST_CONTROL_ICON_SIZE: f64 = 24.0;
+/// Diameter of a move half's state layer: the half's inscribed circle on a
+/// one-line row, whose 48dp control splits into two 24dp halves.
+pub const LIST_MOVE_STATE_LAYER_SIZE: f64 = 2.0f64.mul_add(
+    -LIST_TRAILING_CONTROL_VERTICAL_INSET,
+    LIST_ONE_LINE_ROW_HEIGHT,
+) / 2.0;
+/// Fraction of a row's width a swipe must cross to dismiss on release:
+/// Compose's `SwipeToDismissBoxDefaults.positionalThreshold`,
+/// `distance * 0.5`.
+pub const LIST_SWIPE_DISMISS_THRESHOLD: f64 = 0.5;
+/// Fraction of a slot a reorder drag must cross to step the lifted row over
+/// its neighbour: its midpoint.
+pub const LIST_REORDER_THRESHOLD: f64 = 0.5;
+/// Distance the pointer travels before a row drag is recognised, matching
+/// Android's `ViewConfiguration` touch slop.
+pub const LIST_ROW_DRAG_SLOP: f32 = 8.0;
+/// Size of the delete glyph a swipe reveals, on Material's 24dp icon grid.
+pub const LIST_SWIPE_ICON_SIZE: f64 = 24.0;
+/// Gap between the swipe glyph and the edge of the row it is revealed
+/// against.
+pub const LIST_SWIPE_ICON_EDGE_INSET: f64 = 16.0;
+/// Scale the swipe glyph starts at, growing to full size as the swipe
+/// reaches its dismiss threshold.
+pub const LIST_SWIPE_ICON_MIN_SCALE: f64 = 0.7;
 /// Material list subheader line (`md.sys.list.subheader`), a 48dp band.
 pub const LIST_SECTION_HEADER_HEIGHT: f64 = 48.0;
 /// Supporting text closing a section, on the same 40dp rhythm as a one-line
