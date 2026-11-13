@@ -50,31 +50,28 @@ mod theme;
 pub(crate) use controls::{
     button, input, picker, progress, radio, segmented, slider, stepper, toggle,
 };
-pub(crate) use layout::{badge, card, divider, list, menu, scroll, snackbar, table};
+pub(crate) use layout::{badge, card, list, menu, scroll, snackbar, table};
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use hydrolysis::draw::{Recorder, WorkingColor};
+use hydrolysis::draw::WorkingColor;
 
-use hydrolysis::draw::kurbo::{Point, Rect};
 pub use hydrolysis::theme::{
-    BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, DividerMetrics, IndicatorLook,
+    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, IndicatorLook,
     InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
-    ListDividerMetrics, ListMetrics, ListRowMetrics, ListSectionMetrics,
+    ListDividerMetrics, ListLook, ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec,
     ListTrailingControlMetrics, MenuLook, MenuPickerLook, MenuSpec, ModalInteraction,
     NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, PickerSpec, PressWave,
     PressWaves, ProgressSpec, RadioGroupLook, SegmentedLook, SegmentedSpec, SliderLook, SliderSpec,
-    StepperLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout, TableMetrics, TabsLook,
+    StepperLook, ScrollIndicatorLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout, TableLook, TableMetrics, TabsLook,
     TabsMetrics, TabsSpec, TextCaretMotion, TextFieldLook, TextFieldSpec, ToggleSpec,
     WidgetInteractionState, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
-use waterui::text::font::Font;
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_core::Environment;
-use waterui_graphics::color::Color;
 
 pub use button_group::{
     ButtonGroup, ConnectedButton, ConnectedButtonGroup, GroupButton, button_group,
@@ -515,108 +512,20 @@ impl WidgetTheme for Material3 {
         tabs::look(env)
     }
 
-    fn draw_scroll_indicator(&self, draw: &mut Recorder, bounds: Rect) {
-        scroll::draw_indicator(&self.colors(), draw, bounds);
+    fn scroll_indicator(&self, env: &Environment) -> ScrollIndicatorLook {
+        scroll::look(env)
     }
 
-    fn divider_metrics(&self) -> DividerMetrics {
-        divider::metrics()
+    fn badge(&self, env: &Environment) -> BadgeLook {
+        badge::look(env)
     }
 
-    fn draw_divider(&self, draw: &mut Recorder, bounds: Rect) {
-        divider::draw(&self.colors(), draw, bounds);
+    fn list(&self, spec: &ListSpec, env: &Environment) -> ListLook {
+        list::look(*spec, env)
     }
 
-    fn badge_metrics(&self) -> BadgeMetrics {
-        badge::metrics()
-    }
-
-    fn badge_label_color(&self) -> Color {
-        badge::label_color(&self.colors())
-    }
-
-    fn badge_label_font(&self) -> Font {
-        theme::typography::label_small()
-    }
-
-    fn draw_badge_small(&self, draw: &mut Recorder, bounds: Rect) {
-        badge::draw_small(&self.colors(), draw, bounds);
-    }
-
-    fn draw_badge_large(&self, draw: &mut Recorder, bounds: Rect) {
-        badge::draw_large(&self.colors(), draw, bounds);
-    }
-
-    fn list_metrics(&self) -> ListMetrics {
-        list::metrics()
-    }
-
-    fn draw_list_row_background(&self, draw: &mut Recorder, bounds: Rect, alternate: bool) {
-        list::draw_row_background(&self.colors(), draw, bounds, alternate);
-    }
-
-    fn draw_list_move_control(&self, draw: &mut Recorder, bounds: Rect) {
-        list::draw_move_control(&self.colors(), draw, bounds);
-    }
-
-    fn draw_list_move_control_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        list::draw_move_control_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_list_delete_control(&self, draw: &mut Recorder, bounds: Rect) {
-        list::draw_delete_control(&self.colors(), draw, bounds);
-    }
-
-    fn draw_list_delete_control_state_layer(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        list::draw_delete_control_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_list_swipe_dismiss_background(
-        &self,
-        draw: &mut Recorder,
-        bounds: Rect,
-        progress: f64,
-        toward_start: bool,
-    ) {
-        list::draw_swipe_dismiss_background(&self.colors(), draw, bounds, progress, toward_start);
-    }
-
-    fn draw_list_row_lifted(&self, draw: &mut Recorder, bounds: Rect, elevation: f64) {
-        list::draw_row_lifted(&self.colors(), draw, bounds, elevation);
-    }
-
-    fn draw_list_separator(&self, draw: &mut Recorder, bounds: Rect) {
-        list::draw_separator(&self.colors(), draw, bounds);
-    }
-
-    fn table_metrics(&self) -> TableMetrics {
-        table::metrics()
-    }
-
-    fn draw_table_background(&self, draw: &mut Recorder, bounds: Rect) {
-        table::draw_background(&self.colors(), draw, bounds);
-    }
-
-    fn draw_table_header_background(&self, draw: &mut Recorder, bounds: Rect) {
-        table::draw_header_background(&self.colors(), draw, bounds);
-    }
-
-    fn draw_table_cell_border(&self, draw: &mut Recorder, bounds: Rect) {
-        table::draw_cell_border(&self.colors(), draw, bounds);
-    }
-
-    fn draw_table_column_separator(&self, draw: &mut Recorder, from: Point, to: Point) {
-        table::draw_column_separator(&self.colors(), draw, from, to);
+    fn table(&self, env: &Environment) -> TableLook {
+        table::look(env)
     }
 }
 

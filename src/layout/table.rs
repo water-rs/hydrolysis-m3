@@ -1,12 +1,21 @@
-use crate::TableMetrics;
+//! The Material 3 table look.
+//!
+//! Material ships no table component, so these values have no token to
+//! match: the `surface` background, the `outline-variant` hairlines and the
+//! 56dp header / 52dp row rhythm of the Material data-table spec are
+//! `WaterUI`'s own choice.
+
+use hydrolysis::draw::kurbo::{Line, Stroke};
+use hydrolysis::draw::{Draw as _, Paint};
+use hydrolysis::theme::{Custom, Driven, TableLook, TableMetrics};
+use waterui_core::Environment;
+
+use crate::color::{OutlineVariant, Surface};
+use crate::controls::button::solid_paint;
 use crate::dimensions::{
     TABLE_CELL_HORIZONTAL_PADDING, TABLE_CELL_VERTICAL_INSET, TABLE_HEADER_HEIGHT,
     TABLE_MIN_COLUMN_WIDTH, TABLE_OUTLINE_WIDTH, TABLE_ROW_HEIGHT,
 };
-use crate::theme::colors::MaterialColorScheme;
-use hydrolysis::draw::kurbo::{Line, Stroke};
-use hydrolysis::draw::kurbo::{Point, Rect};
-use hydrolysis::draw::{Draw as _, Recorder};
 
 pub const fn metrics() -> TableMetrics {
     TableMetrics {
@@ -19,33 +28,45 @@ pub const fn metrics() -> TableMetrics {
     }
 }
 
-pub fn draw_background(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
-    draw.fill(bounds, colors.surface.working());
+/// The look of a table: `surface` behind the body and the header, cells
+/// bordered and columns separated by `outline-variant` hairlines.
+pub fn look(env: &Environment) -> TableLook {
+    TableLook::new(
+        metrics(),
+        fill(env),
+        fill(env),
+        cell_border(env),
+        column_separator(env),
+    )
 }
 
-pub fn draw_header_background(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
-    draw.fill(bounds, colors.surface.working());
+fn fill(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new((solid_paint(Surface, env),), |recorder, frame, (paint,)| {
+        recorder.fill(frame, paint);
+    })
 }
 
-pub fn draw_cell_border(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
-    draw.stroke(
-        bounds,
-        Stroke::new(TABLE_OUTLINE_WIDTH),
-        colors.outline_variant.working(),
-    );
+fn cell_border(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new(
+        (solid_paint(OutlineVariant, env),),
+        |recorder, frame, (paint,)| {
+            recorder.stroke(frame, Stroke::new(TABLE_OUTLINE_WIDTH), paint);
+        },
+    )
 }
 
-pub fn draw_column_separator(
-    colors: &MaterialColorScheme,
-    draw: &mut Recorder,
-    from: Point,
-    to: Point,
-) {
-    draw.stroke(
-        Line::new(from, to),
-        Stroke::new(TABLE_OUTLINE_WIDTH),
-        colors.outline_variant.working(),
-    );
+/// The line between the two ends of the zero-width rect it draws over.
+fn column_separator(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new(
+        (solid_paint(OutlineVariant, env),),
+        |recorder, frame, (paint,)| {
+            recorder.stroke(
+                Line::new((frame.x0, frame.y0), (frame.x1, frame.y1)),
+                Stroke::new(TABLE_OUTLINE_WIDTH),
+                paint,
+            );
+        },
+    )
 }
 
 #[cfg(test)]

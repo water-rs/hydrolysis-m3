@@ -1,29 +1,55 @@
-use hydrolysis::draw::kurbo::{Circle, RoundedRect};
-use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
-use hydrolysis::draw::{Draw as _, Recorder};
-use hydrolysis::theme::BadgeMetrics;
+//! The Material 3 badge look from the `md.comp.badge.*` tokens.
 
-use crate::theme::colors::MaterialColorScheme;
+use hydrolysis::draw::kurbo::{Circle, Rect, RoundedRect, RoundedRectRadii};
+use hydrolysis::draw::{Draw as _, Paint};
+use hydrolysis::theme::{BadgeLook, BadgeMetrics, Custom, Driven};
+use waterui_core::Environment;
+use waterui_graphics::color::Color;
+
+use crate::color::{Error, OnError};
+use crate::controls::button::solid_paint;
+use crate::theme::typography;
 
 pub const fn metrics() -> BadgeMetrics {
     BadgeMetrics::new(6.0, 16.0, 4.0, 6.0, 6.0, 12.0, 14.0)
 }
 
-pub fn label_color(colors: &MaterialColorScheme) -> waterui_graphics::color::Color {
-    colors.on_error.view_color()
+/// The look of a badge: the `error` dot (`md.comp.badge.size` 6dp) and count
+/// pill (`md.comp.badge.large.size` 16dp), whose count is `label-small` in
+/// `on-error` (`md.comp.badge.large.label-text`).
+pub fn look(env: &Environment) -> BadgeLook {
+    BadgeLook::new(
+        metrics(),
+        typography::label_small(),
+        Color::from(OnError),
+        small(env),
+        large(env),
+    )
 }
 
-pub fn draw_small(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
-    let radius = bounds.height().min(bounds.width()) * 0.5;
-    draw.fill(Circle::new(bounds.center(), radius), colors.error.working());
+/// The dot: a circle across its rect's shorter side.
+fn small(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new(
+        (solid_paint(Error, env),),
+        |recorder, frame: Rect, (paint,)| {
+            let radius = frame.height().min(frame.width()) * 0.5;
+            recorder.fill(Circle::new(frame.center(), radius), paint);
+        },
+    )
 }
 
-pub fn draw_large(colors: &MaterialColorScheme, draw: &mut Recorder, bounds: Rect) {
-    let radius = bounds.height() * 0.5;
-    draw.fill(
-        RoundedRect::from_rect(bounds, RoundedRectRadii::from_single_radius(radius)),
-        colors.error.working(),
-    );
+/// The count pill: fully round ends.
+fn large(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
+    Custom::new(
+        (solid_paint(Error, env),),
+        |recorder, frame: Rect, (paint,)| {
+            let radius = frame.height() * 0.5;
+            recorder.fill(
+                RoundedRect::from_rect(frame, RoundedRectRadii::from_single_radius(radius)),
+                paint,
+            );
+        },
+    )
 }
 
 #[cfg(test)]

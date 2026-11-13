@@ -1,6 +1,5 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
-use hydrolysis::draw::Draw as _;
 use hydrolysis::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
@@ -231,33 +230,6 @@ pub(crate) fn cast_shadows<V: 'static>(
         )
     };
     (cast(true), cast(false))
-}
-
-/// Casts `level`'s key and ambient shadows for a rounded-rect surface drawn
-/// into `draw`. `colors` resolves the `shadow` role — the same role
-/// [`Shadow`] resolves through the environment — at draw time.
-pub(crate) fn draw_shadows(
-    draw: &mut hydrolysis::draw::Recorder,
-    rect: hydrolysis::draw::kurbo::Rect,
-    radii: hydrolysis::draw::kurbo::RoundedRectRadii,
-    level: MaterialElevationLevel,
-    colors: &crate::theme::colors::MaterialColorScheme,
-) {
-    let tokens = ElevationTokens::for_level(level);
-    for (shadow, base_opacity) in [(tokens.key, KEY_OPACITY), (tokens.ambient, AMBIENT_OPACITY)] {
-        draw.shadow(
-            hydrolysis::draw::kurbo::RoundedRect::from_rect(rect, radii),
-            hydrolysis::draw::Shadow {
-                sigma: f64::from(shadow.blur),
-                offset: hydrolysis::draw::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
-                spread: 0.0,
-                color: colors
-                    .shadow
-                    .working()
-                    .with_alpha(shadow.opacity(base_opacity)),
-            },
-        );
-    }
 }
 
 /// `level`'s two shadows as a [`FloatingElevation`] a `FloatingStyle` can
