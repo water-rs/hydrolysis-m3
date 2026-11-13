@@ -59,6 +59,7 @@ pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
     )
     .active_indicator(active_indicator(env))
     .placeholder(placeholder())
+    .value(value())
 }
 
 /// The measures of the field: at least 280 wide
@@ -197,6 +198,18 @@ fn placeholder() -> Label {
     )
 }
 
+/// The typed value: `body-large` (`md.comp.filled-text-field.input-text.type`)
+/// in `on-surface` (`input-text.color`), on-surface at 38% while disabled
+/// (`md.comp.filled-text-field.disabled.input-text.{color,opacity}`).
+fn value() -> Label {
+    Label::new()
+        .font(typography::body_large())
+        .color(StateValue::new(Color::from(OnSurface)).when(
+            InteractionState::DISABLED,
+            Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY)),
+        ))
+}
+
 /// The selection: `primary` at [`INPUT_SELECTION_OPACITY`], over the text.
 fn selection(env: &Environment) -> Driven<hydrolysis::draw::Paint> {
     solid_paint(Primary.with_opacity(INPUT_SELECTION_OPACITY), env)
@@ -216,7 +229,7 @@ mod tests {
     use hydrolysis::Style as _;
     use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
     use hydrolysis::draw::{Paint, WorkingColor};
-    use hydrolysis::theme::{Inputs, SpecTint, TextFieldLook, TextFieldSpec};
+    use hydrolysis::theme::{Inputs, Label, SpecTint, TextFieldLook, TextFieldSpec};
     use waterui::interaction::InteractionState;
     use waterui_core::layout::LayoutDirection;
     use waterui_core::{Environment, Signal as _};
@@ -394,6 +407,29 @@ mod tests {
         );
         assert!(look.get_placeholder().get_font().is_some());
         assert!(look.floating_label().label().get_font().is_some());
+    }
+
+    /// The typed value is `on-surface` in `body-large`, dim while disabled.
+    #[test]
+    fn the_value_is_coloured_by_state() {
+        let colors = MaterialColorScheme::baseline_light();
+        let look = field_look();
+        let value = look
+            .get_value()
+            .expect("the look styles the value")
+            .get_color()
+            .expect("the value has a colour");
+        let value_at = |state| resolved(&value.target(&inputs(state)));
+
+        assert_eq!(
+            value_at(InteractionState::FOCUSED),
+            colors.on_surface.working()
+        );
+        assert_eq!(
+            value_at(InteractionState::DISABLED),
+            colors.on_surface.working().with_alpha(0.38)
+        );
+        assert!(look.get_value().and_then(Label::get_font).is_some());
     }
 
     /// The populated label is `body-small` (12) where the resting label is
