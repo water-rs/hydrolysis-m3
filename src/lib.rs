@@ -55,7 +55,7 @@ pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use hydrolysis::draw::WorkingColor;
+use hydrolysis::draw::{BlendSpace, WorkingColor};
 
 pub use hydrolysis::theme::{
     BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, IndicatorLook,
@@ -444,6 +444,10 @@ impl Default for Material3 {
 }
 
 impl WidgetTheme for Material3 {
+    fn blend_space(&self) -> BlendSpace {
+        BlendSpace::SrgbEncoded
+    }
+
     fn interaction_motion(&self) -> InteractionMotion {
         theme::motion::interaction()
     }
