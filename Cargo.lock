@@ -5388,7 +5388,7 @@ dependencies = [
 [[package]]
 name = "waterui-chart"
 version = "0.3.0"
-source = "git+https://github.com/water-rs/chart?branch=dev#313e0ad99e1c1fd99f19a7f97f56ed97072cafe5"
+source = "git+https://github.com/water-rs/chart?branch=main#eb21d2101128d7d4e6a0e6ebbd85323e70bfbbde"
 dependencies = [
  "bytemuck",
  "nami 0.13.0",
@@ -5561,7 +5561,7 @@ dependencies = [
 [[package]]
 name = "waterui-image"
 version = "0.5.0"
-source = "git+https://github.com/water-rs/image?branch=dev#338c20da3ce03d20186e947de41e1443d33d7673"
+source = "git+https://github.com/water-rs/image?branch=main#0988ed3225cb941672deb7881665b81182ee50af"
 dependencies = [
  "half",
  "image",
@@ -5778,7 +5778,7 @@ dependencies = [
 [[package]]
 name = "waterui-svg"
 version = "0.4.0"
-source = "git+https://github.com/water-rs/svg?branch=dev#75b85fbb0e7f2add26bf598ef34fba497f56d84d"
+source = "git+https://github.com/water-rs/svg?branch=main#ad60d37ecb46b15f8d4eb29e83cbf6211ed57e9b"
 dependencies = [
  "suiteki",
  "tracing",

@@ -129,7 +129,7 @@ waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "d
 
 # Component crates living in their own repositories, on the branch
 # water-rs/waterui's own patch table tracks.
-waterui-svg = { git = "https://github.com/water-rs/svg", branch = "dev" }
+waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
 waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "dev" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
@@ -166,8 +166,8 @@ wgpu-hal = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-share
 wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 wgpu-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 
-waterui-image = { git = "https://github.com/water-rs/image", branch = "dev" }
-waterui-chart = { git = "https://github.com/water-rs/chart", branch = "dev" }
+waterui-image = { git = "https://github.com/water-rs/image", branch = "main" }
+waterui-chart = { git = "https://github.com/water-rs/chart", branch = "main" }
 waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 # `clipboard-rs` 0.3.5 (via waterkit-clipboard) pins `windows` 0.59, inside
