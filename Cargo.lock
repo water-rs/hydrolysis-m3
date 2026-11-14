@@ -4256,7 +4256,7 @@ dependencies = [
 [[package]]
 name = "shaderloom"
 version = "0.2.1"
-source = "git+https://github.com/water-rs/shaderloom?branch=dev#9e0402afaf8263dc149a3fcb85601532fd5bb907"
+source = "git+https://github.com/water-rs/shaderloom?branch=main#9e0402afaf8263dc149a3fcb85601532fd5bb907"
 dependencies = [
  "serde",
  "toml",
@@ -4454,7 +4454,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "suiteki"
 version = "0.1.1"
-source = "git+https://github.com/water-rs/suiteki?branch=dev#526dbb81f286752ba5d57e2913e234077331bfb5"
+source = "git+https://github.com/water-rs/suiteki?branch=main#526dbb81f286752ba5d57e2913e234077331bfb5"
 dependencies = [
  "nami-core 0.5.0",
  "serde",
@@ -5071,7 +5071,7 @@ dependencies = [
 [[package]]
 name = "waterkit-build"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "futures-channel",
  "jni 0.22.4",
@@ -5082,7 +5082,7 @@ dependencies = [
 [[package]]
 name = "waterkit-clipboard"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "async-channel",
  "block2",
@@ -5114,7 +5114,7 @@ dependencies = [
 [[package]]
 name = "waterkit-codec"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "avif-parse",
  "cfg_aliases",
@@ -5160,7 +5160,7 @@ dependencies = [
 [[package]]
 name = "waterkit-core"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "dispatch2",
  "executor-core",
@@ -5201,7 +5201,7 @@ dependencies = [
 [[package]]
 name = "waterkit-dialog"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "block2",
  "dispatch2",
@@ -5224,7 +5224,7 @@ dependencies = [
 [[package]]
 name = "waterkit-fs"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "async-fs",
  "dirs",
@@ -5242,7 +5242,7 @@ dependencies = [
 [[package]]
 name = "waterkit-location"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "async-channel",
  "dispatch2",
@@ -5267,7 +5267,7 @@ dependencies = [
 [[package]]
 name = "waterkit-permission"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "async-channel",
  "block2",
@@ -5295,7 +5295,7 @@ dependencies = [
 [[package]]
 name = "waterkit-video-core"
 version = "0.2.0"
-source = "git+https://github.com/water-rs/waterkit?branch=dev#8e288a866a2904b09ed9ec91d54098665e3b3216"
+source = "git+https://github.com/water-rs/waterkit?branch=main#8e288a866a2904b09ed9ec91d54098665e3b3216"
 dependencies = [
  "thiserror 2.0.21",
 ]
