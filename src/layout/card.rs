@@ -7,7 +7,7 @@ use crate::theme::colors::MaterialColorScheme;
 
 const CARD_CONTENT_PADDING: f32 = 16.0;
 const CARD_CONTENT_SPACING: f32 = 4.0;
-const CARD_CORNER_RADIUS: f32 = 12.0;
+pub const CARD_CORNER_RADIUS: f32 = 12.0;
 const CARD_OUTLINE_WIDTH: f32 = 1.0;
 
 struct CardShadowTokens {

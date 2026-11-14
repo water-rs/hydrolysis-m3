@@ -1,3 +1,7 @@
+use waterui::contract_violation;
+
+use super::typography::BODY_SMALL_LINE_HEIGHT;
+
 /// `ShapeTokens.CornerSmall`.
 pub const SHAPE_CORNER_SMALL: f64 = 8.0;
 /// `ShapeTokens.CornerMedium`.
@@ -33,7 +37,7 @@ pub struct ButtonSizeTokens {
 /// `ButtonXSmallTokens`.
 pub const BUTTON_EXTRA_SMALL: ButtonSizeTokens = ButtonSizeTokens {
     container_height: 32.0,
-    horizontal_space: 16.0,
+    horizontal_space: 12.0, // md.comp.button.xsmall.leading-space / trailing-space
     icon_size: 20.0,
     icon_label_space: 8.0,
     square_corner_radius: SHAPE_CORNER_MEDIUM,
@@ -41,11 +45,10 @@ pub const BUTTON_EXTRA_SMALL: ButtonSizeTokens = ButtonSizeTokens {
     outline_width: 1.0,
 };
 
-/// `ButtonSmallTokens`, the default size. Its horizontal space comes from
-/// `BaselineButtonTokens`, which is what `ButtonDefaults.ContentPadding` uses.
+/// `ButtonSmallTokens`, the default size.
 pub const BUTTON_SMALL: ButtonSizeTokens = ButtonSizeTokens {
     container_height: 40.0,
-    horizontal_space: 24.0,
+    horizontal_space: 16.0, // md.comp.button.small.leading-space / trailing-space
     icon_size: 20.0,
     icon_label_space: 8.0,
     square_corner_radius: SHAPE_CORNER_MEDIUM,
@@ -83,22 +86,32 @@ pub const BUTTON_EXTRA_LARGE: ButtonSizeTokens = ButtonSizeTokens {
     icon_label_space: 16.0,
     square_corner_radius: SHAPE_CORNER_EXTRA_LARGE,
     pressed_corner_radius: SHAPE_CORNER_LARGE,
-    outline_width: 2.0,
+    outline_width: 3.0, // md.comp.button.xlarge.outlined.outline-width
 };
 
-/// The token set for `size`.
+/// The token set for `size`. A `ControlSize` this theme does not implement is
+/// a contract violation; a release build uses the medium set.
 #[must_use]
-pub const fn button_size_tokens(size: waterui_controls::button::ButtonSize) -> ButtonSizeTokens {
-    use waterui_controls::button::ButtonSize;
+pub fn button_size_tokens(size: waterui_controls::ControlSize) -> ButtonSizeTokens {
+    use waterui_controls::ControlSize;
     match size {
-        ButtonSize::ExtraSmall => BUTTON_EXTRA_SMALL,
-        ButtonSize::Small => BUTTON_SMALL,
-        ButtonSize::Medium => BUTTON_MEDIUM,
-        ButtonSize::Large => BUTTON_LARGE,
-        ButtonSize::ExtraLarge => BUTTON_EXTRA_LARGE,
-        _ => panic!("hydrolysis ButtonSize variant is not implemented"),
+        ControlSize::ExtraSmall => BUTTON_EXTRA_SMALL,
+        ControlSize::Small => BUTTON_SMALL,
+        ControlSize::Medium => BUTTON_MEDIUM,
+        ControlSize::Large => BUTTON_LARGE,
+        ControlSize::ExtraLarge => BUTTON_EXTRA_LARGE,
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement ControlSize {size:?} for a button; using the medium token set"
+            );
+            BUTTON_MEDIUM
+        }
     }
 }
+
+/// `minimumInteractiveComponentSize`: the 48dp touch target every
+/// interactive Material component keeps, whatever its visual size.
+pub const MINIMUM_TOUCH_TARGET: f64 = 48.0;
 
 /// `ButtonDefaults.MinWidth`.
 pub const BUTTON_MIN_WIDTH: f64 = 58.0;
@@ -136,16 +149,16 @@ pub const TOGGLE_CHECKBOX_CONTAINER_SHAPE: f64 = 2.0;
 pub const TOGGLE_CHECKBOX_OUTLINE_WIDTH: f64 = 2.0;
 pub const TOGGLE_CHECKBOX_SELECTED_SCALE_START: f64 = 0.6;
 
-pub const STEPPER_BUTTON_MIN_SIZE: f64 = 40.0;
-pub const STEPPER_BUTTON_MAX_SIZE: f64 = 40.0;
-pub const STEPPER_BUTTON_INTRINSIC_SIZE: f64 = 40.0;
+pub const STEPPER_BUTTON_SIZE: f64 = 40.0;
 pub const STEPPER_BUTTON_SPACING: f64 = 2.0;
 pub const STEPPER_LABEL_SPACING: f64 = 8.0;
 pub const STEPPER_ICON_SIZE: f64 = 24.0;
 pub const STEPPER_INNER_CORNER_RADIUS: f64 = 8.0;
 pub const STEPPER_PRESSED_INNER_CORNER_RADIUS: f64 = 4.0;
 
-pub const INPUT_LABEL_HEIGHT: f64 = 18.0;
+/// The floating label's line box: Material sets the floated label in Body
+/// Small, so the field reserves exactly that role's line height.
+pub const INPUT_LABEL_HEIGHT: f64 = BODY_SMALL_LINE_HEIGHT as f64;
 /// `TextFieldDefaults.MinWidth` — 280dp for both filled and outlined fields.
 pub const INPUT_FIELD_MIN_WIDTH: f64 = 280.0;
 pub const INPUT_FIELD_MIN_HEIGHT: f64 = 56.0;
@@ -154,16 +167,36 @@ pub const INPUT_FIELD_VERTICAL_INSET: f64 = 8.0;
 pub const INPUT_FILLED_CONTAINER_TOP_RADIUS: f64 = 4.0;
 pub const INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT: f64 = 1.0;
 pub const INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT: f64 = 2.0;
+/// The populated label over the resting one: `body-small` is 12sp where
+/// `body-large` is 16sp (`md.comp.filled-text-field.{label-text-populated,
+/// label-text}.size`).
+pub const INPUT_LABEL_FLOAT_SCALE: f64 = 12.0 / 16.0;
+/// How far below the container's top edge the floated label's box starts:
+/// the field's 8dp top padding above the 16dp `body-small` label line.
+pub const INPUT_LABEL_FLOAT_TOP: f64 = INPUT_FIELD_VERTICAL_INSET;
+/// The opacity of the selection's `primary` highlight. Material 3 has no
+/// `md.comp` token for it; the value is the one this theme has always drawn.
+pub const INPUT_SELECTION_OPACITY: f32 = 0.28;
 
-pub const TEXT_CONTEXT_MENU_ROW_HEIGHT: f64 = 48.0;
-pub const TEXT_CONTEXT_MENU_HORIZONTAL_PADDING: f64 = 12.0;
-pub const TEXT_CONTEXT_MENU_VERTICAL_PADDING: f64 = 8.0;
-pub const TEXT_CONTEXT_MENU_MIN_WIDTH: f64 = 112.0;
-pub const TEXT_CONTEXT_MENU_MAX_WIDTH: f64 = 280.0;
-pub const TEXT_CONTEXT_MENU_WIDTH_PER_CHAR: f64 = 8.5;
-pub const TEXT_CONTEXT_MENU_CONTAINER_SHAPE: f64 = 4.0;
-pub const TEXT_CONTEXT_MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
-pub const TEXT_CONTEXT_MENU_SEPARATOR_THICKNESS: f64 = 1.0;
+/// The opacity of a disabled filled text field's container
+/// (`md.comp.filled-text-field.disabled.container.opacity`), which the
+/// menu-style picker's field takes.
+pub const INPUT_FILLED_DISABLED_CONTAINER_OPACITY: f32 = 0.04;
+
+pub const MENU_ROW_HEIGHT: f64 = 48.0;
+pub const MENU_HORIZONTAL_PADDING: f64 = 12.0;
+pub const MENU_VERTICAL_PADDING: f64 = 8.0;
+pub const MENU_MIN_WIDTH: f64 = 112.0;
+pub const MENU_MAX_WIDTH: f64 = 280.0;
+pub const MENU_WIDTH_PER_CHAR: f64 = 8.5;
+pub const MENU_CONTAINER_SHAPE: f64 = 4.0;
+pub const MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
+pub const MENU_SEPARATOR_THICKNESS: f64 = 1.0;
+/// A picker popup's selected row sits this far in from the row's sides.
+pub const MENU_SELECTED_ROW_HORIZONTAL_INSET: f64 = 2.0;
+/// A picker popup's selected row sits this far in from the row's top and
+/// bottom.
+pub const MENU_SELECTED_ROW_VERTICAL_INSET: f64 = 1.0;
 
 /// Compose `TextFieldDefaults.MinWidth`, which the menu-style picker's
 /// filled-field chrome inherits via `ExposedDropdownMenuBox`.
@@ -184,8 +217,12 @@ pub const PICKER_RADIO_INNER_DOT_RADIUS: f64 = 6.0;
 pub const PICKER_RADIO_LABEL_SPACING: f64 = 8.0;
 pub const PICKER_RADIO_ROW_SPACING: f64 = 6.0;
 pub const PICKER_MENU_POPUP_TOP_SPACING: f64 = 4.0;
-pub const PICKER_MENU_POPUP_ROW_HEIGHT: f64 = 48.0;
-pub const PICKER_MENU_POPUP_CORNER_RADIUS: f64 = 4.0;
+/// The dropdown chevron's half width.
+pub const PICKER_CHEVRON_HALF_WIDTH: f64 = 4.0;
+/// The dropdown chevron's half height.
+pub const PICKER_CHEVRON_HALF_HEIGHT: f64 = 2.0;
+/// The dropdown chevron's stroke width.
+pub const PICKER_CHEVRON_STROKE_WIDTH: f64 = 1.5;
 /// Compose `ButtonDefaults.MinWidth`, enforced per segment.
 pub const PICKER_SEGMENTED_MIN_WIDTH: f64 = 58.0;
 pub const PICKER_SEGMENTED_MIN_HEIGHT: f64 = 40.0;
@@ -197,23 +234,97 @@ pub const SLIDER_HORIZONTAL_INSET: f64 = 20.0;
 pub const SLIDER_HORIZONTAL_SPACING: f64 = 8.0;
 pub const SLIDER_VERTICAL_SPACING: f64 = 6.0;
 pub const SLIDER_MIN_TRACK_WIDTH: f64 = 72.0;
-/// `SliderTokens.InactiveTrackHeight` / `ActiveTrackHeight`. The Expressive
-/// slider's track is a thick bar, not the 4dp hairline of earlier Material.
-pub const SLIDER_TRACK_HEIGHT: f64 = 16.0;
 /// `SliderTokens.HandleWidth` — a narrow vertical bar, not a circular thumb.
 pub const SLIDER_HANDLE_WIDTH: f64 = 4.0;
 /// `SliderTokens.PressedHandleWidth`: the handle narrows under the finger.
 pub const SLIDER_PRESSED_HANDLE_WIDTH: f64 = 2.0;
-/// `SliderTokens.HandleHeight` — the handle stands taller than the track.
-pub const SLIDER_HANDLE_HEIGHT: f64 = 44.0;
 /// `SliderTokens.ActiveHandlePadding`: the gap the track leaves on each side of
 /// the handle, so the bar never runs into it.
 pub const SLIDER_HANDLE_PADDING: f64 = 6.0;
-/// `SliderTokens.StopIndicatorSize`: the dot marking the track's far end.
+/// `SliderTokens.StopIndicatorSize`: the dots marking the track's ends.
 pub const SLIDER_STOP_INDICATOR_SIZE: f64 = 4.0;
-/// The corner radius on the track ends that face the handle gap. Only the
-/// outer ends take the full stadium radius (`trackHeight / 2`).
+/// `md.comp.slider.stop-indicator.trailing-space`: the inset between a stop
+/// indicator and the track end it marks (the leading dot mirrors it).
+pub const SLIDER_STOP_INDICATOR_END_SPACE: f64 = 4.0;
+/// The corner radius on the track ends that face the handle gap.
 pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
+
+/// The `md.comp.slider.<size>.*` token set for one control size: track height
+/// and handle height vary with size, and the track's outer corner is a token
+/// of its own rather than half the track height (24 and 40 share the 8/12dp
+/// corner table, not stadium caps).
+#[derive(Clone, Copy)]
+pub struct SliderSizeTokens {
+    /// `*-track-height` (active and inactive agree in every size).
+    pub track_height: f64,
+    /// `active-handle-height`.
+    pub handle_height: f64,
+    /// `*-track-shape-{leading,trailing}` corner radius.
+    pub track_corner: f64,
+}
+
+const SLIDER_EXTRA_SMALL_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 16.0,
+    handle_height: 44.0,
+    track_corner: 8.0,
+};
+const SLIDER_SMALL_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 24.0,
+    handle_height: 44.0,
+    track_corner: 8.0,
+};
+const SLIDER_MEDIUM_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 40.0,
+    handle_height: 52.0,
+    track_corner: 12.0,
+};
+const SLIDER_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 56.0,
+    handle_height: 68.0,
+    track_corner: 16.0,
+};
+const SLIDER_EXTRA_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
+    track_height: 96.0,
+    handle_height: 108.0,
+    track_corner: 28.0,
+};
+
+/// The `md.comp.slider.<size>.*` token set for `size`. A `ControlSize` this
+/// theme does not implement is a contract violation; a release build uses the
+/// medium set.
+#[must_use]
+pub fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeTokens {
+    use waterui_controls::ControlSize;
+    match size {
+        ControlSize::ExtraSmall => SLIDER_EXTRA_SMALL_TOKENS,
+        ControlSize::Small => SLIDER_SMALL_TOKENS,
+        ControlSize::Medium => SLIDER_MEDIUM_TOKENS,
+        ControlSize::Large => SLIDER_LARGE_TOKENS,
+        ControlSize::ExtraLarge => SLIDER_EXTRA_LARGE_TOKENS,
+        _ => {
+            contract_violation!(
+                "hydrolysis-m3 does not implement ControlSize {size:?} for a slider; using the medium token set"
+            );
+            SLIDER_MEDIUM_TOKENS
+        }
+    }
+}
+
+/// `md.comp.slider.value-indicator.active.bottom-space`: the gap between the
+/// value indicator and the top of the handle while dragging.
+pub const SLIDER_VALUE_INDICATOR_BOTTOM_SPACE: f64 = 12.0;
+/// No horizontal padding token exists for the value indicator; 12dp matches
+/// the side padding Material gives its other label bubbles.
+pub const SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING: f64 = 12.0;
+/// Same fallback for the vertical direction: padding past the 44dp container
+/// height only ever enlarges the bubble.
+pub const SLIDER_VALUE_INDICATOR_VERTICAL_PADDING: f64 = 4.0;
+/// `md.comp.slider.value-indicator.label.container.height` per the current
+/// spec (44), replacing the deprecated 28dp `md.comp.slider.label.container.height`.
+pub const SLIDER_VALUE_INDICATOR_MIN_HEIGHT: f64 = 44.0;
+/// `md.comp.slider.value-indicator.label.container.min-width`: the bubble
+/// never narrows past 48 and grows for longer labels.
+pub const SLIDER_VALUE_INDICATOR_MIN_WIDTH: f64 = 48.0;
 
 pub const PROGRESS_LINEAR_LABEL_HEIGHT: f64 = 18.0;
 pub const PROGRESS_LINEAR_BAR_TOP_OFFSET: f64 = 10.0;
@@ -234,8 +345,6 @@ pub const PROGRESS_LINEAR_TRACK_ACTIVE_SPACE: f64 = 4.0;
 /// `LinearProgressIndicatorTokens.StopSize`: the dot marking the bar's end.
 pub const PROGRESS_LINEAR_STOP_SIZE: f64 = 4.0;
 
-pub const DIVIDER_THICKNESS: f64 = 1.0;
-
 pub const NAVIGATION_BAR_AUTOMATIC_HEIGHT: f64 = 64.0;
 pub const NAVIGATION_BAR_INLINE_HEIGHT: f64 = 64.0;
 pub const NAVIGATION_BAR_MEDIUM_HEIGHT: f64 = 112.0;
@@ -255,11 +364,38 @@ pub const NAVIGATION_BACK_BUTTON_LEADING_INSET: f64 = 4.0;
 pub const NAVIGATION_BACK_BUTTON_TOP_INSET: f64 = 12.0;
 pub const NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE: f64 = 30.0;
 pub const SCROLL_INDICATOR_CORNER_RADIUS: f64 = 1.25;
+/// Thickness of the scroll indicator's thumb at rest. Material has no scroll
+/// indicator component; this is the thumb the renderer drew before the theme
+/// owned it.
+pub const SCROLL_INDICATOR_THICKNESS: f64 = 2.5;
+/// Thickness of the thumb while it is dragged.
+pub const SCROLL_INDICATOR_DRAG_THICKNESS: f64 = 6.5;
+/// Inset of the thumb from the scrolling surface's edge.
+pub const SCROLL_INDICATOR_EDGE_INSET: f64 = 1.5;
+/// The shortest the thumb gets along its track.
+pub const SCROLL_INDICATOR_MIN_EXTENT: f64 = 12.0;
+/// Width of the gutter along the edge that takes a thumb drag, wider than
+/// the drawn thumb so it is comfortable to pick up.
+pub const SCROLL_INDICATOR_GUTTER: f64 = 12.0;
+/// Opacity of the thumb's `on-surface-variant` colour.
+pub const SCROLL_INDICATOR_OPACITY: f32 = 0.55;
 pub const TABS_BAR_HEIGHT: f64 = 48.0;
 pub const TABS_BUTTON_MIN_WIDTH: f64 = 48.0;
 pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
-pub const TABS_ACTIVE_INDICATOR_HEIGHT: f64 = 3.0;
-pub const TABS_ACTIVE_INDICATOR_RADIUS: f64 = 3.0;
+/// `md.comp.nav-bar.container.height`: the horizontal-item bar is the M3
+/// navigation bar.
+pub const NAV_BAR_HEIGHT: f64 = 64.0;
+/// `md.comp.nav-bar.item.horizontal.active-indicator.height`.
+pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT: f64 = 40.0;
+/// `md.comp.nav-bar.item.vertical.icon-label-space`: the gap between a
+/// vertical item's icon and its label.
+pub const NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE: f64 = 4.0;
+/// `md.comp.nav-bar.item.horizontal.icon-label-space`: the gap between a
+/// horizontal item's icon and its label inside the indicator.
+pub const NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE: f64 = 4.0;
+/// The M3 medium window width class boundary: at and above it the
+/// navigation bar uses horizontal items.
+pub const MEDIUM_WINDOW_WIDTH: f64 = 600.0;
 pub const LIST_ONE_LINE_ROW_HEIGHT: f64 = 56.0;
 pub const LIST_HORIZONTAL_INSET: f64 = 16.0;
 pub const LIST_VERTICAL_INSET: f64 = 10.0;
@@ -272,6 +408,35 @@ pub const LIST_MOVE_CONTROL_WIDTH: f64 = 48.0;
 pub const LIST_DELETE_CONTROL_WIDTH: f64 = 48.0;
 pub const LIST_TRAILING_CONTROL_SPACING: f64 = 8.0;
 pub const LIST_TRAILING_CONTROL_VERTICAL_INSET: f64 = 4.0;
+/// Diameter of a trailing control's state layer, matching
+/// `IconButtonTokens.StateLayerSize`.
+pub const LIST_CONTROL_STATE_LAYER_SIZE: f64 = 40.0;
+/// Size of the icons the trailing controls draw (Material's 24dp icon).
+pub const LIST_CONTROL_ICON_SIZE: f64 = 24.0;
+/// Diameter of a move half's state layer: the half's inscribed circle on a
+/// one-line row, whose 48dp control splits into two 24dp halves.
+pub const LIST_MOVE_STATE_LAYER_SIZE: f64 = 2.0f64.mul_add(
+    -LIST_TRAILING_CONTROL_VERTICAL_INSET,
+    LIST_ONE_LINE_ROW_HEIGHT,
+) / 2.0;
+/// Fraction of a row's width a swipe must cross to dismiss on release:
+/// Compose's `SwipeToDismissBoxDefaults.positionalThreshold`,
+/// `distance * 0.5`.
+pub const LIST_SWIPE_DISMISS_THRESHOLD: f64 = 0.5;
+/// Fraction of a slot a reorder drag must cross to step the lifted row over
+/// its neighbour: its midpoint.
+pub const LIST_REORDER_THRESHOLD: f64 = 0.5;
+/// Distance the pointer travels before a row drag is recognised, matching
+/// Android's `ViewConfiguration` touch slop.
+pub const LIST_ROW_DRAG_SLOP: f32 = 8.0;
+/// Size of the delete glyph a swipe reveals, on Material's 24dp icon grid.
+pub const LIST_SWIPE_ICON_SIZE: f64 = 24.0;
+/// Gap between the swipe glyph and the edge of the row it is revealed
+/// against.
+pub const LIST_SWIPE_ICON_EDGE_INSET: f64 = 16.0;
+/// Scale the swipe glyph starts at, growing to full size as the swipe
+/// reaches its dismiss threshold.
+pub const LIST_SWIPE_ICON_MIN_SCALE: f64 = 0.7;
 /// Material list subheader line (`md.sys.list.subheader`), a 48dp band.
 pub const LIST_SECTION_HEADER_HEIGHT: f64 = 48.0;
 /// Supporting text closing a section, on the same 40dp rhythm as a one-line

@@ -1,6 +1,5 @@
 //! End-to-end accessibility coverage for the Material Design 3 theme package.
 
-use core::convert::TryFrom as _;
 use core::time::Duration;
 
 use hydrolysis_m3::{
@@ -15,10 +14,10 @@ use hydrolysis_m3::{
 use waterui::ViewExt as _;
 use waterui::component::{hstack, text, vstack};
 use waterui::graphics::color::Srgb;
-use waterui::id::Id;
 use waterui::navigation::NavigationView;
+use waterui::reactive::Signal;
 use waterui::{Binding, Str};
-use waterui_controls::{TextField, button, slider::slider, stepper::stepper, toggle};
+use waterui_controls::{TextField, Toggle, button, slider::slider, stepper::stepper};
 use waterui_core::View;
 use waterui_testing::{
     OffscreenApp, Role, Selector, SemanticApp, Styled, UiBuilder, WaitOptions, WaitResult,
@@ -33,10 +32,6 @@ fn material_shell<V: View>(content: V) -> impl View {
         .background(Srgb::WHITE)
 }
 
-fn tab_id(value: i32) -> Id {
-    Id::try_from(value).expect("test tab id must be non-zero")
-}
-
 fn material_controls_view() -> impl View {
     let enabled = Binding::bool(true);
     let value = Binding::f64(0.32);
@@ -45,7 +40,9 @@ fn material_controls_view() -> impl View {
     material_shell(
         vstack((
             button("Save").action(|| {}),
-            toggle("Wi-Fi", &enabled),
+            // `toggle()` takes the platform default — a checkbox on macOS —
+            // so the Material switch the assertion names is spelled out.
+            Toggle::new("Wi-Fi", &enabled).switch(),
             slider("Volume", &value),
             stepper("Quantity", &count),
             TextField::new("Project", &name),
@@ -105,7 +102,10 @@ fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
         .label("Assist")
         .assert_exists();
     app.query().role(Role::BUTTON).label("Assist").tap();
-    assert!(tapped_for_view.get(), "assist chip tap should update state");
+    assert!(
+        tapped_for_view.snapshot(),
+        "assist chip tap should update state"
+    );
 }
 
 #[waterui::test(viewport = (360, 320))]
@@ -126,7 +126,7 @@ fn material_suggestion_chip_exposes_button_semantics_and_tap_action(ui: UiBuilde
         .assert_exists();
     app.query().role(Role::BUTTON).label("Suggestion").tap();
     assert!(
-        tapped_for_view.get(),
+        tapped_for_view.snapshot(),
         "suggestion chip tap should update state"
     );
 }
@@ -151,10 +151,13 @@ fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBui
         .assert_exists();
     app.query().role(Role::BUTTON).label("Filter").tap();
     assert!(
-        selected.get(),
+        selected.snapshot(),
         "filter chip tap should toggle selected state"
     );
-    assert!(tapped.get(), "filter chip tap should invoke user action");
+    assert!(
+        tapped.snapshot(),
+        "filter chip tap should invoke user action"
+    );
     assert!(
         app.wait_for(
             &[app.expect_exists(
@@ -314,12 +317,12 @@ fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder
 
     app.query().role(Role::BUTTON).label("Person").tap();
     assert!(
-        primary_tapped.get(),
+        primary_tapped.snapshot(),
         "input chip primary action should update state"
     );
     app.query().role(Role::BUTTON).label("Remove Person").tap();
     assert!(
-        remove_tapped.get(),
+        remove_tapped.snapshot(),
         "input chip remove action should update state"
     );
 }
@@ -340,7 +343,7 @@ fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
         .label("Create")
         .assert_exists();
     app.query().role(Role::BUTTON).label("Create").tap();
-    assert!(tapped.get(), "FAB tap should update state");
+    assert!(tapped.snapshot(), "FAB tap should update state");
 }
 
 #[waterui::test(viewport = (360, 320))]
@@ -359,7 +362,7 @@ fn material_extended_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) 
         .label("Create")
         .assert_exists();
     app.query().role(Role::BUTTON).label("Create").tap();
-    assert!(tapped.get(), "extended FAB tap should update state");
+    assert!(tapped.snapshot(), "extended FAB tap should update state");
 }
 
 #[waterui::test(viewport = (360, 320))]
@@ -395,15 +398,15 @@ fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) 
         app.query().role(Role::BUTTON).label(label).tap();
     }
     assert!(
-        standard_tapped.get(),
+        standard_tapped.snapshot(),
         "standard icon button tap should update state"
     );
     assert!(
-        filled_tapped.get(),
+        filled_tapped.snapshot(),
         "filled icon button tap should update state"
     );
     assert!(
-        outlined_tapped.get(),
+        outlined_tapped.snapshot(),
         "outlined icon button tap should update state"
     );
 }
@@ -434,7 +437,7 @@ fn material_tooltips_expose_accessibility_labels_and_action_semantics(ui: UiBuil
         .assert_exists();
     app.query().role(Role::BUTTON).label("Got it").tap();
     assert!(
-        action_tapped.get(),
+        action_tapped.snapshot(),
         "rich tooltip action tap should update state"
     );
 }
@@ -448,7 +451,11 @@ fn anchored_tooltip_view() -> impl View {
 
 #[waterui::test(viewport = (360, 320))]
 fn anchored_material_tooltip_opens_on_keyboard_focus(ui: UiBuilder) {
-    let mut app = ui.theme(Material3::defaults()).mount(anchored_tooltip_view);
+    // The tooltip popup is a window-level anchored overlay, which only the
+    // rendered runtime presents — a semantic mount never shows it.
+    let mut app = ui
+        .theme(Material3::defaults())
+        .mount_offscreen(anchored_tooltip_view);
     app.query()
         .label("Adds this item to your favorites")
         .assert_not_exists();
@@ -491,9 +498,12 @@ fn material_dialog_exposes_semantics_and_action_buttons(ui: UiBuilder) {
         app.query().role(Role::BUTTON).label(label).assert_exists();
         app.query().role(Role::BUTTON).label(label).tap();
     }
-    assert!(cancel_tapped.get(), "cancel action tap should update state");
     assert!(
-        confirm_tapped.get(),
+        cancel_tapped.snapshot(),
+        "cancel action tap should update state"
+    );
+    assert!(
+        confirm_tapped.snapshot(),
         "confirm action tap should update state"
     );
 }
@@ -537,7 +547,10 @@ fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
         .selected(true)
         .assert_exists();
     app.query().role(Role::TAB).label("Home").tap();
-    assert!(home_tapped.get(), "navigation tab tap should update state");
+    assert!(
+        home_tapped.snapshot(),
+        "navigation tab tap should update state"
+    );
 }
 
 #[waterui::test(viewport = (360, 320))]
@@ -581,7 +594,7 @@ fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilde
         .assert_exists();
     app.query().role(Role::BUTTON).label("Archive").tap();
     assert!(
-        archive_tapped.get(),
+        archive_tapped.snapshot(),
         "navigation drawer item tap should update state"
     );
 }
@@ -612,8 +625,8 @@ fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder<S
         .assert_exists();
     app.pointer_down_at(330.0, 160.0);
     app.pointer_up_at(330.0, 160.0);
-    assert!(overlay_tapped.get());
-    assert!(!opened.get());
+    assert!(overlay_tapped.snapshot());
+    assert!(!opened.snapshot());
     assert!(app.wait_for_nonexistence(
         &Selector::default().label("Navigation drawer"),
         Duration::from_millis(250),
@@ -625,7 +638,7 @@ fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder<S
         Duration::from_millis(250),
     ));
     app.press_named_key("Escape");
-    assert!(!opened.get());
+    assert!(!opened.snapshot());
 }
 
 #[waterui::test(viewport = (360, 320))]
@@ -663,11 +676,11 @@ fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilde
         .assert_exists();
     app.query().role(Role::BUTTON).label("Week").tap();
     assert!(
-        second_selected.get(),
+        second_selected.snapshot(),
         "segmented button tap should toggle its binding"
     );
     assert!(
-        second_tapped.get(),
+        second_tapped.snapshot(),
         "segmented button tap should invoke its action"
     );
 }
@@ -694,25 +707,25 @@ fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder<Styled<Ma
     assert_eq!(items.len(), 2);
     items[1].tap_at(&mut app, 0.5, 0.5);
     assert!(
-        reports_tapped.get(),
+        reports_tapped.snapshot(),
         "material list item tap should invoke its action"
     );
 }
 
 #[waterui::test(viewport = (360, 320))]
 fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
-    let first = tab_id(1);
-    let second = tab_id(2);
+    let first = 0usize;
+    let second = 1usize;
     let selection = Binding::container(first);
     let selection_for_view = selection.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(material_tabs(
             &selection_for_view,
             vec![
-                material_tab(first, "Photos", || {
+                material_tab("Photos", || {
                     NavigationView::new("Photos", text("photos content"))
                 }),
-                material_tab(second, "Albums", || {
+                material_tab("Albums", || {
                     NavigationView::new("Albums", text("albums content"))
                 }),
             ],
@@ -735,7 +748,7 @@ fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
         .label("photos content")
         .assert_exists();
     app.query().role(Role::TAB).label("Albums").tap();
-    assert_eq!(selection.get(), second);
+    assert_eq!(selection.snapshot(), second);
     assert!(
         app.wait_for(
             &[app.expect_exists(
@@ -805,12 +818,12 @@ fn material_badge_paints_scheme_error_behind_its_label(app: &mut OffscreenApp) {
     };
     let x0 = bounds.x() as usize;
     let y0 = bounds.y() as usize;
-    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width as usize);
-    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height as usize);
-    let width = snapshot.width as usize;
+    let x1 = ((bounds.x() + bounds.width()) as usize).min(snapshot.width() as usize);
+    let y1 = ((bounds.y() + bounds.height()) as usize).min(snapshot.height() as usize);
+    let width = snapshot.width() as usize;
     let error_pixels = (y0..y1)
         .flat_map(|y| (x0..x1).map(move |x| y * width + x))
-        .filter(|&index| is_error(&snapshot.rgba8[index * 4..index * 4 + 4]))
+        .filter(|&index| is_error(&snapshot.rgba8()[index * 4..index * 4 + 4]))
         .count();
     assert!(
         error_pixels > 20,
@@ -894,7 +907,7 @@ fn collection_membership_view() -> impl View {
             label: Str::from("Charlie"),
         },
     ]);
-    let list_for_action = list.clone();
+    let mut list_for_action = list.clone();
 
     // `ZStack::for_each` lowers to a non-virtualized `LazyContainer`, i.e. the
     // retained per-id collection path. Each row is a `text` label, so every item

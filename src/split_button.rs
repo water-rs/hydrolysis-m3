@@ -12,14 +12,20 @@ use core::marker::PhantomData;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
 use waterui::component::hstack;
+use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::padding::EdgeInsets;
+use waterui::prelude::dynamic::watch;
+use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
-use waterui::{Environment, Str, View, ViewExt as _};
+use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
+use hydrolysis::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
-use crate::semantics::interaction_style;
+use crate::semantics::interaction_chrome;
 
 /// `SplitButtonSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -36,6 +42,10 @@ const TRAILING_ICON_SIZE: f32 = 22.0;
 /// `SplitButtonSmallTokens.InnerCornerCornerSize`, `CornerValueExtraSmall`:
 /// the radius on the two corners either side of the seam.
 const INNER_CORNER_RADIUS: f32 = 4.0;
+/// `SplitButtonSmallTokens.PressedInnerCornerCornerSize`,
+/// `CornerValueMedium`: the seam corners soften while a half is hovered or
+/// held — the hovered token's shape matches it.
+const PRESSED_INNER_CORNER_RADIUS: f32 = 12.0;
 
 /// The outer corners are `CornerFull`, which on this container is half its
 /// height.
@@ -85,11 +95,7 @@ impl SplitButtonVariantTokens for TonalSplitButton {
 }
 
 /// A Material Design 3 split button.
-pub struct SplitButton<
-    Action = fn(&Environment),
-    TrailingAction = fn(&Environment),
-    Tokens = FilledSplitButton,
-> {
+pub struct SplitButton<Action = NoAction, TrailingAction = NoAction, Tokens = FilledSplitButton> {
     label: Label,
     trailing_accessibility_label: Str,
     action: Action,
@@ -145,7 +151,7 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> SplitButton<impl FnMut(&Environment), TrailingAction, Tokens>
+    ) -> SplitButton<impl FnMut(&Environment) -> Result<(), ExtractionError>, TrailingAction, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -163,7 +169,7 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     pub fn trailing_action<F, Args>(
         self,
         action: F,
-    ) -> SplitButton<Action, impl FnMut(&Environment), Tokens>
+    ) -> SplitButton<Action, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -179,8 +185,8 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
 
 impl<Action, TrailingAction, Tokens> View for SplitButton<Action, TrailingAction, Tokens>
 where
-    Action: FnMut(&Environment) + 'static,
-    TrailingAction: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
+    TrailingAction: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: SplitButtonVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -188,53 +194,128 @@ where
         let mut trailing_action = self.trailing_action;
         let outer = normalized(OUTER_CORNER_RADIUS);
         let inner = normalized(INNER_CORNER_RADIUS);
+        let soft_inner = normalized(PRESSED_INNER_CORNER_RADIUS);
 
-        // Round on the outside, tucked in against the seam.
-        let leading_shape = UnevenRoundedRectangle::new(outer, inner, outer, inner);
-        let trailing_shape = UnevenRoundedRectangle::new(inner, outer, inner, outer);
+        // Round on the outside, tucked in against the seam. Each half reports
+        // its own state through `.interaction_state`, and
+        // `md.comp.split-button.*.{hovered,pressed}.inner-corner-radius`
+        // (CornerValueMedium) softens its seam corners while it is hovered or
+        // held.
+        let leading_state = binding(InteractionState::empty());
+        let leading_shape = leading_state.map(move |state: InteractionState| {
+            let seam = if state.intersects(InteractionState::HOVERED | InteractionState::PRESSED) {
+                soft_inner
+            } else {
+                inner
+            };
+            UnevenRoundedRectangle::new(outer, seam, outer, seam)
+        });
+        let trailing_state = binding(InteractionState::empty());
+        let trailing_shape = trailing_state.map(move |state: InteractionState| {
+            let seam = if state.intersects(InteractionState::HOVERED | InteractionState::PRESSED) {
+                soft_inner
+            } else {
+                inner
+            };
+            UnevenRoundedRectangle::new(seam, outer, seam, outer)
+        });
 
-        let leading = self
-            .label
-            .foreground(Tokens::content_color())
-            .padding_with(EdgeInsets::new(
-                0.0,
-                0.0,
-                LEADING_BUTTON_LEADING_SPACE,
-                LEADING_BUTTON_TRAILING_SPACE,
-            ))
-            .height(CONTAINER_HEIGHT)
-            .background(leading_shape.fill(Tokens::container_color()))
-            .on_tap(move |env: Environment| action(&env))
-            .a11y_role(AccessibilityRole::Button)
-            .install(interaction_style(
-                Tokens::content_color(),
-                f64::from(OUTER_CORNER_RADIUS),
-            ));
+        let leading = AnyView::new(
+            self.label
+                .font(crate::theme::typography::label_large())
+                .foreground(Tokens::content_color())
+                .padding_with(EdgeInsets::new(
+                    0.0,
+                    LEADING_BUTTON_LEADING_SPACE,
+                    0.0,
+                    LEADING_BUTTON_TRAILING_SPACE,
+                ))
+                .height(CONTAINER_HEIGHT)
+                .background(ReactiveSplitShape {
+                    shape: leading_shape,
+                    color: Tokens::container_color(),
+                })
+                .on_tap(move |env: Environment| {
+                    action(&env).report_extraction();
+                })
+                .a11y_role(AccessibilityRole::Button)
+                .interaction_state(&leading_state)
+                .install(half_style(
+                    Tokens::content_color(),
+                    RoundedRectRadii::new(
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(INNER_CORNER_RADIUS),
+                        f64::from(INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                    ),
+                    RoundedRectRadii::new(
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                    ),
+                )),
+        );
 
         let chevron = ChevronIcon {
             color: Tokens::content_color(),
             size: TRAILING_ICON_SIZE,
         };
-        let trailing = chevron
-            .padding_with(EdgeInsets::new(
-                0.0,
-                0.0,
-                TRAILING_BUTTON_SPACE,
-                TRAILING_BUTTON_SPACE,
-            ))
-            .height(CONTAINER_HEIGHT)
-            .background(trailing_shape.fill(Tokens::container_color()))
-            .on_tap(move |env: Environment| trailing_action(&env))
-            .a11y_label(self.trailing_accessibility_label)
-            .a11y_role(AccessibilityRole::Button)
-            .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
-                Tokens::content_color(),
-                f64::from(OUTER_CORNER_RADIUS),
-            ));
+        let trailing = AnyView::new(
+            chevron
+                .padding_with(EdgeInsets::new(
+                    0.0,
+                    TRAILING_BUTTON_SPACE,
+                    0.0,
+                    TRAILING_BUTTON_SPACE,
+                ))
+                .height(CONTAINER_HEIGHT)
+                .background(ReactiveSplitShape {
+                    shape: trailing_shape,
+                    color: Tokens::container_color(),
+                })
+                .on_tap(move |env: Environment| {
+                    trailing_action(&env).report_extraction();
+                })
+                .a11y_label(self.trailing_accessibility_label)
+                .a11y_role(AccessibilityRole::Button)
+                .a11y_children(AccessibilityChildren::ExcludeDescendants)
+                .interaction_state(&trailing_state)
+                .install(half_style(
+                    Tokens::content_color(),
+                    RoundedRectRadii::new(
+                        f64::from(INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(INNER_CORNER_RADIUS),
+                    ),
+                    RoundedRectRadii::new(
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(OUTER_CORNER_RADIUS),
+                        f64::from(PRESSED_INNER_CORNER_RADIUS),
+                    ),
+                )),
+        );
 
         hstack((leading, trailing)).spacing(BETWEEN_SPACE)
     }
+}
+
+/// One half's chrome: the state layer traces the resting corners and
+/// softens to `CornerValueMedium` on the seam side while the half is
+/// hovered or held.
+fn half_style(
+    state_layer_color: impl Into<Color>,
+    resting: RoundedRectRadii,
+    soft: RoundedRectRadii,
+) -> hydrolysis::theme::Chrome {
+    interaction_chrome(
+        state_layer_color,
+        StateValue::new(resting)
+            .when(InteractionState::PRESSED, soft)
+            .when(InteractionState::HOVERED, soft),
+    )
 }
 
 /// The trailing half's chevron, sized and tinted by the variant.
@@ -269,7 +350,22 @@ impl View for ChevronIcon {
     }
 }
 
-const fn noop(_env: &Environment) {}
+/// One half's container, whose seam corners follow its pressed state.
+#[derive(Debug)]
+struct ReactiveSplitShape<S> {
+    shape: S,
+    color: Color,
+}
+
+impl<S> View for ReactiveSplitShape<S>
+where
+    S: waterui::Signal<Output = UnevenRoundedRectangle> + 'static,
+{
+    fn body(self, _env: &Environment) -> impl View {
+        let color = self.color;
+        watch(self.shape, move |shape| shape.fill(color.clone()))
+    }
+}
 
 /// Creates a Material Design 3 split button.
 #[must_use]

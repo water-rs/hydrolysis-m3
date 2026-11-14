@@ -4,8 +4,8 @@ use core::fmt::{self, Debug};
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::layout::{
-    HorizontalAlignment, Layout, PlacedSubview, Point, ProposalSize, Rect, Size, SubView,
-    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
+    HorizontalAlignment, Layout, LayoutError, PlacedSubview, PlacementInput, Point, ProposalSize,
+    Rect, Size, SubView, SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
@@ -14,13 +14,17 @@ use waterui::style::Anchor;
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::AnyView;
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
 use waterui_core::view::TupleViews;
 
 use crate::ModalInteraction;
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, Scrim, SurfaceContainerHigh};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{interaction_style, label_plain_text};
+use crate::semantics::{interaction_chrome_radius, label_plain_text};
 use crate::theme::{motion, typography};
 
 const DIALOG_CONTAINER_MIN_WIDTH: f32 = 280.0;
@@ -38,7 +42,7 @@ const DIALOG_ACTION_SPACING: f32 = 8.0;
 const DIALOG_HIDDEN_OFFSET_Y: f32 = -30.0;
 
 /// A Material Design 3 dialog action button.
-pub struct DialogAction<Action = fn(&Environment)> {
+pub struct DialogAction<Action = NoAction> {
     label: Label,
     action: Action,
 }
@@ -51,7 +55,7 @@ impl<Action> Debug for DialogAction<Action> {
     }
 }
 
-impl DialogAction<fn(&Environment)> {
+impl DialogAction<NoAction> {
     /// Creates a dialog action with the given semantic label.
     #[must_use]
     pub fn new(label: impl IntoLabel) -> Self {
@@ -65,7 +69,10 @@ impl DialogAction<fn(&Environment)> {
 impl<Action> DialogAction<Action> {
     /// Sets the action performed when the dialog action is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> DialogAction<impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> DialogAction<impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -78,7 +85,7 @@ impl<Action> DialogAction<Action> {
 
 impl<Action> View for DialogAction<Action>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let accessibility_label = label_plain_text(&self.label);
@@ -87,12 +94,14 @@ where
             .font(typography::label_large())
             .foreground(Primary)
             .height(40.0)
-            .padding_with(EdgeInsets::new(0.0, 0.0, 12.0, 12.0))
-            .on_tap(move |env: Environment| action(&env))
+            .padding_with(EdgeInsets::new(0.0, 12.0, 0.0, 12.0))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(Primary, 20.0))
+            .install(interaction_chrome_radius(Primary, 20.0))
     }
 }
 
@@ -169,8 +178,7 @@ impl<Actions> Dialog<Actions> {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
-        self.overlay_action = SharedAction::new(move |env: Environment| action(&env));
+        self.overlay_action = SharedAction::new(action);
         self
     }
 
@@ -180,9 +188,8 @@ impl<Actions> Dialog<Actions> {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
         self.close_on_escape = true;
-        self.escape_action = SharedAction::new(move |env: Environment| action(&env));
+        self.escape_action = SharedAction::new(action);
         self
     }
 }
@@ -213,7 +220,8 @@ where
                 .on_tap(|_: Environment| {})
                 .a11y_hidden(true)
                 .install(
-                    interaction_style(SurfaceContainerHigh.with_opacity(0.0), 0.0).pointer_only(),
+                    interaction_chrome_radius(SurfaceContainerHigh.with_opacity(0.0), 0.0)
+                        .pointer_only(),
                 ),
         )
         .a11y_label(self.accessibility_label)
@@ -245,9 +253,11 @@ where
                 0.0,
                 crate::theme::colors::SCRIM_OPACITY,
             ))
-            .on_tap(move |env: Environment| overlay_action.call(&env))
+            .on_tap(move |env: Environment| {
+                overlay_action.run(&env);
+            })
             .a11y_hidden(true)
-            .install(interaction_style(Scrim.with_opacity(0.0), 0.0).pointer_only());
+            .install(interaction_chrome_radius(Scrim.with_opacity(0.0), 0.0).pointer_only());
 
         let accessibility_state = presented
             .map(|presented| waterui::accessibility::AccessibilityState::new().hidden(!presented));
@@ -330,6 +340,16 @@ impl Layout for DialogSurfaceLayout {
         Size::new(width, height)
     }
 
+    /// The surface at the bounds' origin, where `place` lays out its
+    /// content.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
+    }
+
     fn place(
         &self,
         bounds: Rect,
@@ -406,8 +426,6 @@ where
         waterui::component::hstack(self.actions).spacing(DIALOG_ACTION_SPACING)
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 dialog.
 #[must_use]

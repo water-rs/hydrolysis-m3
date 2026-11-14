@@ -23,9 +23,15 @@ fn controls(checked: bool) -> impl View {
     let checkbox_on = binding(checked);
     let volume = binding(0.6);
     vstack((
-        toggle("Enabled switch", &switch_off),
-        toggle("Disabled switch (off)", &switch_off).disabled(true),
-        toggle("Disabled switch (on)", &switch_on).disabled(true),
+        // `toggle()` takes the platform default, a checkbox on macOS, so the
+        // switches these captures name are spelled out.
+        toggle("Enabled switch", &switch_off).switch(),
+        toggle("Disabled switch (off)", &switch_off)
+            .switch()
+            .disabled(true),
+        toggle("Disabled switch (on)", &switch_on)
+            .switch()
+            .disabled(true),
         toggle("Disabled checkbox (on)", &checkbox_on)
             .checkbox()
             .disabled(true),

@@ -138,8 +138,7 @@ fn structural_patch_view() -> impl View {
     });
     vstack((
         button("Swap").action(move || {
-            let next = !mode_for_action.get();
-            mode_for_action.set(next);
+            mode_for_action.toggle();
         }),
         swapped,
     ))

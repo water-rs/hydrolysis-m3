@@ -8,13 +8,14 @@
 
 use core::fmt::{self, Debug};
 
+use hydrolysis::draw::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
-use waterui::gesture::{DragEvent, DragGesture, GesturePhase};
+use waterui::gesture::DragGesture;
 use waterui::layout::padding::EdgeInsets;
 use waterui::layout::{
-    Layout, LayoutInvalidationCallback, Point, ProposalSize, Rect, Size, SubView, SubviewPlacement,
-    container::FixedContainer,
+    Layout, LayoutError, LayoutInvalidationCallback, PlacementInput, Point, ProposalSize, Rect,
+    Size, SubView, SubviewPlacement, UnitPoint, container::FixedContainer,
 };
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::watcher::BoxWatcherGuard;
@@ -23,10 +24,11 @@ use waterui::shape::{ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
 use waterui_controls::button::Button;
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{BoxedAction, Handler, boxed_action};
+use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
-use crate::semantics::{conditional_color, interaction_style};
+use crate::semantics::{conditional_color, drag_held, interaction_chrome};
+use hydrolysis::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -97,6 +99,20 @@ impl SegmentPosition {
             Self::Leading => (OUTER_CORNER_RADIUS, inner),
             Self::Middle => (inner, inner),
             Self::Trailing => (inner, OUTER_CORNER_RADIUS),
+        }
+    }
+
+    /// The resting state-layer corners, in `RoundedRectRadii` order
+    /// (top-left, top-right, bottom-right, bottom-left): outer corners are
+    /// `CornerFull`, seam corners `InnerCornerCornerSize`.
+    fn resting_radii(self) -> RoundedRectRadii {
+        let outer = f64::from(OUTER_CORNER_RADIUS);
+        let inner = f64::from(INNER_CORNER_RADIUS);
+        match self {
+            Self::Only => RoundedRectRadii::from(outer),
+            Self::Leading => RoundedRectRadii::new(outer, inner, inner, outer),
+            Self::Middle => RoundedRectRadii::from(inner),
+            Self::Trailing => RoundedRectRadii::new(inner, outer, outer, inner),
         }
     }
 }
@@ -217,8 +233,8 @@ impl View for ConnectedButtonGroup {
                     .foreground(content.clone())
                     .padding_with(EdgeInsets::new(
                         0.0,
-                        0.0,
                         SEGMENT_HORIZONTAL_SPACE,
+                        0.0,
                         SEGMENT_HORIZONTAL_SPACE,
                     ))
                     .height(CONTAINER_HEIGHT)
@@ -233,19 +249,20 @@ impl View for ConnectedButtonGroup {
                     // technology. The drag gesture rides alongside purely to
                     // track the press that tightens the inner corners.
                     .gesture(DragGesture::new(0.0), move |env: Environment| {
-                        let phase = env
-                            .get::<DragEvent>()
-                            .expect("connected button gesture is missing its DragEvent")
-                            .phase;
-                        pressed_for_gesture.set(matches!(
-                            phase,
-                            GesturePhase::Started | GesturePhase::Updated
-                        ));
+                        if let Some(held) = drag_held(&env, "connected button") {
+                            pressed_for_gesture.set(held);
+                        }
                     })
-                    .on_tap(move |env: Environment| action(&env))
+                    .on_tap(move |env: Environment| {
+                        action(&env).report_extraction();
+                    })
                     .a11y_role(AccessibilityRole::Button)
                     .a11y_state_signal(accessibility_state)
-                    .install(interaction_style(content, f64::from(OUTER_CORNER_RADIUS)))
+                    // The state layer traces the segment's resting shape.
+                    .install(interaction_chrome(
+                        content,
+                        Corners::from(position.resting_radii()),
+                    ))
             })
             .collect::<Vec<_>>();
 
@@ -413,16 +430,13 @@ impl View for ButtonGroup {
                     // the press widens its container, so it needs one.
                     Button::new(button.label)
                         .gesture(DragGesture::new(0.0), move |env: Environment| {
-                            let phase = env
-                                .get::<DragEvent>()
-                                .expect("group button gesture is missing its DragEvent")
-                                .phase;
-                            pressed.set(matches!(
-                                phase,
-                                GesturePhase::Started | GesturePhase::Updated
-                            ));
+                            if let Some(held) = drag_held(&env, "group button") {
+                                pressed.set(held);
+                            }
                         })
-                        .on_tap(move |env: Environment| action(&env)),
+                        .on_tap(move |env: Environment| {
+                            action(&env).report_extraction();
+                        }),
                 )
             })
             .collect::<Vec<_>>();
@@ -469,7 +483,7 @@ impl ButtonGroupLayout {
     fn expand(&self, widths: &mut [f32]) {
         let count = widths.len();
         for index in 0..count {
-            if !self.pressed[index].get() {
+            if !self.pressed[index].snapshot() {
                 continue;
             }
             let reach = GROUP_EXPANDED_RATIO * widths[index] / 2.0;
@@ -505,12 +519,22 @@ impl Layout for ButtonGroupLayout {
         // A press only moves width between children, so the row measures the
         // same whether or not one is held.
         let gap_count = u16::try_from(children.len().saturating_sub(1))
-            .expect("a button group holds a sane number of buttons");
+            .expect("a button group holds a handful of buttons, far fewer than u16::MAX");
         let gaps = GROUP_BETWEEN_SPACE * f32::from(gap_count);
         Size::new(
             widths.iter().sum::<f32>() + gaps,
             Self::row_height(children),
         )
+    }
+
+    /// The row where `place` starts it: at the leading edge, centred
+    /// vertically.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::LEADING))
     }
 
     fn place(

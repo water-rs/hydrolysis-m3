@@ -17,19 +17,27 @@ const fn font(
         .with_typography_metrics(line_height, letter_spacing)
 }
 
-fn default<T: 'static>(env: &mut Environment, value: ResolvedFont) {
-    if env.query::<T, Computed<ResolvedFont>>().is_none() {
-        install_font_signal::<T>(env, Computed::constant(value));
-    }
+/// Installs Material's font for role `T` over whatever `env` carries.
+///
+/// The runtime hands a style an environment that already holds the
+/// framework's default fonts and layers the application's own environment
+/// over the style's tokens afterwards, so an unconditional install replaces
+/// the framework default while an application's font for `T` still wins.
+fn install<T: 'static>(env: &mut Environment, value: ResolvedFont) {
+    install_font_signal::<T>(env, Computed::constant(value));
 }
 
+/// Fills `WaterUI`'s slots with Material's type-scale tokens in the slots'
+/// order, Title > Headline > Body >= Subheadline > Footnote > Caption:
+/// headline-small, title-large, body-large, title-medium, body-small and
+/// label-small.
 pub fn defaults(env: &mut Environment) {
-    default::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
-    default::<Title>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
-    default::<Headline>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
-    default::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
-    default::<Caption>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
-    default::<Footnote>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
+    install::<Body>(env, font(16.0, FontWeight::Normal, 24.0, 0.5));
+    install::<Title>(env, font(24.0, FontWeight::Normal, 32.0, 0.0));
+    install::<Headline>(env, font(22.0, FontWeight::Normal, 28.0, 0.0));
+    install::<Subheadline>(env, font(16.0, FontWeight::Medium, 24.0, 0.15));
+    install::<Footnote>(env, font(12.0, FontWeight::Normal, 16.0, 0.4));
+    install::<Caption>(env, font(11.0, FontWeight::Medium, 16.0, 0.5));
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -47,6 +55,42 @@ pub fn label_large() -> Font {
     Font::new(LabelLarge)
 }
 
+/// `md.sys.typescale.label-large-prominent`: label-large at `weight.bold`,
+/// which the spec uses for the active item's label in navigation rails and
+/// drawers.
+#[derive(Debug, Clone, Copy)]
+pub struct LabelLargeProminent;
+
+impl Resolvable for LabelLargeProminent {
+    type Resolved = ResolvedFont;
+
+    fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
+        Computed::constant(font(14.0, FontWeight::Bold, 20.0, 0.1))
+    }
+}
+
+pub fn label_large_prominent() -> Font {
+    Font::new(LabelLargeProminent)
+}
+
+/// `md.comp.slider.value-indicator.label.label-text.*` per
+/// m3.material.io/components/sliders/specs: the typescale's label-large
+/// (14/20, weight 500 Medium, tracking 0.1).
+#[derive(Debug, Clone, Copy)]
+pub struct SliderValueIndicatorLabel;
+
+impl Resolvable for SliderValueIndicatorLabel {
+    type Resolved = ResolvedFont;
+
+    fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
+        Computed::constant(font(14.0, FontWeight::Medium, 20.0, 0.1))
+    }
+}
+
+pub fn slider_value_indicator_label() -> Font {
+    Font::new(SliderValueIndicatorLabel)
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct LabelMedium;
 
@@ -60,6 +104,23 @@ impl Resolvable for LabelMedium {
 
 pub fn label_medium() -> Font {
     Font::new(LabelMedium)
+}
+
+/// `md.sys.typescale.label-medium-prominent`: label-medium at `weight.bold`,
+/// which the spec uses for the active item's label in a navigation bar.
+#[derive(Debug, Clone, Copy)]
+pub struct LabelMediumProminent;
+
+impl Resolvable for LabelMediumProminent {
+    type Resolved = ResolvedFont;
+
+    fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
+        Computed::constant(font(12.0, FontWeight::Bold, 16.0, 0.5))
+    }
+}
+
+pub fn label_medium_prominent() -> Font {
+    Font::new(LabelMediumProminent)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -107,6 +168,9 @@ pub fn body_medium() -> Font {
     Font::new(BodyMedium)
 }
 
+/// Line height of Material's Body Small role, also the floating label's type.
+pub const BODY_SMALL_LINE_HEIGHT: f32 = 16.0;
+
 #[derive(Debug, Clone, Copy)]
 pub struct BodySmall;
 
@@ -114,7 +178,7 @@ impl Resolvable for BodySmall {
     type Resolved = ResolvedFont;
 
     fn resolve(&self, _env: &Environment) -> impl Signal<Output = Self::Resolved> {
-        Computed::constant(font(12.0, FontWeight::Normal, 16.0, 0.4))
+        Computed::constant(font(12.0, FontWeight::Normal, BODY_SMALL_LINE_HEIGHT, 0.4))
     }
 }
 
@@ -177,11 +241,14 @@ mod tests {
         expected_line_height: f32,
         expected_letter_spacing: f32,
     ) {
-        assert_eq!(font.size, expected_size);
-        assert_eq!(font.weight, expected_weight);
-        assert_eq!(font.line_height, Some(expected_line_height));
-        assert_eq!(font.letter_spacing, expected_letter_spacing);
-        assert_eq!(font.family.as_deref(), Some(MATERIAL_TYPEFACE));
+        assert_eq!(font.size(), expected_size);
+        assert_eq!(font.weight(), expected_weight);
+        assert_eq!(font.line_height(), Some(expected_line_height));
+        assert_eq!(font.letter_spacing(), expected_letter_spacing);
+        assert_eq!(
+            font.family().map(waterui::Str::as_str),
+            Some(MATERIAL_TYPEFACE)
+        );
     }
 
     #[test]
@@ -195,42 +262,42 @@ mod tests {
         defaults(&mut env);
 
         assert_material_font(
-            Body.resolve(&env).get(),
+            Body.resolve(&env).snapshot(),
             16.0,
             FontWeight::Normal,
             24.0,
             0.5,
         );
         assert_material_font(
-            Title.resolve(&env).get(),
-            22.0,
-            FontWeight::Normal,
-            28.0,
-            0.0,
-        );
-        assert_material_font(
-            Headline.resolve(&env).get(),
+            Title.resolve(&env).snapshot(),
             24.0,
             FontWeight::Normal,
             32.0,
             0.0,
         );
         assert_material_font(
-            Subheadline.resolve(&env).get(),
+            Headline.resolve(&env).snapshot(),
+            22.0,
+            FontWeight::Normal,
+            28.0,
+            0.0,
+        );
+        assert_material_font(
+            Subheadline.resolve(&env).snapshot(),
             16.0,
             FontWeight::Medium,
             24.0,
             0.15,
         );
         assert_material_font(
-            Caption.resolve(&env).get(),
+            Footnote.resolve(&env).snapshot(),
             12.0,
             FontWeight::Normal,
             16.0,
             0.4,
         );
         assert_material_font(
-            Footnote.resolve(&env).get(),
+            Caption.resolve(&env).snapshot(),
             11.0,
             FontWeight::Medium,
             16.0,
@@ -238,25 +305,81 @@ mod tests {
         );
     }
 
+    /// `WaterUI` ranks its slots Title > Headline > Body >= Subheadline >
+    /// Footnote > Caption, the order Markdown headings and the framework's
+    /// default scale follow; Material's tokens fill the slots in that order.
     #[test]
-    fn material_defaults_preserve_app_font_overrides() {
-        let app_body = ResolvedFont::new(27.0, FontWeight::Bold);
+    fn font_slots_keep_the_framework_slot_order() {
         let mut env = Environment::new();
+        defaults(&mut env);
+        let size = |font: waterui::text::font::ResolvedFont| font.size();
+
+        let title = size(Title.resolve(&env).snapshot());
+        let headline = size(Headline.resolve(&env).snapshot());
+        let body = size(Body.resolve(&env).snapshot());
+        let subheadline = size(Subheadline.resolve(&env).snapshot());
+        let footnote = size(Footnote.resolve(&env).snapshot());
+        let caption = size(Caption.resolve(&env).snapshot());
+
+        assert!(
+            title > headline,
+            "Title {title} must exceed Headline {headline}"
+        );
+        assert!(
+            headline > body,
+            "Headline {headline} must exceed Body {body}"
+        );
+        assert!(
+            body >= subheadline,
+            "Body {body} must be at least Subheadline {subheadline}"
+        );
+        assert!(
+            subheadline > footnote,
+            "Subheadline {subheadline} must exceed Footnote {footnote}"
+        );
+        assert!(
+            footnote > caption,
+            "Footnote {footnote} must exceed Caption {caption}"
+        );
+    }
+
+    #[test]
+    fn material_fonts_replace_framework_defaults_and_yield_to_the_app() {
+        // The runtime's assembly: the framework defaults, the application's
+        // environment over them while the style installs, and the
+        // application's environment over the style's tokens at the end.
+        let mut framework = Environment::new();
+        waterui::theme::Theme::new()
+            .fonts(waterui::theme::FontSettings::default_scale())
+            .install(&mut framework);
+        let app_body = ResolvedFont::new(27.0, FontWeight::Bold);
+        let mut app = Environment::new();
         waterui::theme::Theme::new()
             .fonts(waterui::theme::FontSettings::new().body(app_body.clone()))
-            .install(&mut env);
+            .install(&mut app);
 
-        defaults(&mut env);
-
-        let resolved_body = Body.resolve(&env).get();
-        assert_eq!(resolved_body.size, app_body.size);
-        assert_eq!(resolved_body.weight, app_body.weight);
-        assert_eq!(resolved_body.family, app_body.family);
+        let mut styled = Environment::new().layered_on(&framework);
+        defaults(&mut styled);
         assert_material_font(
-            Title.resolve(&env).get(),
-            22.0,
+            Body.resolve(&styled).snapshot(),
+            16.0,
             FontWeight::Normal,
-            28.0,
+            24.0,
+            0.5,
+        );
+
+        let mut styled = app.layered_on(&framework);
+        defaults(&mut styled);
+        let assembled = app.layered_on(&styled);
+        let resolved_body = Body.resolve(&assembled).snapshot();
+        assert_eq!(resolved_body.size(), app_body.size());
+        assert_eq!(resolved_body.weight(), app_body.weight());
+        assert_eq!(resolved_body.family(), app_body.family());
+        assert_material_font(
+            Title.resolve(&assembled).snapshot(),
+            24.0,
+            FontWeight::Normal,
+            32.0,
             0.0,
         );
     }
@@ -266,7 +389,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            label_large().resolve(&env).get(),
+            label_large().resolve(&env).snapshot(),
             14.0,
             FontWeight::Medium,
             20.0,
@@ -279,7 +402,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            label_medium().resolve(&env).get(),
+            label_medium().resolve(&env).snapshot(),
             12.0,
             FontWeight::Medium,
             16.0,
@@ -292,7 +415,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            label_small().resolve(&env).get(),
+            label_small().resolve(&env).snapshot(),
             11.0,
             FontWeight::Medium,
             16.0,
@@ -305,7 +428,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            body_medium().resolve(&env).get(),
+            body_medium().resolve(&env).snapshot(),
             14.0,
             FontWeight::Normal,
             20.0,
@@ -318,7 +441,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            body_large().resolve(&env).get(),
+            body_large().resolve(&env).snapshot(),
             16.0,
             FontWeight::Normal,
             24.0,
@@ -331,7 +454,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            body_small().resolve(&env).get(),
+            body_small().resolve(&env).snapshot(),
             12.0,
             FontWeight::Normal,
             16.0,
@@ -344,7 +467,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            title_small().resolve(&env).get(),
+            title_small().resolve(&env).snapshot(),
             14.0,
             FontWeight::Medium,
             20.0,
@@ -357,7 +480,7 @@ mod tests {
         let env = Environment::new();
 
         assert_material_font(
-            headline_small().resolve(&env).get(),
+            headline_small().resolve(&env).snapshot(),
             24.0,
             FontWeight::Normal,
             32.0,

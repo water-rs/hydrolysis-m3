@@ -9,14 +9,18 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
 use waterui_core::view::TupleViews;
 
 use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, SurfaceContainer,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{conditional_color, interaction_style, label_plain_text};
+use crate::semantics::{
+    conditional_color, conditional_font, interaction_chrome_radius, label_plain_text,
+};
 use crate::theme::typography;
 
 /// `NavigationBarTokens.ContainerHeight`. Compose's 80dp value is
@@ -27,8 +31,11 @@ const NAVIGATION_BAR_ITEM_TOP_PADDING: f32 = 4.0;
 const NAVIGATION_BAR_ITEM_BOTTOM_PADDING: f32 = 8.0;
 const NAVIGATION_BAR_ICON_SIZE: f32 = 24.0;
 const NAVIGATION_BAR_ICON_SLOT_HEIGHT: f32 = 32.0;
-const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 64.0;
-const NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
+/// `m3_comp_nav_bar_item_vertical_active_indicator_width` — the Expressive
+/// indicator is 56dp wide, not the 64dp of the classic spec.
+pub(crate) const NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
+/// `m3_comp_nav_bar_item_vertical_active_indicator_height`.
+pub(crate) const NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
 const NAVIGATION_BAR_LABEL_TOP_SPACE: f32 = 4.0;
 
 /// A Material Design 3 navigation bar.
@@ -70,7 +77,7 @@ where
 }
 
 /// A Material Design 3 navigation tab.
-pub struct NavigationTab<Icon, Action = fn(&Environment)> {
+pub struct NavigationTab<Icon, Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     icon: Icon,
@@ -86,7 +93,7 @@ impl<Icon, Action> Debug for NavigationTab<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationTab<Icon, fn(&Environment)> {
+impl<Icon> NavigationTab<Icon, NoAction> {
     /// Creates a navigation tab with a semantic label, icon, and selected state.
     #[must_use]
     pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
@@ -105,7 +112,10 @@ impl<Icon> NavigationTab<Icon, fn(&Environment)> {
 impl<Icon, Action> NavigationTab<Icon, Action> {
     /// Sets the action performed when the navigation tab is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> NavigationTab<Icon, impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> NavigationTab<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -122,7 +132,7 @@ impl<Icon, Action> NavigationTab<Icon, Action> {
 impl<Icon, Action> View for NavigationTab<Icon, Action>
 where
     Icon: Clone + View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
@@ -141,8 +151,15 @@ where
             OnSurfaceVariant,
         );
         let label_color = conditional_color(self.selected.clone(), Secondary, OnSurfaceVariant);
-        let state_layer_color =
-            conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
+        // md.comp.nav-bar.item.*.{hovered,focused,pressed}.state-layer.color:
+        // on-secondary-container for the active and inactive items alike.
+        let state_layer_color = OnSecondaryContainer;
+        // The active label is label-medium at the prominent (bold) weight.
+        let label_font = conditional_font(
+            self.selected,
+            typography::label_medium_prominent(),
+            typography::label_medium(),
+        );
 
         navigation_tab_content(
             self.label,
@@ -150,6 +167,7 @@ where
             indicator_color.into(),
             icon_color.into(),
             label_color.into(),
+            label_font,
         )
         // Padding applies inside the fixed item height: the 32dp indicator
         // slot starts `TOP_PADDING` below the item top and the label sits
@@ -158,31 +176,40 @@ where
         // extends `IndicatorVerticalPadding` above the icon.
         .padding_with(EdgeInsets::new(
             NAVIGATION_BAR_ITEM_TOP_PADDING,
-            NAVIGATION_BAR_ITEM_BOTTOM_PADDING,
             0.0,
+            NAVIGATION_BAR_ITEM_BOTTOM_PADDING,
             0.0,
         ))
         .min_width(NAVIGATION_BAR_ITEM_MIN_WIDTH)
         .max_width(f32::INFINITY)
         .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
-        .on_tap(move |env: Environment| action(&env))
+        .on_tap(move |env: Environment| {
+            action(&env).report_extraction();
+        })
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Tab)
         .a11y_state_signal(accessibility_state)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
         .install(
-            interaction_style(
+            interaction_chrome_radius(
                 state_layer_color,
                 f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT * 0.5),
             )
-            .fixed_state_layer(
-                f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
-                f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
-                0.5,
-                f64::from(NAVIGATION_BAR_ITEM_TOP_PADDING)
-                    / f64::from(
-                        NAVIGATION_BAR_CONTAINER_HEIGHT - NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT,
-                    ),
+            // The state layer is the active indicator's pill, centred
+            // horizontally at the item's top padding.
+            .sized(
+                hydrolysis::draw::kurbo::Size::new(
+                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
+                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
+                ),
+                hydrolysis::draw::kurbo::Vec2::new(
+                    0.5,
+                    f64::from(NAVIGATION_BAR_ITEM_TOP_PADDING)
+                        / f64::from(
+                            NAVIGATION_BAR_CONTAINER_HEIGHT
+                                - NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT,
+                        ),
+                ),
             ),
         )
     }
@@ -194,6 +221,7 @@ fn navigation_tab_content(
     indicator_color: Color,
     icon_color: Color,
     label_color: Color,
+    label_font: waterui::text::font::Font,
 ) -> impl View {
     let icon_slot = icon
         .foreground(icon_color)
@@ -211,15 +239,10 @@ fn navigation_tab_content(
         icon_container
             .width(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH)
             .height(NAVIGATION_BAR_ICON_SLOT_HEIGHT),
-        label
-            .font(typography::label_medium())
-            .foreground(label_color)
-            .height(16.0),
+        label.font(label_font).foreground(label_color).height(16.0),
     ))
     .spacing(NAVIGATION_BAR_LABEL_TOP_SPACE)
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 navigation bar.
 #[must_use]
@@ -252,7 +275,8 @@ mod tests {
     fn navigation_bar_tokens_match_compose_navigation_bar_tokens() {
         assert_eq!(NAVIGATION_BAR_CONTAINER_HEIGHT, 64.0);
         assert_eq!(NAVIGATION_BAR_ITEM_MIN_WIDTH, 48.0);
-        assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH, 64.0);
+        // md.comp.nav-bar.item.vertical.active-indicator.width = 56.
+        assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH, 56.0);
         assert_eq!(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT, 32.0);
         assert_eq!(NAVIGATION_BAR_ICON_SIZE, 24.0);
         assert_eq!(NAVIGATION_BAR_LABEL_TOP_SPACE, 4.0);

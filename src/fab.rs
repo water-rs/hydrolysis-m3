@@ -5,18 +5,20 @@ use core::marker::PhantomData;
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
+use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
 use waterui::style::FloatingStyle;
 use waterui::{Environment, Signal, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
+use crate::action::{NoAction, noop};
 use crate::color::{
     OnPrimaryContainer, OnSecondaryContainer, OnTertiaryContainer, Primary, PrimaryContainer,
     SecondaryContainer, SurfaceContainerHigh, TertiaryContainer,
 };
-use crate::elevation::{MaterialElevationLevel, apply_to_floating_style};
-use crate::semantics::interaction_style;
+use crate::elevation::MaterialElevationLevel;
+use crate::semantics::interaction_chrome_radius;
 use crate::theme::typography;
 
 /// The geometry of one FAB size.
@@ -48,14 +50,21 @@ impl FabSizeTokens {
 }
 
 /// How large a floating action button is drawn.
+///
+/// Material 3 Expressive offers FAB (56dp), medium FAB (80dp, the recommended
+/// default), and large FAB (96dp). The M3 small FAB (40dp,
+/// `md.comp.fab.small`) is deprecated: the MDC-Android
+/// `FloatingActionButton.md` docs mark it deprecated and
+/// `floatingactionbutton/res/values/attrs.xml` retires the `fabSize` enum
+/// (auto/normal/mini) that selected it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum FabSize {
-    /// `FabBaselineTokens`: the standard 56dp FAB.
+    /// `md.comp.fab`: the standard 56dp FAB.
     #[default]
     Baseline,
-    /// `FabMediumTokens`.
+    /// `md.comp.fab.medium`.
     Medium,
-    /// `FabLargeTokens`.
+    /// `md.comp.fab.large`.
     Large,
 }
 
@@ -64,7 +73,7 @@ impl FabSize {
     #[must_use]
     pub const fn tokens(self) -> FabSizeTokens {
         match self {
-            // FabBaselineTokens: CornerLarge
+            // md.comp.fab: CornerLarge
             Self::Baseline => FabSizeTokens {
                 container: 56.0,
                 icon: 24.0,
@@ -93,7 +102,10 @@ const EXTENDED_FAB_HEIGHT: f32 = 56.0;
 const EXTENDED_FAB_MINIMUM_WIDTH: f32 = 80.0;
 const EXTENDED_FAB_SHAPE: f32 = 16.0;
 const EXTENDED_FAB_CLIP_RADIUS: f32 = EXTENDED_FAB_SHAPE / EXTENDED_FAB_HEIGHT;
+/// Text-only leading space (Compose `ExtendedFabTextPadding`); the token's
+/// 16dp `extended-fab.leading-space` is for the with-icon layout.
 const EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON: f32 = 20.0;
+/// `md.comp.extended-fab.trailing-space`.
 const EXTENDED_FAB_TRAILING_SPACE: f32 = 20.0;
 
 /// Color token set for a FAB variant.
@@ -106,6 +118,10 @@ pub trait FabVariantTokens: Default + 'static {
 }
 
 /// Surface FAB color tokens.
+///
+/// M3 Expressive no longer recommends the surface FAB, but the
+/// `md.comp.fab-surface` token set and MDC-Android
+/// `FloatingActionButton.Surface` styles still ship, so the variant remains.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SurfaceFab;
 
@@ -165,7 +181,7 @@ impl FabVariantTokens for TertiaryFab {
 ///
 /// The default variant is `PrimaryFab`: `FloatingActionButtonDefaults
 /// .containerColor` resolves to `primaryContainer`.
-pub struct Fab<Content, Action = fn(&Environment), Tokens = PrimaryFab> {
+pub struct Fab<Content, Action = NoAction, Tokens = PrimaryFab> {
     accessibility_label: Str,
     content: Content,
     action: Action,
@@ -181,7 +197,7 @@ impl<Content, Action, Tokens> Debug for Fab<Content, Action, Tokens> {
     }
 }
 
-impl<Content> Fab<Content, fn(&Environment), PrimaryFab> {
+impl<Content> Fab<Content, NoAction, PrimaryFab> {
     /// Creates a primary FAB with arbitrary visual content.
     #[must_use]
     pub fn new(accessibility_label: impl Into<Str>, content: Content) -> Self {
@@ -239,7 +255,10 @@ impl<Content, Action, Tokens> Fab<Content, Action, Tokens> {
 
     /// Sets the action performed when the FAB is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> Fab<Content, impl FnMut(&Environment), Tokens>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> Fab<Content, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -256,7 +275,7 @@ impl<Content, Action, Tokens> Fab<Content, Action, Tokens> {
 impl<Content, Action, Tokens> View for Fab<Content, Action, Tokens>
 where
     Content: View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: FabVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -274,11 +293,13 @@ where
             .padding_with(size.icon_padding())
             .size(size.container, size.container)
             .floating_with(floating_style)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 Tokens::content_color(),
                 f64::from(size.corner_radius),
             ))
@@ -286,7 +307,7 @@ where
 }
 
 /// A Material Design 3 extended floating action button.
-pub struct ExtendedFab<Action = fn(&Environment), Tokens = PrimaryFab> {
+pub struct ExtendedFab<Action = NoAction, Tokens = PrimaryFab> {
     label: Label,
     accessibility_label: Str,
     action: Action,
@@ -301,7 +322,7 @@ impl<Action, Tokens> Debug for ExtendedFab<Action, Tokens> {
     }
 }
 
-impl ExtendedFab<fn(&Environment), PrimaryFab> {
+impl ExtendedFab<NoAction, PrimaryFab> {
     /// Creates a primary extended FAB with a semantic text label.
     #[must_use]
     pub fn new(label: impl IntoLabel) -> Self {
@@ -310,8 +331,8 @@ impl ExtendedFab<fn(&Environment), PrimaryFab> {
             .semantic_text()
             .clone()
             .resolve(&Environment::new())
-            .content
-            .get()
+            .content()
+            .snapshot()
             .to_plain();
         Self {
             label,
@@ -352,7 +373,10 @@ impl<Action, Tokens> ExtendedFab<Action, Tokens> {
 
     /// Sets the action performed when the extended FAB is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> ExtendedFab<impl FnMut(&Environment), Tokens>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> ExtendedFab<impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -367,7 +391,7 @@ impl<Action, Tokens> ExtendedFab<Action, Tokens> {
 
 impl<Action, Tokens> View for ExtendedFab<Action, Tokens>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: FabVariantTokens,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -384,23 +408,23 @@ where
             .height(EXTENDED_FAB_HEIGHT)
             .padding_with(EdgeInsets::new(
                 0.0,
-                0.0,
                 EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON,
+                0.0,
                 EXTENDED_FAB_TRAILING_SPACE,
             ))
             .floating_with(floating_style)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(self.accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 Tokens::content_color(),
                 f64::from(EXTENDED_FAB_SHAPE),
             ))
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 pub(crate) fn theme() -> FloatingStyle {
     let size = FabSize::Baseline.tokens();
@@ -431,7 +455,13 @@ where
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };
-    apply_to_floating_style(&mut style, MaterialElevationLevel::LEVEL3);
+    // `md.comp.fab.{container,hover.container}.elevation`: level3 at rest,
+    // level4 hovered — focused and pressed hold level3.
+    crate::elevation::apply_to_floating_style_states(
+        &mut style,
+        MaterialElevationLevel::LEVEL3,
+        [(InteractionState::HOVERED, MaterialElevationLevel::LEVEL4)],
+    );
     style
 }
 
@@ -457,9 +487,11 @@ mod tests {
         EXTENDED_FAB_SHAPE, EXTENDED_FAB_TRAILING_SPACE, FabSize,
     };
 
-    /// `FabBaselineTokens`, `FabMediumTokens` and `FabLargeTokens`. The corner
+    /// `md.comp.fab`, `md.comp.fab.medium`, `md.comp.fab.large`. The corner
     /// shape grows with the container — `CornerLarge`, `CornerLargeIncreased`,
     /// `CornerExtraLarge` — so a larger FAB is not simply a scaled-up one.
+    /// `md.comp.fab.small` (40dp) is intentionally absent: the small FAB is
+    /// deprecated in M3 Expressive.
     #[test]
     fn fab_sizes_match_compose_fab_tokens() {
         let baseline = FabSize::Baseline.tokens();

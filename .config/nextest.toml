@@ -1,0 +1,17 @@
+# Local runs keep nextest's defaults.
+[profile.default]
+
+# On the hosted macOS runner every test renders through one paravirtual Metal
+# device. Several test processes submitting to it at once hang its command
+# buffers (`kIOGPUCommandBufferCallbackErrorHang`), which loses the device in
+# whichever test is rendering (water-rs/hydrolysis-m3#172), so CI runs them
+# one at a time there.
+[test-groups]
+paravirtual-gpu = { max-threads = 1 }
+
+[profile.ci]
+
+[[profile.ci.overrides]]
+platform = 'cfg(target_os = "macos")'
+filter = 'all()'
+test-group = 'paravirtual-gpu'

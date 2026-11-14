@@ -15,13 +15,15 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, boxed_action};
+use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+
+use crate::action::{NoAction, noop};
 use waterui_core::view::TupleViews;
 
 use crate::color::{
-    OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer, Surface,
+    OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, Surface,
 };
-use crate::semantics::{conditional_color, interaction_style};
+use crate::semantics::{conditional_color, conditional_font, interaction_chrome_radius};
 use crate::theme::typography;
 
 /// `NavigationRailCollapsedTokens.ContainerWidth`.
@@ -47,11 +49,14 @@ const ITEM_ICON_SIZE: f32 = 24.0;
 const ACTIVE_INDICATOR_HORIZONTAL_SPACE: f32 = 16.0;
 /// `NavigationRailBaselineItemTokens.ActiveIndicatorIconLabelSpace`.
 const ACTIVE_INDICATOR_ICON_LABEL_SPACE: f32 = 8.0;
+/// `m3_comp_nav_rail_item_horizontal_active_indicator_height`: the expanded
+/// item's indicator pill is 56dp tall inside the 64dp item.
+const EXPANDED_ACTIVE_INDICATOR_HEIGHT: f32 = 56.0;
 /// `NavigationRailVerticalItemTokens.ActiveIndicatorWidth` — the collapsed
 /// item's pill.
-const COLLAPSED_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
+pub(crate) const COLLAPSED_ACTIVE_INDICATOR_WIDTH: f32 = 56.0;
 /// `NavigationRailVerticalItemTokens.ActiveIndicatorHeight`.
-const COLLAPSED_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
+pub(crate) const COLLAPSED_ACTIVE_INDICATOR_HEIGHT: f32 = 32.0;
 /// `NavigationRailVerticalItemTokens.IconLabelSpace` — the gap between the
 /// collapsed indicator's bottom edge and its label.
 const COLLAPSED_ICON_LABEL_SPACE: f32 = 4.0;
@@ -168,7 +173,7 @@ where
 }
 
 /// One destination in a [`NavigationRail`].
-pub struct NavigationRailItem<Icon, Action = fn(&Environment)> {
+pub struct NavigationRailItem<Icon, Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     icon: Icon,
@@ -213,7 +218,10 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
 
     /// Sets the action performed when the item is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> NavigationRailItem<Icon, impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> NavigationRailItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -231,7 +239,7 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
 impl<Icon, Action> View for NavigationRailItem<Icon, Action>
 where
     Icon: Clone + View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
@@ -249,19 +257,32 @@ where
             OnSecondaryContainer,
             OnSurfaceVariant,
         );
-        let label_color = conditional_color(self.selected.clone(), OnSurface, OnSurfaceVariant);
-        let state_layer_color =
-            conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
+        // md.comp.nav-rail.item.active.label-text.color = secondary.
+        let label_color = conditional_color(self.selected.clone(), Secondary, OnSurfaceVariant);
+        // md.comp.nav-rail.item.*.state-layer.color: on-secondary-container
+        // for the active and inactive items alike.
+        let state_layer_color = OnSecondaryContainer;
+        // The expanded item's label is label-large; the collapsed one is
+        // label-medium — prominent when active in both.
+        let (plain, prominent) = if self.layout.is_expanded() {
+            (
+                typography::label_large(),
+                typography::label_large_prominent(),
+            )
+        } else {
+            (
+                typography::label_medium(),
+                typography::label_medium_prominent(),
+            )
+        };
+        let label_font = conditional_font(self.selected, prominent, plain);
 
         let icon = self
             .icon
             .foreground(icon_color)
             .width(ITEM_ICON_SIZE)
             .height(ITEM_ICON_SIZE);
-        let label = self
-            .label
-            .font(typography::label_medium())
-            .foreground(label_color);
+        let label = self.label.font(label_font).foreground(label_color);
 
         // Expanded lays the label beside the icon inside one pill; collapsed
         // stacks it beneath, so only the icon sits on the active indicator.
@@ -270,16 +291,18 @@ where
                 .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
                 .padding_with(EdgeInsets::new(
                     0.0,
+                    ACTIVE_INDICATOR_HORIZONTAL_SPACE,
                     0.0,
                     ACTIVE_INDICATOR_HORIZONTAL_SPACE,
-                    ACTIVE_INDICATOR_HORIZONTAL_SPACE,
+                ))
+                // The indicator pill is 56dp tall; the item itself is 64dp.
+                .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
+                .background(Capsule.fill(indicator_color))
+                .install(interaction_chrome_radius(
+                    state_layer_color,
+                    f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
                 ))
                 .height(ITEM_HEIGHT)
-                .background(Capsule.fill(indicator_color))
-                .install(interaction_style(
-                    state_layer_color,
-                    f64::from(ITEM_HEIGHT / 2.0),
-                ))
                 .anyview()
         } else {
             waterui::component::vstack((
@@ -294,7 +317,7 @@ where
                         .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
                     icon,
                 ))
-                .install(interaction_style(
+                .install(interaction_chrome_radius(
                     state_layer_color,
                     f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
                 )),
@@ -307,15 +330,15 @@ where
 
         content
             .max_width(f32::INFINITY)
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Tab)
             .a11y_state_signal(accessibility_state)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
     }
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 navigation rail.
 #[must_use]
@@ -340,8 +363,9 @@ mod tests {
         COLLAPSED_ACTIVE_INDICATOR_HEIGHT, COLLAPSED_ACTIVE_INDICATOR_WIDTH,
         COLLAPSED_CONTAINER_WIDTH, COLLAPSED_ICON_LABEL_SPACE, COLLAPSED_ITEM_HEIGHT,
         COLLAPSED_ITEM_VERTICAL_SPACE, COLLAPSED_NARROW_CONTAINER_WIDTH,
-        EXPANDED_CONTAINER_WIDTH_MAXIMUM, EXPANDED_CONTAINER_WIDTH_MINIMUM, ITEM_HEIGHT,
-        ITEM_ICON_SIZE, ITEM_VERTICAL_SPACE, NavigationRailLayout, TOP_SPACE,
+        EXPANDED_ACTIVE_INDICATOR_HEIGHT, EXPANDED_CONTAINER_WIDTH_MAXIMUM,
+        EXPANDED_CONTAINER_WIDTH_MINIMUM, ITEM_HEIGHT, ITEM_ICON_SIZE, ITEM_VERTICAL_SPACE,
+        NavigationRailLayout, TOP_SPACE,
     };
 
     /// Values from `NavigationRailCollapsedTokens`, `NavigationRailExpandedTokens`
@@ -359,6 +383,8 @@ mod tests {
         assert_eq!(ITEM_ICON_SIZE, 24.0);
         assert_eq!(ACTIVE_INDICATOR_HORIZONTAL_SPACE, 16.0);
         assert_eq!(ACTIVE_INDICATOR_ICON_LABEL_SPACE, 8.0);
+        // m3_comp_nav_rail_item_horizontal_active_indicator_height = 56.
+        assert_eq!(EXPANDED_ACTIVE_INDICATOR_HEIGHT, 56.0);
     }
 
     /// `NavigationRailVerticalItemTokens` and the item metrics Compose derives

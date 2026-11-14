@@ -1,7 +1,12 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
-use waterui::style::{FloatingStyle, Shadow as ViewShadow, Vector};
+use hydrolysis::theme::{Driven, Inputs};
+use waterui::contract_violation;
+use waterui::interaction::{InteractionState, StateValue};
+use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
+use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
+use waterui_graphics::color::Color;
 
 use crate::color::Shadow;
 
@@ -46,12 +51,14 @@ impl MaterialElevationLevel {
 
     /// Creates a Material elevation level.
     ///
-    /// # Panics
-    ///
-    /// Panics when `level` is outside Material's 0..=5 elevation range.
+    /// A `level` outside Material's 0..=5 elevation range is a contract
+    /// violation; a release build uses level 5, the nearest valid level.
     #[must_use]
-    pub const fn new(level: u8) -> Self {
-        assert!(level <= 5, "Material elevation level must be in 0..=5");
+    pub fn new(level: u8) -> Self {
+        if level > 5 {
+            contract_violation!("Material elevation level {level} must be in 0..=5; using level 5");
+            return Self::LEVEL5;
+        }
         Self(level)
     }
 
@@ -130,7 +137,7 @@ impl ElevationTokens {
             Shadow.with_opacity(self.key.opacity(KEY_OPACITY)).into(),
             Vector::new(0.0, self.key.y),
             self.key.blur,
-            corner_radius,
+            FixedRoundedRectangle::new(corner_radius),
         )
     }
 
@@ -141,7 +148,7 @@ impl ElevationTokens {
                 .into(),
             Vector::new(0.0, self.ambient.y),
             self.ambient.blur,
-            corner_radius,
+            FixedRoundedRectangle::new(corner_radius),
         )
     }
 }
@@ -181,43 +188,99 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
     )
 }
 
-/// Casts `level`'s key and ambient shadows for a rounded-rect surface drawn
-/// through a [`DrawContext`]. `colors` resolves the `shadow` role — the same
-/// role [`Shadow`] resolves through the environment — at draw time.
-///
-/// [`DrawContext`]: waterui::backend_core::widget::DrawContext
-pub(crate) fn draw_shadows(
-    draw: &mut dyn crate::DrawContext,
-    rect: vello::kurbo::Rect,
-    radii: vello::kurbo::RoundedRectRadii,
+/// `level`'s key and ambient shadows in `shadow`, the resolved `shadow`
+/// role, as the elevation of a control's chrome.
+pub(crate) fn chrome_elevation(
     level: MaterialElevationLevel,
-    colors: &crate::theme::colors::MaterialColorScheme,
-) {
+    shadow: hydrolysis::draw::WorkingColor,
+) -> hydrolysis::theme::Elevation {
     let tokens = ElevationTokens::for_level(level);
-    for (shadow, base_opacity) in [(tokens.key, KEY_OPACITY), (tokens.ambient, AMBIENT_OPACITY)] {
-        draw.draw_shadow(
-            rect,
-            radii,
-            vello::kurbo::Vec2::new(0.0, f64::from(shadow.y)),
-            f64::from(shadow.blur),
-            colors
-                .shadow
-                .peniko()
-                .with_alpha(shadow.opacity(base_opacity)),
-        );
+    let cast = |token: ElevationShadow, base_opacity| hydrolysis::draw::Shadow {
+        sigma: f64::from(token.blur),
+        offset: hydrolysis::draw::kurbo::Vec2::new(0.0, f64::from(token.y)),
+        spread: 0.0,
+        color: shadow.with_alpha(token.opacity(base_opacity)),
+    };
+    hydrolysis::theme::Elevation::new(
+        cast(tokens.key, KEY_OPACITY),
+        cast(tokens.ambient, AMBIENT_OPACITY),
+    )
+}
+
+/// `level`'s key and ambient shadows as live values of a look part, in the
+/// `shadow` role `env` resolves and following it.
+pub(crate) fn cast_shadows<V: 'static>(
+    level: MaterialElevationLevel,
+    env: &Environment,
+) -> (
+    Driven<hydrolysis::draw::Shadow, V>,
+    Driven<hydrolysis::draw::Shadow, V>,
+) {
+    let cast = |key: bool| {
+        Driven::follow(
+            Color::from(Shadow).resolve(env),
+            move |shadow: &hydrolysis::draw::WorkingColor, _inputs: &Inputs<'_, V>| {
+                let elevation = chrome_elevation(level, *shadow);
+                if key {
+                    elevation.key
+                } else {
+                    elevation.ambient
+                }
+            },
+        )
+    };
+    (cast(true), cast(false))
+}
+
+/// `level`'s two shadows as a [`FloatingElevation`] a `FloatingStyle` can
+/// hold per interaction state.
+fn floating_elevation(level: MaterialElevationLevel) -> FloatingElevation {
+    let tokens = ElevationTokens::for_level(level);
+    FloatingElevation {
+        key_shadow_color: Shadow.with_opacity(tokens.key.opacity(KEY_OPACITY)).into(),
+        key_shadow_offset_y: tokens.key.y,
+        key_shadow_radius: tokens.key.blur,
+        ambient_shadow_color: Shadow
+            .with_opacity(tokens.ambient.opacity(AMBIENT_OPACITY))
+            .into(),
+        ambient_shadow_offset_y: tokens.ambient.y,
+        ambient_shadow_radius: tokens.ambient.blur,
     }
 }
 
-pub(crate) fn apply_to_floating_style(style: &mut FloatingStyle, level: MaterialElevationLevel) {
+/// `level`'s two shadows as a `Shadow`-modified fill for `corner_radius` —
+/// the layer behind a surface that lifts it, so the card composer can redraw
+/// it per reported state.
+pub(crate) fn shadow_layer(
+    level: MaterialElevationLevel,
+    corner_radius: f32,
+    fill: waterui::color::Color,
+) -> impl View {
     let tokens = ElevationTokens::for_level(level);
-    style.key_shadow_color = Shadow.with_opacity(tokens.key.opacity(KEY_OPACITY)).into();
-    style.key_shadow_offset_y = tokens.key.y;
-    style.key_shadow_radius = tokens.key.blur;
-    style.ambient_shadow_color = Shadow
-        .with_opacity(tokens.ambient.opacity(AMBIENT_OPACITY))
-        .into();
-    style.ambient_shadow_offset_y = tokens.ambient.y;
-    style.ambient_shadow_radius = tokens.ambient.blur;
+    FixedRoundedRectangle::new(corner_radius)
+        .fill(fill)
+        .shadow(tokens.ambient_shadow(corner_radius))
+        .shadow(tokens.key_shadow(corner_radius))
+}
+
+/// Installs `level` as the style's resting elevation.
+pub(crate) fn apply_to_floating_style(style: &mut FloatingStyle, level: MaterialElevationLevel) {
+    style.elevation = floating_elevation(level).into();
+}
+
+/// Installs `resting` as the resting elevation plus each
+/// `(states, level)` override — a FAB sitting at level3 that rises to
+/// level4 while hovered, say. Overrides resolve in the order given.
+pub(crate) fn apply_to_floating_style_states(
+    style: &mut FloatingStyle,
+    resting: MaterialElevationLevel,
+    overrides: impl IntoIterator<Item = (InteractionState, MaterialElevationLevel)>,
+) {
+    let mut elevation = StateValue::new(floating_elevation(resting));
+    for (states, level) in overrides {
+        elevation = elevation.when(states, floating_elevation(level));
+    }
+    style.elevation = elevation;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -268,8 +331,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Material elevation level must be in 0..=5")]
-    fn elevation_level_rejects_out_of_range_values() {
-        let _ = MaterialElevationLevel::new(6);
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "Material elevation level 6 must be in 0..=5")
+    )]
+    fn elevation_level_clamps_out_of_range_values() {
+        assert_eq!(
+            MaterialElevationLevel::new(6),
+            MaterialElevationLevel::LEVEL5
+        );
     }
 }

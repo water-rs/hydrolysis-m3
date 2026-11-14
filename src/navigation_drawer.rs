@@ -4,23 +4,31 @@ use core::fmt::{self, Debug};
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
+use waterui::interaction::InteractionState;
 use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
-    container::FixedContainer, padding::EdgeInsets,
+    Layout, LayoutError, PlacementInput, ProposalSize, Rect, Size, StretchAxis, SubView,
+    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
-use waterui::reactive::SignalExt as _;
+use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
 
 use crate::ModalInteraction;
 use crate::color::{
-    OnSecondaryContainer, OnSurfaceVariant, Scrim, SecondaryContainer, Surface, SurfaceContainerLow,
+    OnSecondaryContainer, OnSurface, OnSurfaceVariant, Scrim, SecondaryContainer, Surface,
+    SurfaceContainerLow,
 };
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{conditional_color, interaction_style, label_plain_text};
+use crate::semantics::{
+    conditional_color, conditional_font, interaction_chrome_radius, label_plain_text,
+};
 use crate::theme::{motion, typography};
 
 const NAVIGATION_DRAWER_CONTAINER_WIDTH: f32 = 360.0;
@@ -105,8 +113,7 @@ impl<Content> NavigationDrawer<Content> {
     where
         F: Handler<Args, ()> + 'static,
     {
-        let mut action = boxed_action(action);
-        self.overlay_action = SharedAction::new(move |env: Environment| action(&env));
+        self.overlay_action = SharedAction::new(action);
         self
     }
 }
@@ -148,7 +155,7 @@ where
                 panel_content,
             )
             .offset(offset, 0.0)
-            .position_in(UnitPoint::TOP_LEADING);
+            .position_in_anchor(UnitPoint::TOP_LEADING, UnitPoint::TOP_LEADING);
             let close_on_overlay_click = self.close_on_overlay_click;
             let opened_for_overlay = opened.clone();
             let overlay_action = self.overlay_action;
@@ -160,13 +167,13 @@ where
                     crate::theme::colors::SCRIM_OPACITY,
                 ))
                 .on_tap(move |env: Environment| {
-                    overlay_action.call(&env);
+                    overlay_action.run(&env);
                     if close_on_overlay_click {
                         opened_for_overlay.set(false);
                     }
                 })
                 .a11y_hidden(true)
-                .install(interaction_style(Scrim.with_opacity(0.0), 0.0).pointer_only());
+                .install(interaction_chrome_radius(Scrim.with_opacity(0.0), 0.0).pointer_only());
             let opened_for_escape = opened.clone();
             let modal = ModalInteraction::new(
                 self.close_on_escape,
@@ -208,6 +215,15 @@ impl Layout for NavigationDrawerPanelLayout {
         Size::new(width, height)
     }
 
+    /// The panel at the bounds' origin, over which `place` lays its content.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
+    }
+
     fn place(
         &self,
         bounds: Rect,
@@ -227,7 +243,7 @@ impl Layout for NavigationDrawerPanelLayout {
 }
 
 /// A selectable Material Design 3 navigation drawer item.
-pub struct NavigationDrawerItem<Icon, Action = fn(&Environment)> {
+pub struct NavigationDrawerItem<Icon, Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     icon: Icon,
@@ -243,7 +259,7 @@ impl<Icon, Action> Debug for NavigationDrawerItem<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationDrawerItem<Icon, fn(&Environment)> {
+impl<Icon> NavigationDrawerItem<Icon, NoAction> {
     /// Creates a navigation drawer item.
     #[must_use]
     pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
@@ -262,7 +278,10 @@ impl<Icon> NavigationDrawerItem<Icon, fn(&Environment)> {
 impl<Icon, Action> NavigationDrawerItem<Icon, Action> {
     /// Sets the action performed when the drawer item is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> NavigationDrawerItem<Icon, impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> NavigationDrawerItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -279,7 +298,7 @@ impl<Icon, Action> NavigationDrawerItem<Icon, Action> {
 impl<Icon, Action> View for NavigationDrawerItem<Icon, Action>
 where
     Icon: Clone + View + 'static,
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
@@ -297,19 +316,49 @@ where
             SecondaryContainer,
             SecondaryContainer.with_opacity(0.0),
         );
-        let state_layer_color =
-            conditional_color(self.selected, OnSecondaryContainer, OnSurfaceVariant);
+        // md.comp.navigation-drawer: active items take on-secondary-container;
+        // inactive items take on-surface on hover/focus and
+        // on-secondary-container on pressed — the reported interaction state
+        // splits them.
+        let state = binding(InteractionState::empty());
+        let inactive_layer = conditional_color(
+            state.map(|s: InteractionState| s.contains(InteractionState::PRESSED)),
+            OnSecondaryContainer,
+            OnSurface,
+        );
+        let state_layer_color = conditional_color(
+            self.selected.clone(),
+            OnSecondaryContainer,
+            Color::new(inactive_layer),
+        );
 
-        drawer_item_content(self.label, self.icon, foreground.into(), background.into())
-            .on_tap(move |env: Environment| action(&env))
-            .a11y_label(accessibility_label)
-            .a11y_role(AccessibilityRole::Button)
-            .a11y_state_signal(accessibility_state)
-            .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
-                state_layer_color,
-                f64::from(NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE),
-            ))
+        // md.comp.navigation-drawer.active.label-text.weight =
+        // label-large-weight-prominent.
+        let label_font = conditional_font(
+            self.selected.clone(),
+            typography::label_large_prominent(),
+            typography::label_large(),
+        );
+
+        drawer_item_content(
+            self.label,
+            self.icon,
+            foreground.into(),
+            background.into(),
+            label_font,
+        )
+        .on_tap(move |env: Environment| {
+            action(&env).report_extraction();
+        })
+        .interaction_state(&state)
+        .a11y_label(accessibility_label)
+        .a11y_role(AccessibilityRole::Button)
+        .a11y_state_signal(accessibility_state)
+        .a11y_children(AccessibilityChildren::ExcludeDescendants)
+        .install(interaction_chrome_radius(
+            state_layer_color,
+            f64::from(NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE),
+        ))
     }
 }
 
@@ -318,26 +367,25 @@ fn drawer_item_content(
     icon: impl View,
     foreground: Color,
     background: Color,
+    label_font: waterui::text::font::Font,
 ) -> impl View {
     waterui::component::hstack((
         icon.foreground(foreground.clone())
             .width(NAVIGATION_DRAWER_ITEM_ICON_SIZE)
             .height(NAVIGATION_DRAWER_ITEM_ICON_SIZE),
-        label.font(typography::label_large()).foreground(foreground),
+        label.font(label_font).foreground(foreground),
         waterui::component::spacer(),
     ))
     .spacing(NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE)
     .height(NAVIGATION_DRAWER_ITEM_HEIGHT)
     .padding_with(EdgeInsets::new(
         0.0,
-        0.0,
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
+        0.0,
         NAVIGATION_DRAWER_ITEM_HORIZONTAL_PADDING,
     ))
     .background(Capsule.fill(background))
 }
-
-const fn noop(_env: &Environment) {}
 
 /// Creates a Material Design 3 navigation drawer.
 #[must_use]

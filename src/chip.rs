@@ -11,13 +11,17 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{FixedRoundedRectangle, Rectangle, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
 
 use crate::color::{
-    OnSecondaryContainer, OnSurface, OnSurfaceVariant, Outline, SecondaryContainer, Surface,
+    OnSecondaryContainer, OnSurface, OnSurfaceVariant, OutlineVariant, SecondaryContainer,
 };
 use crate::icons::CheckmarkIcon;
-use crate::semantics::{conditional_color, interaction_style, label_plain_text};
+use crate::semantics::{conditional_color, interaction_chrome_radius, label_plain_text};
 use crate::theme::typography;
 
 const ASSIST_CHIP_CONTAINER_HEIGHT: f32 = 32.0;
@@ -49,7 +53,7 @@ const INPUT_CHIP_REMOVE_ICON_LINE_WIDTH: f32 = 2.0;
 ///
 /// This implementation is pure `WaterUI` composition: no Hydrolysis renderer type
 /// or backend-specific view ID is introduced.
-pub struct OutlinedChip<Action = fn(&Environment), LabelColor = OnSurface> {
+pub struct OutlinedChip<Action = NoAction, LabelColor = OnSurface> {
     label: Label,
     accessibility_label: Str,
     action: Action,
@@ -64,7 +68,7 @@ impl<Action, LabelColor> Debug for OutlinedChip<Action, LabelColor> {
     }
 }
 
-impl<LabelColor> OutlinedChip<fn(&Environment), LabelColor> {
+impl<LabelColor> OutlinedChip<NoAction, LabelColor> {
     /// Creates an outlined chip with the given semantic label.
     #[must_use]
     pub fn new(label: impl IntoLabel) -> Self {
@@ -82,7 +86,10 @@ impl<LabelColor> OutlinedChip<fn(&Environment), LabelColor> {
 impl<Action, LabelColor> OutlinedChip<Action, LabelColor> {
     /// Sets the action performed when the chip is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> OutlinedChip<impl FnMut(&Environment), LabelColor>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> OutlinedChip<impl FnMut(&Environment) -> Result<(), ExtractionError>, LabelColor>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -97,7 +104,7 @@ impl<Action, LabelColor> OutlinedChip<Action, LabelColor> {
 
 impl<Action, LabelColor> View for OutlinedChip<Action, LabelColor>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     LabelColor: Default + Into<Color> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -112,44 +119,49 @@ where
             .height(ASSIST_CHIP_CONTAINER_HEIGHT)
             .padding_with(EdgeInsets::new(
                 0.0,
-                0.0,
                 ASSIST_CHIP_LEADING_SPACE,
+                0.0,
                 ASSIST_CHIP_TRAILING_SPACE,
             ))
-            .background(FixedRoundedRectangle::new(ASSIST_CHIP_CONTAINER_SHAPE).fill(Surface))
+            // flat chips publish no container color — the background is
+            // transparent (md.comp.assist-chip.flat has no container.color).
+            .background(
+                FixedRoundedRectangle::new(ASSIST_CHIP_CONTAINER_SHAPE).fill(Color::transparent()),
+            )
+            // md.comp.assist-chip.flat.outline.color = outline-variant.
             .border_with(
-                Border::new(Outline, ASSIST_CHIP_OUTLINE_WIDTH)
+                Border::new(OutlineVariant, ASSIST_CHIP_OUTLINE_WIDTH)
                     .corner_radius(ASSIST_CHIP_CONTAINER_SHAPE),
             )
-            .on_tap(move |env: Environment| action(&env))
+            .on_tap(move |env: Environment| {
+                action(&env).report_extraction();
+            })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 LabelColor::default(),
                 f64::from(ASSIST_CHIP_CONTAINER_SHAPE),
             ))
     }
 }
 
-const fn noop(_env: &Environment) {}
-
 /// A Material Design 3 assist chip.
 ///
 /// Assist chips represent a smart or supplemental action related to nearby
 /// content.
-pub type AssistChip<Action = fn(&Environment)> = OutlinedChip<Action, OnSurface>;
+pub type AssistChip<Action = NoAction> = OutlinedChip<Action, OnSurface>;
 
 /// A Material Design 3 suggestion chip.
 ///
 /// Suggestion chips present quick suggestions related to user input or content.
-pub type SuggestionChip<Action = fn(&Environment)> = OutlinedChip<Action, OnSurfaceVariant>;
+pub type SuggestionChip<Action = NoAction> = OutlinedChip<Action, OnSurfaceVariant>;
 
 /// A Material Design 3 filter chip.
 ///
 /// Filter chips toggle a selected state and expose that state through the
 /// accessibility tree.
-pub struct FilterChip<Action = fn(&Environment)> {
+pub struct FilterChip<Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     selected: Binding<bool>,
@@ -157,7 +169,7 @@ pub struct FilterChip<Action = fn(&Environment)> {
 }
 
 /// A Material Design 3 input chip with a trailing remove action.
-pub struct InputChip<Action = fn(&Environment), RemoveAction = fn(&Environment)> {
+pub struct InputChip<Action = NoAction, RemoveAction = NoAction> {
     label: Label,
     accessibility_label: Str,
     remove_accessibility_label: Str,
@@ -173,7 +185,7 @@ impl<Action, RemoveAction> Debug for InputChip<Action, RemoveAction> {
     }
 }
 
-impl InputChip<fn(&Environment), fn(&Environment)> {
+impl InputChip<NoAction, NoAction> {
     /// Creates an input chip with the given semantic label.
     #[must_use]
     pub fn new(label: impl IntoLabel) -> Self {
@@ -193,7 +205,10 @@ impl InputChip<fn(&Environment), fn(&Environment)> {
 impl<Action, RemoveAction> InputChip<Action, RemoveAction> {
     /// Sets the action performed when the primary chip area is tapped.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> InputChip<impl FnMut(&Environment), RemoveAction>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> InputChip<impl FnMut(&Environment) -> Result<(), ExtractionError>, RemoveAction>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -208,7 +223,10 @@ impl<Action, RemoveAction> InputChip<Action, RemoveAction> {
 
     /// Sets the action performed when the trailing remove button is tapped.
     #[must_use]
-    pub fn remove_action<F, Args>(self, action: F) -> InputChip<Action, impl FnMut(&Environment)>
+    pub fn remove_action<F, Args>(
+        self,
+        action: F,
+    ) -> InputChip<Action, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -230,7 +248,7 @@ impl<Action> Debug for FilterChip<Action> {
     }
 }
 
-impl FilterChip<fn(&Environment)> {
+impl FilterChip<NoAction> {
     /// Creates a filter chip bound to the provided selected state.
     #[must_use]
     pub fn new(label: impl IntoLabel, selected: &Binding<bool>) -> Self {
@@ -248,7 +266,10 @@ impl FilterChip<fn(&Environment)> {
 impl<Action> FilterChip<Action> {
     /// Sets the action performed after the chip toggles its selected state.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> FilterChip<impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> FilterChip<impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -263,11 +284,13 @@ impl<Action> FilterChip<Action> {
 
 impl<Action> View for FilterChip<Action>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
-        let action = SharedAction::new(move |env: Environment| action(&env));
+        let action = SharedAction::new(move |env: Environment| {
+            action(&env).report_extraction();
+        });
         let selected_for_tap = self.selected.clone();
         let accessibility_state = self
             .selected
@@ -277,11 +300,19 @@ where
             OnSecondaryContainer,
             OnSurfaceVariant,
         );
-        let background = conditional_color(self.selected.clone(), SecondaryContainer, Surface);
+        // md.comp.filter-chip.flat.selected.container.color =
+        // secondary-container; the unselected flat chip has no container.
+        let background = conditional_color(
+            self.selected.clone(),
+            SecondaryContainer,
+            Color::transparent(),
+        );
+        // md.comp.filter-chip.flat.unselected.outline.color = outline-variant;
+        // .flat.selected.outline.width = 0.
         let outline = conditional_color(
             self.selected.clone(),
-            Outline.with_opacity(FILTER_CHIP_SELECTED_OUTLINE_WIDTH),
-            Outline,
+            OutlineVariant.with_opacity(FILTER_CHIP_SELECTED_OUTLINE_WIDTH),
+            OutlineVariant,
         );
         let state_layer_color = conditional_color(
             self.selected.clone(),
@@ -317,8 +348,8 @@ where
         .height(FILTER_CHIP_CONTAINER_HEIGHT)
         .padding_with(EdgeInsets::new(
             0.0,
-            0.0,
             FILTER_CHIP_WITH_ICON_LEADING_SPACE,
+            0.0,
             FILTER_CHIP_TRAILING_SPACE,
         ))
         .background(FixedRoundedRectangle::new(FILTER_CHIP_CONTAINER_SHAPE).fill(background))
@@ -327,14 +358,14 @@ where
                 .corner_radius(FILTER_CHIP_CONTAINER_SHAPE),
         )
         .on_tap(move |env: Environment| {
-            selected_for_tap.set(!selected_for_tap.get());
-            action.call(&env);
+            selected_for_tap.toggle();
+            action.run(&env);
         })
         .a11y_label(self.accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
         .a11y_state_signal(accessibility_state)
-        .install(interaction_style(
+        .install(interaction_chrome_radius(
             state_layer_color,
             f64::from(FILTER_CHIP_CONTAINER_SHAPE),
         ))
@@ -343,14 +374,18 @@ where
 
 impl<Action, RemoveAction> View for InputChip<Action, RemoveAction>
 where
-    Action: FnMut(&Environment) + 'static,
-    RemoveAction: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
+    RemoveAction: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
-        let action = SharedAction::new(move |env: Environment| action(&env));
+        let action = SharedAction::new(move |env: Environment| {
+            action(&env).report_extraction();
+        });
         let mut remove_action = self.remove_action;
-        let remove_action = SharedAction::new(move |env: Environment| remove_action(&env));
+        let remove_action = SharedAction::new(move |env: Environment| {
+            remove_action(&env).report_extraction();
+        });
         let accessibility_label = self.accessibility_label;
         let remove_accessibility_label = self.remove_accessibility_label;
 
@@ -358,11 +393,13 @@ where
             self.label
                 .font(typography::label_large())
                 .foreground(OnSurfaceVariant)
-                .on_tap(move |env: Environment| action.call(&env))
+                .on_tap(move |env: Environment| {
+                    action.run(&env);
+                })
                 .a11y_label(accessibility_label)
                 .a11y_role(AccessibilityRole::Button)
                 .a11y_children(AccessibilityChildren::ExcludeDescendants)
-                .install(interaction_style(
+                .install(interaction_chrome_radius(
                     OnSurfaceVariant,
                     f64::from(INPUT_CHIP_CONTAINER_SHAPE),
                 )),
@@ -375,13 +412,17 @@ where
         .height(INPUT_CHIP_CONTAINER_HEIGHT)
         .padding_with(EdgeInsets::new(
             0.0,
-            0.0,
             INPUT_CHIP_LEADING_SPACE,
+            0.0,
             INPUT_CHIP_WITH_TRAILING_ICON_TRAILING_SPACE,
         ))
-        .background(FixedRoundedRectangle::new(INPUT_CHIP_CONTAINER_SHAPE).fill(Surface))
+        // The unselected input chip publishes no container color; its outline
+        // is outline-variant (md.comp.input-chip.flat.unselected.outline.color).
+        .background(
+            FixedRoundedRectangle::new(INPUT_CHIP_CONTAINER_SHAPE).fill(Color::transparent()),
+        )
         .border_with(
-            Border::new(Outline, INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH)
+            Border::new(OutlineVariant, INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH)
                 .corner_radius(INPUT_CHIP_CONTAINER_SHAPE),
         )
     }
@@ -422,11 +463,13 @@ impl View for RemoveButton {
         let action = self.action;
         waterui::component::hstack((RemoveIcon,))
             .size(INPUT_CHIP_TRAILING_ICON_SIZE, INPUT_CHIP_TRAILING_ICON_SIZE)
-            .on_tap(move |env: Environment| action.call(&env))
+            .on_tap(move |env: Environment| {
+                action.run(&env);
+            })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
-            .install(interaction_style(
+            .install(interaction_chrome_radius(
                 OnSurfaceVariant,
                 f64::from(INPUT_CHIP_TRAILING_ICON_SIZE * 0.5),
             ))

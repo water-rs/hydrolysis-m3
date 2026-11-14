@@ -1,0 +1,212 @@
+# Material Design 3 conformance audit (issue #92)
+
+Scope: every file under `src/`, audited against the official token sources:
+
+- `material-components/material-web` `tokens/versions/latest` — M3 Expressive token set (v34.0.21). For components redesigned for M3 Expressive (buttons, icon buttons, FABs, segmented buttons, split buttons, navigation bar/rail, lists) this set supersedes the stale `md.comp.outlined-button` / `md.comp.navigation-bar`-era names that also ship in the same directory.
+- `material-components-android` `lib/java/com/google/android/material/**/res/values/tokens.xml` at release 1.34 (`m3_comp_*` resources) — cross-checked where the web Sass is ambiguous.
+- m3.material.io spec pages for anatomy and behavior where no token exists.
+
+Status legend: `conforms` = value already matched the token; `fixed` = deviation corrected in this change; `annotated` = conforming value, token name added as a comment; `blocked` = needs a waterui capability that does not exist (details in the last section); `no token` = no applicable M3 token.
+
+## Theme — color, elevation, typography, shape, state, motion, dimensions
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/theme/colors.rs | full `MaterialColorScheme` maps 1:1 to `md.sys.color.*` | `md.sys.color.*` | `md.sys.color.*` | conforms |
+| src/theme/elevation.rs | LEVEL0–LEVEL5 shadow pairs | level0–level5 | `md.sys.elevation.level*` | conforms |
+| src/theme/state_layer.rs | hover 0.08 / focus 0.10 / pressed 0.10 / dragged 0.16 | same | `md.sys.state.*-state-layer-opacity` | conforms |
+| src/theme/dimensions.rs:36 | `BUTTON_EXTRA_SMALL.horizontal_space` 12.0 | 8→12 | `md.comp.button.xsmall.leading-space`/`trailing-space` | fixed |
+| src/theme/dimensions.rs:47 | `BUTTON_SMALL.horizontal_space` 16.0 | 16 | `md.comp.button.small.leading-space`/`trailing-space` | fixed |
+| src/theme/dimensions.rs:85 | `BUTTON_EXTRA_LARGE.outline_width` 3.0 | 3 | `md.comp.button.xlarge.outlined.outline-width` | fixed |
+| src/theme/dimensions.rs:203-215 | handle 4×44, pad 6, dot 4 | 4/44/6/4 | `md.comp.slider.handle.{width,height}` / `stop-indicator.*` | conforms |
+| src/theme/dimensions.rs:215 | `SLIDER_STOP_INDICATOR_END_SPACE` 4.0 | 4 | `md.comp.slider.stop-indicator.trailing-space` | fixed (added) |
+| src/theme/typography.rs:46-96 | label small/medium/large; +`label_medium_prominent`, `label_large_prominent` (Bold weight) | label scale incl. `prominent` weights | `md.sys.typescale.label-*` | conforms (helpers added for `*.label-text.weight` tokens) |
+| src/theme/motion/* | spring/duration scheme | — | `md.sys.motion.*` | conforms |
+| src/semantics.rs | `conditional_font` added (mirrors `conditional_color`) | — | supports `*.active.label-text.weight` | fixed (added) |
+
+## Buttons (`src/controls/button.rs`, `src/theme/dimensions.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/controls/button.rs:164-172 | filled disabled container = on-surface @ 0.1 | 0.12→0.10 | `md.comp.button.filled.disabled.container.opacity` | fixed |
+| src/controls/button.rs:58 | outlined label/icon/layer = on-surface-variant | was primary | `md.comp.button.outlined.{label-text,icon,*.state-layer}.color` | fixed |
+| src/controls/button.rs:60 | text button label/layer = primary | primary | `md.comp.button.text.label-text.color` | conforms |
+| src/controls/button.rs:517-537 | outlined border = outline-variant, width 1/1/1/2/3 per size | was outline, flat 1 | `md.comp.button.outlined.outline.color` + `md.comp.button.<size>.outlined.outline-width` | fixed |
+| src/controls/button.rs:101-115 | pressed corner morph 8/8/12/16/16 per size | new | `md.comp.button.<size>.pressed.container.shape` | fixed (driven by `state.press_progress`) |
+| src/controls/button.rs:398-399 | disabled outlined border stays outline-variant | outline-variant | `md.comp.button.outlined.disabled.outline.color` | conforms |
+| container heights | 32/40/48/56/64 | 32/40/48/56/64 | `md.comp.button.<size>.container.height` | conforms |
+| label font | label-large at every size | label-large | `md.comp.button.<size>.label-text` | conforms |
+
+## Icon buttons (`src/icon_button.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/icon_button.rs:49-96 | five sizes xs/s/m/l/xl: layer 32/40/56/96/136, icon 20/24/24/32/40, outline 1/1/1/2/3 | added xs + xl | `md.comp.icon-button.<size>.*` | fixed |
+| src/icon_button.rs:183-184 | filled container primary; disabled container opacity 0.1 | 0.12→0.10 | `md.comp.icon-button.filled.disabled.container.opacity` | fixed |
+| src/icon_button.rs:193-195 | outlined border outline-variant in all states | was outline | `md.comp.icon-button.outlined.{outline,disabled.outline}.color` | fixed |
+| src/icon_button.rs:228-230 | layer on-primary (filled) / on-surface-variant (standard, outlined) | same | `md.comp.icon-button.*.state-layer.color` | conforms |
+| src/icon_button.rs:250-264 | pressed corner morph 8/8/12/16/16 | new | `md.comp.icon-button.<size>.pressed.container.shape` | fixed |
+| pressed morph on custom interaction style | — | per-state shape | `md.comp.icon-button.<size>.pressed.container.shape` | fixed: the `Chrome` surface's corners are a `Driven` value resolved per reported state, and the pressed morph animates its live operand under the press transition |
+
+## FABs (`src/fab.rs`, `src/fab_menu.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/fab.rs:53-95 | sizes FAB 56/corner-16/icon-24, medium 80/corner-20/icon-28, large 96/corner-28/icon-36 | 56/80/96 | `md.comp.fab{,.medium,.large}.container.*` | fixed; `md.comp.fab.small` (40dp) dropped — deprecated in M3 Expressive (MDC-Android `FloatingActionButton.md`: "Deprecated small FAB size"; `floatingactionbutton/attrs.xml:28` retires `fabSize`); `SurfaceFab` kept (`md.comp.fab-surface` + MDC styles still ship, though Expressive no longer recommends it) |
+| src/fab.rs | container primary-container, icon on-primary-container | same | `md.comp.fab.container.color` / `icon.color` | conforms |
+| src/fab.rs | container elevation level3, hover level4 | level3; hover L4 | `md.comp.fab.{container,hover.container}.elevation` | fixed (`FloatingStyle.elevation: StateValue<FloatingElevation>` — LEVEL3 resting, `.when(HOVERED, LEVEL4)`) |
+| src/fab_menu.rs:236-254 | items h56, corner-full, level0, primary-container/on-primary-container, icon 24, label large | level3→level0 | `md.comp.fab-menu.menu-item.*` | fixed |
+| src/fab_menu.rs:258-273 | close button 56×56, corner-full, icon 20, level3, primary/on-primary | was primary-container | `md.comp.fab-menu.primary.close-button.*` | fixed |
+| fab-menu item per-state elevation | — | level0 → higher on press | `md.comp.fab-menu.menu-item.*.container.elevation` | fixed (rest level0, hover/focus level4, pressed level3 via `StateValue<FloatingElevation>`) |
+
+## Button group & segmented & split buttons (`src/button_group.rs`, `src/segmented_button.rs`, `src/split_button.rs`, `src/controls/picker.rs`, `src/controls/segmented.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/button_group.rs:107-120 | resting radii per position (outer=outer corner, inner=inner corner) | segment shape | `md.comp.button-group.*` | fixed (`interaction_style_with_radii` at :266) |
+| src/segmented_button.rs | selected secondary-container/on-secondary-container; segment layer on-secondary-container | same | `md.comp.segmented-button.*` | conforms |
+| src/split_button.rs:47,200-214 | pressed half softens seam corner to 12 (corner-medium) | new | `md.comp.split-button.*.pressed.inner-corner-radius` | fixed (binding-driven `UnevenRoundedRectangle` morph) |
+| src/split_button.rs:219 | label label-large | label-large | `md.comp.split-button.label-text` | fixed |
+| src/split_button.rs:246-290 | state layer clipped to each half's radii | half-shape | `md.comp.split-button.*.state-layer` | fixed (`interaction_style_with_radii`) |
+| split-button hovered morph | — | inner-corner corner-medium on hover | `md.comp.split-button.*.hovered.*` | fixed: each half reports its own `InteractionState` via `.interaction_state`; seam corners soften to corner-medium while hovered or pressed, and the state-layer radii morph with them |
+
+## Chips (`src/chip.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/chip.rs:120-124 | flat chips transparent fill, outline-variant border | was elevated/tinted | `md.comp.assist-chip.flat.*` | fixed |
+| src/chip.rs:285-292 | filter selected → secondary-container fill, outline width 0 | was outline kept | `md.comp.filter-chip.flat.selected.*` | fixed |
+| src/chip.rs:396 | input-chip flat outline outline-variant | outline-variant | `md.comp.input-chip.flat.unselected.outline.color` | conforms |
+| chip focus outline | — | per-state outline color | `md.comp.*-chip.flat.focused.outline.color` | fixed: the focus-indicator ring on every `interaction_chrome` draws the `md.comp.focus-indicator.*` ring — secondary, 3dp, riding 2dp outside the state layer — which carries the flat-chip focused outline |
+
+## Dialog, tooltip, drag handle, badge (`src/dialog.rs`, `src/tooltip.rs`, `src/drag_handle.rs`, `src/layout/badge.rs`, `src/material_badge.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/dialog.rs:223 | container elevation level3 | level3 | `md.comp.dialog.container.elevation` | conforms |
+| src/dialog.rs | corner-extra-large (28), padding 24, headline headline-small, body body-medium | same | `md.comp.dialog.*` | conforms |
+| src/tooltip.rs:397 | supporting tooltip elevation level2, corner 4, plain tooltip inverse-surface | same | `md.comp.tooltip.*` | conforms |
+| src/layout/badge.rs:19-28 | badge container error, label on-error, sizes 6/16 | same | `md.comp.badge.*` | conforms |
+| src/drag_handle.rs | drag-handle 4×22 corner-full on-surface-variant@0.4 | same | `md.comp.drag-handle.*` | conforms |
+
+## Controls (`src/controls/*`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/controls/input.rs | filled text field draws hover-only state layer on-surface@0.08 clipped to top-rounded (4,4,0,0) | hover layer only | `md.comp.filled-text-field.hover.state-layer.{color,opacity}` | fixed |
+| src/controls/input.rs | container surface-container-highest on (4,4,0,0), on-surface@0.04 disabled; the picker's select field wears the same container | same | `md.comp.filled-text-field.{container.color,container.shape,disabled.container.*}` | conforms |
+| src/controls/input.rs | active indicator 1dp on-surface-variant (hover on-surface, focus 2dp primary, disabled 1dp on-surface@0.38); the picker's select field wears the same indicator | same | `md.comp.filled-text-field.{active-indicator,hover.active-indicator,focus.active-indicator,disabled.active-indicator}.*` | conforms |
+| src/controls/input.rs | label rests body-large and floats scaled 12/16 (body-small), on-surface-variant (primary focused, on-surface@0.38 disabled), over short3 with standard easing; the floated line box starts 8dp below the top edge | same | `md.comp.filled-text-field.{label-text,label-text-populated,hover.label-text,focus.label-text,disabled.label-text}.*` | fixed: was floated 4dp below the top edge |
+| src/controls/input.rs | placeholder body-large on-surface-variant (on-surface@0.38 disabled) | same | `md.comp.filled-text-field.{input-text.placeholder,disabled.input-text}.*` | conforms |
+| src/controls/input.rs | caret primary, blinking on the platform cadence; selection primary@0.28 | caret primary; no `md.comp` token for the selection | `md.comp.filled-text-field.caret.color` | conforms |
+| src/controls/picker.rs | select field container surface-container-highest on (4,4,0,0), hover layer on-surface@0.08 clipped to it, active indicator 1dp on-surface-variant (hover on-surface, focus 2dp primary, disabled on-surface@0.38), chevron on-surface-variant | same | `md.comp.filled-select.text-field.{container.shape,hover.state-layer.*,active-indicator.*,trailing-icon.color}` | conforms |
+| src/controls/picker.rs | select field value body-large on-surface | same | `md.comp.filled-select.text-field.input-text.*` | conforms |
+| src/layout/menu.rs | menu row layer on-surface (all states): the menu's rows are buttons, whose look the renderer lowers to a foreground state layer | on-surface | `md.comp.filled-select.menu.list-item.*.state-layer.color` | fixed |
+| src/layout/menu.rs | menu separator surface-variant, one divider for the picker popup and every other menu | was outline-variant | `md.comp.menu.divider.color`, `md.comp.filled-select.menu.divider.color` | fixed |
+| src/layout/menu.rs | selected menu row surface-container-highest | surface-container-highest | `md.comp.filled-select.menu.list-item.selected.container.color` | conforms |
+| src/controls/radio.rs | ring 2dp on-surface-variant (on-surface hovered/focused/pressed, tint selected, on-surface@0.38 disabled), dot 12dp across in the tint | same | `md.comp.radio-button.{selected,unselected,disabled}.*.icon.color` | conforms |
+| src/controls/radio.rs | radio state layer 40dp, tint selected / on-surface unselected, 0.08/0.10/0.10, press ripple | same | `md.comp.radio-button.*.state-layer.*` | conforms |
+| src/controls/segmented.rs | segmented layer on-secondary-container (selected) | on-secondary-container | `md.comp.segmented-button.selected.*.state-layer.color` | conforms |
+| src/controls/progress.rs | track/active-indicator heights, gap, shapes per expressive progress | same | `md.comp.{linear,circular}-progress-indicator.*` | conforms |
+| src/controls/slider.rs:147 | handle elevation level1 (disabled level0) | was level0 | `md.comp.slider.handle.elevation` / `disabled.handle.elevation` | fixed |
+| src/controls/slider.rs:83-103 | single stop dot at the track's trailing end, offset = trailing-space 4 + r2, on-secondary-container | trailing only | `md.comp.slider.{stop-indicator.trailing-space,inactive.stop-indicator.container.color}` | fixed — leading dot removed: no `leading-space`/`leading stop-indicator` token exists; Compose `SliderDefaults.TrackStopIndicatorSize` is "at the end of the track" and the M3 accessibility page places the dot at the end of the inactive track; MDC-Android's `trackStopIndicatorSize` doc says "edges" but is one attr shared across Slider/RangeSlider/CenteredSlider |
+| src/controls/slider.rs:160-170 | unbounded 40dp halo, primary, hover/focus/press opacities | new | `md.comp.slider.state-layer.size/color` | fixed |
+| src/controls/slider.rs | track 16h, handle 4×44, gap 6 at the default small size | same | `md.comp.slider.small.*` | conforms |
+| src/controls/slider.rs | xsmall/small/medium/large/xlarge tracks 16/24/40/56/96, handle heights 44/44/52/68/108, leading+trailing corners 8/8/12/16/28 | medium handle was 44 | `md.comp.slider.{xsmall,small,medium,large,xlarge}.*` | fixed |
+| src/controls/slider.rs | value indicator: inverse-surface capsule 44 high, ≥48 wide (grows with the label), inverse-on-surface label-large 14/20/500/0.1 text centered, 12dp above the thumb while dragging | container was the deprecated 28-high label container; label was body weight/tracking | `md.comp.slider.value-indicator.*` | fixed |
+| src/controls/toggle.rs:127-142 | thumb shadow level1 enabled / level0 disabled | was none | `md.comp.switch.handle.elevation` / `disabled.handle.elevation` | fixed |
+| src/controls/toggle.rs | track 52×32, handle 16→28 grow, icon 16; handle color primary-container/on-surface-variant on hover+focus+pressed | same | `md.comp.switch.*` | conforms (color gate kept — tokens give same color on all three states) |
+| src/controls/stepper.rs | stepper chrome | — | no M3 stepper component | no token |
+
+## Lists (`src/material_list.rs`, `src/layout/list.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/material_list.rs:25-27 | leading/trailing icons 20×20 | was 24 | `md.comp.list.list-item.*-icon.expressive.size` | fixed |
+| src/material_list.rs:222 | interactive item layer radius corner-extra-small (8), on-surface | was 0 | `md.comp.list.list-item.container.expressive.shape` + `*.state-layer.color` | fixed |
+| src/material_list.rs | one-line 56 / two-line 72, body-large headline, body-medium supporting, label-small trailing | same | `md.comp.list.list-item.*` | conforms |
+| src/material_list.rs | selected container secondary-container | secondary-container | `md.comp.list.list-item.selected.container.color` | fixed: `MaterialListItem::selected(impl IntoComputed<bool>)`; the reported SELECTED bit drives the secondary-container fill and the on-secondary-container state layer |
+| src/layout/list.rs:155-161 | reorder drag: level4 shadow + tertiary-container + corner-large | added | `md.comp.list.reorder.list-item.*` | fixed |
+| src/layout/list.rs:167 | row separator outline 1px | was outline-variant | `md.comp.list.divider.color` | fixed |
+| list-item shape morph by state | — | rest 8 / hover 12 / pressed+focused+dragged 16 | `md.comp.list.list-item.container.*-state.expressive.shape` | fixed: `state_layer_radii` `StateValue` (rest 8, `.when` HOVERED 12, PRESSED/FOCUSED/DRAGGED 16) drives both the selected container fill's corners and the state layer |
+
+## Menus (`src/layout/menu.rs`, `src/material_menu.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/layout/menu.rs | menu panel level2, surface-container, corner 4: the picker popup, the text context menu and the popup window share it | same | `md.comp.menu.container.*` | conforms |
+| src/layout/menu.rs | separator surface-variant 1px | was outline-variant | `md.comp.menu.divider.color` | fixed |
+| src/material_menu.rs | row 48h, padding 12/8, width 112–280 | same | `md.comp.menu.list-item.*` | conforms |
+
+## Cards, snackbar, divider, table, scroll (`src/layout/*`, `src/material_*`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/layout/card.rs:8-11,63-85 | corner 12; elevated L1 / filled L0 / outlined 1px border | same | `md.comp.{elevated,filled,outlined}-card.*` | conforms |
+| src/material_card.rs | elevated card lifts to level2 while hovered | level2 | `md.comp.elevated-card.hovered.elevation` | fixed: the composer's static shadows are blanked on a scoped `CardTheme` and a `watch`-driven background layer carries L1 at rest, L2 while hovered |
+| src/layout/snackbar.rs:11-29 | 48h single-line, pad 16/12, 288–568w, corner 4, level3 | same | `md.comp.snackbar.*` | conforms |
+| src/layout/snackbar.rs | container inverse-surface, label inverse-on-surface, action inverse-primary | same | `md.comp.snackbar.*` | conforms |
+| src/layout/divider.rs:10 | divider outline-variant 1px | outline-variant | `md.comp.divider.color` | conforms |
+| src/layout/table.rs:21-49 | surface rows, outline-variant gridlines, cell pad 32 | same | `md.comp.data-table.*` | conforms |
+| src/layout/scroll.rs | scroll chrome | — | no M3 scrollbar tokens | no token |
+
+## Navigation (`src/navigation_bar.rs`, `src/navigation_rail.rs`, `src/navigation_drawer.rs`, `src/navigation/tabs.rs`, `src/navigation/navigation.rs`, `src/material_navigation.rs`, `src/material_tabs.rs`, `src/toolbar.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/navigation_bar.rs:146 | item layer on-secondary-container, both states | was on-surface (inactive) | `md.comp.nav-bar.item.*.state-layer.color` | fixed |
+| src/navigation_bar.rs:263 | active indicator 56×32 capsule secondary-container | was 64w | `md.comp.nav-bar.item.vertical.active-indicator.{width,height}` | fixed |
+| src/navigation_bar.rs | bar h64, active label secondary + label-medium-prominent weight | added prominent weight | `md.comp.nav-bar.*` | fixed (weight) / conforms (rest) |
+| src/navigation_bar.rs | horizontal item variant (h40 indicator) | h40 | `md.comp.nav-bar.item.horizontal.*` | blocked: only vertical layout supported |
+| src/navigation_rail.rs:255-259 | active label secondary; layer on-secondary-container both states | was primary/on-surface | `md.comp.nav-rail.item.*` | fixed |
+| src/navigation_rail.rs:40-63,294-300 | expanded item 64h with 56h horizontal indicator; collapsed 56h item + 56×32 pill; expanded label label-large(-prominent) | was 32h pill | `md.comp.nav-rail.{collapsed,expanded}.*` | fixed |
+| src/navigation_drawer.rs:301-308 | active layer on-secondary-container; inactive layer on-surface; active label label-large-prominent | added prominent weight | `md.comp.navigation-drawer.*` | fixed |
+| src/navigation_drawer.rs | inactive pressed layer on-secondary-container (vs on-surface for hover/focus) | split per state | `md.comp.navigation-drawer.inactive.*.state-layer.color` | fixed: `.interaction_state` report + `conditional_color` — inactive pressed takes on-secondary-container, hover/focus on-surface |
+| src/navigation/tabs.rs | tab bar container surface, divider surface-variant | was outline | `md.comp.primary-navigation-tab.container.color`, `md.comp.primary-navigation-tab.divider.color` | fixed |
+| src/navigation/tabs.rs | the active indicator is a part driven by the item's selection: it grows out of the item's centre while its secondary-container fades in, and the old one shrinks and fades out, under the 280ms standard-easing chrome motion | was a pill that snapped | `md.comp.nav-bar.item.active-indicator.color` (secondary-container); the grow and fade follow Compose `NavigationBarItem`'s indicator | fixed |
+| src/navigation/tabs.rs | item chrome in the pill's shape: state layer primary while selected, on-surface otherwise, 0.08/0.10/0.10, press ripple, focus ring | same | `md.comp.primary-navigation-tab.{active,inactive}.*.state-layer.*` | conforms except the inactive pressed layer: the token is primary and the look's one state-layer colour cannot differ by state, so it stays on-surface |
+| src/navigation/tabs.rs | bar 48dp with vertical items; from the 600dp medium width class a 64dp bar with horizontal items, 40dp indicator | same | `md.comp.primary-navigation-tab.container.height`, `md.comp.nav-bar.container.height`, `md.comp.nav-bar.item.horizontal.*` | conforms |
+| src/navigation/navigation.rs | top app bar container: the application's colour, else surface; no separator | none | `md.comp.app-bar` defines no divider token | conforms |
+| src/navigation/navigation.rs | leading navigation icon: the standard icon button's chrome in its own 40dp state layer (corner-full, pressed corner-small), state layer and 24dp `arrow_back` in on-surface, 0.08/0.10/0.10, press ripple, focus ring | same | `md.comp.top-app-bar.small.leading-icon.color`; `md.comp.icon-button.standard.*` | fixed: the back button showed no interaction feedback |
+| src/navigation/navigation.rs | page transition: long1 on the emphasized easing, 30dp shared-axis travel, fade-through at 35% | same | `md.sys.motion.duration.long1`, `md.sys.motion.easing.emphasized` | conforms |
+| src/toolbar.rs | toolbar row | — | `md.comp.toolbar.*` exists (docked/floating) | no token implemented: file exposes plain row layout, no M3 chrome claimed |
+| src/material_navigation.rs | app-bar scrolled container: surface-container once `offset.y > 0`, surface at rest | on-scroll L2 expressed tonally via surface-container | `md.comp.app-bar.scrolled.container.color/elevation` | fixed (`material_scrolled_app_bar` + `ScrollView::report_offset`) |
+
+## Misc (`src/material_*`, `src/icons.rs`, `src/icon_paths.rs`, `src/lib.rs`)
+
+| file:line | our value | spec value | token name | status |
+|---|---|---|---|---|
+| src/material_card.rs / material_divider.rs / material_snackbar.rs / material_tabs.rs | public views delegate to the audited layout/navigation drawers | — | — | conforms |
+| src/icons.rs / icon_paths.rs | icon geometry | — | no tokens | no token |
+| src/lib.rs | exports | — | — | no token |
+
+## Blocked on missing waterui capabilities (reported, not approximated)
+
+Former items 1–5 and 9 are implemented through the per-state interaction
+styling API (`InteractionState`/`StateValue`, `.interaction_state`,
+`.selected`, the `Chrome` surface's driven corners and focus indicator,
+`FloatingStyle.elevation: StateValue<FloatingElevation>`). Item 6 is
+implemented too: the tabs look switches to horizontal items at the 600dp
+medium window width boundary, answers the `md.comp.nav-bar` container (64dp
+bar) and `md.comp.nav-bar.item.horizontal.active-indicator` (40dp) values
+there, and its highlight draws the secondary-container corner-full capsule
+spanning the item.
+
+1. ~~**Slider size variants and value indicator**~~ — implemented: `slider(&SliderSpec)` reads the `md.comp.slider.{xsmall..xlarge}` token tables and its value indicator is the `md.comp.slider.value-indicator` capsule; waterui surfaces the size and the formatter-driven label.
+2. ~~**App-bar scrolled state**~~ — fixed: `material_scrolled_app_bar(view, &offset)` binds a `ScrollView::report_offset` binding and drives `md.comp.app-bar.scrolled.container.color` (surface-container, the tonal L2 elevation expression) once `offset.y > 0`.
+
+## Tests updated
+
+- `src/controls/button.rs` unit tests: disabled filled container opacity 0.1; outlined outline-variant + banded widths; pressed corner morph.
+- `src/icon_button.rs` unit tests: xs/xl size map, outline width table.
+- `src/fab.rs` unit test: `FabSize` = Baseline 56/Medium 80/Large 96 only (no `Small`).
+- `src/layout/menu.rs`, `src/controls/picker.rs`, `src/controls/radio.rs`: the menu, menu picker and radio group looks' layouts, shapes and per-state paints.
+- `src/controls/input.rs`: the filled text field look's metrics, top-rounded container, active indicator width and colour per state, label and placeholder colours, floated label scale, and the primary caret and selection.
+- `src/navigation_bar.rs`: indicator width 56.
+- `src/navigation/tabs.rs`: `the_bar_uses_horizontal_items_at_the_medium_width_class` and `horizontal_item_metrics_match_compose_nav_bar_tokens` cover the layout switch and the horizontal-item token values; the item layer, the pill's grow and fade and its placement in the item are asserted per input.
+- `src/navigation/navigation.rs`: the metrics and motion tokens, the bar's colour and the back button's chrome (state layer, opacities, pressed corner morph).
+- `tests/navigation_tabs_look.rs`: captures of the back button (rest, hovered, pressed) and of the tabs highlight (rest, mid-transition, settled), light and dark.
+- `src/navigation_rail.rs`: expanded indicator height 56.
+- `src/material_list.rs`: icon sizes 20.
+- `src/controls/slider.rs`: handle-level shadow + trailing stop dot + halo assertions; per-size token tables (`the_look_follows_the_size_token_tables`), the track split around the handle, the state-layer opacities and the value indicator's tokens; the look's parts draw in the spec's tint.
+- Visual acceptance tests (`*_visual.rs`, ignored by default) regenerate their PNGs under the new tokens; they are opt-in rendering comparisons, not CI assertions.

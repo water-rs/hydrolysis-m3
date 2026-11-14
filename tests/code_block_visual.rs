@@ -15,7 +15,7 @@ fn code_block() -> impl View {
 
 fn assert_code_block_semantics(app: &mut OffscreenApp) {
     app.query().role(Role::LABEL).label("Rust").assert_exists();
-    app.query().role(Role::LABEL).label("Copy").assert_exists();
+    app.query().role(Role::BUTTON).label("Copy").assert_exists();
 }
 
 // Moved from waterui's components/foundation/text/tests/e2e_visual.rs.

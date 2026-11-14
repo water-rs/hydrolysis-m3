@@ -2,8 +2,14 @@
 
 use core::fmt::{self, Debug};
 
+use crate::elevation::{MaterialElevationLevel, shadow_layer};
+use crate::layout::card::CARD_CORNER_RADIUS;
 use waterui::accessibility::AccessibilityRole;
-use waterui::widget::{Card as WaterCard, CardStyle};
+use waterui::color::Color;
+use waterui::prelude::dynamic::watch;
+use waterui::reactive::binding;
+
+use waterui::widget::{Card as WaterCard, CardStyle, CardTheme};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 
 /// A Material Design 3 card container.
@@ -67,16 +73,61 @@ impl<Content> View for MaterialCard<Content>
 where
     Content: View,
 {
-    fn body(self, _env: &Environment) -> impl View {
+    fn body(self, env: &Environment) -> impl View {
         let card = WaterCard::new(self.content)
             .style(self.style)
             .a11y_role(AccessibilityRole::Group);
 
-        match self.accessibility_label {
+        let card = match self.accessibility_label {
             Some(label) => AnyView::new(card.a11y_label(label)),
             None => AnyView::new(card),
+        };
+
+        if self.style == CardStyle::Elevated {
+            elevated_hover(card, env)
+        } else {
+            card
         }
     }
+}
+
+/// `md.comp.elevated-card.*`: an elevated card rests at level1
+/// (`container.elevation`) and lifts to level2 while hovered
+/// (`hovered.elevation`). The card composer's static level1 shadows are
+/// blanked on this card's scoped theme and a hover-driven background layer
+/// carries the shadows instead.
+fn elevated_hover(card: AnyView, env: &Environment) -> AnyView {
+    let Some(theme) = env.get::<CardTheme>() else {
+        return card;
+    };
+    let mut theme = theme.clone();
+    theme.elevated.shadow_color = Color::transparent();
+    theme.elevated.ambient_shadow_color = Color::transparent();
+
+    let hovered = binding(false);
+    let enter = hovered.clone();
+    let exit = hovered;
+    let layer = watch(enter.clone(), |h| {
+        if h {
+            AnyView::new(shadow_layer(
+                MaterialElevationLevel::LEVEL2,
+                CARD_CORNER_RADIUS,
+                Color::transparent(),
+            ))
+        } else {
+            AnyView::new(shadow_layer(
+                MaterialElevationLevel::LEVEL1,
+                CARD_CORNER_RADIUS,
+                Color::transparent(),
+            ))
+        }
+    });
+    AnyView::new(
+        card.background(layer)
+            .on_hover_enter(move || enter.set(true))
+            .on_hover_exit(move || exit.set(false))
+            .with(theme),
+    )
 }
 
 /// Creates a filled Material Design 3 card.

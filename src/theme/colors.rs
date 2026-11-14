@@ -1,3 +1,4 @@
+use hydrolysis::draw::WorkingColor;
 use material_color_utils::{
     MaterializedScheme,
     dynamic::{
@@ -7,8 +8,8 @@ use material_color_utils::{
     theme_from_color,
     utils::color_utils::Argb,
 };
-use vello::peniko::Color;
-use waterui_graphics::color::{Color as WaterColor, ResolvedColor, Srgb};
+use waterui::contract_violation;
+use waterui_graphics::color::{Color as WaterColor, Srgb};
 
 const fn role(red: u8, green: u8, blue: u8) -> MaterialRoleColor {
     MaterialRoleColor::new(Argb::from_rgb(red, green, blue))
@@ -43,16 +44,21 @@ impl MaterialContrastLevel {
 
     /// Create a Material contrast level.
     ///
-    /// # Panics
-    ///
-    /// Panics when `level` is outside the Material dynamic color range
-    /// `-1.0..=1.0` or is not finite.
+    /// A `level` outside the Material dynamic color range `-1.0..=1.0`, or
+    /// not a number, is a contract violation; a release build uses the
+    /// nearest level in range, and the standard level for NaN.
     #[must_use]
     pub fn new(level: f64) -> Self {
-        assert!(
-            (-1.0..=1.0).contains(&level) && level.is_finite(),
-            "Material contrast level must be finite and within -1.0..=1.0"
-        );
+        if !(-1.0..=1.0).contains(&level) {
+            contract_violation!(
+                "Material contrast level {level} must be finite and within -1.0..=1.0; using the nearest valid level"
+            );
+            return if level.is_nan() {
+                Self::STANDARD
+            } else {
+                Self(level.clamp(-1.0, 1.0))
+            };
+        }
         Self(level)
     }
 
@@ -251,16 +257,10 @@ impl MaterialRoleColor {
         self.0
     }
 
-    /// Convert the role color to the Vello brush color type.
+    /// Convert the role color to the draw vocabulary's `WorkingColor`.
     #[must_use]
-    pub fn peniko(self) -> Color {
-        let color = self.0;
-        Color::new([
-            f32::from(color.red()) / 255.0,
-            f32::from(color.green()) / 255.0,
-            f32::from(color.blue()) / 255.0,
-            f32::from(color.alpha()) / 255.0,
-        ])
+    pub fn working(self) -> WorkingColor {
+        self.srgb().into()
     }
 
     /// Convert the role color to `WaterUI`'s sRGB color type.
@@ -268,12 +268,6 @@ impl MaterialRoleColor {
     pub const fn srgb(self) -> Srgb {
         let color = self.0;
         Srgb::new_u8(color.red(), color.green(), color.blue())
-    }
-
-    /// Convert the role color to a resolved `WaterUI` color.
-    #[must_use]
-    pub fn resolved(self) -> ResolvedColor {
-        ResolvedColor::from(self.srgb())
     }
 
     /// Convert the role color to a `WaterUI` view color.
@@ -284,14 +278,14 @@ impl MaterialRoleColor {
 
     /// This role at the MD3 disabled-container opacity (12%).
     #[must_use]
-    pub fn peniko_disabled_container(self) -> Color {
-        self.peniko().with_alpha(DISABLED_CONTAINER_OPACITY)
+    pub fn working_disabled_container(self) -> WorkingColor {
+        self.working().with_alpha(DISABLED_CONTAINER_OPACITY)
     }
 
     /// This role at the MD3 disabled-content opacity (38%).
     #[must_use]
-    pub fn peniko_disabled_content(self) -> Color {
-        self.peniko().with_alpha(DISABLED_CONTENT_OPACITY)
+    pub fn working_disabled_content(self) -> WorkingColor {
+        self.working().with_alpha(DISABLED_CONTENT_OPACITY)
     }
 }
 
@@ -670,8 +664,37 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Material contrast level must be finite and within -1.0..=1.0")]
-    fn contrast_level_rejects_values_outside_material_range() {
-        let _ = MaterialContrastLevel::new(1.5);
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(
+            expected = "Material contrast level 1.5 must be finite and within -1.0..=1.0"
+        )
+    )]
+    fn contrast_level_clamps_values_above_material_range() {
+        assert_eq!(MaterialContrastLevel::new(1.5), MaterialContrastLevel::HIGH);
+    }
+
+    #[test]
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "Material contrast level -3 must be finite and within -1.0..=1.0")
+    )]
+    fn contrast_level_clamps_values_below_material_range() {
+        assert_eq!(
+            MaterialContrastLevel::new(-3.0),
+            MaterialContrastLevel::REDUCED
+        );
+    }
+
+    #[test]
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "Material contrast level NaN must be finite")
+    )]
+    fn contrast_level_uses_standard_for_nan() {
+        assert_eq!(
+            MaterialContrastLevel::new(f64::NAN),
+            MaterialContrastLevel::STANDARD
+        );
     }
 }

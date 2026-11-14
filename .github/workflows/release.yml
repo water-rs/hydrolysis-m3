@@ -1,26 +1,23 @@
 name: Release
 
+# Every push to `main` runs both jobs: `release` publishes unpublished crates
+# (crates.io trusted publishing rejects OIDC tokens minted under
+# `workflow_run`, and the required `CI result` check on `main` already
+# guarantees the merged commit passed CI), and `release-pr` opens or refreshes
+# the version bump and changelog pull request against `main`. Merging that
+# pull request is the release.
 on:
-  # crates.io trusted publishing rejects OIDC tokens minted under
-  # `workflow_run`, so publishing runs on the `main` push itself — which
-  # can only come from a merged pull request (the dev -> main release PR)
-  # whose required checks already passed on the same tree. `release-pr`
-  # still waits for CI via `workflow_run`.
   push:
     branches: [main]
-  workflow_run:
-    workflows: ["CI"]
-    branches: [main]
-    types: [completed]
 
 permissions:
   contents: write
   pull-requests: write
   id-token: write
+  actions: write
 
 jobs:
   release:
-    if: github.event_name == 'push'
     concurrency:
       group: release-${{ github.ref_name }}
       cancel-in-progress: false
@@ -28,13 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev
+          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev spirv-tools
       # Mint a short-lived crates.io token from the GitHub OIDC identity
       # instead of a stored CARGO_REGISTRY_TOKEN (trusted publishing is
       # configured per crate on crates.io).
@@ -48,21 +44,32 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ steps.crates-io-auth.outputs.token }}
 
   release-pr:
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
+    concurrency:
+      group: release-plz-pr
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev
+          sudo apt-get install -y libfontconfig1-dev libva-dev libpipewire-0.3-dev libegl-dev libgbm-dev libwayland-dev libxkbcommon-dev libvulkan-dev spirv-tools
       - uses: MarcoIeni/release-plz-action@v0.5
+        id: release-plz
         with:
           command: release-pr
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # GitHub holds the pull request runs of a pull request the Actions bot
+      # opened or pushed until they are approved, and the required
+      # `CI result` reports only from those runs.
+      - name: Approve the release PR's CI
+        if: steps.release-plz.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.release-plz.outputs.pr }}
+        run: bash .github/scripts/approve-held-runs.sh "$(jq -er .number <<<"$PR")"

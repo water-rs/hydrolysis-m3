@@ -47,11 +47,11 @@ pub fn material_menu_icon_label(label: impl Into<Label>) -> Label {
 
 #[cfg(test)]
 mod tests {
-    use crate::layout::menu::text_context_metrics;
+    use crate::layout::menu::layout;
 
     #[test]
     fn material_menu_tokens_match_compose_menu_tokens() {
-        let metrics = text_context_metrics();
+        let metrics = layout();
 
         assert_eq!(metrics.row_height, 48.0);
         assert_eq!(metrics.min_width, 112.0);

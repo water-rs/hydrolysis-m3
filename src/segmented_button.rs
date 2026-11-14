@@ -2,7 +2,6 @@
 
 use core::fmt::{self, Debug};
 
-use vello::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::border::Border;
 use waterui::component::hstack;
@@ -11,14 +10,20 @@ use waterui::reactive::SignalExt as _;
 use waterui::shape::{Rectangle, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{
+    ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
+};
+
+use crate::action::{NoAction, noop};
+use hydrolysis::draw::kurbo::RoundedRectRadii;
 use waterui_core::interaction::Disabled;
 use waterui_core::view::TupleViews;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;
-use crate::semantics::{conditional_color, interaction_style_with_radii, label_plain_text};
+use crate::semantics::{conditional_color, interaction_chrome, label_plain_text};
 use crate::theme::typography;
+use hydrolysis::theme::Corners;
 
 const OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT: f32 = 40.0;
 const OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE: f32 = 20.0;
@@ -129,7 +134,7 @@ impl SegmentedButtonShape {
 }
 
 /// A Material Design 3 outlined segmented button.
-pub struct OutlinedSegmentedButton<Action = fn(&Environment)> {
+pub struct OutlinedSegmentedButton<Action = NoAction> {
     label: Label,
     accessibility_label: Str,
     selected: Binding<bool>,
@@ -145,7 +150,7 @@ impl<Action> Debug for OutlinedSegmentedButton<Action> {
     }
 }
 
-impl OutlinedSegmentedButton<fn(&Environment)> {
+impl OutlinedSegmentedButton<NoAction> {
     /// Creates an outlined segmented button bound to the provided selected state.
     #[must_use]
     pub fn new(label: impl IntoLabel, selected: &Binding<bool>) -> Self {
@@ -185,7 +190,10 @@ impl<Action> OutlinedSegmentedButton<Action> {
 
     /// Sets the action performed after this button toggles its selected state.
     #[must_use]
-    pub fn action<F, Args>(self, action: F) -> OutlinedSegmentedButton<impl FnMut(&Environment)>
+    pub fn action<F, Args>(
+        self,
+        action: F,
+    ) -> OutlinedSegmentedButton<impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -201,11 +209,13 @@ impl<Action> OutlinedSegmentedButton<Action> {
 
 impl<Action> View for OutlinedSegmentedButton<Action>
 where
-    Action: FnMut(&Environment) + 'static,
+    Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, env: &Environment) -> impl View {
         let mut action = self.action;
-        let action = SharedAction::new(move |env: Environment| action(&env));
+        let action = SharedAction::new(move |env: Environment| {
+            action(&env).report_extraction();
+        });
         let selected_for_view = self.selected.clone();
         let accessibility_state = self
             .selected
@@ -348,8 +358,8 @@ fn segmented_button_view(
         .spacing(OUTLINED_SEGMENTED_BUTTON_ICON_LABEL_SPACE)
         .padding_with(EdgeInsets::new(
             0.0,
-            0.0,
             OUTLINED_SEGMENTED_BUTTON_LEADING_SPACE,
+            0.0,
             OUTLINED_SEGMENTED_BUTTON_TRAILING_SPACE,
         ));
     let content = if shape.has_leading_separator() {
@@ -376,19 +386,17 @@ fn segmented_button_view(
         .height(OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT)
         .background(shape.shape().fill(background))
         .on_tap(move |env: Environment| {
-            selected_state.set(!selected_state.get());
-            action.call(&env);
+            selected_state.toggle();
+            action.run(&env);
         })
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
-        .install(interaction_style_with_radii(
+        .install(interaction_chrome(
             state_layer_color,
-            shape.interaction_radii(),
+            Corners::from(shape.interaction_radii()),
         ))
 }
-
-const fn noop(_env: &Environment) {}
 
 #[cfg(test)]
 mod tests {

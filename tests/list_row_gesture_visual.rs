@@ -13,7 +13,7 @@ use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
 
 const ROW_COUNT: usize = 6;
 
-#[derive(Clone, Copy, Identifiable)]
+#[derive(Clone, Copy, PartialEq, Identifiable)]
 struct Row {
     #[id]
     id: u64,
@@ -25,11 +25,11 @@ struct Fixture {
     editing: Binding<bool>,
 }
 
-fn delete_row(ListDelete(index): ListDelete, State(fixture): State<Fixture>) {
+fn delete_row(ListDelete(index): ListDelete, State(mut fixture): State<Fixture>) {
     let _ = fixture.rows.remove(index);
 }
 
-fn move_row(ListMove(movement): ListMove, State(fixture): State<Fixture>) {
+fn move_row(ListMove(movement): ListMove, State(mut fixture): State<Fixture>) {
     let mut rows = fixture.rows.snapshot();
     let row = rows.remove(movement.from());
     rows.insert(movement.to(), row);

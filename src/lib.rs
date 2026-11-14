@@ -4,8 +4,8 @@
 )]
 //! Material Design 3 widget metrics and drawing primitives.
 //!
-//! This crate is a style package: [`Material3`] implements the backend-neutral
-//! widget chrome contract from `waterui-backend-core` and the
+//! This crate is a style package: [`Material3`] implements the
+//! widget chrome contract from `hydrolysis::theme` and the
 //! [`hydrolysis::Style`] contract the rendered Hydrolysis runtime is
 //! constructed with — `hydrolysis::run(app, Material3::defaults())`.
 
@@ -36,6 +36,7 @@ pub mod tooltip;
 #[cfg(test)]
 mod layout_test_support;
 
+mod action;
 mod controls;
 mod icon_paths;
 mod icons;
@@ -46,32 +47,31 @@ mod semantics;
 pub mod split_button;
 mod theme;
 
-pub(crate) use controls::{button, input, picker, progress, slider, stepper, toggle};
-pub(crate) use layout::{badge, card, divider, list, menu, scroll, snackbar, table};
+pub(crate) use controls::{
+    button, input, picker, progress, radio, segmented, slider, stepper, toggle,
+};
+pub(crate) use layout::{badge, card, list, menu, scroll, snackbar, table};
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
+use hydrolysis::draw::{BlendSpace, WorkingColor};
 
-use vello::kurbo::{BezPath, Point, Rect};
-use waterui::Plugin as _;
-use waterui::reactive::{Computed, Signal, SignalExt as _};
-use waterui::text::font::Font;
-use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
-pub use waterui_backend_core::widget::{
-    BadgeMetrics, Brush, ButtonMetrics, DividerMetrics, DrawContext, InputFieldMetrics,
-    InteractionFocusBinding, InteractionMotion, InteractionStyle, ListDividerMetrics, ListMetrics,
-    ListRowMetrics, ListSectionMetrics, ListTrailingControlMetrics, ModalInteraction,
-    NavigationMetrics, NavigationMotion, PickerMetrics, PressWave, PressWaves,
-    ProgressIndicatorStyle, ProgressMetrics, ProgressMotion, RadioIndicatorState,
-    RadioSelectionMotion, SliderMetrics, StepperEnd, StepperMetrics, TableMetrics, TabsMetrics,
-    TextCaretMotion, TextContextMenuMetrics, ToggleMetrics, WidgetInteractionState, WidgetTheme,
+pub use hydrolysis::theme::{
+    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, IndicatorLook,
+    InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
+    ListDividerMetrics, ListLook, ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec,
+    ListTrailingControlMetrics, MenuLook, MenuPickerLook, MenuSpec, ModalInteraction,
+    NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, PickerSpec, PressWave,
+    PressWaves, ProgressSpec, RadioGroupLook, ScrollIndicatorLook, SegmentedLook, SegmentedSpec,
+    SliderLook, SliderSpec, StepperLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout,
+    TableLook, TableMetrics, TabsLook, TabsMetrics, TabsSpec, TextCaretMotion, TextFieldLook,
+    TextFieldSpec, ToggleSpec, WidgetInteractionState, WidgetTheme,
 };
-use waterui_controls::button::{ButtonSize, ButtonStyle};
-use waterui_controls::toggle::ToggleStyle;
+use waterui::Plugin as _;
+use waterui::reactive::{Computed, Signal};
+use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
 use waterui_core::Environment;
-use waterui_form::picker::PickerStyle;
-use waterui_graphics::color::Color;
 
 pub use button_group::{
     ButtonGroup, ConnectedButton, ConnectedButtonGroup, GroupButton, button_group,
@@ -113,7 +113,7 @@ pub use material_menu::{
 };
 pub use material_navigation::{
     MaterialNavigationView, material_large_top_app_bar, material_navigation_view,
-    material_small_top_app_bar,
+    material_scrolled_app_bar, material_small_top_app_bar,
 };
 pub use material_snackbar::{MaterialSnackbar, material_snackbar};
 pub use material_tabs::{MaterialTab, MaterialTabs, material_tab, material_tabs};
@@ -282,7 +282,7 @@ impl Material3Colors {
                 scheme
                     .get()
                     .expect("a `Material3` reads its color scheme only after `install_tokens`")
-                    .get(),
+                    .snapshot(),
             ),
         }
     }
@@ -327,21 +327,21 @@ fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
         .color_scheme(color_scheme)
         .colors(
             ColorSettings::new()
-                .background(colors.background.resolved())
-                .surface(colors.surface.resolved())
-                .surface_variant(colors.surface_variant.resolved())
-                .border(colors.outline.resolved())
-                .foreground(colors.on_surface.resolved())
-                .muted_foreground(colors.on_surface_variant.resolved())
-                .accent(colors.primary.resolved())
-                .accent_foreground(colors.on_primary.resolved())
-                .accent_container(colors.primary_container.resolved())
-                .tertiary(colors.tertiary.resolved())
-                .tertiary_container(colors.tertiary_container.resolved())
-                .selection_container(colors.secondary_container.resolved())
-                .selection_foreground(colors.on_secondary_container.resolved())
-                .error(colors.error.resolved())
-                .error_foreground(colors.on_error.resolved()),
+                .background(colors.background.working())
+                .surface(colors.surface.working())
+                .surface_variant(colors.surface_variant.working())
+                .border(colors.outline.working())
+                .foreground(colors.on_surface.working())
+                .muted_foreground(colors.on_surface_variant.working())
+                .accent(colors.primary.working())
+                .accent_foreground(colors.on_primary.working())
+                .accent_container(colors.primary_container.working())
+                .tertiary(colors.tertiary.working())
+                .tertiary_container(colors.tertiary_container.working())
+                .selection_container(colors.secondary_container.working())
+                .selection_foreground(colors.on_secondary_container.working())
+                .error(colors.error.working())
+                .error_foreground(colors.on_error.working()),
         )
         .install(env);
     theme::typography::defaults(env);
@@ -359,9 +359,9 @@ fn insert_dynamic_tokens(
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
 ) {
-    project_color_tokens(env, scheme, light, dark);
+    project_color_tokens(env, light, dark);
     theme::typography::defaults(env);
-    let initial = material_scheme_for_color_scheme(light, dark, scheme.get());
+    let initial = material_scheme_for_color_scheme(light, dark, scheme.snapshot());
     env.insert(initial);
     env.insert(MaterialColorSchemes::new(
         MaterialColorSource::default(),
@@ -374,10 +374,9 @@ fn insert_dynamic_tokens(
 }
 
 /// Projects each `WaterUI` color token onto the Material role that carries it,
-/// as a signal that re-resolves when the color scheme flips.
+/// as a derivation that follows the color scheme installed on any subtree.
 fn project_color_tokens(
     env: &mut Environment,
-    scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
 ) {
@@ -386,7 +385,6 @@ fn project_color_tokens(
             $(
                 project_color_token::<waterui_theme::color::$token>(
                     env,
-                    scheme,
                     light,
                     dark,
                     |colors| colors.$role,
@@ -414,17 +412,18 @@ fn project_color_tokens(
     }
 }
 
-fn project_color_token<T: 'static>(
+fn project_color_token<T: waterui_theme::ColorSlot>(
     env: &mut Environment,
-    scheme: &Computed<ColorScheme>,
     light: MaterialColorScheme,
     dark: MaterialColorScheme,
     role: fn(MaterialColorScheme) -> MaterialRoleColor,
 ) {
-    let signal = scheme
-        .map(move |scheme| role(material_scheme_for_color_scheme(light, dark, scheme)).resolved())
-        .computed();
-    waterui_theme::install_color_signal::<T>(env, signal);
+    waterui_theme::install_color_derivation::<T>(
+        env,
+        waterui_theme::ColorDerivation::new(move |scheme| {
+            role(material_scheme_for_color_scheme(light, dark, scheme)).working()
+        }),
+    );
 }
 
 const fn material_scheme_for_color_scheme(
@@ -445,552 +444,92 @@ impl Default for Material3 {
 }
 
 impl WidgetTheme for Material3 {
+    fn blend_space(&self) -> BlendSpace {
+        BlendSpace::SrgbEncoded
+    }
+
     fn interaction_motion(&self) -> InteractionMotion {
         theme::motion::interaction()
     }
 
-    fn progress_motion(&self) -> ProgressMotion {
-        theme::motion::progress()
+    fn button(&self, spec: &ButtonSpec, env: &Environment) -> ButtonLook {
+        if spec.icon_only() {
+            icon_button::look(spec, env)
+        } else {
+            button::look(spec, env)
+        }
     }
 
-    fn text_caret_motion(&self) -> TextCaretMotion {
-        theme::motion::text_caret()
+    fn switch(&self, spec: &ToggleSpec, env: &Environment) -> SwitchLook {
+        toggle::switch(spec, env)
     }
 
-    fn navigation_motion(&self) -> NavigationMotion {
-        theme::motion::navigation()
+    fn checkbox(&self, spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
+        toggle::checkbox(spec, env)
     }
 
-    fn button_metrics(&self, style: ButtonStyle, size: ButtonSize) -> ButtonMetrics {
-        button::metrics(style, size)
+    fn stepper(&self, spec: &StepperSpec, env: &Environment) -> StepperLook {
+        stepper::look(spec, env)
     }
 
-    fn button_label_color(&self, style: ButtonStyle, disabled: bool) -> Option<Color> {
-        Some(button::label_color(&self.colors(), style, disabled))
+    fn text_field(&self, spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
+        input::look(spec, env)
     }
 
-    fn button_label_font(&self, _style: ButtonStyle) -> Option<Font> {
-        Some(theme::typography::label_large())
+    fn menu(&self, spec: &MenuSpec, env: &Environment) -> MenuLook {
+        menu::look(*spec, env)
     }
 
-    fn draw_button_chrome(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        style: ButtonStyle,
-        state: WidgetInteractionState,
-    ) {
-        button::draw_chrome(&self.colors(), draw, bounds, style, state);
+    fn menu_picker(&self, spec: &PickerSpec, env: &Environment) -> MenuPickerLook {
+        picker::look(spec, env)
     }
 
-    fn draw_button_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        style: ButtonStyle,
-        state: WidgetInteractionState,
-    ) {
-        button::draw_state_layer(&self.colors(), draw, bounds, style, state);
+    fn radio_group(&self, spec: &PickerSpec, env: &Environment) -> RadioGroupLook {
+        radio::look(spec, env)
     }
 
-    fn draw_interaction_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        radii: vello::kurbo::RoundedRectRadii,
-        color: vello::peniko::Color,
-        state: WidgetInteractionState,
-    ) {
-        theme::state_layer::draw_bounded(draw, bounds, radii, color, state);
+    fn segmented_picker(&self, spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {
+        segmented::look(spec, env)
     }
 
-    fn toggle_metrics(&self, style: ToggleStyle) -> ToggleMetrics {
-        toggle::metrics(style)
+    fn slider(&self, spec: &SliderSpec, env: &Environment) -> SliderLook {
+        slider::look(spec, env)
     }
 
-    fn toggle_value_animation(&self) -> waterui::animation::Animation {
-        theme::motion::toggle_value()
+    fn linear_progress(&self, spec: &ProgressSpec, env: &Environment) -> LinearProgressLook {
+        progress::linear(spec, env)
     }
 
-    fn draw_toggle_switch(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        progress: f32,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_switch(&self.colors(), draw, bounds, progress, selected, state);
+    fn circular_progress(&self, spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
+        progress::circular(spec, env)
     }
 
-    fn draw_toggle_switch_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        progress: f32,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_switch_state_layer(&self.colors(), draw, bounds, progress, selected, state);
+    fn loading_indicator(&self, spec: &ProgressSpec, env: &Environment) -> IndicatorLook {
+        progress::loading(spec, env)
     }
 
-    fn draw_toggle_checkbox(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        progress: f32,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_checkbox(&self.colors(), draw, bounds, progress, state);
+    fn navigation_bar(&self, _spec: &NavigationSpec, env: &Environment) -> NavigationBarLook {
+        navigation_chrome::look(env)
     }
 
-    fn draw_toggle_checkbox_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        progress: f32,
-        state: WidgetInteractionState,
-    ) {
-        toggle::draw_checkbox_state_layer(&self.colors(), draw, bounds, progress, state);
+    fn tabs(&self, _spec: &TabsSpec, env: &Environment) -> TabsLook {
+        tabs::look(env)
     }
 
-    fn stepper_metrics(&self) -> StepperMetrics {
-        stepper::metrics()
+    fn scroll_indicator(&self, env: &Environment) -> ScrollIndicatorLook {
+        scroll::look(env)
     }
 
-    fn draw_stepper_button(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        end: StepperEnd,
-        state: WidgetInteractionState,
-    ) {
-        stepper::draw_button(&self.colors(), draw, bounds, end, state);
+    fn badge(&self, env: &Environment) -> BadgeLook {
+        badge::look(env)
     }
 
-    fn draw_stepper_decrement_icon(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        stepper::draw_decrement_icon(&self.colors(), draw, bounds);
+    fn list(&self, spec: &ListSpec, env: &Environment) -> ListLook {
+        list::look(*spec, env)
     }
 
-    fn draw_stepper_increment_icon(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        stepper::draw_increment_icon(&self.colors(), draw, bounds);
-    }
-
-    fn draw_stepper_button_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        end: StepperEnd,
-        state: WidgetInteractionState,
-    ) {
-        stepper::draw_button_state_layer(&self.colors(), draw, bounds, end, state);
-    }
-
-    fn input_field_metrics(&self) -> InputFieldMetrics {
-        input::metrics()
-    }
-
-    fn input_placeholder_color(&self) -> Color {
-        input::placeholder_color(&self.colors())
-    }
-
-    fn input_selection_brush(&self) -> Brush {
-        input::selection_brush(&self.colors())
-    }
-
-    fn input_caret_brush(&self, opacity: f32) -> Brush {
-        input::caret_brush(&self.colors(), opacity)
-    }
-
-    fn draw_input_field(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        input::draw_field(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_input_field_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        input::draw_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn text_context_menu_metrics(&self) -> TextContextMenuMetrics {
-        menu::text_context_metrics()
-    }
-
-    fn draw_text_context_menu_panel(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        menu::draw_text_context_panel(&self.colors(), draw, bounds);
-    }
-
-    fn draw_text_context_menu_separator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        menu::draw_text_context_separator(&self.colors(), draw, bounds);
-    }
-
-    fn picker_metrics(&self, style: PickerStyle) -> PickerMetrics {
-        picker::metrics(style)
-    }
-
-    fn radio_selection_motion(&self) -> RadioSelectionMotion {
-        theme::motion::radio_selection()
-    }
-
-    fn draw_picker_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        picker::draw_indicator(&self.colors(), draw, bounds);
-    }
-
-    fn draw_picker_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_picker_popup(&self, draw: &mut dyn DrawContext, popup_rect: Rect) {
-        picker::draw_popup(&self.colors(), draw, popup_rect);
-    }
-
-    fn draw_picker_popup_row_background(
-        &self,
-        draw: &mut dyn DrawContext,
-        row_rect: Rect,
-        selected: bool,
-    ) {
-        picker::draw_popup_row_background(&self.colors(), draw, row_rect, selected);
-    }
-
-    fn draw_picker_popup_row_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        row_rect: Rect,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_popup_row_state_layer(&self.colors(), draw, row_rect, selected, state);
-    }
-
-    fn draw_picker_separator(&self, draw: &mut dyn DrawContext, separator: Rect) {
-        picker::draw_separator(&self.colors(), draw, separator);
-    }
-
-    fn draw_radio_indicator(
-        &self,
-        draw: &mut dyn DrawContext,
-        center: Point,
-        radius: f64,
-        state: RadioIndicatorState,
-    ) {
-        picker::draw_radio_indicator(&self.colors(), draw, center, radius, state);
-    }
-
-    fn draw_radio_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        center: Point,
-        radius: f64,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_radio_state_layer(&self.colors(), draw, center, radius, selected, state);
-    }
-
-    fn segmented_picker_label_color(&self, selected: bool) -> Option<Color> {
-        Some(picker::segmented_label_color(&self.colors(), selected))
-    }
-
-    fn draw_segmented_picker_container(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        segment_count: usize,
-    ) {
-        picker::draw_segmented_container(&self.colors(), draw, bounds, segment_count);
-    }
-
-    fn draw_segmented_picker_segment(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        selected: bool,
-        is_first: bool,
-        is_last: bool,
-    ) {
-        picker::draw_segmented_segment(&self.colors(), draw, bounds, selected, is_first, is_last);
-    }
-
-    fn draw_segmented_picker_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        selected: bool,
-        is_first: bool,
-        is_last: bool,
-        state: WidgetInteractionState,
-    ) {
-        picker::draw_segmented_state_layer(
-            &self.colors(),
-            draw,
-            bounds,
-            selected,
-            is_first,
-            is_last,
-            state,
-        );
-    }
-
-    fn slider_metrics(&self) -> SliderMetrics {
-        slider::metrics()
-    }
-
-    fn draw_slider_track(
-        &self,
-        draw: &mut dyn DrawContext,
-        track_rect: Rect,
-        fill_rect: Rect,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_track(&self.colors(), draw, track_rect, fill_rect, state);
-    }
-
-    fn draw_slider_thumb(
-        &self,
-        draw: &mut dyn DrawContext,
-        center: Point,
-        radius: f64,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_thumb(&self.colors(), draw, center, radius, state);
-    }
-
-    fn draw_slider_thumb_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        center: Point,
-        radius: f64,
-        state: WidgetInteractionState,
-    ) {
-        slider::draw_thumb_state_layer(&self.colors(), draw, center, radius, state);
-    }
-
-    fn progress_metrics(&self, style: ProgressIndicatorStyle) -> ProgressMetrics {
-        progress::metrics(style)
-    }
-
-    fn draw_progress_linear_track(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        active_end: Option<f64>,
-    ) {
-        progress::draw_linear_track(&self.colors(), draw, bounds, active_end);
-    }
-
-    fn draw_progress_linear_fill(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        progress::draw_linear_fill(&self.colors(), draw, bounds);
-    }
-
-    fn draw_progress_linear_indeterminate(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        elapsed: core::time::Duration,
-        four_color: bool,
-    ) {
-        progress::draw_linear_indeterminate(&self.colors(), draw, bounds, elapsed, four_color);
-    }
-
-    fn draw_progress_circular_track(
-        &self,
-        draw: &mut dyn DrawContext,
-        center: Point,
-        radius: f64,
-        width: f64,
-        active_turns: Option<f64>,
-    ) {
-        progress::draw_circular_track(&self.colors(), draw, center, radius, width, active_turns);
-    }
-
-    fn draw_progress_circular_fill(&self, draw: &mut dyn DrawContext, path: &BezPath, width: f64) {
-        progress::draw_circular_fill(&self.colors(), draw, path, width);
-    }
-
-    fn draw_progress_loading(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        elapsed: core::time::Duration,
-        four_color: bool,
-    ) {
-        progress::draw_loading(&self.colors(), draw, bounds, elapsed, four_color);
-    }
-
-    fn draw_progress_circular_indeterminate(
-        &self,
-        draw: &mut dyn DrawContext,
-        center: Point,
-        radius: f64,
-        width: f64,
-        elapsed: core::time::Duration,
-        four_color: bool,
-    ) {
-        progress::draw_circular_indeterminate(
-            &self.colors(),
-            draw,
-            center,
-            radius,
-            width,
-            elapsed,
-            four_color,
-        );
-    }
-
-    fn navigation_metrics(&self) -> NavigationMetrics {
-        navigation_chrome::metrics()
-    }
-
-    fn draw_navigation_bar(&self, draw: &mut dyn DrawContext, bounds: Rect, background: &Brush) {
-        navigation_chrome::draw_bar(draw, bounds, background);
-    }
-
-    fn draw_navigation_bar_separator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        navigation_chrome::draw_bar_separator(&self.colors(), draw, bounds);
-    }
-
-    fn draw_navigation_back_button(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        navigation_chrome::draw_back_button(&self.colors(), draw, bounds);
-    }
-
-    fn tabs_metrics(&self) -> TabsMetrics {
-        tabs::metrics()
-    }
-
-    fn draw_tabs_bar(&self, draw: &mut dyn DrawContext, bounds: Rect, top_edge: bool) {
-        tabs::draw_bar(&self.colors(), draw, bounds, top_edge);
-    }
-
-    fn draw_tabs_highlight(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        tabs::draw_highlight(&self.colors(), draw, bounds);
-    }
-
-    fn draw_tabs_button_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        selected: bool,
-        state: WidgetInteractionState,
-    ) {
-        tabs::draw_button_state_layer(&self.colors(), draw, bounds, selected, state);
-    }
-
-    fn draw_scroll_indicator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        scroll::draw_indicator(&self.colors(), draw, bounds);
-    }
-
-    fn divider_metrics(&self) -> DividerMetrics {
-        divider::metrics()
-    }
-
-    fn draw_divider(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        divider::draw(&self.colors(), draw, bounds);
-    }
-
-    fn badge_metrics(&self) -> BadgeMetrics {
-        badge::metrics()
-    }
-
-    fn badge_label_color(&self) -> Color {
-        badge::label_color(&self.colors())
-    }
-
-    fn badge_label_font(&self) -> Font {
-        theme::typography::label_small()
-    }
-
-    fn draw_badge_small(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        badge::draw_small(&self.colors(), draw, bounds);
-    }
-
-    fn draw_badge_large(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        badge::draw_large(&self.colors(), draw, bounds);
-    }
-
-    fn list_metrics(&self) -> ListMetrics {
-        list::metrics()
-    }
-
-    fn draw_list_row_background(&self, draw: &mut dyn DrawContext, bounds: Rect, alternate: bool) {
-        list::draw_row_background(&self.colors(), draw, bounds, alternate);
-    }
-
-    fn draw_list_move_control(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        list::draw_move_control(&self.colors(), draw, bounds);
-    }
-
-    fn draw_list_move_control_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        list::draw_move_control_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_list_delete_control(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        list::draw_delete_control(&self.colors(), draw, bounds);
-    }
-
-    fn draw_list_delete_control_state_layer(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        state: WidgetInteractionState,
-    ) {
-        list::draw_delete_control_state_layer(&self.colors(), draw, bounds, state);
-    }
-
-    fn draw_list_swipe_dismiss_background(
-        &self,
-        draw: &mut dyn DrawContext,
-        bounds: Rect,
-        progress: f64,
-        toward_start: bool,
-    ) {
-        list::draw_swipe_dismiss_background(&self.colors(), draw, bounds, progress, toward_start);
-    }
-
-    fn draw_list_row_lifted(&self, draw: &mut dyn DrawContext, bounds: Rect, elevation: f64) {
-        list::draw_row_lifted(&self.colors(), draw, bounds, elevation);
-    }
-
-    fn draw_list_separator(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        list::draw_separator(&self.colors(), draw, bounds);
-    }
-
-    fn table_metrics(&self) -> TableMetrics {
-        table::metrics()
-    }
-
-    fn draw_table_background(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        table::draw_background(&self.colors(), draw, bounds);
-    }
-
-    fn draw_table_header_background(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        table::draw_header_background(&self.colors(), draw, bounds);
-    }
-
-    fn draw_table_cell_border(&self, draw: &mut dyn DrawContext, bounds: Rect) {
-        table::draw_cell_border(&self.colors(), draw, bounds);
-    }
-
-    fn draw_table_column_separator(&self, draw: &mut dyn DrawContext, from: Point, to: Point) {
-        table::draw_column_separator(&self.colors(), draw, from, to);
+    fn table(&self, env: &Environment) -> TableLook {
+        table::look(env)
     }
 }
 
@@ -998,22 +537,14 @@ fn lerp_channel(start: f32, end: f32, t: f32) -> f32 {
     (end - start).mul_add(t, start)
 }
 
-fn lerp_color(
-    start: vello::peniko::Color,
-    end: vello::peniko::Color,
-    t: f32,
-) -> vello::peniko::Color {
+fn lerp_color(start: WorkingColor, end: WorkingColor, t: f32) -> WorkingColor {
     let t = t.clamp(0.0, 1.0);
-    let start = start.to_rgba8();
-    let end = end.to_rgba8();
-    vello::peniko::Color::new([
-        lerp_channel(f32::from(start.r) / 255.0, f32::from(end.r) / 255.0, t),
-        lerp_channel(f32::from(start.g) / 255.0, f32::from(end.g) / 255.0, t),
-        lerp_channel(f32::from(start.b) / 255.0, f32::from(end.b) / 255.0, t),
-        lerp_channel(f32::from(start.a) / 255.0, f32::from(end.a) / 255.0, t),
+    let [r0, g0, b0, a0] = start.components;
+    let [r1, g1, b1, a1] = end.components;
+    WorkingColor::new([
+        lerp_channel(r0, r1, t),
+        lerp_channel(g0, g1, t),
+        lerp_channel(b0, b1, t),
+        lerp_channel(a0, a1, t),
     ])
-}
-
-fn lerp_f64(start: f64, end: f64, t: f32) -> f64 {
-    (end - start).mul_add(f64::from(t.clamp(0.0, 1.0)), start)
 }

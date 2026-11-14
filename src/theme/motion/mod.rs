@@ -8,14 +8,17 @@ pub mod tokens;
 
 use core::time::Duration;
 
+use hydrolysis::draw::kurbo::Size;
+use hydrolysis::theme::{
+    HitRegion, InteractionMotion, Motion, NavigationMotion, Ripple, TextCaretMotion, Transition,
+    ValueMotion,
+};
 use waterui::animation::Animation;
+use waterui::easing::EasingCurve;
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
-use waterui_backend_core::widget::{
-    InteractionMotion, NavigationMotion, ProgressMotion, RadioSelectionMotion, TextCaretMotion,
-};
 
-use super::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
+use super::dimensions::{MINIMUM_TOUCH_TARGET, NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE};
 use super::state_layer;
 use tokens::{duration, easing, motion};
 
@@ -42,8 +45,10 @@ const RIPPLE_TOUCH_DELAY: Duration = Duration::from_millis(70);
 /// grows from the press point with standard easing while fading in linearly,
 /// and a release never plays the growth backwards — the wave holds its expanded
 /// shape and only fades out once the expansion has completed, which is why
-/// `minimum_press_duration` equals the grow duration.
-pub const fn interaction() -> InteractionMotion {
+/// `minimum_press_duration` equals the grow duration. The container's pressed
+/// shape morph, by contrast, plays the fast spatial spring in both directions,
+/// so release animates the corners back to resting shape.
+pub fn interaction() -> InteractionMotion {
     InteractionMotion {
         hover_opacity: state_layer::HOVER_STATE_LAYER_OPACITY,
         focus_opacity: state_layer::FOCUS_STATE_LAYER_OPACITY,
@@ -56,39 +61,99 @@ pub const fn interaction() -> InteractionMotion {
         press_fade_in: Animation::linear(RIPPLE_OPACITY_IN),
         press_fade_out: Animation::linear(RIPPLE_OPACITY_OUT),
         press_grow: material_standard(RIPPLE_RADIUS_IN),
+        press_shape: fast_spatial(),
         minimum_press_duration: RIPPLE_RADIUS_IN,
         touch_delay: RIPPLE_TOUCH_DELAY,
     }
 }
 
+/// The Material ripple: a wave of [`state_layer::RIPPLE_INITIAL_SCALE`] of
+/// the surface diagonal — floored at
+/// [`state_layer::RIPPLE_MINIMUM_DIAMETER`] — that grows from the press
+/// point to full size while drifting to the surface centre, fades in
+/// linearly as it grows, and fades out only once its growth has completed,
+/// so a release never plays the growth backwards.
+pub const fn ripple() -> Ripple {
+    Ripple {
+        min_diameter: state_layer::RIPPLE_MINIMUM_DIAMETER,
+        initial_scale: state_layer::RIPPLE_INITIAL_SCALE,
+        drift: 1.0,
+        grow: material_standard(RIPPLE_RADIUS_IN),
+        fade_in: Animation::linear(RIPPLE_OPACITY_IN),
+        fade_out: Animation::linear(RIPPLE_OPACITY_OUT),
+        minimum_duration: RIPPLE_RADIUS_IN,
+    }
+}
+
+/// The motion of a Material control's chrome: the state layer cross-fades
+/// over 280ms with standard easing on hover, focus and drag, and the
+/// pressed container shape plays the fast spatial spring in both
+/// directions, so a release morphs the corners back.
+pub fn chrome() -> Motion {
+    let fade = Transition::symmetric(material_standard(RIPPLE_STATE_LAYER_FADE));
+    Motion {
+        hover: fade.clone(),
+        focus: fade.clone(),
+        press: Transition::symmetric(fast_spatial()),
+        drag: fade,
+        value: ValueMotion::Follow(material_standard(RIPPLE_STATE_LAYER_FADE)),
+    }
+}
+
+/// Android's `ViewConfiguration` touch slop: a touch that moves no farther
+/// than this while its ripple waits stays a press.
+const TOUCH_SLOP: f64 = 8.0;
+
+/// Where a Material control takes touches: at least the 48dp
+/// `minimumInteractiveComponentSize`, a touch press holding its ripple back
+/// for [`RIPPLE_TOUCH_DELAY`] and surviving the touch slop meanwhile.
+pub const fn hit_region() -> HitRegion {
+    HitRegion::NONE
+        .minimum(Size::new(MINIMUM_TOUCH_TARGET, MINIMUM_TOUCH_TARGET))
+        .slop(TOUCH_SLOP)
+        .press_delay(RIPPLE_TOUCH_DELAY)
+}
+
 /// material-web drives both progress indicators with CSS `ease-in-out`-family
-/// curves of its own rather than M3 easing tokens, and the indeterminate cycles
-/// are keyframe loop lengths, not durations from the scale.
+/// curves of its own rather than M3 easing tokens.
 const PROGRESS_LINEAR_DETERMINATE: (f32, f32, f32, f32) = (0.4, 0.0, 0.6, 1.0);
 const PROGRESS_CIRCULAR_DETERMINATE: (f32, f32, f32, f32) = (0.0, 0.0, 0.2, 1.0);
-const PROGRESS_LINEAR_INDETERMINATE_CYCLE: Duration = Duration::from_secs(2);
-const PROGRESS_CIRCULAR_INDETERMINATE_CYCLE: Duration = Duration::from_millis(5_332);
 
-pub fn progress() -> ProgressMotion {
-    ProgressMotion {
-        linear_determinate: Animation::bezier(
-            duration::MEDIUM_1,
-            PROGRESS_LINEAR_DETERMINATE.0,
-            PROGRESS_LINEAR_DETERMINATE.1,
-            PROGRESS_LINEAR_DETERMINATE.2,
-            PROGRESS_LINEAR_DETERMINATE.3,
-        ),
-        circular_determinate: Animation::bezier(
-            duration::LONG_2,
-            PROGRESS_CIRCULAR_DETERMINATE.0,
-            PROGRESS_CIRCULAR_DETERMINATE.1,
-            PROGRESS_CIRCULAR_DETERMINATE.2,
-            PROGRESS_CIRCULAR_DETERMINATE.3,
-        ),
-        linear_indeterminate_cycle: PROGRESS_LINEAR_INDETERMINATE_CYCLE,
-        circular_indeterminate_cycle: PROGRESS_CIRCULAR_INDETERMINATE_CYCLE,
-        loading_cycle: crate::controls::progress::loading_cycle(),
+/// A determinate indicator whose value changes run `animation` whatever
+/// animation the caller names, and snap when the caller disables animation.
+fn progress(animation: Animation) -> Motion {
+    Motion {
+        value: ValueMotion::Own(animation.clone()),
+        ..Motion::uniform(animation)
     }
+}
+
+/// The motion of a linear indicator's value.
+pub fn progress_linear() -> Motion {
+    progress(Animation::Bezier {
+        duration: duration::MEDIUM_1,
+        x1: PROGRESS_LINEAR_DETERMINATE.0,
+        y1: PROGRESS_LINEAR_DETERMINATE.1,
+        x2: PROGRESS_LINEAR_DETERMINATE.2,
+        y2: PROGRESS_LINEAR_DETERMINATE.3,
+    })
+}
+
+/// The motion of a circular indicator's value.
+pub fn progress_circular() -> Motion {
+    progress(Animation::Bezier {
+        duration: duration::LONG_2,
+        x1: PROGRESS_CIRCULAR_DETERMINATE.0,
+        y1: PROGRESS_CIRCULAR_DETERMINATE.1,
+        x2: PROGRESS_CIRCULAR_DETERMINATE.2,
+        y2: PROGRESS_CIRCULAR_DETERMINATE.3,
+    })
+}
+
+/// The inside label floating between resting and floating: `short3` with
+/// standard easing, unless the change that floats it names an animation.
+pub const fn text_field_label() -> ValueMotion {
+    ValueMotion::Follow(material_standard(duration::SHORT_3))
 }
 
 /// The caret blinks on the platform text-cursor cadence (530ms per half cycle),
@@ -108,10 +173,16 @@ pub const fn text_caret() -> TextCaretMotion {
 /// muddy midpoint (M3 fade-through).
 const NAVIGATION_FADE_THROUGH_THRESHOLD: f32 = 0.35;
 
+/// The emphasized easing, as the curve navigation progress samples.
+const fn navigation_transition_easing() -> EasingCurve {
+    let easing = easing::EMPHASIZED;
+    EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2)
+}
+
 pub const fn navigation() -> NavigationMotion {
     NavigationMotion {
         transition_duration: duration::LONG_1,
-        transition_easing: easing::EMPHASIZED,
+        transition_easing: navigation_transition_easing(),
         shared_axis_slide_distance: NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE,
         fade_through_threshold: NAVIGATION_FADE_THROUGH_THRESHOLD,
     }
@@ -179,16 +250,22 @@ pub const fn tooltip() -> Animation {
 }
 
 /// `MotionSchemeKeyTokens.FastSpatial` — `spring(dampingRatio = 0.9,
-/// stiffness = 1400)` in `StandardMotionTokens`. `WaterUI` springs take the raw
-/// damping coefficient c = 2ζ√k with unit mass: 2 · 0.9 · √1400 ≈ 67.35.
-pub const fn fast_spatial() -> Animation {
-    Animation::spring(1400.0, 67.35)
+/// stiffness = 1400)` in `StandardMotionTokens`. Springs take the stiffness and
+/// damping coefficient with unit mass: damping = 2·ζ·√k = 2·0.9·√1400 ≈ 67.4.
+pub fn fast_spatial() -> Animation {
+    Animation::Spring {
+        stiffness: 1400.0,
+        damping: 2.0 * 0.9 * 1400f32.sqrt(),
+    }
 }
 
 /// `MotionSchemeKeyTokens.DefaultEffects` — `spring(dampingRatio = 1.0,
-/// stiffness = 1600)` in `StandardMotionTokens`. c = 2 · 1.0 · √1600 = 80.
+/// stiffness = 1600)` in `StandardMotionTokens`: damping = 2·1·√1600 = 80.
 pub const fn default_effects() -> Animation {
-    Animation::spring(1600.0, 80.0)
+    Animation::Spring {
+        stiffness: 1600.0,
+        damping: 80.0,
+    }
 }
 
 #[derive(Clone)]
@@ -204,8 +281,8 @@ impl Signal for DialogProperty {
     type Output = f32;
     type Guard = <Computed<bool> as Signal>::Guard;
 
-    fn get(&self) -> Self::Output {
-        if self.opened.get() {
+    fn snapshot(&self) -> Self::Output {
+        if self.opened.snapshot() {
             self.opened_value
         } else {
             self.closed_value
@@ -278,12 +355,23 @@ pub fn dialog_opacity(
     )
 }
 
-pub const fn radio_selection() -> RadioSelectionMotion {
-    RadioSelectionMotion {
-        inner_grow: motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2),
-        inner_opacity: Animation::linear(duration::SHORT_1),
-        outer_color: Animation::linear(duration::SHORT_1),
-    }
+/// The radio dot's growth on selection: emphasized decelerate over `medium2`,
+/// so the dot arrives rather than fades up.
+pub const fn radio_dot_grow() -> Animation {
+    motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2)
+}
+
+/// The radio dot's opacity and the ring's colour on selection: linear over
+/// `short1`, snapping over while the dot grows.
+pub const fn radio_snap() -> Animation {
+    Animation::linear(duration::SHORT_1)
+}
+
+/// The control chrome's motion with a value change running `value`.
+pub fn value(value: Animation) -> Motion {
+    let mut motion = chrome();
+    motion.value = ValueMotion::Own(value);
+    motion
 }
 
 #[cfg(test)]
@@ -291,13 +379,14 @@ mod tests {
     use super::tokens::{duration, easing, motion};
     use super::{
         RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN, RIPPLE_STATE_LAYER_FADE,
-        dialog_opacity, dialog_transform, interaction, navigation, navigation_drawer,
-        navigation_drawer_scrim, radio_selection, toggle_value, tooltip,
+        dialog_opacity, dialog_transform, fast_spatial, interaction, navigation, navigation_drawer,
+        navigation_drawer_scrim, radio_dot_grow, radio_snap, toggle_value, tooltip,
     };
     use core::time::Duration;
     use std::cell::RefCell;
     use std::rc::Rc;
     use waterui::animation::Animation;
+    use waterui::easing::EasingCurve;
     use waterui::{Binding, Signal, SignalExt as _};
 
     /// Collect the (value, animation) pairs a motion signal emits, so a test can
@@ -357,6 +446,9 @@ mod tests {
             motion_spec.press_fade_out,
             Animation::linear(RIPPLE_OPACITY_OUT)
         );
+        // The pressed-shape morph plays the fast spatial spring in both
+        // directions (MotionSchemeKeyTokens.FastSpatial).
+        assert_eq!(motion_spec.press_shape, fast_spatial());
     }
 
     /// A release must not rewind the growth: the fade-out is gated until the
@@ -456,20 +548,11 @@ mod tests {
     /// than to fade up.
     #[test]
     fn radio_dot_grows_slower_than_its_colour_changes() {
-        let motion_spec = radio_selection();
-
         assert_eq!(
-            motion_spec.inner_grow,
+            radio_dot_grow(),
             motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2)
         );
-        assert_eq!(
-            motion_spec.inner_opacity,
-            Animation::linear(duration::SHORT_1)
-        );
-        assert_eq!(
-            motion_spec.outer_color,
-            Animation::linear(duration::SHORT_1)
-        );
+        assert_eq!(radio_snap(), Animation::linear(duration::SHORT_1));
     }
 
     /// Navigation is a full-screen transition, so it uses the emphasized curve
@@ -478,8 +561,12 @@ mod tests {
     fn navigation_uses_an_emphasized_long_transition() {
         let motion_spec = navigation();
 
+        let easing = easing::EMPHASIZED;
         assert_eq!(motion_spec.transition_duration, duration::LONG_1);
-        assert_eq!(motion_spec.transition_easing, easing::EMPHASIZED);
+        assert_eq!(
+            motion_spec.transition_easing,
+            EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2,)
+        );
         assert!(motion_spec.transition_duration > duration::SHORT_4);
     }
 

@@ -1,12 +1,13 @@
 //! Programmatic `List` jumps scroll rather than teleport.
 //!
 //! The list example's Top / Middle / Last buttons drive
-//! `ScrollController::scroll_to`. Landing on the target in a single frame is
+//! `ScrollController::animate_to`. Landing on the target in a single frame is
 //! the bug this guards: the viewport must visibly travel there.
 
 use core::time::Duration;
 
 use waterui::Identifiable;
+use waterui::animation::Animation;
 use waterui::component::list::{List, ListItem};
 use waterui::prelude::*;
 
@@ -83,7 +84,7 @@ fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder<Styled<hydrolysi
         "the list should start at the top"
     );
 
-    scroll.scroll_to(TARGET_ROW);
+    scroll.animate_to(TARGET_ROW, Animation::default());
 
     let mut positions = Vec::new();
     for _ in 0..FRAMES {
@@ -128,7 +129,7 @@ fn a_short_jump_is_animated_end_to_end(ui: UiBuilder<Styled<hydrolysis_m3::Mater
     let scroll = fixture.scroll.clone();
     let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
 
-    scroll.scroll_to(NEARBY_ROW);
+    scroll.animate_to(NEARBY_ROW, Animation::default());
 
     let mut positions = Vec::new();
     for _ in 0..FRAMES {

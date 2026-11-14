@@ -3,23 +3,22 @@
 use core::fmt::{self, Debug};
 use core::time::Duration;
 
-use waterui::accessibility::{AccessibilityRole, AccessibilityState};
-use waterui::layout::{
-    Layout, ProposalSize, Rect, Size, SubView, SubviewPlacement, container::FixedContainer,
-    padding::EdgeInsets,
-};
-use waterui::reactive::SignalExt as _;
+use hydrolysis::theme::InteractionFocusBinding;
+use waterui::accessibility::AccessibilityRole;
+use waterui::layout::padding::EdgeInsets;
+use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
+use waterui::prelude::dynamic::watch;
+use waterui::reactive::{Signal, SignalExt as _};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_backend_core::widget::InteractionFocusBinding;
 use waterui_controls::label::{IntoLabel, Label};
-use waterui_core::handler::{Handler, SharedAction, boxed_action};
+use waterui_core::handler::{Handler, SharedAction};
 
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
-use crate::semantics::{interaction_style, label_plain_text};
+use crate::semantics::{interaction_chrome_radius, label_plain_text};
 use crate::theme::{motion, typography};
 
 const PLAIN_TOOLTIP_CONTAINER_HEIGHT: f32 = 24.0;
@@ -36,8 +35,14 @@ const RICH_TOOLTIP_BOTTOM_PADDING: f32 = 8.0;
 const RICH_TOOLTIP_CONTENT_SPACING: f32 = 4.0;
 const RICH_TOOLTIP_ACTION_TOP_SPACE: f32 = 8.0;
 const RICH_TOOLTIP_ACTION_HEIGHT: f32 = 40.0;
-const PLAIN_TOOLTIP_TARGET_GAP: f32 = 4.0;
-const RICH_TOOLTIP_TARGET_GAP: f32 = 0.0;
+/// `SpacingBetweenTooltipAndAnchor` — Compose Material3 `Tooltip.kt` — the
+/// space between a tooltip and its anchor, both plain and rich.
+const TOOLTIP_ANCHOR_GAP: f32 = 4.0;
+/// `Widget.Material3.Tooltip`'s `android:layout_margin` — the margin
+/// material-components-android keeps between a tooltip and the display
+/// frame (`TooltipDrawable.calculatePointerOffset`), applied as the window
+/// clamp margin.
+const TOOLTIP_WINDOW_MARGIN: f32 = 2.0;
 /// Platform long-press timeout that opens a tooltip from touch input.
 const TOOLTIP_LONG_PRESS_MS: u32 = 500;
 /// How long a non-persistent tooltip stays visible after a long-press.
@@ -82,13 +87,12 @@ impl TooltipVisibility {
     }
 
     fn next_generation(&self) -> u64 {
-        let generation = self
-            .generation
-            .get()
-            .checked_add(1)
-            .expect("Material tooltip generation overflow");
-        self.generation.set(generation);
-        generation
+        self.generation.with_mut(|generation| {
+            *generation = generation.checked_add(1).expect(
+                "a u64 generation counter, bumped once per hover or focus change, cannot overflow",
+            );
+            *generation
+        })
     }
 
     fn cancel_pending(&self) {
@@ -102,7 +106,7 @@ impl TooltipVisibility {
         let state = self.clone();
         spawn_local(async move {
             sleep(TOOLTIP_DISMISS_DURATION).await;
-            if state.generation.get() == generation && state.open.get() {
+            if state.generation.snapshot() == generation && state.open.snapshot() {
                 state.open.set(false);
             }
         })
@@ -132,7 +136,7 @@ impl TooltipVisibility {
         self.cancel_pending();
         if focused {
             self.open.set(true);
-        } else if !self.target_hovered.get() && !self.persistent {
+        } else if !self.target_hovered.snapshot() && !self.persistent {
             self.open.set(false);
         }
     }
@@ -147,7 +151,7 @@ impl TooltipVisibility {
 impl<Target, Popup> View for TooltipAnchor<Target, Popup>
 where
     Target: View + 'static,
-    Popup: View + 'static,
+    Popup: View + Clone + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let target_enter = self.visibility.clone();
@@ -159,88 +163,102 @@ where
         let focus_binding = InteractionFocusBinding::new(&focused)
             .escape_action(SharedAction::new(move |_: Environment| escape.dismiss()));
         let open = self.visibility.open.clone();
-        let popup_accessibility = open.map(|open| AccessibilityState::new().hidden(!open));
+        // `is_presented` → scale drives both directions: when `open` goes false
+        // the backend keeps the overlay drawn until this transition finishes.
         let popup_scale = open
             .map(|open| if open { 1.0 } else { 0.0 })
             .with(motion::tooltip());
-        let target = self
-            .target
+        // Plain tooltips sit above their anchor and flip below; rich tooltips
+        // sit below and flip above — `place_anchored_overlay` resolves the
+        // flip against the window bounds and `Clamp::Window` keeps the popup
+        // inside it, which a layout inside the anchor cannot see.
+        let requested_edge = if self.rich {
+            AnchorEdge::Bottom
+        } else {
+            AnchorEdge::Top
+        };
+        // `placed` is written back with the edge the overlay actually landed
+        // on, so the scale transition always grows out of the edge touching
+        // the anchor — after a flip, the opposite edge from the requested one.
+        let placed = Binding::container(requested_edge);
+        let rich = self.rich;
+        let popup = self.popup;
+        // `AnchoredOverlay` calls its content builder on every presentation:
+        // the scale-in `watch` subtree is rebuilt with it, so a fresh
+        // presentation animates in from scratch rather than reviving the
+        // previous popup's state.
+        let overlay = AnchoredOverlay::new(&open, {
+            let placed = placed.clone();
+            move || {
+                watch(placed.distinct(), {
+                    let popup = popup.clone();
+                    let popup_scale = popup_scale.clone();
+                    move |edge| {
+                        popup.clone().scale_from(
+                            popup_scale.clone(),
+                            popup_scale.clone(),
+                            tooltip_scale_origin(edge, rich),
+                        )
+                    }
+                })
+            }
+        })
+        .edge(requested_edge)
+        .alignment(if rich {
+            EdgeAlignment::Start
+        } else {
+            EdgeAlignment::Center
+        })
+        .gap(TOOLTIP_ANCHOR_GAP)
+        .flip(true)
+        .clamp(Clamp::Window {
+            margin: TOOLTIP_WINDOW_MARGIN,
+        })
+        .placed_edge(&placed);
+
+        self.target
             .on_hover_enter(move || target_enter.set_target_hovered(true))
             .on_hover_exit(move || target_exit.set_target_hovered(false))
             .on_long_press_gesture(TOOLTIP_LONG_PRESS_MS, move |_: Environment| {
                 long_press.long_press();
             })
             .install(focus_binding)
-            .on_change(&focused, move |focused| focus_change.set_focused(focused));
-        let popup_anchor = if self.rich {
-            Anchor::TOP_LEFT
-        } else {
-            Anchor::new(0.5, 1.0)
-        };
-        let popup = self
-            .popup
-            .scale_from(popup_scale.clone(), popup_scale, popup_anchor)
-            .a11y_state_signal(popup_accessibility)
-            .hittable(open);
-
-        FixedContainer::new(TooltipLayout { rich: self.rich }, (target, popup))
+            .on_change(&focused, move |focused| focus_change.set_focused(focused))
+            .anchored_overlay(overlay)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-struct TooltipLayout {
-    rich: bool,
-}
-
-impl Layout for TooltipLayout {
-    fn size_that_fits(&self, proposal: ProposalSize, children: &[&dyn SubView]) -> Size {
-        let [target, _popup] = children else {
-            return Size::zero();
-        };
-        target.measure(proposal).size
-    }
-
-    fn place(
-        &self,
-        bounds: Rect,
-        proposal: ProposalSize,
-        children: &[&dyn SubView],
-    ) -> Vec<SubviewPlacement> {
-        let [target, popup] = children else {
-            return Vec::new();
-        };
-        let target_size = target.measure(proposal).size;
-        let target_rect = Rect::new(bounds.origin(), target_size);
-        let popup_proposal = ProposalSize::new(
-            Some(if self.rich {
-                RICH_TOOLTIP_MAX_WIDTH
+/// The transform origin a tooltip scales in and out of — the popup edge
+/// touching the anchor, so it grows out of, and shrinks back into, its target
+/// whichever side `place_anchored_overlay` put it on.
+const fn tooltip_scale_origin(placed: AnchorEdge, rich: bool) -> Anchor {
+    let x = match placed {
+        AnchorEdge::Leading => 1.0,
+        AnchorEdge::Trailing => 0.0,
+        _ => {
+            if rich {
+                0.0
             } else {
-                320.0
-            }),
-            None,
-        );
-        let popup_size = popup.measure(popup_proposal).size;
-        let popup_x = if self.rich {
-            target_rect.x() + target_rect.width() + RICH_TOOLTIP_TARGET_GAP
-        } else {
-            (target_rect.width() - popup_size.width).mul_add(0.5, target_rect.x())
-        };
-        let popup_y = if self.rich {
-            target_rect.y() + target_rect.height() + RICH_TOOLTIP_TARGET_GAP
-        } else {
-            target_rect.y() - popup_size.height - PLAIN_TOOLTIP_TARGET_GAP
-        };
-        vec![
-            SubviewPlacement::new(target_rect, proposal),
-            SubviewPlacement::new(
-                Rect::new(waterui::layout::Point::new(popup_x, popup_y), popup_size),
-                popup_proposal,
-            ),
-        ]
-    }
+                0.5
+            }
+        }
+    };
+    let y = match placed {
+        AnchorEdge::Top => 1.0,
+        AnchorEdge::Bottom => 0.0,
+        _ => {
+            if rich {
+                0.0
+            } else {
+                0.5
+            }
+        }
+    };
+    Anchor::new(x, y)
 }
 
 /// A Material Design 3 plain tooltip.
+#[derive(Clone)]
 pub struct PlainTooltip {
     supporting_text: Label,
     accessibility_label: Str,
@@ -288,8 +306,8 @@ impl View for PlainTooltip {
             .foreground(InverseOnSurface)
             .padding_with(EdgeInsets::new(
                 PLAIN_TOOLTIP_TOP_SPACE,
-                PLAIN_TOOLTIP_BOTTOM_SPACE,
                 PLAIN_TOOLTIP_LEADING_SPACE,
+                PLAIN_TOOLTIP_BOTTOM_SPACE,
                 PLAIN_TOOLTIP_TRAILING_SPACE,
             ))
             .background(
@@ -304,14 +322,15 @@ impl View for PlainTooltip {
 }
 
 /// A Material Design 3 rich tooltip.
-pub struct RichTooltip<Action = fn(&Environment)> {
+#[derive(Clone)]
+pub struct RichTooltip {
     subhead: Label,
     supporting_text: Label,
     accessibility_label: Str,
-    action: Option<(Label, Action)>,
+    action: Option<(Label, SharedAction)>,
 }
 
-impl<Action> Debug for RichTooltip<Action> {
+impl Debug for RichTooltip {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RichTooltip")
             .field("subhead", &self.subhead)
@@ -320,7 +339,7 @@ impl<Action> Debug for RichTooltip<Action> {
     }
 }
 
-impl RichTooltip<fn(&Environment)> {
+impl RichTooltip {
     /// Creates a rich tooltip with a subhead and supporting text.
     #[must_use]
     pub fn new(subhead: impl IntoLabel, supporting_text: impl IntoLabel) -> Self {
@@ -336,22 +355,18 @@ impl RichTooltip<fn(&Environment)> {
     }
 }
 
-impl<Action> RichTooltip<Action> {
+impl RichTooltip {
     /// Adds a Material rich tooltip action.
     #[must_use]
-    pub fn action<F, Args>(
-        self,
-        label: impl IntoLabel,
-        action: F,
-    ) -> RichTooltip<impl FnMut(&Environment)>
+    pub fn action<F, Args>(self, label: impl IntoLabel, action: F) -> Self
     where
         F: Handler<Args, ()> + 'static,
     {
-        RichTooltip {
+        Self {
             subhead: self.subhead,
             supporting_text: self.supporting_text,
             accessibility_label: self.accessibility_label,
-            action: Some((label.into_label(), boxed_action(action))),
+            action: Some((label.into_label(), SharedAction::new(action))),
         }
     }
 
@@ -370,10 +385,7 @@ impl<Action> RichTooltip<Action> {
     }
 }
 
-impl<Action> View for RichTooltip<Action>
-where
-    Action: FnMut(&Environment) + 'static,
-{
+impl View for RichTooltip {
     fn body(self, _env: &Environment) -> impl View {
         let content = waterui::component::vstack((
             self.subhead
@@ -387,13 +399,19 @@ where
         .spacing(RICH_TOOLTIP_CONTENT_SPACING)
         .padding_with(EdgeInsets::new(
             RICH_TOOLTIP_TOP_PADDING,
+            RICH_TOOLTIP_HORIZONTAL_PADDING,
             RICH_TOOLTIP_BOTTOM_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
-            RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
-        .background(FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer))
-        .max_width(RICH_TOOLTIP_MAX_WIDTH);
+        .background(
+            FixedRoundedRectangle::new(RICH_TOOLTIP_CONTAINER_SHAPE).fill(SurfaceContainer),
+        );
 
+        // `max_width` sits outside the elevation: a `Frame` resolves to the
+        // offered extent (up to its cap), so a cap inside `material_elevation`
+        // would inflate the bounds the shadow casts past the painted card.
+        // The a11y scope stays inside the frame so the Group node keeps the
+        // card's bounds rather than the frame's.
         material_elevation(
             MaterialElevationLevel::LEVEL2,
             RICH_TOOLTIP_CONTAINER_SHAPE,
@@ -401,14 +419,12 @@ where
         )
         .a11y_label(self.accessibility_label)
         .a11y_role(AccessibilityRole::Group)
+        .max_width(RICH_TOOLTIP_MAX_WIDTH)
     }
 }
 
-fn rich_tooltip_action<Action>(action: Option<(Label, Action)>) -> impl View
-where
-    Action: FnMut(&Environment) + 'static,
-{
-    let Some((label, mut action)) = action else {
+fn rich_tooltip_action(action: Option<(Label, SharedAction)>) -> impl View {
+    let Some((label, action)) = action else {
         return waterui::component::hstack(((),)).anyview();
     };
     let accessibility_label = label_plain_text(&label);
@@ -423,10 +439,12 @@ where
             0.0,
             0.0,
         ))
-        .on_tap(move |env: Environment| action(&env))
+        .on_tap(move |env: Environment| {
+            action.run(&env);
+        })
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
-        .install(interaction_style(Primary, 20.0))
+        .install(interaction_chrome_radius(Primary, 20.0))
         .anyview()
 }
 
@@ -438,10 +456,7 @@ pub fn plain_tooltip(supporting_text: impl IntoLabel) -> PlainTooltip {
 
 /// Creates a Material Design 3 rich tooltip.
 #[must_use]
-pub fn rich_tooltip(
-    subhead: impl IntoLabel,
-    supporting_text: impl IntoLabel,
-) -> RichTooltip<fn(&Environment)> {
+pub fn rich_tooltip(subhead: impl IntoLabel, supporting_text: impl IntoLabel) -> RichTooltip {
     RichTooltip::new(subhead, supporting_text)
 }
 
@@ -449,11 +464,12 @@ pub fn rich_tooltip(
 mod tests {
     use super::{
         PLAIN_TOOLTIP_CONTAINER_HEIGHT, PLAIN_TOOLTIP_CONTAINER_SHAPE, PLAIN_TOOLTIP_LEADING_SPACE,
-        PLAIN_TOOLTIP_TARGET_GAP, PLAIN_TOOLTIP_TOP_SPACE, RICH_TOOLTIP_CONTAINER_SHAPE,
-        RICH_TOOLTIP_HORIZONTAL_PADDING, RICH_TOOLTIP_MAX_WIDTH, RICH_TOOLTIP_TARGET_GAP,
-        TOOLTIP_DISMISS_DURATION, TOOLTIP_LONG_PRESS_MS, TooltipVisibility,
+        PLAIN_TOOLTIP_TOP_SPACE, RICH_TOOLTIP_CONTAINER_SHAPE, RICH_TOOLTIP_HORIZONTAL_PADDING,
+        RICH_TOOLTIP_MAX_WIDTH, TOOLTIP_ANCHOR_GAP, TOOLTIP_DISMISS_DURATION,
+        TOOLTIP_LONG_PRESS_MS, TOOLTIP_WINDOW_MARGIN, TooltipVisibility,
     };
     use core::time::Duration;
+    use waterui::reactive::Signal;
 
     #[test]
     fn plain_tooltip_tokens_match_compose_plain_tooltip_tokens() {
@@ -461,7 +477,8 @@ mod tests {
         assert_eq!(PLAIN_TOOLTIP_CONTAINER_SHAPE, 4.0);
         assert_eq!(PLAIN_TOOLTIP_TOP_SPACE, 4.0);
         assert_eq!(PLAIN_TOOLTIP_LEADING_SPACE, 8.0);
-        assert_eq!(PLAIN_TOOLTIP_TARGET_GAP, 4.0);
+        assert_eq!(TOOLTIP_ANCHOR_GAP, 4.0);
+        assert_eq!(TOOLTIP_WINDOW_MARGIN, 2.0);
         assert_eq!(TOOLTIP_LONG_PRESS_MS, 500);
         assert_eq!(TOOLTIP_DISMISS_DURATION, Duration::from_millis(1500));
     }
@@ -470,36 +487,36 @@ mod tests {
     fn plain_tooltip_hover_opens_immediately_and_exit_dismisses() {
         let visibility = TooltipVisibility::new(false);
         visibility.set_target_hovered(true);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.set_target_hovered(false);
-        assert!(!visibility.open.get());
+        assert!(!visibility.open.snapshot());
     }
 
     #[test]
     fn rich_tooltip_stays_open_after_hover_exit() {
         let visibility = TooltipVisibility::new(true);
         visibility.set_target_hovered(true);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.set_target_hovered(false);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
     }
 
     #[test]
     fn focus_loss_dismisses_plain_tooltip() {
         let visibility = TooltipVisibility::new(false);
         visibility.set_focused(true);
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.set_focused(false);
-        assert!(!visibility.open.get());
+        assert!(!visibility.open.snapshot());
     }
 
     #[test]
     fn escape_dismisses_even_persistent_tooltip() {
         let visibility = TooltipVisibility::new(true);
         visibility.long_press();
-        assert!(visibility.open.get());
+        assert!(visibility.open.snapshot());
         visibility.dismiss();
-        assert!(!visibility.open.get());
+        assert!(!visibility.open.snapshot());
     }
 
     #[test]
@@ -507,28 +524,5 @@ mod tests {
         assert_eq!(RICH_TOOLTIP_CONTAINER_SHAPE, 12.0);
         assert_eq!(RICH_TOOLTIP_MAX_WIDTH, 312.0);
         assert_eq!(RICH_TOOLTIP_HORIZONTAL_PADDING, 16.0);
-        assert_eq!(RICH_TOOLTIP_TARGET_GAP, 0.0);
-    }
-    #[test]
-    fn layout_contract_tooltip_preserves_target_and_popup_proposals() {
-        use super::TooltipLayout;
-        use crate::layout_test_support::FixedLeaf;
-        use waterui::layout::{Layout, ProposalSize, Rect, Size};
-        let target = FixedLeaf(Size::new(160.0, 20.0));
-        let popup = FixedLeaf(Size::new(100.0, 30.0));
-        for rich in [false, true] {
-            let layout = TooltipLayout { rich };
-            for width in [None, Some(160.0), None] {
-                let proposal = ProposalSize::new(width, None);
-                let placements =
-                    layout.place(Rect::from_size(target.0), proposal, &[&target, &popup]);
-                assert_eq!(placements[0].proposal, proposal);
-                assert_eq!(placements[0].frame.size(), &target.0);
-                assert_eq!(
-                    placements[1].proposal,
-                    ProposalSize::new(Some(if rich { 312.0 } else { 320.0 }), None)
-                );
-            }
-        }
     }
 }
