@@ -9,5 +9,9 @@ changelog_update = true
 
 [[package]]
 name = "hydrolysis-m3"
+# cargo-semver-checks builds in a synthetic wrapper workspace where
+# `[patch.crates-io]` in this manifest is ignored, resolving unpatched
+# crates.io transitive dependencies (failing on `cros-libva 0.0.12`).
+semver_check = false
 git_release_name = "v{{ version }}"
 git_tag_name = "v{{ version }}"
