@@ -154,7 +154,7 @@ filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "dev" 
 # does not apply downstream, so without these entries this graph resolves the
 # crashing crates.io build while cherenkov resolves the fork. Drop them once
 # wgpu-hal 30.0.2 ships the backport.
-shaderloom = { git = "https://github.com/water-rs/shaderloom", branch = "dev" }
+shaderloom = { git = "https://github.com/water-rs/shaderloom", branch = "main" }
 naga = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 naga-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 wgpu = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
@@ -168,8 +168,8 @@ wgpu-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-sha
 
 waterui-image = { git = "https://github.com/water-rs/image", branch = "dev" }
 waterui-chart = { git = "https://github.com/water-rs/chart", branch = "dev" }
-waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
-waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
+waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "main" }
+waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 # `clipboard-rs` 0.3.5 (via waterkit-clipboard) pins `windows` 0.59, inside
 # gpu-allocator's `>=0.53, <=0.62` range, so a relock can settle
 # gpu-allocator on it instead of wgpu-hal's 0.62 and split the ID3D12 types
@@ -177,17 +177,17 @@ waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "d
 # `windows-0.62-signed` branch carries only the `windows = "0.62"` bump; drop
 # the pin once a release admits 0.62.
 clipboard-rs = { git = "https://github.com/water-rs/clipboard-rs", branch = "windows-0.62-signed" }
-waterkit-codec = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
-waterkit-core = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
-waterkit-dialog = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
-waterkit-fs = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
-waterkit-location = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
+waterkit-codec = { git = "https://github.com/water-rs/waterkit", branch = "main" }
+waterkit-core = { git = "https://github.com/water-rs/waterkit", branch = "main" }
+waterkit-dialog = { git = "https://github.com/water-rs/waterkit", branch = "main" }
+waterkit-fs = { git = "https://github.com/water-rs/waterkit", branch = "main" }
+waterkit-location = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 # Unreleased, so there is no registry version to resolve: the patch tracks
 # waterkit's `dev`, which carries the crate (water-rs/waterkit#223), like the
 # rest of the family. Drop it once a release exists.
-waterkit-permission = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
-waterkit-video-core = { git = "https://github.com/water-rs/waterkit", branch = "dev" }
+waterkit-permission = { git = "https://github.com/water-rs/waterkit", branch = "main" }
+waterkit-video-core = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 # suiteki 0.1.1 on crates.io implements nami-core 0.3's `Signal`; `dev`
 # implements the current nami-core's, keeping this graph on one `Signal` trait.
 # Drop once a release carries it.
-suiteki = { git = "https://github.com/water-rs/suiteki", branch = "dev" }
+suiteki = { git = "https://github.com/water-rs/suiteki", branch = "main" }
