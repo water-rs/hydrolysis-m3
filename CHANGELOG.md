@@ -7,6 +7,205 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/water-rs/hydrolysis-m3/compare/v0.3.1...v0.4.0) - 2026-11-14
+
+### Added
+
+- use sRGB-encoded blending on Material3 surfaces
+- style the text field value from the input text tokens
+- [**breaking**] implement the list, table, badge and scroll indicator looks
+- [**breaking**] implement the navigation bar and tabs looks
+- [**breaking**] implement the text field look
+- [**breaking**] implement the menu, menu picker and radio looks
+- tint a segment's state layer by its selection
+- ripple a segmented picker's segments from the press point
+- [**breaking**] implement the segmented picker as a declarative look
+- toggles draw with the subtree's tint and keep their state layer whole
+- buttons draw with the subtree's tint
+- [**breaking**] implement the response-geometry layout query
+- *(tabs)* [**breaking**] draw the navigation-bar indicator pill around the icon
+- [**breaking**] key MaterialTabs by a reactive view collection
+- draw the tabs bar divider through its own theme call
+- port to the render-target-neutral recording contract
+- port material components and motion to the cherenkov recorder API
+- *(interaction)* adopt the per-state styling API for the audited controls
+- *(app-bar)* scrolled state driven by ScrollView::report_offset
+- [**breaking**] slider control sizes and drag-time value indicator
+- *(tooltip)* scale in from the placed edge and out on dismissal
+- *(tabs)* [**breaking**] horizontal navigation-bar items at the medium width class
+- *(theme)* add M3 token helpers for button sizes and prominent labels
+
+### Fixed
+
+- satisfy clippy on Rust 1.100
+- *(text-field)* float the label 8dp below the top and set its font
+- [**breaking**] report contract violations instead of crashing a release app
+- *(theme)* follow a colour scheme installed on a subtree
+- *(typography)* fill the font slots in WaterUI's slot order
+- *(deps)* pin clipboard-rs to the windows 0.62 fork
+- pass EdgeInsets in the new argument order
+- *(tooltip)* build overlay content per presentation
+- *(input)* reserve Body Small's line height for the floating label
+- *(typography)* install Material's fonts over the framework defaults
+- *(scene)* implement SceneContent::rebuild_for_engine for the 1406 contract
+- *(lint)* satisfy clippy 1.99 suboptimal_flops
+- finish the dev merge in controls, state layer, and code block test
+- *(merge)* resolve radii through cherenkov kurbo in the list item
+- *(merge)* keep a single hydrolysis pin at the merged rev
+- *(list)* stop shadowing the row Selected scope
+- *(card)* draw the elevated card level-1 shadow at rest
+- *(tooltip)* keep the width cap outside the elevation shadow
+- *(tooltip)* place tooltips via AnchoredOverlay so they flip and clamp
+- [**breaking**] pass the caster's shape to Shadow::new
+- *(fab)* drop the deprecated small FAB; slider shows one stop dot
+- *(m3)* conform navigation components to m3 tokens
+- *(m3)* conform chips, controls, lists, menus to m3 tokens
+- *(m3)* conform button family to expressive tokens
+- repin hydrolysis to 14d5e231; migrate list_selection test to list-level selection API
+- *(icon-button)* draw Automatic as the standard icon button
+- *(theme)* lay icon buttons out at the touch target with a centred state layer
+
+### Other
+
+- *(deps)* point migrated Batch 2 git dependencies to main ([#185](https://github.com/water-rs/hydrolysis-m3/pull/185))
+- skip cargo-semver-checks on hydrolysis-m3
+- release from main and retire dev ([#180](https://github.com/water-rs/hydrolysis-m3/pull/180))
+- *(deps)* point migrated Batch 1 git dependencies to main ([#176](https://github.com/water-rs/hydrolysis-m3/pull/176)) ([#177](https://github.com/water-rs/hydrolysis-m3/pull/177))
+- format the theme re-exports
+- run macOS tests one at a time on the shared paravirtual GPU
+- Merge remote-tracking branch 'origin/dev' into feat/waterui-4042-text-field
+- *(text-field)* apply the clippy fixes
+- *(navigation)* apply the clippy fixes to the tabs look
+- lock waterui at the text field look fixes
+- lock waterui at the navigation and tabs looks
+- lock waterui at the text field look
+- *(menu)* take the menu spec by value and name the panel operands
+- lock waterui at the menu and radio looks
+- lock waterui at the live segment selection
+- lock waterui at the segment chrome
+- lock waterui at the segmented look
+- Merge pull request #164 from water-rs/fix/subtree-color-scheme
+- *(icons)* draw the checkmark with Canvas
+- restore the Hydrolysis test fonts from the Actions cache
+- draw through hydrolysis::draw and the graphics contract modules
+- Merge remote-tracking branch 'origin/dev' into fix/waterui-4169-fallible-handlers
+- [**breaking**] run actions through the fallible handler contract
+- Merge remote-tracking branch 'origin/dev' into feat/waterui-4041-stepper
+- Merge remote-tracking branch 'origin/dev' into feat/waterui-4041-stepper
+- lock waterui at the progress looks branch
+- build the stepper spec without a size
+- select the list selection rows by their tags
+- Merge remote-tracking branch 'origin/dev' into feat/waterui-4043-progress
+- [**breaking**] implement the stepper look from M3 tokens
+- rotate progress as nested stages
+- run indeterminate progress on its real curves
+- lock waterui at the slider look
+- Merge remote-tracking branch 'origin/dev' into feat/waterui-4039-slider
+- [**breaking**] port progress to declarative looks
+- [**breaking**] implement the slider look from M3 tokens
+- lock waterui at the switch and checkbox looks
+- Merge remote-tracking branch 'origin/dev' into feat/waterui-4038-toggle
+- [**breaking**] realize the switch and checkbox looks from MD3 tokens
+- lock waterui at the subtree tint
+- lock waterui at the widget-look branch
+- name the switch in the switch captures
+- Merge origin/dev into feat/waterui-4037-looks
+- [**breaking**] realize buttons and composed controls as Hydrolysis looks
+- keep the windows crates where dev locks them
+- follow the split repositories' dev again
+- install a software Vulkan driver on Linux
+- follow the centred root and response-rectangle a11y bounds
+- authenticated font downloads and cached dxc
+- follow the framework's dev for response geometry
+- lock the response-geometry framework branch
+- read waterui structs through their accessors
+- return the water-rs/waterui pins to dev
+- pin water-rs/waterui to the tab indicator geometry branch
+- compare the rail's edge in the frame it occupies
+- assert the scroll rail's measured contract, not its old geometry
+- *(deps)* restore waterui patch pins to the dev branch
+- track waterui fix/1194-reactive-tabs tip (8ba7716e)
+- raise the rust-version floor to 1.99 and fmt
+- pin waterui to fix/1194-reactive-tabs and match its wgpu/shaderloom sources
+- name the ripple snapshot's card picture
+- [**breaking**] implement the widget theme contract from hydrolysis::theme
+- repin waterui to the press_progress contract merge (water-rs/waterui#2663)
+- animate the pressed corner morph back on release
+- *(deps)* repin the theme to the merged transition contract
+- pin the framework at the per-presentation overlay builder
+- *(tooltip)* rustfmt the builder closure
+- receive hydrolysis's Material 3 suites
+- pin waterui to dev at the #1982 merge
+- pass the release pull request's gate without CI
+- depend on hydrolysis without its default painter
+- keep gpu-allocator on wgpu-hal's windows 0.62
+- resolve nami 0.12 from crates.io
+- *(deps)* narrow the graphics dev-dependency to the cherenkov feature
+- install Hydrolysis test fonts before tests
+- *(deps)* repin water-rs/waterui to 1e359bca
+- port command-recording assertions to Content::record
+- *(deps)* repin the engine stack to in-tree Cherenkov at waterui 4dacae48
+- *(deps)* pin hydrolysis to the system compositor planes revision
+- *(deps)* pin cherenkov to the system compositor planes revision
+- *(deps)* pin hydrolysis to the commit on the same cherenkov revision
+- *(deps)* pin cherenkov to the filtrate gpu-feature revision
+- *(deps)* pin hydrolysis to the commit on the same cherenkov revision
+- *(deps)* pin cherenkov to dev with the filtrate output-size declaration
+- *(deps)* pin hydrolysis to the commit on the same cherenkov revision
+- *(deps)* pin cherenkov to the GL depth-index spacing fix
+- *(deps)* bump hydrolysis pin to a833de9
+- *(deps)* pin video-gpu patch at the repinned head
+- pin cherenkov to 52236561
+- install SPIRV-Tools for cherenkov-gpu's shader build on non-Apple legs
+- restore Cargo.lock resolved for the Cherenkov pins
+- *(deps)* pin waterui, hydrolysis and video-gpu at their delivered heads
+- *(deps)* pin hydrolysis at its final repin head
+- *(deps)* repin cherenkov, waterui, hydrolysis and waterkit at the rewritten line
+- *(deps)* pin hydrolysis at the cherenkov-fix repin
+- *(deps)* pin cherenkov at the self-contained testing fix
+- *(deps)* repin waterui at the merged base and hydrolysis at the merged backend
+- m3 dev interaction-state styling into the cherenkov port line
+- *(deps)* repin cherenkov to f2209fb4
+- *(deps)* repin waterui to w3-r9 (e4be3c42); satisfy new-stable clippy
+- *(deps)* keep interim video-gpu path dep — no published rev compiles
+- *(deps)* repin onto the w3-r8 integrated graph
+- *(deps)* repin onto the WaterUI r4 cutover graph
+- Merge branch 'feat/cherenkov-cutover-m-wip' into feat/cherenkov-cutover-m
+- repin cherenkov to its rewritten history
+- align GPU color and presentation revisions
+- align native GPU presentation dependencies
+- pin engine with GPU host wake support
+- consume engine GPU capabilities and updated scene resources
+- pin the Cherenkov migration dependency graph
+- migration state from the cut-off session
+- *(deps)* pin waterui and hydrolysis to the interaction-state revisions
+- *(theme)* drop the duplicated focus indicator
+- *(theme)* [**breaking**] read WidgetInteractionState::state flags
+- import kurbo and peniko directly, dropping the vello:: namespaces (#205 P1)
+- *(deps)* pin waterui and hydrolysis to their dev heads
+- *(deps)* pin hydrolysis to its scroll-offset merge
+- pin hydrolysis to dev with the slider sizes and value indicator
+- pin hydrolysis to the gesture-observer a11y fix
+- *(tooltip)* add M3 placement acceptance tests for #93
+- pin hydrolysis to the horizontal tab items squash
+- pin hydrolysis to the landed silhouette renderer
+- *(m3)* add per-component conformance audit table
+- repin the vello fork to the glifo canonical-location fix
+- repin water-rs dependencies to merged dev heads
+- rustfmt merged sources
+- pin hydrolysis to merge-with-dev head 9985fea8
+- origin/dev into chore/nami-snapshot
+- repin water-rs dependencies to unified migration heads
+- repin hydrolysis to accessibility import fix
+- refresh lockfile for final branch revs
+- repin migrated dependency branch heads
+- rustfmt on migrated files
+- pin migrated dependency branch revs
+- [**breaking**] migrate to nami snapshot API
+- *(icon-button)* make the pixel comparison helper const
+- pin hydrolysis 1ec6cd4d and waterui df4f7c1
+- pin waterui dfef36f and hydrolysis fe09a71, which carry the icon-button contract
+
 ## [0.3.1](https://github.com/water-rs/hydrolysis-m3/compare/v0.3.0...v0.3.1) - 2026-09-21
 
 ### Added
