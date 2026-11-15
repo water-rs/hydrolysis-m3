@@ -6,6 +6,7 @@
 //! the path data below is the same geometry Compose ships in
 //! `androidx.compose.material.icons`.
 
+#[cfg(any(feature = "list", feature = "stepper", feature = "navigation"))]
 use hydrolysis::draw::kurbo::{BezPath, Point, Rect};
 
 /// The grid every Material icon is authored on.
@@ -13,12 +14,14 @@ const ICON_GRID: f64 = 24.0;
 
 /// Maps the 24dp icon grid onto a concrete square on screen.
 #[derive(Clone, Copy)]
+#[cfg(any(feature = "list", feature = "stepper", feature = "navigation"))]
 pub struct IconGrid {
     scale: f64,
     origin_x: f64,
     origin_y: f64,
 }
 
+#[cfg(any(feature = "list", feature = "stepper", feature = "navigation"))]
 impl IconGrid {
     /// Fits the icon grid into `bounds`, centered, preserving proportions.
     #[must_use]
@@ -53,6 +56,7 @@ impl IconGrid {
 
 /// Material `drag_handle`: the two stacked bars used as a reorder grip.
 #[must_use]
+#[cfg(feature = "list")]
 pub fn drag_handle(grid: IconGrid) -> BezPath {
     let mut path = BezPath::new();
     for (top, bottom) in [(9.0, 11.0), (13.0, 15.0)] {
@@ -67,6 +71,7 @@ pub fn drag_handle(grid: IconGrid) -> BezPath {
 
 /// Material `delete`: the filled waste-basket, body plus lid.
 #[must_use]
+#[cfg(feature = "list")]
 pub fn delete(grid: IconGrid) -> BezPath {
     let mut path = BezPath::new();
 
@@ -124,6 +129,7 @@ pub const fn icon_grid_size() -> f64 {
 /// left-pointing arrow. This is the icon Compose's `TopAppBar` navigation
 /// slot shows by default (`Icons.AutoMirrored.Filled.ArrowBack`).
 #[must_use]
+#[cfg(feature = "navigation")]
 pub fn arrow_back(grid: IconGrid) -> BezPath {
     const OUTLINE: [(f64, f64); 9] = [
         (20.0, 11.0),
@@ -149,6 +155,7 @@ pub fn arrow_back(grid: IconGrid) -> BezPath {
 
 /// Material `remove`: the minus bar.
 #[must_use]
+#[cfg(feature = "stepper")]
 pub fn remove(grid: IconGrid) -> BezPath {
     let mut path = BezPath::new();
     path.move_to(grid.point(19.0, 13.0));
@@ -161,6 +168,7 @@ pub fn remove(grid: IconGrid) -> BezPath {
 
 /// Material `add`: the plus cross.
 #[must_use]
+#[cfg(feature = "stepper")]
 pub fn add(grid: IconGrid) -> BezPath {
     const OUTLINE: [(f64, f64); 12] = [
         (19.0, 13.0),
@@ -190,6 +198,7 @@ pub fn add(grid: IconGrid) -> BezPath {
 #[cfg(test)]
 mod tests {
     use super::{IconGrid, delete, drag_handle};
+    #[cfg(any(feature = "list", feature = "stepper", feature = "navigation"))]
     use hydrolysis::draw::kurbo::{Rect, Shape as _};
 
     /// Both icons must stay inside the box they are fitted to, or they would

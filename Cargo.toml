@@ -14,17 +14,37 @@ description = "Material 3 widget theme for WaterUI self-drawn backends"
 keywords = ["ui", "theme", "material", "waterui", "graphics"]
 categories = ["gui"]
 
+[features]
+default = ["all-controls"]
+all-controls = ["menu", "calendar", "color-picker", "date-picker", "file-picker", "multi-date-picker", "picker", "secure-field", "slider", "stepper", "text-field", "toggle", "validation", "list", "table", "navigation"]
+menu = ["hydrolysis/menu", "waterui/menu"]
+calendar = ["hydrolysis/calendar", "waterui/calendar"]
+color-picker = ["hydrolysis/color-picker", "waterui/color-picker"]
+date-picker = ["calendar", "stepper", "menu", "hydrolysis/date-picker", "waterui/date-picker"]
+file-picker = ["hydrolysis/file-picker", "waterui/file-picker"]
+multi-date-picker = ["calendar", "hydrolysis/multi-date-picker", "waterui/multi-date-picker"]
+picker = ["menu", "hydrolysis/picker", "waterui/picker"]
+secure-field = ["menu", "hydrolysis/secure-field", "waterui/secure-field"]
+slider = ["hydrolysis/slider", "waterui/slider"]
+stepper = ["hydrolysis/stepper", "waterui/stepper"]
+text-field = ["menu", "hydrolysis/text-field", "waterui/text-field"]
+toggle = ["hydrolysis/toggle", "waterui/toggle"]
+validation = ["text-field", "hydrolysis/validation", "waterui/validation"]
+list = ["hydrolysis/list", "waterui/list"]
+table = ["list", "hydrolysis/table", "waterui/table"]
+navigation = ["text-field", "hydrolysis/navigation", "waterui/navigation"]
+
 [dependencies]
 hydrolysis = { version = "0.3.1", default-features = false }
 material-color-utils = { version = "0.1.3", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 waterui = { version = "0.5.2", default-features = false, features = ["snackbar"] }
-waterui-core = "0.5.1"
-waterui-controls = "0.5.1"
-waterui-form = "0.5.1"
+waterui-core = { version = "0.5.1", default-features = false }
+waterui-controls = { version = "0.5.1", default-features = false }
 waterui-graphics = { version = "0.5.1", default-features = false }
 
 [dev-dependencies]
+waterui-form = { version = "0.5.1", default-features = false, features = ["all"] }
 waterui = { version = "0.5.2", default-features = false, features = ["media"] }
 # The tests render through hydrolysis's default Cherenkov painter.
 hydrolysis = "0.3.1"

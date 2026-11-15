@@ -173,3 +173,30 @@ mod tests {
         assert_eq!(drag_held(&Environment::new(), "test owner"), None);
     }
 }
+
+#[cfg(any(
+    feature = "toggle",
+    feature = "picker",
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+/// `colors` resolved in `env` together, so one [`Driven`] reads them all.
+pub fn gather<const N: usize>(
+    colors: [Color; N],
+    env: &Environment,
+) -> Computed<[WorkingColor; N]> {
+    let mut gathered: Computed<Vec<WorkingColor>> = Computed::constant(Vec::with_capacity(N));
+    for color in colors {
+        gathered = zip::zip(gathered, color.resolve(env))
+            .map(|(mut all, color): (Vec<WorkingColor>, WorkingColor)| {
+                all.push(color);
+                all
+            })
+            .computed();
+    }
+    gathered
+        .map(|all| <[WorkingColor; N]>::try_from(all).expect("every colour was gathered"))
+        .computed()
+}

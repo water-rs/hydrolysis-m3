@@ -1,7 +1,10 @@
 pub mod badge;
 pub mod card;
+#[cfg(feature = "list")]
 pub mod list;
+#[cfg(feature = "menu")]
 pub mod menu;
 pub mod scroll;
 pub mod snackbar;
+#[cfg(feature = "table")]
 pub mod table;
