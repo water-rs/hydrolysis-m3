@@ -119,53 +119,53 @@ multiple_crate_versions = "allow"
 #
 # Joint widget-capability integration; the exact commit is recorded by the
 # committed `Cargo.lock`.
-waterui = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "main" }
 
 # Component crates living in their own repositories, on the branch
 # water-rs/waterui's own patch table tracks.
 waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "main" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "main" }
 
 
 # The engine and its filter crates live in the waterui repository under
 # `graphics/` and resolve to the same revision as the rest of the graph:
 # every cherenkov/filtrate name in the graph must come from it or a
 # filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-filtrate = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
-filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "feat/4636-widget-capabilities" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "main" }
+cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "main" }
+filtrate = { git = "https://github.com/water-rs/waterui", branch = "main" }
+filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
+filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "main" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
