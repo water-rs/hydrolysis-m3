@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(corners(InteractionState::PRESSED), Corners::from(8.0));
         assert_eq!(
             chrome.state_layer().hover,
-            crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY
+            crate::theme::motion::HOVER_STATE_LAYER_OPACITY
         );
         assert!(chrome.press().get_ripple().is_some());
     }

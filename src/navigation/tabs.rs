@@ -391,7 +391,7 @@ mod tests {
         assert_eq!(color(), colors.primary.working());
         assert_eq!(
             chrome.state_layer().pressed,
-            crate::theme::state_layer::PRESSED_STATE_LAYER_OPACITY
+            crate::theme::motion::PRESSED_STATE_LAYER_OPACITY
         );
         assert!(chrome.press().get_ripple().is_some());
     }

@@ -12,7 +12,7 @@ use waterui_controls::label::Label;
 use waterui_core::resolve::Resolvable;
 
 use crate::color::Secondary;
-use crate::theme::{motion, state_layer};
+use crate::theme::motion;
 
 pub fn label_plain_text(label: &Label) -> Str {
     label
@@ -37,10 +37,10 @@ pub fn focus_indicator() -> FocusIndicator {
 /// The MD3 state layer in `color`, at the `StateTokens` opacities.
 pub fn state_layer(color: impl Into<Color>) -> StateLayer {
     StateLayer::new(color).opacities(
-        state_layer::HOVER_STATE_LAYER_OPACITY,
-        state_layer::FOCUS_STATE_LAYER_OPACITY,
-        state_layer::PRESSED_STATE_LAYER_OPACITY,
-        state_layer::DRAGGED_STATE_LAYER_OPACITY,
+        motion::HOVER_STATE_LAYER_OPACITY,
+        motion::FOCUS_STATE_LAYER_OPACITY,
+        motion::PRESSED_STATE_LAYER_OPACITY,
+        motion::DRAGGED_STATE_LAYER_OPACITY,
     )
 }
 

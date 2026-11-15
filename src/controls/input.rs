@@ -38,7 +38,7 @@ use crate::dimensions::{
     INPUT_LABEL_HEIGHT, INPUT_SELECTION_OPACITY,
 };
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
-use crate::theme::state_layer::HOVER_STATE_LAYER_OPACITY;
+use crate::theme::motion::HOVER_STATE_LAYER_OPACITY;
 use crate::theme::{motion, typography};
 
 /// The look of a text field or a secure field in `spec`.

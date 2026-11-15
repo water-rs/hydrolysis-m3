@@ -32,10 +32,10 @@ use crate::dimensions::{
 };
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
-use crate::theme::state_layer::{
-    FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
+use crate::theme::motion::{
+    self, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
 };
-use crate::theme::{motion, typography};
+use crate::theme::typography;
 
 /// A bar of the track: its shape over the value, and its paint.
 type BarPart = Custom<f64, (Driven<RoundedRect, f64>, Driven<Paint, f64>)>;
