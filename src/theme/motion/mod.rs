@@ -10,8 +10,7 @@ use core::time::Duration;
 
 use hydrolysis::draw::kurbo::Size;
 use hydrolysis::theme::{
-    HitRegion, InteractionMotion, Motion, NavigationMotion, Ripple, TextCaretMotion, Transition,
-    ValueMotion,
+    HitRegion, Motion, NavigationMotion, Ripple, TextCaretMotion, Transition, ValueMotion,
 };
 use waterui::animation::Animation;
 use waterui::easing::EasingCurve;
@@ -56,32 +55,6 @@ const RIPPLE_STATE_LAYER_FADE: Duration = Duration::from_millis(280);
 /// Touch presses wait this long before showing a ripple, so a scroll that
 /// starts under the finger does not flash one (the Material ripple mixin).
 const RIPPLE_TOUCH_DELAY: Duration = Duration::from_millis(70);
-
-/// MD3 interaction state-layer motion, matching the M3 reference: the ripple
-/// grows from the press point with standard easing while fading in linearly,
-/// and a release never plays the growth backwards — the wave holds its expanded
-/// shape and only fades out once the expansion has completed, which is why
-/// `minimum_press_duration` equals the grow duration. The container's pressed
-/// shape morph, by contrast, plays the fast spatial spring in both directions,
-/// so release animates the corners back to resting shape.
-pub fn interaction() -> InteractionMotion {
-    InteractionMotion {
-        hover_opacity: HOVER_STATE_LAYER_OPACITY,
-        focus_opacity: FOCUS_STATE_LAYER_OPACITY,
-        pressed_opacity: PRESSED_STATE_LAYER_OPACITY,
-        dragged_opacity: DRAGGED_STATE_LAYER_OPACITY,
-        hover_enter: material_standard(RIPPLE_STATE_LAYER_FADE),
-        hover_exit: material_standard(RIPPLE_STATE_LAYER_FADE),
-        focus_enter: material_standard(RIPPLE_STATE_LAYER_FADE),
-        focus_exit: material_standard(RIPPLE_STATE_LAYER_FADE),
-        press_fade_in: Animation::linear(RIPPLE_OPACITY_IN),
-        press_fade_out: Animation::linear(RIPPLE_OPACITY_OUT),
-        press_grow: material_standard(RIPPLE_RADIUS_IN),
-        press_shape: fast_spatial(),
-        minimum_press_duration: RIPPLE_RADIUS_IN,
-        touch_delay: RIPPLE_TOUCH_DELAY,
-    }
-}
 
 /// The Material ripple: a wave of [`RIPPLE_INITIAL_SCALE`] of
 /// the surface diagonal — floored at [`RIPPLE_MINIMUM_DIAMETER`] — that grows
@@ -393,9 +366,10 @@ pub fn value(value: Animation) -> Motion {
 mod tests {
     use super::tokens::{duration, easing, motion};
     use super::{
-        RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN, RIPPLE_STATE_LAYER_FADE,
-        dialog_opacity, dialog_transform, fast_spatial, interaction, navigation, navigation_drawer,
-        navigation_drawer_scrim, radio_dot_grow, radio_snap, toggle_value, tooltip,
+        DRAGGED_STATE_LAYER_OPACITY, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY,
+        PRESSED_STATE_LAYER_OPACITY, RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN,
+        RIPPLE_TOUCH_DELAY, dialog_opacity, dialog_transform, navigation, navigation_drawer,
+        navigation_drawer_scrim, radio_dot_grow, radio_snap, ripple, toggle_value, tooltip,
     };
     use core::time::Duration;
     use std::cell::RefCell;
@@ -430,57 +404,32 @@ mod tests {
     /// the ripple's own timings rather than drifting onto arbitrary numbers.
     #[test]
     fn state_layer_motion_uses_the_ripple_timings_and_material_opacities() {
-        let motion_spec = interaction();
+        let ripple_spec = ripple();
 
         // androidx.compose.material3.tokens.StateTokens
-        assert_eq!(motion_spec.hover_opacity, 0.08);
-        assert_eq!(motion_spec.focus_opacity, 0.1);
-        assert_eq!(motion_spec.pressed_opacity, 0.1);
-        assert_eq!(motion_spec.dragged_opacity, 0.16);
+        assert_eq!(HOVER_STATE_LAYER_OPACITY, 0.08);
+        assert_eq!(FOCUS_STATE_LAYER_OPACITY, 0.1);
+        assert_eq!(PRESSED_STATE_LAYER_OPACITY, 0.1);
+        assert_eq!(DRAGGED_STATE_LAYER_OPACITY, 0.16);
 
-        for cross_fade in [
-            motion_spec.hover_enter,
-            motion_spec.hover_exit,
-            motion_spec.focus_enter,
-            motion_spec.focus_exit,
-        ] {
-            assert_eq!(
-                cross_fade,
-                motion(easing::STANDARD, RIPPLE_STATE_LAYER_FADE)
-            );
-        }
-        assert_eq!(
-            motion_spec.press_grow,
-            motion(easing::STANDARD, RIPPLE_RADIUS_IN)
-        );
-        assert_eq!(
-            motion_spec.press_fade_in,
-            Animation::linear(RIPPLE_OPACITY_IN)
-        );
-        assert_eq!(
-            motion_spec.press_fade_out,
-            Animation::linear(RIPPLE_OPACITY_OUT)
-        );
-        // The pressed-shape morph plays the fast spatial spring in both
-        // directions (MotionSchemeKeyTokens.FastSpatial).
-        assert_eq!(motion_spec.press_shape, fast_spatial());
+        assert_eq!(ripple_spec.grow, motion(easing::STANDARD, RIPPLE_RADIUS_IN));
+        assert_eq!(ripple_spec.fade_in, Animation::linear(RIPPLE_OPACITY_IN));
+        assert_eq!(ripple_spec.fade_out, Animation::linear(RIPPLE_OPACITY_OUT));
     }
 
     /// A release must not rewind the growth: the fade-out is gated until the
     /// wave has finished expanding, so the gate equals the grow duration.
     #[test]
     fn press_fade_out_is_gated_until_the_wave_finished_growing() {
-        let motion_spec = interaction();
-        assert_eq!(motion_spec.minimum_press_duration, RIPPLE_RADIUS_IN);
+        assert_eq!(ripple().minimum_duration, RIPPLE_RADIUS_IN);
     }
 
     /// Fading in faster than the wave grows is what makes a tap read as a single
     /// gesture rather than two separate animations.
     #[test]
     fn ripple_opacity_settles_before_the_wave_finishes_growing() {
-        let motion_spec = interaction();
         assert!(RIPPLE_OPACITY_IN < RIPPLE_RADIUS_IN);
-        assert!(motion_spec.touch_delay < RIPPLE_OPACITY_IN);
+        assert!(RIPPLE_TOUCH_DELAY < RIPPLE_OPACITY_IN);
     }
 
     /// M3 gives an entering container the decelerate curve and a leaving one the
