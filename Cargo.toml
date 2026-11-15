@@ -18,13 +18,14 @@ categories = ["gui"]
 hydrolysis = { version = "0.3.1", default-features = false }
 material-color-utils = { version = "0.1.3", default-features = false }
 num-traits = { version = "0.2", default-features = false }
-waterui = { version = "0.5.2", default-features = false, features = ["snackbar", "media", "highlight"] }
+waterui = { version = "0.5.2", default-features = false, features = ["snackbar"] }
 waterui-core = "0.5.1"
 waterui-controls = "0.5.1"
 waterui-form = "0.5.1"
 waterui-graphics = { version = "0.5.1", default-features = false }
 
 [dev-dependencies]
+waterui = { version = "0.5.2", default-features = false, features = ["media"] }
 # The tests render through hydrolysis's default Cherenkov painter.
 hydrolysis = "0.3.1"
 pollster = "1.0"
