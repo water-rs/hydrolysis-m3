@@ -16,32 +16,80 @@
 
 use hydrolysis::draw::WorkingColor;
 use hydrolysis::draw::kurbo::RoundedRectRadii;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 use hydrolysis::theme::{
-    Border, Caret, Chrome, CornerShape, Corners, Driven, FloatingLabel, FocusIndicator,
-    InputFieldMetrics, Inputs, Label, PressFeedback, StateLayer, Surface, TextFieldLook,
+    Border, Caret, Driven, FloatingLabel, InputFieldMetrics, Inputs, Label, TextFieldLook,
     TextFieldSpec,
+};
+use hydrolysis::theme::{
+    Chrome, CornerShape, Corners, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
 use waterui::interaction::InteractionState;
 use waterui::reactive::Computed;
 use waterui_core::Environment;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 use waterui_core::interaction::StateValue;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 use waterui_graphics::color::Color;
 
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, SurfaceContainerHighest};
-use crate::controls::button::{disabled_paint, solid_paint};
-use crate::controls::toggle::gather;
+use crate::controls::button::disabled_paint;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+use crate::controls::button::solid_paint;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 use crate::dimensions::{
     INPUT_FIELD_HORIZONTAL_INSET, INPUT_FIELD_MIN_HEIGHT, INPUT_FIELD_MIN_WIDTH,
-    INPUT_FIELD_VERTICAL_INSET, INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT,
-    INPUT_FILLED_CONTAINER_TOP_RADIUS, INPUT_FILLED_DISABLED_CONTAINER_OPACITY,
-    INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT, INPUT_LABEL_FLOAT_SCALE, INPUT_LABEL_FLOAT_TOP,
-    INPUT_LABEL_HEIGHT, INPUT_SELECTION_OPACITY,
+    INPUT_FIELD_VERTICAL_INSET, INPUT_LABEL_FLOAT_SCALE, INPUT_LABEL_FLOAT_TOP, INPUT_LABEL_HEIGHT,
+    INPUT_SELECTION_OPACITY,
 };
+use crate::dimensions::{
+    INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
+    INPUT_FILLED_DISABLED_CONTAINER_OPACITY, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
+};
+use crate::semantics::gather;
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
+use crate::theme::motion;
 use crate::theme::motion::HOVER_STATE_LAYER_OPACITY;
-use crate::theme::{motion, typography};
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+use crate::theme::typography;
 
 /// The look of a text field or a secure field in `spec`.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
     TextFieldLook::new(
         container(env),
@@ -65,6 +113,12 @@ pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
 /// The measures of the field: at least 280 wide
 /// (`TextFieldDefaults.MinWidth`) and 56 tall, inset 16 by 8, with the
 /// floated label's 16 line (`body-small`) reserved above the text.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 const fn metrics() -> InputFieldMetrics {
     InputFieldMetrics::new(
         INPUT_LABEL_HEIGHT,
@@ -157,6 +211,12 @@ pub const fn indicator_color(
 }
 
 /// The active indicator as the field's border along its bottom edge.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 fn active_indicator(env: &Environment) -> Driven<Border> {
     Driven::follow(
         indicator_colors(env),
@@ -177,6 +237,12 @@ fn active_indicator(env: &Environment) -> Driven<Border> {
 /// The label rests in `body-large` and floats to `body-small`
 /// (`md.comp.filled-text-field.{label-text,label-text-populated}.*`), the
 /// 12 over 16 of [`INPUT_LABEL_FLOAT_SCALE`].
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 fn label_color() -> StateValue<Color> {
     StateValue::new(Color::from(OnSurfaceVariant))
         .when(
@@ -189,6 +255,12 @@ fn label_color() -> StateValue<Color> {
 /// The placeholder: `body-large` in `on-surface-variant`, on-surface at 38%
 /// while disabled
 /// (`md.comp.filled-text-field.{input-text.placeholder,disabled.input-text}.*`).
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 fn placeholder() -> Label {
     Label::new().font(typography::body_large()).color(
         StateValue::new(Color::from(OnSurfaceVariant)).when(
@@ -201,6 +273,12 @@ fn placeholder() -> Label {
 /// The typed value: `body-large` (`md.comp.filled-text-field.input-text.type`)
 /// in `on-surface` (`input-text.color`), on-surface at 38% while disabled
 /// (`md.comp.filled-text-field.disabled.input-text.{color,opacity}`).
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 fn value() -> Label {
     Label::new()
         .font(typography::body_large())
@@ -211,6 +289,12 @@ fn value() -> Label {
 }
 
 /// The selection: `primary` at [`INPUT_SELECTION_OPACITY`], over the text.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 fn selection(env: &Environment) -> Driven<hydrolysis::draw::Paint> {
     solid_paint(Primary.with_opacity(INPUT_SELECTION_OPACITY), env)
 }

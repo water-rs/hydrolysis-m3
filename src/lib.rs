@@ -21,10 +21,14 @@ pub mod icon_button;
 pub mod material_badge;
 pub mod material_card;
 pub mod material_divider;
+#[cfg(feature = "list")]
 pub mod material_list;
+#[cfg(feature = "menu")]
 pub mod material_menu;
+#[cfg(feature = "navigation")]
 pub mod material_navigation;
 pub mod material_snackbar;
+#[cfg(feature = "navigation")]
 pub mod material_tabs;
 pub mod navigation_bar;
 pub mod navigation_drawer;
@@ -42,31 +46,85 @@ mod icon_paths;
 mod icons;
 mod layout;
 pub mod material_shapes;
+#[cfg(feature = "navigation")]
 mod navigation;
 mod semantics;
 pub mod split_button;
 mod theme;
 
-pub(crate) use controls::{
-    button, input, picker, progress, radio, segmented, slider, stepper, toggle,
-};
-pub(crate) use layout::{badge, card, list, menu, scroll, snackbar, table};
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+pub(crate) use controls::input;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
+pub(crate) use controls::picker;
+#[cfg(feature = "picker")]
+pub(crate) use controls::radio;
+#[cfg(feature = "picker")]
+pub(crate) use controls::segmented;
+#[cfg(feature = "slider")]
+pub(crate) use controls::slider;
+#[cfg(feature = "stepper")]
+pub(crate) use controls::stepper;
+#[cfg(feature = "toggle")]
+pub(crate) use controls::toggle;
+pub(crate) use controls::{button, progress};
+
+#[cfg(feature = "list")]
+pub(crate) use layout::list;
+#[cfg(feature = "menu")]
+pub(crate) use layout::menu;
+#[cfg(feature = "table")]
+pub(crate) use layout::table;
+pub(crate) use layout::{badge, card, scroll, snackbar};
+
+#[cfg(feature = "navigation")]
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use hydrolysis::draw::{BlendSpace, WorkingColor};
+use hydrolysis::draw::BlendSpace;
+#[cfg(feature = "toggle")]
+use hydrolysis::draw::WorkingColor;
 
 pub use hydrolysis::theme::{
-    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CheckboxLook, IndicatorLook,
-    InputFieldMetrics, InteractionFocusBinding, LinearProgressLook, ListDividerMetrics, ListLook,
-    ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec, ListTrailingControlMetrics,
-    MenuLook, MenuPickerLook, MenuSpec, ModalInteraction, NavigationBarLook, NavigationMetrics,
-    NavigationMotion, NavigationSpec, PickerSpec, ProgressSpec, RadioGroupLook,
-    ScrollIndicatorLook, SegmentedLook, SegmentedSpec, SliderLook, SliderSpec, StepperLook,
-    StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout, TableLook, TableMetrics, TabsLook,
-    TabsMetrics, TabsSpec, TextCaretMotion, TextFieldLook, TextFieldSpec, ToggleSpec, WidgetTheme,
+    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, IndicatorLook, InteractionFocusBinding,
+    LinearProgressLook, ModalInteraction, ProgressSpec, ScrollIndicatorLook, WidgetTheme,
 };
+#[cfg(feature = "toggle")]
+pub use hydrolysis::theme::{CheckboxLook, SwitchLook, ToggleSpec};
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+pub use hydrolysis::theme::{InputFieldMetrics, TextCaretMotion, TextFieldLook, TextFieldSpec};
+#[cfg(feature = "list")]
+pub use hydrolysis::theme::{
+    ListDividerMetrics, ListLook, ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec,
+    ListTrailingControlMetrics,
+};
+#[cfg(feature = "menu")]
+pub use hydrolysis::theme::{MenuLook, MenuSpec};
+#[cfg(any(feature = "picker", feature = "date-picker"))]
+pub use hydrolysis::theme::{MenuPickerLook, PickerSpec};
+#[cfg(feature = "navigation")]
+pub use hydrolysis::theme::{
+    NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, TabItemGeometry,
+    TabItemLayout, TabsLook, TabsMetrics, TabsSpec,
+};
+#[cfg(feature = "picker")]
+pub use hydrolysis::theme::{RadioGroupLook, SegmentedLook, SegmentedSpec};
+#[cfg(feature = "slider")]
+pub use hydrolysis::theme::{SliderLook, SliderSpec};
+#[cfg(feature = "stepper")]
+pub use hydrolysis::theme::{StepperLook, StepperSpec};
+#[cfg(feature = "table")]
+pub use hydrolysis::theme::{TableLook, TableMetrics};
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
@@ -105,16 +163,20 @@ pub use material_color_utils::dynamic::{
 /// without naming the color-utils crate directly.
 pub use material_color_utils::utils::color_utils::Argb;
 pub use material_divider::{MaterialDivider, material_divider};
+#[cfg(feature = "list")]
 pub use material_list::{MaterialList, MaterialListItem, material_list, material_list_item};
+#[cfg(feature = "menu")]
 pub use material_menu::{
     MaterialMenu, MaterialMenuCommand, MaterialMenuItem, MaterialMenuItemBuilder, material_menu,
     material_menu_divider, material_menu_icon_label, material_menu_item, material_sub_menu,
 };
+#[cfg(feature = "navigation")]
 pub use material_navigation::{
     MaterialNavigationView, material_large_top_app_bar, material_navigation_view,
     material_scrolled_app_bar, material_small_top_app_bar,
 };
 pub use material_snackbar::{MaterialSnackbar, material_snackbar};
+#[cfg(feature = "navigation")]
 pub use material_tabs::{MaterialTab, MaterialTabs, material_tab, material_tabs};
 pub use navigation_bar::{NavigationBar, NavigationTab, navigation_bar, navigation_tab};
 pub use navigation_drawer::{
@@ -455,38 +517,52 @@ impl WidgetTheme for Material3 {
         }
     }
 
+    #[cfg(feature = "toggle")]
     fn switch(&self, spec: &ToggleSpec, env: &Environment) -> SwitchLook {
         toggle::switch(spec, env)
     }
 
+    #[cfg(feature = "toggle")]
     fn checkbox(&self, spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
         toggle::checkbox(spec, env)
     }
 
+    #[cfg(feature = "stepper")]
     fn stepper(&self, spec: &StepperSpec, env: &Environment) -> StepperLook {
         stepper::look(spec, env)
     }
 
+    #[cfg(any(
+        feature = "text-field",
+        feature = "secure-field",
+        feature = "date-picker",
+        feature = "color-picker"
+    ))]
     fn text_field(&self, spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
         input::look(spec, env)
     }
 
+    #[cfg(feature = "menu")]
     fn menu(&self, spec: &MenuSpec, env: &Environment) -> MenuLook {
         menu::look(*spec, env)
     }
 
+    #[cfg(any(feature = "picker", feature = "date-picker"))]
     fn menu_picker(&self, spec: &PickerSpec, env: &Environment) -> MenuPickerLook {
         picker::look(spec, env)
     }
 
+    #[cfg(feature = "picker")]
     fn radio_group(&self, spec: &PickerSpec, env: &Environment) -> RadioGroupLook {
         radio::look(spec, env)
     }
 
+    #[cfg(feature = "picker")]
     fn segmented_picker(&self, spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {
         segmented::look(spec, env)
     }
 
+    #[cfg(feature = "slider")]
     fn slider(&self, spec: &SliderSpec, env: &Environment) -> SliderLook {
         slider::look(spec, env)
     }
@@ -503,10 +579,12 @@ impl WidgetTheme for Material3 {
         progress::loading(spec, env)
     }
 
+    #[cfg(feature = "navigation")]
     fn navigation_bar(&self, _spec: &NavigationSpec, env: &Environment) -> NavigationBarLook {
         navigation_chrome::look(env)
     }
 
+    #[cfg(feature = "navigation")]
     fn tabs(&self, _spec: &TabsSpec, env: &Environment) -> TabsLook {
         tabs::look(env)
     }
@@ -519,19 +597,23 @@ impl WidgetTheme for Material3 {
         badge::look(env)
     }
 
+    #[cfg(feature = "list")]
     fn list(&self, spec: &ListSpec, env: &Environment) -> ListLook {
         list::look(*spec, env)
     }
 
+    #[cfg(feature = "table")]
     fn table(&self, env: &Environment) -> TableLook {
         table::look(env)
     }
 }
 
+#[cfg(feature = "toggle")]
 fn lerp_channel(start: f32, end: f32, t: f32) -> f32 {
     (end - start).mul_add(t, start)
 }
 
+#[cfg(feature = "toggle")]
 fn lerp_color(start: WorkingColor, end: WorkingColor, t: f32) -> WorkingColor {
     let t = t.clamp(0.0, 1.0);
     let [r0, g0, b0, a0] = start.components;

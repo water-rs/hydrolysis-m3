@@ -1,11 +1,13 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
+#[cfg(any(feature = "menu", feature = "list"))]
 use hydrolysis::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
+#[cfg(any(feature = "menu", feature = "list"))]
 use waterui_graphics::color::Color;
 
 use crate::color::Shadow;
@@ -209,6 +211,7 @@ pub(crate) fn chrome_elevation(
 
 /// `level`'s key and ambient shadows as live values of a look part, in the
 /// `shadow` role `env` resolves and following it.
+#[cfg(any(feature = "menu", feature = "list"))]
 pub(crate) fn cast_shadows<V: 'static>(
     level: MaterialElevationLevel,
     env: &Environment,

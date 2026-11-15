@@ -9,15 +9,25 @@ pub mod tokens;
 use core::time::Duration;
 
 use hydrolysis::draw::kurbo::Size;
-use hydrolysis::theme::{
-    HitRegion, Motion, NavigationMotion, Ripple, TextCaretMotion, Transition, ValueMotion,
-};
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+use hydrolysis::theme::TextCaretMotion;
+use hydrolysis::theme::{HitRegion, Motion, Ripple, Transition, ValueMotion};
 use waterui::animation::Animation;
+#[cfg(feature = "navigation")]
 use waterui::easing::EasingCurve;
 use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
 
-use super::dimensions::{MINIMUM_TOUCH_TARGET, NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE};
+use super::dimensions::MINIMUM_TOUCH_TARGET;
+#[cfg(feature = "navigation")]
+use super::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
+#[cfg(feature = "navigation")]
+use hydrolysis::theme::NavigationMotion;
 use tokens::{duration, easing, motion};
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
@@ -140,14 +150,32 @@ pub fn progress_circular() -> Motion {
 
 /// The inside label floating between resting and floating: `short3` with
 /// standard easing, unless the change that floats it names an animation.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const fn text_field_label() -> ValueMotion {
     ValueMotion::Follow(material_standard(duration::SHORT_3))
 }
 
 /// The caret blinks on the platform text-cursor cadence (530ms per half cycle),
 /// which is a system convention rather than an M3 motion token.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 const CARET_HALF_CYCLE: Duration = Duration::from_millis(530);
 
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const fn text_caret() -> TextCaretMotion {
     TextCaretMotion {
         fade_cycle_duration: CARET_HALF_CYCLE.saturating_mul(2),
@@ -159,14 +187,17 @@ pub const fn text_caret() -> TextCaretMotion {
 /// The shared-axis outgoing view has faded out by 35% of the transition, so the
 /// incoming view fades in over the remainder rather than cross-fading through a
 /// muddy midpoint (M3 fade-through).
+#[cfg(feature = "navigation")]
 const NAVIGATION_FADE_THROUGH_THRESHOLD: f32 = 0.35;
 
 /// The emphasized easing, as the curve navigation progress samples.
+#[cfg(feature = "navigation")]
 const fn navigation_transition_easing() -> EasingCurve {
     let easing = easing::EMPHASIZED;
     EasingCurve::bezier(easing.x1, easing.y1, easing.x2, easing.y2)
 }
 
+#[cfg(feature = "navigation")]
 pub const fn navigation() -> NavigationMotion {
     NavigationMotion {
         transition_duration: duration::LONG_1,
@@ -228,6 +259,7 @@ pub fn navigation_drawer_scrim(
 /// Switch value motion, matching the M3 reference: thumb slide, thumb size,
 /// track color, and outline width all transition together over 200ms with the
 /// MD3 standard easing (the M3 reference `transition-duration(short4)` + standard curve).
+#[cfg(any(feature = "toggle", feature = "picker"))]
 pub const fn toggle_value() -> Animation {
     material_standard(duration::SHORT_4)
 }
@@ -345,17 +377,20 @@ pub fn dialog_opacity(
 
 /// The radio dot's growth on selection: emphasized decelerate over `medium2`,
 /// so the dot arrives rather than fades up.
+#[cfg(feature = "picker")]
 pub const fn radio_dot_grow() -> Animation {
     motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_2)
 }
 
 /// The radio dot's opacity and the ring's colour on selection: linear over
 /// `short1`, snapping over while the dot grows.
+#[cfg(feature = "picker")]
 pub const fn radio_snap() -> Animation {
     Animation::linear(duration::SHORT_1)
 }
 
 /// The control chrome's motion with a value change running `value`.
+#[cfg(any(feature = "toggle", feature = "picker"))]
 pub fn value(value: Animation) -> Motion {
     let mut motion = chrome();
     motion.value = ValueMotion::Own(value);
@@ -364,17 +399,20 @@ pub fn value(value: Animation) -> Motion {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "navigation")]
+    use super::navigation;
     use super::tokens::{duration, easing, motion};
     use super::{
         DRAGGED_STATE_LAYER_OPACITY, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY,
         PRESSED_STATE_LAYER_OPACITY, RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN,
-        RIPPLE_TOUCH_DELAY, dialog_opacity, dialog_transform, navigation, navigation_drawer,
+        RIPPLE_TOUCH_DELAY, dialog_opacity, dialog_transform, navigation_drawer,
         navigation_drawer_scrim, radio_dot_grow, radio_snap, ripple, toggle_value, tooltip,
     };
     use core::time::Duration;
     use std::cell::RefCell;
     use std::rc::Rc;
     use waterui::animation::Animation;
+    #[cfg(feature = "navigation")]
     use waterui::easing::EasingCurve;
     use waterui::{Binding, Signal, SignalExt as _};
 
@@ -522,6 +560,7 @@ mod tests {
     /// Navigation is a full-screen transition, so it uses the emphasized curve
     /// on a long token rather than the standard/short pairing of a control.
     #[test]
+    #[cfg(feature = "navigation")]
     fn navigation_uses_an_emphasized_long_transition() {
         let motion_spec = navigation();
 

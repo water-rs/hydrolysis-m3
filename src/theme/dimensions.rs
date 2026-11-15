@@ -1,5 +1,11 @@
 use waterui::contract_violation;
 
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 use super::typography::BODY_SMALL_LINE_HEIGHT;
 
 /// `ShapeTokens.CornerSmall`.
@@ -124,11 +130,17 @@ pub const BUTTON_LINK_HORIZONTAL_PADDING: f64 = 12.0;
 /// `ButtonDefaults.TextButtonContentPadding` vertical.
 pub const BUTTON_LINK_VERTICAL_PADDING: f64 = 8.0;
 
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_WIDTH: f64 = 52.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_HEIGHT: f64 = 32.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_OUTLINE_WIDTH: f64 = 2.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_UNSELECTED_HANDLE_SIZE: f64 = 16.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_SELECTED_HANDLE_SIZE: f64 = 24.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_PRESSED_HANDLE_SIZE: f64 = 28.0;
 /// Compose's `ThumbPadding`: `(TrackHeight - SelectedHandleWidth) / 2`.
 ///
@@ -136,117 +148,249 @@ pub const TOGGLE_SWITCH_PRESSED_HANDLE_SIZE: f64 = 28.0;
 /// a slot the size of the *selected* handle at either end, and centres the
 /// smaller unselected handle inside that slot, so the thumb never shifts when
 /// it changes size.
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_THUMB_PADDING: f64 =
     (TOGGLE_SWITCH_HEIGHT - TOGGLE_SWITCH_SELECTED_HANDLE_SIZE) / 2.0;
 /// Size of the thumb icon (the Material switch `checked-icon` font size).
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_ICON_SIZE: f64 = 16.0;
 /// Initial scale of the thumb icon while it transitions in/out (the M3 reference
 /// `transform: scale(0.92)`).
+#[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_ICON_SCALE_START: f64 = 0.92;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_LABEL_SPACING: f64 = 8.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_CHECKBOX_SIZE: f64 = 18.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_CHECKBOX_CONTAINER_SHAPE: f64 = 2.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_CHECKBOX_OUTLINE_WIDTH: f64 = 2.0;
+#[cfg(feature = "toggle")]
 pub const TOGGLE_CHECKBOX_SELECTED_SCALE_START: f64 = 0.6;
 
+#[cfg(feature = "stepper")]
 pub const STEPPER_BUTTON_SIZE: f64 = 40.0;
+#[cfg(feature = "stepper")]
 pub const STEPPER_BUTTON_SPACING: f64 = 2.0;
+#[cfg(feature = "stepper")]
 pub const STEPPER_LABEL_SPACING: f64 = 8.0;
+#[cfg(feature = "stepper")]
 pub const STEPPER_ICON_SIZE: f64 = 24.0;
+#[cfg(feature = "stepper")]
 pub const STEPPER_INNER_CORNER_RADIUS: f64 = 8.0;
+#[cfg(feature = "stepper")]
 pub const STEPPER_PRESSED_INNER_CORNER_RADIUS: f64 = 4.0;
 
 /// The floating label's line box: Material sets the floated label in Body
 /// Small, so the field reserves exactly that role's line height.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_LABEL_HEIGHT: f64 = BODY_SMALL_LINE_HEIGHT as f64;
 /// `TextFieldDefaults.MinWidth` — 280dp for both filled and outlined fields.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_FIELD_MIN_WIDTH: f64 = 280.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_FIELD_MIN_HEIGHT: f64 = 56.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_FIELD_HORIZONTAL_INSET: f64 = 16.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_FIELD_VERTICAL_INSET: f64 = 8.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker",
+    feature = "picker"
+))]
 pub const INPUT_FILLED_CONTAINER_TOP_RADIUS: f64 = 4.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker",
+    feature = "picker"
+))]
 pub const INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT: f64 = 1.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker",
+    feature = "picker"
+))]
 pub const INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT: f64 = 2.0;
 /// The populated label over the resting one: `body-small` is 12sp where
 /// `body-large` is 16sp (`md.comp.filled-text-field.{label-text-populated,
 /// label-text}.size`).
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_LABEL_FLOAT_SCALE: f64 = 12.0 / 16.0;
 /// How far below the container's top edge the floated label's box starts:
 /// the field's 8dp top padding above the 16dp `body-small` label line.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_LABEL_FLOAT_TOP: f64 = INPUT_FIELD_VERTICAL_INSET;
 /// The opacity of the selection's `primary` highlight. Material 3 has no
 /// `md.comp` token for it; the value is the one this theme has always drawn.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub const INPUT_SELECTION_OPACITY: f32 = 0.28;
 
 /// The opacity of a disabled filled text field's container
 /// (`md.comp.filled-text-field.disabled.container.opacity`), which the
 /// menu-style picker's field takes.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker",
+    feature = "picker"
+))]
 pub const INPUT_FILLED_DISABLED_CONTAINER_OPACITY: f32 = 0.04;
 
+#[cfg(feature = "menu")]
 pub const MENU_ROW_HEIGHT: f64 = 48.0;
+#[cfg(feature = "menu")]
 pub const MENU_HORIZONTAL_PADDING: f64 = 12.0;
+#[cfg(feature = "menu")]
 pub const MENU_VERTICAL_PADDING: f64 = 8.0;
+#[cfg(feature = "menu")]
 pub const MENU_MIN_WIDTH: f64 = 112.0;
+#[cfg(feature = "menu")]
 pub const MENU_MAX_WIDTH: f64 = 280.0;
+#[cfg(feature = "menu")]
 pub const MENU_WIDTH_PER_CHAR: f64 = 8.5;
+#[cfg(feature = "menu")]
 pub const MENU_CONTAINER_SHAPE: f64 = 4.0;
+#[cfg(feature = "menu")]
 pub const MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
+#[cfg(feature = "menu")]
 pub const MENU_SEPARATOR_THICKNESS: f64 = 1.0;
 /// A picker popup's selected row sits this far in from the row's sides.
+#[cfg(feature = "menu")]
 pub const MENU_SELECTED_ROW_HORIZONTAL_INSET: f64 = 2.0;
 /// A picker popup's selected row sits this far in from the row's top and
 /// bottom.
+#[cfg(feature = "menu")]
 pub const MENU_SELECTED_ROW_VERTICAL_INSET: f64 = 1.0;
 
 /// Compose `TextFieldDefaults.MinWidth`, which the menu-style picker's
 /// filled-field chrome inherits via `ExposedDropdownMenuBox`.
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_MENU_MIN_WIDTH: f64 = 280.0;
 /// No spec floor exists for a radio column; this keeps a lone row from
 /// collapsing below a tappable width.
+#[cfg(feature = "picker")]
 pub const PICKER_RADIO_MIN_WIDTH: f64 = 72.0;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_MIN_HEIGHT: f64 = 56.0;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_HORIZONTAL_INSET: f64 = 16.0;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_VERTICAL_INSET: f64 = 8.0;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_LABEL_SPACING: f64 = 8.0;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_INDICATOR_SPACE: f64 = 18.0;
+#[cfg(feature = "picker")]
 pub const PICKER_RADIO_INDICATOR_SIZE: f64 = 20.0;
 /// Compose's `RadioStrokeWidth`.
+#[cfg(feature = "picker")]
 pub const PICKER_RADIO_OUTER_RING_WIDTH: f64 = 2.0;
 /// Half of Compose's `RadioButtonDotSize` (12dp).
+#[cfg(feature = "picker")]
 pub const PICKER_RADIO_INNER_DOT_RADIUS: f64 = 6.0;
+#[cfg(feature = "picker")]
 pub const PICKER_RADIO_LABEL_SPACING: f64 = 8.0;
+#[cfg(feature = "picker")]
 pub const PICKER_RADIO_ROW_SPACING: f64 = 6.0;
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_MENU_POPUP_TOP_SPACING: f64 = 4.0;
 /// The dropdown chevron's half width.
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_CHEVRON_HALF_WIDTH: f64 = 4.0;
 /// The dropdown chevron's half height.
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_CHEVRON_HALF_HEIGHT: f64 = 2.0;
 /// The dropdown chevron's stroke width.
+#[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_CHEVRON_STROKE_WIDTH: f64 = 1.5;
 /// Compose `ButtonDefaults.MinWidth`, enforced per segment.
+#[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_MIN_WIDTH: f64 = 58.0;
+#[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_MIN_HEIGHT: f64 = 40.0;
+#[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_HORIZONTAL_INSET: f64 = 12.0;
+#[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_CONTAINER_RADIUS: f64 = 20.0;
+#[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_OUTLINE_WIDTH: f64 = 1.0;
 
+#[cfg(feature = "slider")]
 pub const SLIDER_HORIZONTAL_INSET: f64 = 20.0;
+#[cfg(feature = "slider")]
 pub const SLIDER_HORIZONTAL_SPACING: f64 = 8.0;
+#[cfg(feature = "slider")]
 pub const SLIDER_VERTICAL_SPACING: f64 = 6.0;
+#[cfg(feature = "slider")]
 pub const SLIDER_MIN_TRACK_WIDTH: f64 = 72.0;
 /// `SliderTokens.HandleWidth` — a narrow vertical bar, not a circular thumb.
+#[cfg(feature = "slider")]
 pub const SLIDER_HANDLE_WIDTH: f64 = 4.0;
 /// `SliderTokens.PressedHandleWidth`: the handle narrows under the finger.
+#[cfg(feature = "slider")]
 pub const SLIDER_PRESSED_HANDLE_WIDTH: f64 = 2.0;
 /// `SliderTokens.ActiveHandlePadding`: the gap the track leaves on each side of
 /// the handle, so the bar never runs into it.
+#[cfg(feature = "slider")]
 pub const SLIDER_HANDLE_PADDING: f64 = 6.0;
 /// `SliderTokens.StopIndicatorSize`: the dots marking the track's ends.
+#[cfg(feature = "slider")]
 pub const SLIDER_STOP_INDICATOR_SIZE: f64 = 4.0;
 /// `md.comp.slider.stop-indicator.trailing-space`: the inset between a stop
 /// indicator and the track end it marks (the leading dot mirrors it).
+#[cfg(feature = "slider")]
 pub const SLIDER_STOP_INDICATOR_END_SPACE: f64 = 4.0;
 /// The corner radius on the track ends that face the handle gap.
+#[cfg(feature = "slider")]
 pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
 
 /// The `md.comp.slider.<size>.*` token set for one control size: track height
@@ -254,6 +398,7 @@ pub const SLIDER_TRACK_INSIDE_CORNER_SIZE: f64 = 2.0;
 /// of its own rather than half the track height (24 and 40 share the 8/12dp
 /// corner table, not stadium caps).
 #[derive(Clone, Copy)]
+#[cfg(feature = "slider")]
 pub struct SliderSizeTokens {
     /// `*-track-height` (active and inactive agree in every size).
     pub track_height: f64,
@@ -263,26 +408,31 @@ pub struct SliderSizeTokens {
     pub track_corner: f64,
 }
 
+#[cfg(feature = "slider")]
 const SLIDER_EXTRA_SMALL_TOKENS: SliderSizeTokens = SliderSizeTokens {
     track_height: 16.0,
     handle_height: 44.0,
     track_corner: 8.0,
 };
+#[cfg(feature = "slider")]
 const SLIDER_SMALL_TOKENS: SliderSizeTokens = SliderSizeTokens {
     track_height: 24.0,
     handle_height: 44.0,
     track_corner: 8.0,
 };
+#[cfg(feature = "slider")]
 const SLIDER_MEDIUM_TOKENS: SliderSizeTokens = SliderSizeTokens {
     track_height: 40.0,
     handle_height: 52.0,
     track_corner: 12.0,
 };
+#[cfg(feature = "slider")]
 const SLIDER_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
     track_height: 56.0,
     handle_height: 68.0,
     track_corner: 16.0,
 };
+#[cfg(feature = "slider")]
 const SLIDER_EXTRA_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
     track_height: 96.0,
     handle_height: 108.0,
@@ -293,6 +443,7 @@ const SLIDER_EXTRA_LARGE_TOKENS: SliderSizeTokens = SliderSizeTokens {
 /// theme does not implement is a contract violation; a release build uses the
 /// medium set.
 #[must_use]
+#[cfg(feature = "slider")]
 pub fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeTokens {
     use waterui_controls::ControlSize;
     match size {
@@ -312,18 +463,23 @@ pub fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeToke
 
 /// `md.comp.slider.value-indicator.active.bottom-space`: the gap between the
 /// value indicator and the top of the handle while dragging.
+#[cfg(feature = "slider")]
 pub const SLIDER_VALUE_INDICATOR_BOTTOM_SPACE: f64 = 12.0;
 /// No horizontal padding token exists for the value indicator; 12dp matches
 /// the side padding Material gives its other label bubbles.
+#[cfg(feature = "slider")]
 pub const SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING: f64 = 12.0;
 /// Same fallback for the vertical direction: padding past the 44dp container
 /// height only ever enlarges the bubble.
+#[cfg(feature = "slider")]
 pub const SLIDER_VALUE_INDICATOR_VERTICAL_PADDING: f64 = 4.0;
 /// `md.comp.slider.value-indicator.label.container.height` per the current
 /// spec (44), replacing the deprecated 28dp `md.comp.slider.label.container.height`.
+#[cfg(feature = "slider")]
 pub const SLIDER_VALUE_INDICATOR_MIN_HEIGHT: f64 = 44.0;
 /// `md.comp.slider.value-indicator.label.container.min-width`: the bubble
 /// never narrows past 48 and grows for longer labels.
+#[cfg(feature = "slider")]
 pub const SLIDER_VALUE_INDICATOR_MIN_WIDTH: f64 = 48.0;
 
 pub const PROGRESS_LINEAR_LABEL_HEIGHT: f64 = 18.0;
@@ -345,23 +501,41 @@ pub const PROGRESS_LINEAR_TRACK_ACTIVE_SPACE: f64 = 4.0;
 /// `LinearProgressIndicatorTokens.StopSize`: the dot marking the bar's end.
 pub const PROGRESS_LINEAR_STOP_SIZE: f64 = 4.0;
 
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BAR_AUTOMATIC_HEIGHT: f64 = 64.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BAR_INLINE_HEIGHT: f64 = 64.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BAR_MEDIUM_HEIGHT: f64 = 112.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BAR_LARGE_HEIGHT: f64 = 152.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_TITLE_INLINE_HEIGHT: f64 = 28.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_TITLE_MEDIUM_HEIGHT: f64 = 36.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_TITLE_LARGE_HEIGHT: f64 = 36.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_TITLE_LEADING_INSET: f64 = 16.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_TITLE_TRAILING_INSET: f64 = 16.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_LARGE_TITLE_BOTTOM_INSET: f64 = 28.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BAR_HORIZONTAL_INSET: f64 = 4.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BAR_ITEM_SPACING: f64 = 0.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_SEARCH_HEIGHT: f64 = 56.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_SEARCH_VERTICAL_INSET: f64 = 4.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BACK_BUTTON_SIZE: f64 = 40.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BACK_BUTTON_LEADING_INSET: f64 = 4.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_BACK_BUTTON_TOP_INSET: f64 = 12.0;
+#[cfg(feature = "navigation")]
 pub const NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE: f64 = 30.0;
 pub const SCROLL_INDICATOR_CORNER_RADIUS: f64 = 1.25;
 /// Thickness of the scroll indicator's thumb at rest. Material has no scroll
@@ -379,42 +553,62 @@ pub const SCROLL_INDICATOR_MIN_EXTENT: f64 = 12.0;
 pub const SCROLL_INDICATOR_GUTTER: f64 = 12.0;
 /// Opacity of the thumb's `on-surface-variant` colour.
 pub const SCROLL_INDICATOR_OPACITY: f32 = 0.55;
+#[cfg(feature = "navigation")]
 pub const TABS_BAR_HEIGHT: f64 = 48.0;
+#[cfg(feature = "navigation")]
 pub const TABS_BUTTON_MIN_WIDTH: f64 = 48.0;
+#[cfg(feature = "navigation")]
 pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
 /// `md.comp.nav-bar.container.height`: the horizontal-item bar is the M3
 /// navigation bar.
+#[cfg(feature = "navigation")]
 pub const NAV_BAR_HEIGHT: f64 = 64.0;
 /// `md.comp.nav-bar.item.horizontal.active-indicator.height`.
+#[cfg(feature = "navigation")]
 pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT: f64 = 40.0;
 /// `md.comp.nav-bar.item.vertical.icon-label-space`: the gap between a
 /// vertical item's icon and its label.
+#[cfg(feature = "navigation")]
 pub const NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE: f64 = 4.0;
 /// `md.comp.nav-bar.item.horizontal.icon-label-space`: the gap between a
 /// horizontal item's icon and its label inside the indicator.
+#[cfg(feature = "navigation")]
 pub const NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE: f64 = 4.0;
 /// The M3 medium window width class boundary: at and above it the
 /// navigation bar uses horizontal items.
+#[cfg(feature = "navigation")]
 pub const MEDIUM_WINDOW_WIDTH: f64 = 600.0;
+#[cfg(feature = "list")]
 pub const LIST_ONE_LINE_ROW_HEIGHT: f64 = 56.0;
+#[cfg(feature = "list")]
 pub const LIST_HORIZONTAL_INSET: f64 = 16.0;
+#[cfg(feature = "list")]
 pub const LIST_VERTICAL_INSET: f64 = 10.0;
+#[cfg(feature = "list")]
 pub const LIST_DIVIDER_LEADING_INSET: f64 = 16.0;
+#[cfg(feature = "list")]
 pub const LIST_DIVIDER_TRAILING_INSET: f64 = 16.0;
 /// Hit box for the reorder grip: Material's 48dp minimum touch target,
 /// holding a 24dp `drag_handle` icon.
+#[cfg(feature = "list")]
 pub const LIST_MOVE_CONTROL_WIDTH: f64 = 48.0;
 /// Hit box for the delete affordance, sized like the grip beside it.
+#[cfg(feature = "list")]
 pub const LIST_DELETE_CONTROL_WIDTH: f64 = 48.0;
+#[cfg(feature = "list")]
 pub const LIST_TRAILING_CONTROL_SPACING: f64 = 8.0;
+#[cfg(feature = "list")]
 pub const LIST_TRAILING_CONTROL_VERTICAL_INSET: f64 = 4.0;
 /// Diameter of a trailing control's state layer, matching
 /// `IconButtonTokens.StateLayerSize`.
+#[cfg(feature = "list")]
 pub const LIST_CONTROL_STATE_LAYER_SIZE: f64 = 40.0;
 /// Size of the icons the trailing controls draw (Material's 24dp icon).
+#[cfg(feature = "list")]
 pub const LIST_CONTROL_ICON_SIZE: f64 = 24.0;
 /// Diameter of a move half's state layer: the half's inscribed circle on a
 /// one-line row, whose 48dp control splits into two 24dp halves.
+#[cfg(feature = "list")]
 pub const LIST_MOVE_STATE_LAYER_SIZE: f64 = 2.0f64.mul_add(
     -LIST_TRAILING_CONTROL_VERTICAL_INSET,
     LIST_ONE_LINE_ROW_HEIGHT,
@@ -422,29 +616,43 @@ pub const LIST_MOVE_STATE_LAYER_SIZE: f64 = 2.0f64.mul_add(
 /// Fraction of a row's width a swipe must cross to dismiss on release:
 /// Compose's `SwipeToDismissBoxDefaults.positionalThreshold`,
 /// `distance * 0.5`.
+#[cfg(feature = "list")]
 pub const LIST_SWIPE_DISMISS_THRESHOLD: f64 = 0.5;
 /// Fraction of a slot a reorder drag must cross to step the lifted row over
 /// its neighbour: its midpoint.
+#[cfg(feature = "list")]
 pub const LIST_REORDER_THRESHOLD: f64 = 0.5;
 /// Distance the pointer travels before a row drag is recognised, matching
 /// Android's `ViewConfiguration` touch slop.
+#[cfg(feature = "list")]
 pub const LIST_ROW_DRAG_SLOP: f32 = 8.0;
 /// Size of the delete glyph a swipe reveals, on Material's 24dp icon grid.
+#[cfg(feature = "list")]
 pub const LIST_SWIPE_ICON_SIZE: f64 = 24.0;
 /// Gap between the swipe glyph and the edge of the row it is revealed
 /// against.
+#[cfg(feature = "list")]
 pub const LIST_SWIPE_ICON_EDGE_INSET: f64 = 16.0;
 /// Scale the swipe glyph starts at, growing to full size as the swipe
 /// reaches its dismiss threshold.
+#[cfg(feature = "list")]
 pub const LIST_SWIPE_ICON_MIN_SCALE: f64 = 0.7;
 /// Material list subheader line (`md.sys.list.subheader`), a 48dp band.
+#[cfg(feature = "list")]
 pub const LIST_SECTION_HEADER_HEIGHT: f64 = 48.0;
 /// Supporting text closing a section, on the same 40dp rhythm as a one-line
 /// supporting paragraph.
+#[cfg(feature = "list")]
 pub const LIST_SECTION_FOOTER_HEIGHT: f64 = 40.0;
+#[cfg(feature = "table")]
 pub const TABLE_MIN_COLUMN_WIDTH: f64 = 72.0;
+#[cfg(feature = "table")]
 pub const TABLE_CELL_HORIZONTAL_PADDING: f64 = 32.0;
+#[cfg(feature = "table")]
 pub const TABLE_CELL_VERTICAL_INSET: f64 = 16.0;
+#[cfg(feature = "table")]
 pub const TABLE_HEADER_HEIGHT: f64 = 56.0;
+#[cfg(feature = "table")]
 pub const TABLE_ROW_HEIGHT: f64 = 52.0;
+#[cfg(feature = "table")]
 pub const TABLE_OUTLINE_WIDTH: f64 = 1.0;

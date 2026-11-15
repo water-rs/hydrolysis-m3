@@ -12,16 +12,21 @@ use hydrolysis::draw::kurbo::{
 };
 use hydrolysis::draw::{Draw as _, Paint, Shadow as ShadowCast, WorkingColor};
 use hydrolysis::theme::{
-    CheckboxLook, Custom, Driven, Inputs, Motion, SwitchDrag, SwitchLook, ToggleControl,
-    ToggleSpec, Transition, ValueMotion,
+    CheckboxLook, Custom, Driven, Inputs, SwitchDrag, SwitchLook, ToggleControl, ToggleSpec,
+    ValueMotion,
 };
 use waterui::animation::Animation;
 use waterui::interaction::InteractionState;
-use waterui::reactive::zip::zip;
-use waterui::reactive::{Computed, SignalExt as _};
 use waterui_core::Environment;
 use waterui_core::layout::LayoutDirection;
 use waterui_graphics::color::Color;
+
+use super::selection::{
+    STATE_LAYER_RADIUS, ShapePart, Toggled, centered_ripple, centered_state_layer, disabled, faded,
+    layer_paint, narrow, ripple_motion, ripple_opacity, ripple_radius, state_layer_opacity,
+    toggle_motion,
+};
+use crate::semantics::gather;
 
 use crate::color::{
     OnPrimary, OnPrimaryContainer, OnSurface, OnSurfaceVariant, Outline, PrimaryContainer, Shadow,
@@ -38,14 +43,7 @@ use crate::dimensions::{
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
 use crate::theme::motion::tokens::duration;
-use crate::theme::motion::{
-    self, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
-    RIPPLE_INITIAL_SCALE,
-};
-
-/// `md.comp.switch.state-layer.size` / `md.comp.checkbox.state-layer.size`
-/// over two: the unbounded state layer's radius.
-pub const STATE_LAYER_RADIUS: f64 = 20.0;
+use crate::theme::motion::{self};
 
 /// The distance the switch thumb travels between its resting centres.
 const SWITCH_TRAVEL: f64 = 2.0f64.mul_add(
@@ -57,11 +55,6 @@ const SWITCH_TRAVEL: f64 = 2.0f64.mul_add(
 /// never moves it sideways.
 const SWITCH_SLOT_HALF: f64 = TOGGLE_SWITCH_SELECTED_HANDLE_SIZE / 2.0;
 
-/// A `bool`-valued [`Driven`].
-pub type Toggled<T> = Driven<T, bool>;
-
-/// A part drawing a shape and its paint.
-pub type ShapePart = Custom<bool, (Toggled<Circle>, Toggled<Paint>)>;
 /// The switch outline: its shape, stroke and paint.
 type OutlinePart = Custom<bool, (Toggled<RoundedRect>, Toggled<Stroke>, Toggled<Paint>)>;
 /// The thumb's key and ambient shadows, each over its own copy of the
@@ -78,55 +71,12 @@ type ShadowPart = Custom<
 /// The checked container: where it scales to, its fill and its check.
 type ContainerPart = Custom<bool, (Toggled<Affine>, Toggled<Paint>, Toggled<Paint>)>;
 
-/// The Material toggle's motion: the control chrome's, with the value
-/// running the 200 ms standard easing whatever animation the change names.
-pub fn toggle_motion() -> Motion {
-    motion::value(motion::toggle_value())
-}
-
-/// `colors` resolved in `env` together, so one [`Driven`] reads them all.
-pub fn gather<const N: usize>(
-    colors: [Color; N],
-    env: &Environment,
-) -> Computed<[WorkingColor; N]> {
-    let mut gathered: Computed<Vec<WorkingColor>> = Computed::constant(Vec::with_capacity(N));
-    for color in colors {
-        gathered = zip(gathered, color.resolve(env))
-            .map(|(mut all, color): (Vec<WorkingColor>, WorkingColor)| {
-                all.push(color);
-                all
-            })
-            .computed();
-    }
-    gathered
-        .map(|all| <[WorkingColor; N]>::try_from(all).expect("every colour was gathered"))
-        .computed()
-}
-
-pub const fn disabled(inputs: &Inputs<'_, bool>) -> bool {
-    inputs.state.contains(InteractionState::DISABLED)
-}
-
-/// `t` as the `f32` the colour blend takes.
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "a blend factor in [0, 1] loses nothing visible in f32"
-)]
-const fn narrow(t: f64) -> f32 {
-    t as f32
-}
-
 fn lerp(start: f64, end: f64, t: f64) -> f64 {
     (end - start).mul_add(t, start)
 }
 
 fn blend(start: WorkingColor, end: WorkingColor, t: f64) -> WorkingColor {
     crate::lerp_color(start, end, narrow(t))
-}
-
-/// `color` at `opacity` of its own alpha.
-pub fn faded(color: WorkingColor, opacity: f64) -> WorkingColor {
-    color.with_alpha(color.components[3] * narrow(opacity))
 }
 
 /// Where a toggle's operands are between their ends: the value's end, moved
@@ -447,38 +397,6 @@ fn check_glyph_path(bounds: Rect) -> BezPath {
     ])
 }
 
-/// The state layer's opacity while hovered or focused; the press is the
-/// ripple's.
-fn state_layer_opacity(inputs: &Inputs<'_, bool>) -> f64 {
-    if disabled(inputs) {
-        0.0
-    } else if inputs.state.contains(InteractionState::FOCUSED) {
-        f64::from(FOCUS_STATE_LAYER_OPACITY)
-    } else if inputs.state.contains(InteractionState::HOVERED) {
-        f64::from(HOVER_STATE_LAYER_OPACITY)
-    } else {
-        0.0
-    }
-}
-
-/// The state-layer colour: the tint while on, on-surface while off.
-fn layer_color(tint: &Color, env: &Environment) -> Computed<[WorkingColor; 2]> {
-    gather([tint.clone(), OnSurface.into()], env)
-}
-
-fn layer_paint(
-    tint: &Color,
-    env: &Environment,
-    opacity: impl Fn(&Inputs<'_, bool>) -> f64 + 'static,
-) -> Toggled<Paint> {
-    Driven::follow(
-        layer_color(tint, env),
-        move |&[on, off]: &[WorkingColor; 2], inputs: &Inputs<'_, bool>| {
-            Paint::from(faded(if *inputs.value { on } else { off }, opacity(inputs)))
-        },
-    )
-}
-
 fn switch_state_layer(progress: Progress, tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(move |inputs: &Inputs<'_, bool>| {
         Circle::new(progress.thumb_center(inputs), STATE_LAYER_RADIUS)
@@ -487,31 +405,6 @@ fn switch_state_layer(progress: Progress, tint: &Color, env: &Environment) -> Sh
         (circle, layer_paint(tint, env, state_layer_opacity)),
         |recorder, _frame, (circle, paint)| recorder.fill(circle, paint),
     )
-}
-
-/// The press ripple of an unbounded layer: it grows from the initial scale
-/// to the layer's radius and fades in on press, and fades out on release.
-fn ripple_motion() -> Motion {
-    let ripple = motion::ripple();
-    let mut motion = toggle_motion();
-    motion.press = Transition::new(ripple.grow, ripple.fade_out);
-    motion
-}
-
-fn ripple_radius(inputs: &Inputs<'_, bool>) -> f64 {
-    if inputs.state.contains(InteractionState::PRESSED) {
-        STATE_LAYER_RADIUS
-    } else {
-        STATE_LAYER_RADIUS * RIPPLE_INITIAL_SCALE
-    }
-}
-
-fn ripple_opacity(inputs: &Inputs<'_, bool>) -> f64 {
-    if inputs.state.contains(InteractionState::PRESSED) && !disabled(inputs) {
-        f64::from(PRESSED_STATE_LAYER_OPACITY)
-    } else {
-        0.0
-    }
 }
 
 fn switch_ripple(progress: Progress, tint: &Color, env: &Environment) -> ShapePart {
@@ -625,32 +518,6 @@ fn checkbox_container(progress: Progress, tint: &Color, env: &Environment) -> Co
             });
         },
     )
-}
-
-/// The hover and focus state layer of a toggle-like control: an unbounded
-/// circle of [`STATE_LAYER_RADIUS`] centred on the control, in the tint while
-/// on and on-surface while off.
-pub fn centered_state_layer(tint: &Color, env: &Environment) -> ShapePart {
-    let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
-        Circle::new(inputs.frame.center(), STATE_LAYER_RADIUS)
-    });
-    Custom::new(
-        (circle, layer_paint(tint, env, state_layer_opacity)),
-        |recorder, _frame, (circle, paint)| recorder.fill(circle, paint),
-    )
-}
-
-/// The press ripple of a toggle-like control, over the same circle as
-/// [`centered_state_layer`].
-pub fn centered_ripple(tint: &Color, env: &Environment) -> ShapePart {
-    let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
-        Circle::new(inputs.frame.center(), ripple_radius(inputs))
-    })
-    .motion(ripple_motion());
-    let paint = layer_paint(tint, env, ripple_opacity).motion(ripple_motion());
-    Custom::new((circle, paint), |recorder, _frame, (circle, paint)| {
-        recorder.fill(circle, paint);
-    })
 }
 
 #[cfg(test)]

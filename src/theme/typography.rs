@@ -77,8 +77,10 @@ pub fn label_large_prominent() -> Font {
 /// m3.material.io/components/sliders/specs: the typescale's label-large
 /// (14/20, weight 500 Medium, tracking 0.1).
 #[derive(Debug, Clone, Copy)]
+#[cfg(feature = "slider")]
 pub struct SliderValueIndicatorLabel;
 
+#[cfg(feature = "slider")]
 impl Resolvable for SliderValueIndicatorLabel {
     type Resolved = ResolvedFont;
 
@@ -87,6 +89,7 @@ impl Resolvable for SliderValueIndicatorLabel {
     }
 }
 
+#[cfg(feature = "slider")]
 pub fn slider_value_indicator_label() -> Font {
     Font::new(SliderValueIndicatorLabel)
 }
@@ -139,8 +142,24 @@ pub fn label_small() -> Font {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg(any(
+    feature = "list",
+    feature = "picker",
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub struct BodyLarge;
 
+#[cfg(any(
+    feature = "list",
+    feature = "picker",
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 impl Resolvable for BodyLarge {
     type Resolved = ResolvedFont;
 
@@ -149,6 +168,14 @@ impl Resolvable for BodyLarge {
     }
 }
 
+#[cfg(any(
+    feature = "list",
+    feature = "picker",
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
 pub fn body_large() -> Font {
     Font::new(BodyLarge)
 }
