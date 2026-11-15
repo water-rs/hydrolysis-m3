@@ -160,20 +160,6 @@ pub fn drag_held(env: &Environment, owner: &str) -> Option<bool> {
     ))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[cfg_attr(
-        debug_assertions,
-        should_panic(expected = "test owner drag gesture ran without a DragEvent")
-    )]
-    fn a_drag_handler_without_an_event_leaves_the_press_unchanged() {
-        assert_eq!(drag_held(&Environment::new(), "test owner"), None);
-    }
-}
-
 #[cfg(any(
     feature = "toggle",
     feature = "picker",
@@ -199,4 +185,18 @@ pub fn gather<const N: usize>(
     gathered
         .map(|all| <[WorkingColor; N]>::try_from(all).expect("every colour was gathered"))
         .computed()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg_attr(
+        debug_assertions,
+        should_panic(expected = "test owner drag gesture ran without a DragEvent")
+    )]
+    fn a_drag_handler_without_an_event_leaves_the_press_unchanged() {
+        assert_eq!(drag_held(&Environment::new(), "test owner"), None);
+    }
 }
