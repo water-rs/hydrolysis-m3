@@ -19,8 +19,24 @@ use waterui::reactive::watcher::Context;
 use waterui::{Computed, Signal};
 
 use super::dimensions::{MINIMUM_TOUCH_TARGET, NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE};
-use super::state_layer;
 use tokens::{duration, easing, motion};
+
+/// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
+/// targets still produce a ripple at least this wide.
+pub const RIPPLE_MINIMUM_DIAMETER: f64 = 48.0;
+
+/// `StateTokens.HoverStateLayerOpacity`.
+pub const HOVER_STATE_LAYER_OPACITY: f32 = 0.08;
+/// `StateTokens.FocusStateLayerOpacity`.
+pub const FOCUS_STATE_LAYER_OPACITY: f32 = 0.1;
+/// `StateTokens.PressedStateLayerOpacity`.
+pub const PRESSED_STATE_LAYER_OPACITY: f32 = 0.1;
+/// `StateTokens.DraggedStateLayerOpacity`.
+pub const DRAGGED_STATE_LAYER_OPACITY: f32 = 0.16;
+
+/// Initial ripple size as a fraction of the full diameter: a wave starts at
+/// this scale over its press point and grows to full size.
+pub const RIPPLE_INITIAL_SCALE: f64 = 0.4;
 
 /// The MD3 standard easing curve over `duration`.
 const fn material_standard(duration: Duration) -> Animation {
@@ -50,10 +66,10 @@ const RIPPLE_TOUCH_DELAY: Duration = Duration::from_millis(70);
 /// so release animates the corners back to resting shape.
 pub fn interaction() -> InteractionMotion {
     InteractionMotion {
-        hover_opacity: state_layer::HOVER_STATE_LAYER_OPACITY,
-        focus_opacity: state_layer::FOCUS_STATE_LAYER_OPACITY,
-        pressed_opacity: state_layer::PRESSED_STATE_LAYER_OPACITY,
-        dragged_opacity: state_layer::DRAGGED_STATE_LAYER_OPACITY,
+        hover_opacity: HOVER_STATE_LAYER_OPACITY,
+        focus_opacity: FOCUS_STATE_LAYER_OPACITY,
+        pressed_opacity: PRESSED_STATE_LAYER_OPACITY,
+        dragged_opacity: DRAGGED_STATE_LAYER_OPACITY,
         hover_enter: material_standard(RIPPLE_STATE_LAYER_FADE),
         hover_exit: material_standard(RIPPLE_STATE_LAYER_FADE),
         focus_enter: material_standard(RIPPLE_STATE_LAYER_FADE),
@@ -67,16 +83,15 @@ pub fn interaction() -> InteractionMotion {
     }
 }
 
-/// The Material ripple: a wave of [`state_layer::RIPPLE_INITIAL_SCALE`] of
-/// the surface diagonal — floored at
-/// [`state_layer::RIPPLE_MINIMUM_DIAMETER`] — that grows from the press
-/// point to full size while drifting to the surface centre, fades in
-/// linearly as it grows, and fades out only once its growth has completed,
-/// so a release never plays the growth backwards.
+/// The Material ripple: a wave of [`RIPPLE_INITIAL_SCALE`] of
+/// the surface diagonal — floored at [`RIPPLE_MINIMUM_DIAMETER`] — that grows
+/// from the press point to full size while drifting to the surface centre,
+/// fades in linearly as it grows, and fades out only once its growth has
+/// completed, so a release never plays the growth backwards.
 pub const fn ripple() -> Ripple {
     Ripple {
-        min_diameter: state_layer::RIPPLE_MINIMUM_DIAMETER,
-        initial_scale: state_layer::RIPPLE_INITIAL_SCALE,
+        min_diameter: RIPPLE_MINIMUM_DIAMETER,
+        initial_scale: RIPPLE_INITIAL_SCALE,
         drift: 1.0,
         grow: material_standard(RIPPLE_RADIUS_IN),
         fade_in: Animation::linear(RIPPLE_OPACITY_IN),

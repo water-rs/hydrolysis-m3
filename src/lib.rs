@@ -62,11 +62,11 @@ pub use hydrolysis::theme::{
     InputFieldMetrics, InteractionFocusBinding, InteractionMotion, LinearProgressLook,
     ListDividerMetrics, ListLook, ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec,
     ListTrailingControlMetrics, MenuLook, MenuPickerLook, MenuSpec, ModalInteraction,
-    NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, PickerSpec, PressWave,
-    PressWaves, ProgressSpec, RadioGroupLook, ScrollIndicatorLook, SegmentedLook, SegmentedSpec,
-    SliderLook, SliderSpec, StepperLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout,
-    TableLook, TableMetrics, TabsLook, TabsMetrics, TabsSpec, TextCaretMotion, TextFieldLook,
-    TextFieldSpec, ToggleSpec, WidgetInteractionState, WidgetTheme,
+    NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, PickerSpec,
+    ProgressSpec, RadioGroupLook, ScrollIndicatorLook, SegmentedLook, SegmentedSpec, SliderLook,
+    SliderSpec, StepperLook, StepperSpec, SwitchLook, TabItemGeometry, TabItemLayout, TableLook,
+    TableMetrics, TabsLook, TabsMetrics, TabsSpec, TextCaretMotion, TextFieldLook, TextFieldSpec,
+    ToggleSpec, WidgetTheme,
 };
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
@@ -446,10 +446,6 @@ impl Default for Material3 {
 impl WidgetTheme for Material3 {
     fn blend_space(&self) -> BlendSpace {
         BlendSpace::SrgbEncoded
-    }
-
-    fn interaction_motion(&self) -> InteractionMotion {
-        theme::motion::interaction()
     }
 
     fn button(&self, spec: &ButtonSpec, env: &Environment) -> ButtonLook {

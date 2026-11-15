@@ -37,10 +37,9 @@ use crate::dimensions::{
 };
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
-use crate::theme::motion;
 use crate::theme::motion::tokens::duration;
-use crate::theme::state_layer::{
-    FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
+use crate::theme::motion::{
+    self, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
     RIPPLE_INITIAL_SCALE,
 };
 
