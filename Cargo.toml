@@ -57,7 +57,7 @@ image = { version = "0.25.10", default-features = false, features = ["png"] }
 tracing = "0.1"
 # nami 0.12 renamed `Signal::get` to `snapshot`; waterkit consumers of
 # `Subscribed` need the migrated source too.
-waterkit-core = "0.1.4"
+waterkit-core = "0.3"
 waterui-inspector-app = "0.5.2"
 waterui-navigation = "0.5.1"
 waterui-testing = "0.5.1"
