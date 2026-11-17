@@ -102,7 +102,7 @@ fn nested_tap_fires_on_offscreen_mount_without_selecting() {
 /// a geometric rule that concedes centre-covering regions to the press loses
 /// it. The ancestry rule claims it anyway — the thumb is registered by a
 /// descendant of the row's own view.
-fn centered_thumb_row(row: i32, reactions: Rc<Cell<i32>>) -> ListItem {
+fn centered_thumb_row(row: i32, reactions: Rc<Cell<i32>>) -> ListItem<impl View> {
     ListItem::new(hstack((
         spacer(),
         text(thumb_label(row))
@@ -157,7 +157,7 @@ fn centered_nested_tap_claims_press_on_offscreen_mount() {
 /// root — is not a descendant of it, so it never claims the press: the row
 /// selects AND the handler fires — the coexistence a nested `on_tap` no longer
 /// needs geometry to distinguish.
-fn tapped_row(row: i32, taps: Rc<Cell<i32>>) -> ListItem {
+fn tapped_row(row: i32, taps: Rc<Cell<i32>>) -> ListItem<impl View> {
     ListItem::new(hstack((text(row_label(row)), spacer())).on_tap(move || taps.set(row)))
 }
 
