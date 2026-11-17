@@ -188,7 +188,7 @@ wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", branch = "fix/met
 wgpu-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 
 waterui-image = { git = "https://github.com/water-rs/image", branch = "main" }
-waterui-chart = { git = "https://github.com/water-rs/chart", branch = "main" }
+waterui-chart = { git = "https://github.com/water-rs/chart", branch = "refactor/realized-stretch-axis" }
 waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 # `clipboard-rs` 0.3.5 (via waterkit-clipboard) pins `windows` 0.59, inside
