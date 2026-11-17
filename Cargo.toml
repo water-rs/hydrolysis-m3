@@ -119,53 +119,53 @@ multiple_crate_versions = "allow"
 #
 # Joint widget-capability integration; the exact commit is recorded by the
 # committed `Cargo.lock`.
-waterui = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "main" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
 
 # Component crates living in their own repositories, on the branch
 # water-rs/waterui's own patch table tracks.
 waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "main" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
 
 
 # The engine and its filter crates live in the waterui repository under
 # `graphics/` and resolve to the same revision as the rest of the graph:
 # every cherenkov/filtrate name in the graph must come from it or a
 # filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "main" }
-cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "main" }
-filtrate = { git = "https://github.com/water-rs/waterui", branch = "main" }
-filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
-filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "main" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+filtrate = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
+filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "fix/4721-menu-panel-surface" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
