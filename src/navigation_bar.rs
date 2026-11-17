@@ -12,7 +12,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, SurfaceContainer,
@@ -59,7 +59,7 @@ impl<Tabs> NavigationBar<Tabs> {
 
 impl<Tabs> View for NavigationBar<Tabs>
 where
-    Tabs: TupleViews + 'static,
+    Tabs: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         material_elevation(

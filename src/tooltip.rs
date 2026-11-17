@@ -2,6 +2,7 @@
 
 use core::fmt::{self, Debug};
 use core::time::Duration;
+use waterui::OneOf2;
 
 use hydrolysis::theme::InteractionFocusBinding;
 use waterui::accessibility::AccessibilityRole;
@@ -425,27 +426,28 @@ impl View for RichTooltip {
 
 fn rich_tooltip_action(action: Option<(Label, SharedAction)>) -> impl View {
     let Some((label, action)) = action else {
-        return waterui::component::hstack(((),)).anyview();
+        return OneOf2::A(waterui::component::hstack(((),)));
     };
     let accessibility_label = label_plain_text(&label);
 
-    label
-        .font(typography::label_large())
-        .foreground(Primary)
-        .height(RICH_TOOLTIP_ACTION_HEIGHT)
-        .padding_with(EdgeInsets::new(
-            RICH_TOOLTIP_ACTION_TOP_SPACE,
-            0.0,
-            0.0,
-            0.0,
-        ))
-        .on_tap(move |env: Environment| {
-            action.run(&env);
-        })
-        .a11y_label(accessibility_label)
-        .a11y_role(AccessibilityRole::Button)
-        .install(interaction_chrome_radius(Primary, 20.0))
-        .anyview()
+    OneOf2::B(
+        label
+            .font(typography::label_large())
+            .foreground(Primary)
+            .height(RICH_TOOLTIP_ACTION_HEIGHT)
+            .padding_with(EdgeInsets::new(
+                RICH_TOOLTIP_ACTION_TOP_SPACE,
+                0.0,
+                0.0,
+                0.0,
+            ))
+            .on_tap(move |env: Environment| {
+                action.run(&env);
+            })
+            .a11y_label(accessibility_label)
+            .a11y_role(AccessibilityRole::Button)
+            .install(interaction_chrome_radius(Primary, 20.0)),
+    )
 }
 
 /// Creates a Material Design 3 plain tooltip.

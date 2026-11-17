@@ -17,7 +17,7 @@ use waterui_core::handler::{
 use crate::action::{NoAction, noop};
 use hydrolysis::draw::kurbo::RoundedRectRadii;
 use waterui_core::interaction::Disabled;
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;
@@ -268,7 +268,7 @@ impl<Content> OutlinedSegmentedButtonSet<Content> {
 
 impl<Content> View for OutlinedSegmentedButtonSet<Content>
 where
-    Content: TupleViews + 'static,
+    Content: ViewSequence,
 {
     fn body(self, env: &Environment) -> impl View {
         let disabled = Disabled::resolve(env, false);
