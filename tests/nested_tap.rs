@@ -21,7 +21,7 @@ use waterui::component::list::{List, ListItem};
 use waterui::component::{hstack, spacer, text};
 use waterui::id::SelfId;
 use waterui::reactive::collection::List as ReactiveList;
-use waterui::{Binding, Signal as _, ViewExt};
+use waterui::{Binding, Signal as _, View, ViewExt};
 use waterui_testing::{Role, ui};
 
 const ROW_COUNT: i32 = 3;
@@ -45,7 +45,7 @@ fn thumb_label(row: i32) -> String {
 /// A message-row-shaped item from the #175 report: the row's own label on the
 /// leading edge and a reaction pill carrying a nested `on_tap` on the
 /// trailing edge.
-fn message_row(row: i32, reactions: Rc<Cell<i32>>) -> ListItem {
+fn message_row(row: i32, reactions: Rc<Cell<i32>>) -> ListItem<impl View> {
     ListItem::new(hstack((
         text(row_label(row)),
         spacer(),

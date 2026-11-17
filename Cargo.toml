@@ -124,53 +124,53 @@ nami-derive = { git = "https://github.com/water-rs/nami", branch = "main" }
 #
 # Joint widget-capability integration; the exact commit is recorded by the
 # committed `Cargo.lock`.
-waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
 
 # Component crates living in their own repositories, on the branch
 # water-rs/waterui's own patch table tracks.
 waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
 
 
 # The engine and its filter crates live in the waterui repository under
 # `graphics/` and resolve to the same revision as the rest of the graph:
 # every cherenkov/filtrate name in the graph must come from it or a
 # filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-filtrate = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
-filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-navigation" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+filtrate = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
+filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-list" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
