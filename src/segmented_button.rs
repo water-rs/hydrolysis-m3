@@ -314,7 +314,7 @@ fn segmented_button_view(
     selected_state: Binding<bool>,
     action: SharedAction,
     disabled: &Computed<bool>,
-) -> impl View {
+) -> impl View + use<> {
     let foreground = conditional_color(
         disabled.clone(),
         OnSurface.with_opacity(OUTLINED_SEGMENTED_BUTTON_DISABLED_CONTENT_OPACITY),
