@@ -721,14 +721,14 @@ fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(material_tabs(
             &selection_for_view,
-            vec![
+            (
                 material_tab("Photos", || {
                     NavigationView::new("Photos", text("photos content"))
                 }),
                 material_tab("Albums", || {
                     NavigationView::new("Albums", text("albums content"))
                 }),
-            ],
+            ),
         ))
     });
 

@@ -71,7 +71,7 @@ fn tabs_selection_material3_snapshots() {
             .mount_offscreen(move || {
                 material_tabs(
                     &for_view,
-                    vec![
+                    (
                         material_tab(label("Photos").icon(text("*")), || {
                             NavigationView::new("Photos", text("photos content"))
                         }),
@@ -81,7 +81,7 @@ fn tabs_selection_material3_snapshots() {
                         material_tab(label("Places").icon(text("*")), || {
                             NavigationView::new("Places", text("places content"))
                         }),
-                    ],
+                    ),
                 )
             });
         app.pump_for(Duration::from_millis(800));
