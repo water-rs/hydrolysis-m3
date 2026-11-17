@@ -7,6 +7,7 @@
 //! is an attribute of the rail rather than two separate item types.
 
 use core::fmt::{self, Debug};
+use waterui::OneOf2;
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
@@ -18,7 +19,7 @@ use waterui_controls::label::{IntoLabel, Label};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, Surface,
@@ -156,7 +157,7 @@ impl<Items> NavigationRail<Items> {
 
 impl<Items> View for NavigationRail<Items>
 where
-    Items: TupleViews + 'static,
+    Items: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         let layout = self.layout;
@@ -287,45 +288,47 @@ where
         // Expanded lays the label beside the icon inside one pill; collapsed
         // stacks it beneath, so only the icon sits on the active indicator.
         let content = if self.layout.is_expanded() {
-            waterui::component::hstack((icon, label))
-                .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
-                .padding_with(EdgeInsets::new(
-                    0.0,
-                    ACTIVE_INDICATOR_HORIZONTAL_SPACE,
-                    0.0,
-                    ACTIVE_INDICATOR_HORIZONTAL_SPACE,
-                ))
-                // The indicator pill is 56dp tall; the item itself is 64dp.
-                .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
-                .background(Capsule.fill(indicator_color))
-                .install(interaction_chrome_radius(
-                    state_layer_color,
-                    f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
-                ))
-                .height(ITEM_HEIGHT)
-                .anyview()
+            OneOf2::A(
+                waterui::component::hstack((icon, label))
+                    .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
+                    .padding_with(EdgeInsets::new(
+                        0.0,
+                        ACTIVE_INDICATOR_HORIZONTAL_SPACE,
+                        0.0,
+                        ACTIVE_INDICATOR_HORIZONTAL_SPACE,
+                    ))
+                    // The indicator pill is 56dp tall; the item itself is 64dp.
+                    .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
+                    .background(Capsule.fill(indicator_color))
+                    .install(interaction_chrome_radius(
+                        state_layer_color,
+                        f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
+                    ))
+                    .height(ITEM_HEIGHT),
+            )
         } else {
-            waterui::component::vstack((
-                // The whole item is selectable, but only the indicator pill
-                // carries the state layer — Compose clips the indication to
-                // the indicator shape and re-maps the item's interactions
-                // onto it.
-                waterui::component::zstack((
-                    Capsule
-                        .fill(indicator_color)
-                        .width(COLLAPSED_ACTIVE_INDICATOR_WIDTH)
-                        .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
-                    icon,
+            OneOf2::B(
+                waterui::component::vstack((
+                    // The whole item is selectable, but only the indicator pill
+                    // carries the state layer — Compose clips the indication to
+                    // the indicator shape and re-maps the item's interactions
+                    // onto it.
+                    waterui::component::zstack((
+                        Capsule
+                            .fill(indicator_color)
+                            .width(COLLAPSED_ACTIVE_INDICATOR_WIDTH)
+                            .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
+                        icon,
+                    ))
+                    .install(interaction_chrome_radius(
+                        state_layer_color,
+                        f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
+                    )),
+                    label,
                 ))
-                .install(interaction_chrome_radius(
-                    state_layer_color,
-                    f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
-                )),
-                label,
-            ))
-            .spacing(COLLAPSED_ICON_LABEL_SPACE)
-            .height(COLLAPSED_ITEM_HEIGHT)
-            .anyview()
+                .spacing(COLLAPSED_ICON_LABEL_SPACE)
+                .height(COLLAPSED_ITEM_HEIGHT),
+            )
         };
 
         content

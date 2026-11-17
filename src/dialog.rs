@@ -19,7 +19,7 @@ use waterui_core::handler::{
 };
 
 use crate::action::{NoAction, noop};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::ModalInteraction;
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, Scrim, SurfaceContainerHigh};
@@ -196,7 +196,7 @@ impl<Actions> Dialog<Actions> {
 
 impl<Actions> View for Dialog<Actions>
 where
-    Actions: TupleViews + 'static,
+    Actions: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         let presented = self.presented;
@@ -420,7 +420,7 @@ struct DialogActions<Actions> {
 
 impl<Actions> View for DialogActions<Actions>
 where
-    Actions: TupleViews + 'static,
+    Actions: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         waterui::component::hstack(self.actions).spacing(DIALOG_ACTION_SPACING)
