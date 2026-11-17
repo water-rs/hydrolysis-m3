@@ -73,8 +73,8 @@ pub struct MaterialListItem {
     accessibility_label: Str,
     supporting_text: Option<Label>,
     trailing_supporting_text: Option<Label>,
-    leading: Option<AnyViewBuilder>,
-    trailing: Option<AnyViewBuilder>,
+    leading: Option<AnyViewBuilder<AnyView>>,
+    trailing: Option<AnyViewBuilder<AnyView>>,
     action: Option<SharedAction>,
     selected: Option<Computed<bool>>,
 }
