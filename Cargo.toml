@@ -124,53 +124,53 @@ nami-derive = { git = "https://github.com/water-rs/nami", branch = "main" }
 #
 # Joint widget-capability integration; the exact commit is recorded by the
 # committed `Cargo.lock`.
-waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
 
 # Component crates living in their own repositories, on the branch
 # water-rs/waterui's own patch table tracks.
 waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
 
 
 # The engine and its filter crates live in the waterui repository under
 # `graphics/` and resolve to the same revision as the rest of the graph:
 # every cherenkov/filtrate name in the graph must come from it or a
 # filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-filtrate = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
-filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "refactor/no-erased-defaults" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+filtrate = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
