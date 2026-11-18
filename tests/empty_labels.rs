@@ -10,13 +10,13 @@
 //! siblings stay in waterui as unstyled tests.
 
 use hydrolysis_m3::Material3;
-use waterui::Str;
 use waterui::component::text;
 use waterui::navigation::NavigationView;
+use waterui::{Str, View};
 use waterui_testing::{Role, ui};
 
 /// The issue's first shape: a titled navigation page that binds no subtitle.
-fn inbox_view() -> NavigationView {
+fn inbox_view() -> NavigationView<impl View> {
     NavigationView::new("Inbox", text("mail body"))
 }
 

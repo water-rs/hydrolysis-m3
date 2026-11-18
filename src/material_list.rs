@@ -73,8 +73,8 @@ pub struct MaterialListItem {
     accessibility_label: Str,
     supporting_text: Option<Label>,
     trailing_supporting_text: Option<Label>,
-    leading: Option<AnyViewBuilder>,
-    trailing: Option<AnyViewBuilder>,
+    leading: Option<AnyViewBuilder<AnyView>>,
+    trailing: Option<AnyViewBuilder<AnyView>>,
     action: Option<SharedAction>,
     selected: Option<Computed<bool>>,
 }
@@ -317,10 +317,17 @@ impl MaterialListItem {
     }
 }
 
+/// A Material list item is a row whose content is the item itself.
 impl ListContent for MaterialListItem {
-    fn collect_items(self, sink: &mut ListItemSink) {
+    type Row = Self;
+
+    fn collect_items<R, W>(self, sink: &mut ListItemSink<R>, wrap: W)
+    where
+        R: View,
+        W: Fn(Self::Row) -> R + Clone + 'static,
+    {
         sink.push(AnyViewBuilder::new(move || {
-            WaterListItem::new(self.clone().row_view())
+            WaterListItem::new(wrap(self.clone()))
         }));
     }
 }

@@ -54,7 +54,7 @@ fn a_changed_text_is_measured_again_inside_a_retained_sub_view(
     use waterui::id::SelfId;
     use waterui::navigation::{NavigationSplitView, NavigationStack, NavigationView};
 
-    fn status_column(status: &Binding<String>) -> impl View {
+    fn status_column(status: &Binding<String>) -> impl View + use<> {
         vstack((
             text(status.clone()).a11y_label("status").width(150.0),
             text("next").a11y_label("next"),
