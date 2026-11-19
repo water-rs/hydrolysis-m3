@@ -15,7 +15,7 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
@@ -174,8 +174,8 @@ where
 }
 
 /// One destination in a [`NavigationRail`].
-pub struct NavigationRailItem<Icon, Action = NoAction> {
-    label: Label,
+pub struct NavigationRailItem<L, Icon, Action = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     icon: Icon,
     selected: Binding<bool>,
@@ -183,7 +183,7 @@ pub struct NavigationRailItem<Icon, Action = NoAction> {
     action: Action,
 }
 
-impl<Icon, Action> Debug for NavigationRailItem<Icon, Action> {
+impl<L: Debug, Icon, Action> Debug for NavigationRailItem<L, Icon, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NavigationRailItem")
             .field("label", &self.label)
@@ -192,10 +192,10 @@ impl<Icon, Action> Debug for NavigationRailItem<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationRailItem<Icon> {
+impl<L: LabelKind, Icon> NavigationRailItem<L, Icon> {
     /// Creates a rail item.
     #[must_use]
-    pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>, icon: Icon, selected: &Binding<bool>) -> Self {
         let label = label.into_label();
         let accessibility_label = crate::semantics::label_plain_text(&label);
         Self {
@@ -209,7 +209,7 @@ impl<Icon> NavigationRailItem<Icon> {
     }
 }
 
-impl<Icon, Action> NavigationRailItem<Icon, Action> {
+impl<L, Icon, Action> NavigationRailItem<L, Icon, Action> {
     /// Matches the item to the rail's layout.
     #[must_use]
     pub const fn layout(mut self, layout: NavigationRailLayout) -> Self {
@@ -222,7 +222,7 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> NavigationRailItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> NavigationRailItem<L, Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -237,8 +237,9 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
     }
 }
 
-impl<Icon, Action> View for NavigationRailItem<Icon, Action>
+impl<L, Icon, Action> View for NavigationRailItem<L, Icon, Action>
 where
+    L: LabelKind,
     Icon: Clone + View + 'static,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
@@ -351,11 +352,11 @@ pub const fn navigation_rail<Items>(items: Items) -> NavigationRail<Items> {
 
 /// Creates a Material Design 3 navigation rail item.
 #[must_use]
-pub fn navigation_rail_item<Icon>(
-    label: impl IntoLabel,
+pub fn navigation_rail_item<L: IntoLabel, Icon>(
+    label: L,
     icon: Icon,
     selected: &Binding<bool>,
-) -> NavigationRailItem<Icon> {
+) -> NavigationRailItem<L::Kind, Icon> {
     NavigationRailItem::new(label, icon, selected)
 }
 

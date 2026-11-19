@@ -13,7 +13,7 @@ use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
@@ -243,15 +243,15 @@ impl Layout for NavigationDrawerPanelLayout {
 }
 
 /// A selectable Material Design 3 navigation drawer item.
-pub struct NavigationDrawerItem<Icon, Action = NoAction> {
-    label: Label,
+pub struct NavigationDrawerItem<L, Icon, Action = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     icon: Icon,
     selected: Binding<bool>,
     action: Action,
 }
 
-impl<Icon, Action> Debug for NavigationDrawerItem<Icon, Action> {
+impl<L: Debug, Icon, Action> Debug for NavigationDrawerItem<L, Icon, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NavigationDrawerItem")
             .field("label", &self.label)
@@ -259,10 +259,10 @@ impl<Icon, Action> Debug for NavigationDrawerItem<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationDrawerItem<Icon, NoAction> {
+impl<L: LabelKind, Icon> NavigationDrawerItem<L, Icon, NoAction> {
     /// Creates a navigation drawer item.
     #[must_use]
-    pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>, icon: Icon, selected: &Binding<bool>) -> Self {
         let label = label.into_label();
         let accessibility_label = label_plain_text(&label);
         Self {
@@ -275,13 +275,13 @@ impl<Icon> NavigationDrawerItem<Icon, NoAction> {
     }
 }
 
-impl<Icon, Action> NavigationDrawerItem<Icon, Action> {
+impl<L, Icon, Action> NavigationDrawerItem<L, Icon, Action> {
     /// Sets the action performed when the drawer item is tapped.
     #[must_use]
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> NavigationDrawerItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> NavigationDrawerItem<L, Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -295,8 +295,9 @@ impl<Icon, Action> NavigationDrawerItem<Icon, Action> {
     }
 }
 
-impl<Icon, Action> View for NavigationDrawerItem<Icon, Action>
+impl<L, Icon, Action> View for NavigationDrawerItem<L, Icon, Action>
 where
+    L: LabelKind,
     Icon: Clone + View + 'static,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
@@ -362,8 +363,8 @@ where
     }
 }
 
-fn drawer_item_content(
-    label: Label,
+fn drawer_item_content<L: LabelKind>(
+    label: Label<L>,
     icon: impl View,
     foreground: Color,
     background: Color,
@@ -398,11 +399,11 @@ pub fn navigation_drawer<Content>(
 
 /// Creates a Material Design 3 navigation drawer item.
 #[must_use]
-pub fn navigation_drawer_item<Icon>(
-    label: impl IntoLabel,
+pub fn navigation_drawer_item<L: IntoLabel, Icon>(
+    label: L,
     icon: Icon,
     selected: &Binding<bool>,
-) -> NavigationDrawerItem<Icon> {
+) -> NavigationDrawerItem<L::Kind, Icon> {
     NavigationDrawerItem::new(label, icon, selected)
 }
 
