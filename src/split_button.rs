@@ -18,7 +18,7 @@ use waterui::prelude::dynamic::watch;
 use waterui::reactive::{SignalExt as _, binding};
 use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
@@ -95,15 +95,18 @@ impl SplitButtonVariantTokens for TonalSplitButton {
 }
 
 /// A Material Design 3 split button.
-pub struct SplitButton<Action = NoAction, TrailingAction = NoAction, Tokens = FilledSplitButton> {
-    label: Label,
+pub struct SplitButton<L, Action = NoAction, TrailingAction = NoAction, Tokens = FilledSplitButton>
+{
+    label: Label<L>,
     trailing_accessibility_label: Str,
     action: Action,
     trailing_action: TrailingAction,
     tokens: PhantomData<Tokens>,
 }
 
-impl<Action, TrailingAction, Tokens> Debug for SplitButton<Action, TrailingAction, Tokens> {
+impl<L: Debug, Action, TrailingAction, Tokens> Debug
+    for SplitButton<L, Action, TrailingAction, Tokens>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SplitButton")
             .field("label", &self.label)
@@ -115,14 +118,17 @@ impl<Action, TrailingAction, Tokens> Debug for SplitButton<Action, TrailingActio
     }
 }
 
-impl SplitButton {
+impl<L: LabelKind> SplitButton<L> {
     /// Creates a split button.
     ///
     /// `trailing_accessibility_label` names what the trailing half opens; it
     /// has no visible text of its own, only a chevron, so assistive technology
     /// has nothing else to announce.
     #[must_use]
-    pub fn new(label: impl IntoLabel, trailing_accessibility_label: impl Into<Str>) -> Self {
+    pub fn new(
+        label: impl IntoLabel<Kind = L>,
+        trailing_accessibility_label: impl Into<Str>,
+    ) -> Self {
         Self {
             label: label.into_label(),
             trailing_accessibility_label: trailing_accessibility_label.into(),
@@ -133,10 +139,10 @@ impl SplitButton {
     }
 }
 
-impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens> {
+impl<L, Action, TrailingAction, Tokens> SplitButton<L, Action, TrailingAction, Tokens> {
     /// Uses tonal split button tokens.
     #[must_use]
-    pub fn tonal(self) -> SplitButton<Action, TrailingAction, TonalSplitButton> {
+    pub fn tonal(self) -> SplitButton<L, Action, TrailingAction, TonalSplitButton> {
         SplitButton {
             label: self.label,
             trailing_accessibility_label: self.trailing_accessibility_label,
@@ -151,7 +157,12 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> SplitButton<impl FnMut(&Environment) -> Result<(), ExtractionError>, TrailingAction, Tokens>
+    ) -> SplitButton<
+        L,
+        impl FnMut(&Environment) -> Result<(), ExtractionError>,
+        TrailingAction,
+        Tokens,
+    >
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -169,7 +180,7 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     pub fn trailing_action<F, Args>(
         self,
         action: F,
-    ) -> SplitButton<Action, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
+    ) -> SplitButton<L, Action, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -183,8 +194,9 @@ impl<Action, TrailingAction, Tokens> SplitButton<Action, TrailingAction, Tokens>
     }
 }
 
-impl<Action, TrailingAction, Tokens> View for SplitButton<Action, TrailingAction, Tokens>
+impl<L, Action, TrailingAction, Tokens> View for SplitButton<L, Action, TrailingAction, Tokens>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     TrailingAction: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: SplitButtonVariantTokens,
@@ -369,10 +381,10 @@ where
 
 /// Creates a Material Design 3 split button.
 #[must_use]
-pub fn split_button(
-    label: impl IntoLabel,
+pub fn split_button<L: IntoLabel>(
+    label: L,
     trailing_accessibility_label: impl Into<Str>,
-) -> SplitButton {
+) -> SplitButton<L::Kind> {
     SplitButton::new(label, trailing_accessibility_label)
 }
 

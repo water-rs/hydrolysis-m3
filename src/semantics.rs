@@ -8,13 +8,13 @@ use waterui::gesture::{DragEvent, GesturePhase};
 use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
 use waterui::{Environment, Signal as _, Str};
-use waterui_controls::label::Label;
+use waterui_controls::label::{Label, LabelKind};
 use waterui_core::resolve::Resolvable;
 
 use crate::color::Secondary;
 use crate::theme::motion;
 
-pub fn label_plain_text(label: &Label) -> Str {
+pub fn label_plain_text<K: LabelKind>(label: &Label<K>) -> Str {
     label
         .semantic_text()
         .clone()

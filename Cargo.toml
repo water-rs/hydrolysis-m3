@@ -124,53 +124,54 @@ nami-derive = { git = "https://github.com/water-rs/nami", branch = "main" }
 #
 # Joint widget-capability integration; the exact commit is recorded by the
 # committed `Cargo.lock`.
-waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-backend-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-icons-codegen = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-icons-lucide = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-inspector-app = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
 
 # Component crates living in their own repositories, on the branch
 # water-rs/waterui's own patch table tracks.
 waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
 # `hydrolysis` moved into water-rs/waterui at `backends/hydrolysis` and
 # resolves to the same revision as the rest of the framework.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
 
 
 # The engine and its filter crates live in the waterui repository under
 # `graphics/` and resolve to the same revision as the rest of the graph:
 # every cherenkov/filtrate name in the graph must come from it or a
 # filter/recorder type splits into two copies.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-filtrate = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
-filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "refactor/4757-no-erased-defaults" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+cherenkov-gpu = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+filtrate = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+filtrate-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
+filtrate-derive = { git = "https://github.com/water-rs/waterui", branch = "refactor/4770-slim-core-ui" }
 
 # wgpu 30.0.1's Metal backend reads the address of the kCGColorSpace* globals
 # instead of their value and crashes in CGColorSpaceCreateWithName whenever a
@@ -193,7 +194,7 @@ wgpu-naga-bridge = { git = "https://github.com/water-rs/wgpu", branch = "fix/met
 wgpu-types = { git = "https://github.com/water-rs/wgpu", branch = "fix/metal-shared-memory-v30" }
 
 waterui-image = { git = "https://github.com/water-rs/image", branch = "main" }
-waterui-chart = { git = "https://github.com/water-rs/chart", branch = "main" }
+waterui-chart = { git = "https://github.com/water-rs/chart", branch = "refactor/4770-slim-core-ui" }
 waterkit-build = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 waterkit-clipboard = { git = "https://github.com/water-rs/waterkit", branch = "main" }
 # `clipboard-rs` 0.3.5 (via waterkit-clipboard) pins `windows` 0.59, inside

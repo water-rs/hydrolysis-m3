@@ -9,7 +9,7 @@ use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
 use waterui::style::FloatingStyle;
 use waterui::{Environment, Signal, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
@@ -307,14 +307,14 @@ where
 }
 
 /// A Material Design 3 extended floating action button.
-pub struct ExtendedFab<Action = NoAction, Tokens = PrimaryFab> {
-    label: Label,
+pub struct ExtendedFab<L, Action = NoAction, Tokens = PrimaryFab> {
+    label: Label<L>,
     accessibility_label: Str,
     action: Action,
     tokens: PhantomData<Tokens>,
 }
 
-impl<Action, Tokens> Debug for ExtendedFab<Action, Tokens> {
+impl<L: Debug, Action, Tokens> Debug for ExtendedFab<L, Action, Tokens> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ExtendedFab")
             .field("label", &self.label)
@@ -322,10 +322,10 @@ impl<Action, Tokens> Debug for ExtendedFab<Action, Tokens> {
     }
 }
 
-impl ExtendedFab<NoAction, PrimaryFab> {
+impl<L: LabelKind> ExtendedFab<L, NoAction, PrimaryFab> {
     /// Creates a primary extended FAB with a semantic text label.
     #[must_use]
-    pub fn new(label: impl IntoLabel) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>) -> Self {
         let label = label.into_label();
         let accessibility_label = label
             .semantic_text()
@@ -343,26 +343,26 @@ impl ExtendedFab<NoAction, PrimaryFab> {
     }
 }
 
-impl<Action, Tokens> ExtendedFab<Action, Tokens> {
+impl<L, Action, Tokens> ExtendedFab<L, Action, Tokens> {
     /// Uses surface FAB color tokens.
     #[must_use]
-    pub fn surface(self) -> ExtendedFab<Action, SurfaceFab> {
+    pub fn surface(self) -> ExtendedFab<L, Action, SurfaceFab> {
         self.with_variant()
     }
 
     /// Uses secondary FAB color tokens.
     #[must_use]
-    pub fn secondary(self) -> ExtendedFab<Action, SecondaryFab> {
+    pub fn secondary(self) -> ExtendedFab<L, Action, SecondaryFab> {
         self.with_variant()
     }
 
     /// Uses tertiary FAB color tokens.
     #[must_use]
-    pub fn tertiary(self) -> ExtendedFab<Action, TertiaryFab> {
+    pub fn tertiary(self) -> ExtendedFab<L, Action, TertiaryFab> {
         self.with_variant()
     }
 
-    fn with_variant<NewTokens>(self) -> ExtendedFab<Action, NewTokens> {
+    fn with_variant<NewTokens>(self) -> ExtendedFab<L, Action, NewTokens> {
         ExtendedFab {
             label: self.label,
             accessibility_label: self.accessibility_label,
@@ -376,7 +376,7 @@ impl<Action, Tokens> ExtendedFab<Action, Tokens> {
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> ExtendedFab<impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
+    ) -> ExtendedFab<L, impl FnMut(&Environment) -> Result<(), ExtractionError>, Tokens>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -389,8 +389,9 @@ impl<Action, Tokens> ExtendedFab<Action, Tokens> {
     }
 }
 
-impl<Action, Tokens> View for ExtendedFab<Action, Tokens>
+impl<L, Action, Tokens> View for ExtendedFab<L, Action, Tokens>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     Tokens: FabVariantTokens,
 {
@@ -476,7 +477,7 @@ where
 
 /// Creates a primary extended FAB with a semantic text label.
 #[must_use]
-pub fn extended_fab(label: impl IntoLabel) -> ExtendedFab {
+pub fn extended_fab<L: IntoLabel>(label: L) -> ExtendedFab<L::Kind> {
     ExtendedFab::new(label)
 }
 

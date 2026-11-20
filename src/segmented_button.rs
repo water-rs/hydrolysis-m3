@@ -9,14 +9,14 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{Rectangle, ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
 
 use crate::action::{NoAction, noop};
 use hydrolysis::draw::kurbo::RoundedRectRadii;
-use waterui_core::interaction::Disabled;
+use waterui::interaction::Disabled;
 use waterui_core::view::ViewSequence;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
@@ -134,15 +134,15 @@ impl SegmentedButtonShape {
 }
 
 /// A Material Design 3 outlined segmented button.
-pub struct OutlinedSegmentedButton<Action = NoAction> {
-    label: Label,
+pub struct OutlinedSegmentedButton<L, Action = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     selected: Binding<bool>,
     shape: SegmentedButtonShape,
     action: Action,
 }
 
-impl<Action> Debug for OutlinedSegmentedButton<Action> {
+impl<L: Debug, Action> Debug for OutlinedSegmentedButton<L, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OutlinedSegmentedButton")
             .field("label", &self.label)
@@ -150,10 +150,10 @@ impl<Action> Debug for OutlinedSegmentedButton<Action> {
     }
 }
 
-impl OutlinedSegmentedButton<NoAction> {
+impl<L: LabelKind> OutlinedSegmentedButton<L, NoAction> {
     /// Creates an outlined segmented button bound to the provided selected state.
     #[must_use]
-    pub fn new(label: impl IntoLabel, selected: &Binding<bool>) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>, selected: &Binding<bool>) -> Self {
         let label = label.into_label();
         let accessibility_label = label_plain_text(&label);
         Self {
@@ -166,7 +166,7 @@ impl OutlinedSegmentedButton<NoAction> {
     }
 }
 
-impl<Action> OutlinedSegmentedButton<Action> {
+impl<L, Action> OutlinedSegmentedButton<L, Action> {
     /// Uses the leading-segment shape.
     #[must_use]
     pub const fn start(mut self) -> Self {
@@ -193,7 +193,7 @@ impl<Action> OutlinedSegmentedButton<Action> {
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> OutlinedSegmentedButton<impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> OutlinedSegmentedButton<L, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -207,8 +207,9 @@ impl<Action> OutlinedSegmentedButton<Action> {
     }
 }
 
-impl<Action> View for OutlinedSegmentedButton<Action>
+impl<L, Action> View for OutlinedSegmentedButton<L, Action>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, env: &Environment) -> impl View {
@@ -292,10 +293,10 @@ where
 
 /// Creates a Material Design 3 outlined segmented button.
 #[must_use]
-pub fn outlined_segmented_button(
-    label: impl IntoLabel,
+pub fn outlined_segmented_button<L: IntoLabel>(
+    label: L,
     selected: &Binding<bool>,
-) -> OutlinedSegmentedButton {
+) -> OutlinedSegmentedButton<L::Kind> {
     OutlinedSegmentedButton::new(label, selected)
 }
 
@@ -307,14 +308,14 @@ pub fn outlined_segmented_button_set<Content>(
     OutlinedSegmentedButtonSet::new(content)
 }
 
-fn segmented_button_view(
-    label: Label,
+fn segmented_button_view<L: LabelKind>(
+    label: Label<L>,
     shape: SegmentedButtonShape,
     accessibility_label: Str,
     selected_state: Binding<bool>,
     action: SharedAction,
     disabled: &Computed<bool>,
-) -> impl View + use<> {
+) -> impl View + use<L> {
     let foreground = conditional_color(
         disabled.clone(),
         OnSurface.with_opacity(OUTLINED_SEGMENTED_BUTTON_DISABLED_CONTENT_OPACITY),

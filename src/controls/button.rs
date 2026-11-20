@@ -145,7 +145,7 @@ pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<C
     };
     // MD3 disabled button label: on-surface at the 38% disabled-content
     // opacity, regardless of variant.
-    waterui_core::interaction::StateValue::new(rest)
+    waterui::interaction::StateValue::new(rest)
         .when(
             InteractionState::DISABLED,
             Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY)),
