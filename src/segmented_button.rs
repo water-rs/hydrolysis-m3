@@ -16,7 +16,7 @@ use waterui_core::handler::{
 
 use crate::action::{NoAction, noop};
 use hydrolysis::draw::kurbo::RoundedRectRadii;
-use waterui_core::interaction::Disabled;
+use waterui::interaction::Disabled;
 use waterui_core::view::ViewSequence;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
