@@ -5,12 +5,15 @@
 //! its layout and records the parts below once, at rest: a menu has no live
 //! state of its own, its rows are buttons with looks of their own.
 
-use hydrolysis::draw::kurbo::{Rect, RoundedRect, RoundedRectRadii};
-use hydrolysis::draw::{Draw as _, Paint, Shadow as ShadowCast};
-use hydrolysis::theme::{Custom, Driven, MenuLayout, MenuLook, MenuSpec};
+use hydrolysis::draw::kurbo::Rect;
+use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis::theme::{
+    CornerShape, Custom, Driven, Elevation, Inputs, MenuLayout, MenuLook, MenuSpec, Surface,
+};
 use waterui_core::Environment;
+use waterui_graphics::color::Color;
 
-use crate::color::{SurfaceContainer, SurfaceContainerHighest, SurfaceVariant};
+use crate::color::{Shadow, SurfaceContainer, SurfaceContainerHighest, SurfaceVariant};
 use crate::controls::button::solid_paint;
 use crate::dimensions::{
     MENU_CONTAINER_SHAPE, MENU_HORIZONTAL_PADDING, MENU_MAX_WIDTH, MENU_MIN_WIDTH, MENU_ROW_HEIGHT,
@@ -18,12 +21,12 @@ use crate::dimensions::{
     MENU_SEPARATOR_HORIZONTAL_INSET, MENU_SEPARATOR_THICKNESS, MENU_VERTICAL_PADDING,
     MENU_WIDTH_PER_CHAR,
 };
-use crate::elevation::{MaterialElevationLevel, cast_shadows};
+use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 
 /// The measures of a menu: rows 48 tall, padded 12 by 8, 112 to 280 wide,
-/// on a container of corner 4 (`md.comp.menu.list-item.container.height`,
-/// `.leading-space`, `md.comp.menu.container.shape` and the Compose menu's
-/// `DropdownMenuItemDefaultMinWidth` / `DropdownMenuItemDefaultMaxWidth`).
+/// (`md.comp.menu.list-item.container.height`, `.leading-space` and the
+/// Compose menu's `DropdownMenuItemDefaultMinWidth` /
+/// `DropdownMenuItemDefaultMaxWidth`).
 pub const fn layout() -> MenuLayout {
     MenuLayout {
         row_height: MENU_ROW_HEIGHT,
@@ -32,7 +35,6 @@ pub const fn layout() -> MenuLayout {
         min_width: MENU_MIN_WIDTH,
         max_width: MENU_MAX_WIDTH,
         width_per_char: MENU_WIDTH_PER_CHAR,
-        corner_radius: MENU_CONTAINER_SHAPE,
         separator_horizontal_inset: MENU_SEPARATOR_HORIZONTAL_INSET,
         separator_thickness: MENU_SEPARATOR_THICKNESS,
     }
@@ -49,23 +51,22 @@ pub fn look(_spec: MenuSpec, env: &Environment) -> MenuLook {
     MenuLook::new(layout(), panel(env), separator(env)).selected_row(selected_row(env))
 }
 
-/// The panel's operands: its level-2 key and ambient shadows, then its
-/// container paint.
-type PanelOperands = (Driven<ShadowCast>, Driven<ShadowCast>, Driven<Paint>);
+/// The panel: the `surface-container` fill on corner 4, raised to level 2.
+fn panel(env: &Environment) -> Surface {
+    Surface::new(
+        CornerShape::radius(MENU_CONTAINER_SHAPE),
+        solid_paint::<()>(SurfaceContainer, env),
+    )
+    .elevation(panel_elevation(env))
+}
 
-/// The panel: its level-2 key and ambient shadows, then its container.
-fn panel(env: &Environment) -> Custom<(), PanelOperands> {
-    let (key, ambient) = cast_shadows(MaterialElevationLevel::LEVEL2, env);
-    Custom::new(
-        (key, ambient, solid_paint(SurfaceContainer, env)),
-        |recorder, frame, (key, ambient, paint)| {
-            let shape = RoundedRect::from_rect(
-                frame,
-                RoundedRectRadii::from_single_radius(MENU_CONTAINER_SHAPE),
-            );
-            recorder.shadow(shape, key);
-            recorder.shadow(shape, ambient);
-            recorder.fill(shape, paint);
+/// `md.comp.menu.container.elevation`: level 2, in the resolved `shadow`
+/// role and following it.
+fn panel_elevation(env: &Environment) -> Driven<Elevation> {
+    Driven::follow(
+        Color::from(Shadow).resolve(env),
+        |shadow: &WorkingColor, _inputs: &Inputs<'_, ()>| {
+            chrome_elevation(MaterialElevationLevel::LEVEL2, *shadow)
         },
     )
 }
@@ -98,8 +99,8 @@ fn selected_row(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
 mod tests {
     use super::{layout, look, selected_row_rect};
     use crate::dimensions::{
-        MENU_CONTAINER_SHAPE, MENU_HORIZONTAL_PADDING, MENU_MAX_WIDTH, MENU_MIN_WIDTH,
-        MENU_ROW_HEIGHT, MENU_VERTICAL_PADDING,
+        MENU_HORIZONTAL_PADDING, MENU_MAX_WIDTH, MENU_MIN_WIDTH, MENU_ROW_HEIGHT,
+        MENU_VERTICAL_PADDING,
     };
     use hydrolysis::Style as _;
     use hydrolysis::draw::kurbo::Rect;
@@ -121,8 +122,6 @@ mod tests {
         assert_eq!(layout.min_width, 112.0);
         assert_eq!(layout.max_width, MENU_MAX_WIDTH);
         assert_eq!(layout.max_width, 280.0);
-        assert_eq!(layout.corner_radius, MENU_CONTAINER_SHAPE);
-        assert_eq!(layout.corner_radius, 4.0);
         assert_eq!(layout.separator_thickness, 1.0);
     }
 
@@ -134,6 +133,16 @@ mod tests {
 
         assert_eq!(look.layout(), layout());
         assert!(look.has_selected_row());
+    }
+
+    /// The panel's level-2 shadows give a popup window room to draw them.
+    #[test]
+    fn the_panel_is_raised_to_level_two() {
+        let mut env = Environment::new();
+        crate::Material3::defaults().install_tokens(&mut env);
+        let look = look(MenuSpec::new(LayoutDirection::LeftToRight), &env);
+
+        assert!(look.panel_extent(Rect::new(0.0, 0.0, 200.0, 200.0)) > 0.0);
     }
 
     /// The selected row leaves the row's edges to the rows around it.
