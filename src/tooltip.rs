@@ -2,6 +2,7 @@
 
 use core::fmt::{self, Debug};
 use core::time::Duration;
+use waterui::OneOf2;
 
 use hydrolysis::theme::InteractionFocusBinding;
 use waterui::accessibility::AccessibilityRole;
@@ -13,7 +14,7 @@ use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind, TitleLabel};
 use waterui_core::handler::{Handler, SharedAction};
 
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
@@ -259,12 +260,12 @@ const fn tooltip_scale_origin(placed: AnchorEdge, rich: bool) -> Anchor {
 
 /// A Material Design 3 plain tooltip.
 #[derive(Clone)]
-pub struct PlainTooltip {
-    supporting_text: Label,
+pub struct PlainTooltip<S> {
+    supporting_text: Label<S>,
     accessibility_label: Str,
 }
 
-impl Debug for PlainTooltip {
+impl<S: Debug> Debug for PlainTooltip<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PlainTooltip")
             .field("supporting_text", &self.supporting_text)
@@ -272,10 +273,10 @@ impl Debug for PlainTooltip {
     }
 }
 
-impl PlainTooltip {
+impl<S: LabelKind> PlainTooltip<S> {
     /// Creates a plain tooltip with supporting text.
     #[must_use]
-    pub fn new(supporting_text: impl IntoLabel) -> Self {
+    pub fn new(supporting_text: impl IntoLabel<Kind = S>) -> Self {
         let supporting_text = supporting_text.into_label();
         let accessibility_label = label_plain_text(&supporting_text);
         Self {
@@ -299,7 +300,7 @@ impl PlainTooltip {
     }
 }
 
-impl View for PlainTooltip {
+impl<S: LabelKind> View for PlainTooltip<S> {
     fn body(self, _env: &Environment) -> impl View {
         self.supporting_text
             .font(typography::body_small())
@@ -323,14 +324,14 @@ impl View for PlainTooltip {
 
 /// A Material Design 3 rich tooltip.
 #[derive(Clone)]
-pub struct RichTooltip {
-    subhead: Label,
-    supporting_text: Label,
+pub struct RichTooltip<S, T, A = TitleLabel> {
+    subhead: Label<S>,
+    supporting_text: Label<T>,
     accessibility_label: Str,
-    action: Option<(Label, SharedAction)>,
+    action: Option<(Label<A>, SharedAction)>,
 }
 
-impl Debug for RichTooltip {
+impl<S: Debug, T: Debug, A: Debug> Debug for RichTooltip<S, T, A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RichTooltip")
             .field("subhead", &self.subhead)
@@ -339,10 +340,13 @@ impl Debug for RichTooltip {
     }
 }
 
-impl RichTooltip {
+impl<S: LabelKind, T: LabelKind> RichTooltip<S, T, TitleLabel> {
     /// Creates a rich tooltip with a subhead and supporting text.
     #[must_use]
-    pub fn new(subhead: impl IntoLabel, supporting_text: impl IntoLabel) -> Self {
+    pub fn new(
+        subhead: impl IntoLabel<Kind = S>,
+        supporting_text: impl IntoLabel<Kind = T>,
+    ) -> Self {
         let subhead = subhead.into_label();
         let supporting_text = supporting_text.into_label();
         let accessibility_label = label_plain_text(&supporting_text);
@@ -355,14 +359,18 @@ impl RichTooltip {
     }
 }
 
-impl RichTooltip {
+impl<S, T, A> RichTooltip<S, T, A> {
     /// Adds a Material rich tooltip action.
     #[must_use]
-    pub fn action<F, Args>(self, label: impl IntoLabel, action: F) -> Self
+    pub fn action<F, Args, NewA: IntoLabel>(
+        self,
+        label: NewA,
+        action: F,
+    ) -> RichTooltip<S, T, NewA::Kind>
     where
         F: Handler<Args, ()> + 'static,
     {
-        Self {
+        RichTooltip {
             subhead: self.subhead,
             supporting_text: self.supporting_text,
             accessibility_label: self.accessibility_label,
@@ -385,7 +393,7 @@ impl RichTooltip {
     }
 }
 
-impl View for RichTooltip {
+impl<S: LabelKind, T: LabelKind, A: LabelKind> View for RichTooltip<S, T, A> {
     fn body(self, _env: &Environment) -> impl View {
         let content = waterui::component::vstack((
             self.subhead
@@ -423,40 +431,44 @@ impl View for RichTooltip {
     }
 }
 
-fn rich_tooltip_action(action: Option<(Label, SharedAction)>) -> impl View {
+fn rich_tooltip_action<A: LabelKind>(action: Option<(Label<A>, SharedAction)>) -> impl View {
     let Some((label, action)) = action else {
-        return waterui::component::hstack(((),)).anyview();
+        return OneOf2::A(waterui::component::hstack(((),)));
     };
     let accessibility_label = label_plain_text(&label);
 
-    label
-        .font(typography::label_large())
-        .foreground(Primary)
-        .height(RICH_TOOLTIP_ACTION_HEIGHT)
-        .padding_with(EdgeInsets::new(
-            RICH_TOOLTIP_ACTION_TOP_SPACE,
-            0.0,
-            0.0,
-            0.0,
-        ))
-        .on_tap(move |env: Environment| {
-            action.run(&env);
-        })
-        .a11y_label(accessibility_label)
-        .a11y_role(AccessibilityRole::Button)
-        .install(interaction_chrome_radius(Primary, 20.0))
-        .anyview()
+    OneOf2::B(
+        label
+            .font(typography::label_large())
+            .foreground(Primary)
+            .height(RICH_TOOLTIP_ACTION_HEIGHT)
+            .padding_with(EdgeInsets::new(
+                RICH_TOOLTIP_ACTION_TOP_SPACE,
+                0.0,
+                0.0,
+                0.0,
+            ))
+            .on_tap(move |env: Environment| {
+                action.run(&env);
+            })
+            .a11y_label(accessibility_label)
+            .a11y_role(AccessibilityRole::Button)
+            .install(interaction_chrome_radius(Primary, 20.0)),
+    )
 }
 
 /// Creates a Material Design 3 plain tooltip.
 #[must_use]
-pub fn plain_tooltip(supporting_text: impl IntoLabel) -> PlainTooltip {
+pub fn plain_tooltip<S: IntoLabel>(supporting_text: S) -> PlainTooltip<S::Kind> {
     PlainTooltip::new(supporting_text)
 }
 
 /// Creates a Material Design 3 rich tooltip.
 #[must_use]
-pub fn rich_tooltip(subhead: impl IntoLabel, supporting_text: impl IntoLabel) -> RichTooltip {
+pub fn rich_tooltip<S: IntoLabel, T: IntoLabel>(
+    subhead: S,
+    supporting_text: T,
+) -> RichTooltip<S::Kind, T::Kind, TitleLabel> {
     RichTooltip::new(subhead, supporting_text)
 }
 

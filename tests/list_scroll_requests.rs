@@ -440,7 +440,7 @@ fn row_content_tap_survives_retained_swipe_order_offscreen() {
         });
 
     app.query()
-        .role(Role::LABEL)
+        .role(Role::LIST_ITEM)
         .label_contains("row 2")
         .tap_at(0.5, 0.5);
     assert_eq!(taps.get(), 2, "baseline: row content on_tap must fire");
@@ -452,7 +452,7 @@ fn row_content_tap_survives_retained_swipe_order_offscreen() {
 
     taps.set(0);
     app.query()
-        .role(Role::LABEL)
+        .role(Role::LIST_ITEM)
         .label_contains("row 2")
         .tap_at(0.5, 0.5);
     assert_eq!(

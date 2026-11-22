@@ -7,6 +7,7 @@
 //! is an attribute of the rail rather than two separate item types.
 
 use core::fmt::{self, Debug};
+use waterui::OneOf2;
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
@@ -14,11 +15,11 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, Surface,
@@ -156,7 +157,7 @@ impl<Items> NavigationRail<Items> {
 
 impl<Items> View for NavigationRail<Items>
 where
-    Items: TupleViews + 'static,
+    Items: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         let layout = self.layout;
@@ -173,8 +174,8 @@ where
 }
 
 /// One destination in a [`NavigationRail`].
-pub struct NavigationRailItem<Icon, Action = NoAction> {
-    label: Label,
+pub struct NavigationRailItem<L, Icon, Action = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     icon: Icon,
     selected: Binding<bool>,
@@ -182,7 +183,7 @@ pub struct NavigationRailItem<Icon, Action = NoAction> {
     action: Action,
 }
 
-impl<Icon, Action> Debug for NavigationRailItem<Icon, Action> {
+impl<L: Debug, Icon, Action> Debug for NavigationRailItem<L, Icon, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NavigationRailItem")
             .field("label", &self.label)
@@ -191,10 +192,10 @@ impl<Icon, Action> Debug for NavigationRailItem<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationRailItem<Icon> {
+impl<L: LabelKind, Icon> NavigationRailItem<L, Icon> {
     /// Creates a rail item.
     #[must_use]
-    pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>, icon: Icon, selected: &Binding<bool>) -> Self {
         let label = label.into_label();
         let accessibility_label = crate::semantics::label_plain_text(&label);
         Self {
@@ -208,7 +209,7 @@ impl<Icon> NavigationRailItem<Icon> {
     }
 }
 
-impl<Icon, Action> NavigationRailItem<Icon, Action> {
+impl<L, Icon, Action> NavigationRailItem<L, Icon, Action> {
     /// Matches the item to the rail's layout.
     #[must_use]
     pub const fn layout(mut self, layout: NavigationRailLayout) -> Self {
@@ -221,7 +222,7 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> NavigationRailItem<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> NavigationRailItem<L, Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -236,8 +237,9 @@ impl<Icon, Action> NavigationRailItem<Icon, Action> {
     }
 }
 
-impl<Icon, Action> View for NavigationRailItem<Icon, Action>
+impl<L, Icon, Action> View for NavigationRailItem<L, Icon, Action>
 where
+    L: LabelKind,
     Icon: Clone + View + 'static,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
@@ -287,45 +289,47 @@ where
         // Expanded lays the label beside the icon inside one pill; collapsed
         // stacks it beneath, so only the icon sits on the active indicator.
         let content = if self.layout.is_expanded() {
-            waterui::component::hstack((icon, label))
-                .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
-                .padding_with(EdgeInsets::new(
-                    0.0,
-                    ACTIVE_INDICATOR_HORIZONTAL_SPACE,
-                    0.0,
-                    ACTIVE_INDICATOR_HORIZONTAL_SPACE,
-                ))
-                // The indicator pill is 56dp tall; the item itself is 64dp.
-                .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
-                .background(Capsule.fill(indicator_color))
-                .install(interaction_chrome_radius(
-                    state_layer_color,
-                    f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
-                ))
-                .height(ITEM_HEIGHT)
-                .anyview()
+            OneOf2::A(
+                waterui::component::hstack((icon, label))
+                    .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
+                    .padding_with(EdgeInsets::new(
+                        0.0,
+                        ACTIVE_INDICATOR_HORIZONTAL_SPACE,
+                        0.0,
+                        ACTIVE_INDICATOR_HORIZONTAL_SPACE,
+                    ))
+                    // The indicator pill is 56dp tall; the item itself is 64dp.
+                    .height(EXPANDED_ACTIVE_INDICATOR_HEIGHT)
+                    .background(Capsule.fill(indicator_color))
+                    .install(interaction_chrome_radius(
+                        state_layer_color,
+                        f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
+                    ))
+                    .height(ITEM_HEIGHT),
+            )
         } else {
-            waterui::component::vstack((
-                // The whole item is selectable, but only the indicator pill
-                // carries the state layer — Compose clips the indication to
-                // the indicator shape and re-maps the item's interactions
-                // onto it.
-                waterui::component::zstack((
-                    Capsule
-                        .fill(indicator_color)
-                        .width(COLLAPSED_ACTIVE_INDICATOR_WIDTH)
-                        .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
-                    icon,
+            OneOf2::B(
+                waterui::component::vstack((
+                    // The whole item is selectable, but only the indicator pill
+                    // carries the state layer — Compose clips the indication to
+                    // the indicator shape and re-maps the item's interactions
+                    // onto it.
+                    waterui::component::zstack((
+                        Capsule
+                            .fill(indicator_color)
+                            .width(COLLAPSED_ACTIVE_INDICATOR_WIDTH)
+                            .height(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
+                        icon,
+                    ))
+                    .install(interaction_chrome_radius(
+                        state_layer_color,
+                        f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
+                    )),
+                    label,
                 ))
-                .install(interaction_chrome_radius(
-                    state_layer_color,
-                    f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
-                )),
-                label,
-            ))
-            .spacing(COLLAPSED_ICON_LABEL_SPACE)
-            .height(COLLAPSED_ITEM_HEIGHT)
-            .anyview()
+                .spacing(COLLAPSED_ICON_LABEL_SPACE)
+                .height(COLLAPSED_ITEM_HEIGHT),
+            )
         };
 
         content
@@ -348,11 +352,11 @@ pub const fn navigation_rail<Items>(items: Items) -> NavigationRail<Items> {
 
 /// Creates a Material Design 3 navigation rail item.
 #[must_use]
-pub fn navigation_rail_item<Icon>(
-    label: impl IntoLabel,
+pub fn navigation_rail_item<L: IntoLabel, Icon>(
+    label: L,
     icon: Icon,
     selected: &Binding<bool>,
-) -> NavigationRailItem<Icon> {
+) -> NavigationRailItem<L::Kind, Icon> {
     NavigationRailItem::new(label, icon, selected)
 }
 

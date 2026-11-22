@@ -12,14 +12,14 @@ use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::signal::IntoComputed;
 use waterui::style::Anchor;
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::AnyView;
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
 
 use crate::action::{NoAction, noop};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::ModalInteraction;
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, Scrim, SurfaceContainerHigh};
@@ -42,12 +42,12 @@ const DIALOG_ACTION_SPACING: f32 = 8.0;
 const DIALOG_HIDDEN_OFFSET_Y: f32 = -30.0;
 
 /// A Material Design 3 dialog action button.
-pub struct DialogAction<Action = NoAction> {
-    label: Label,
+pub struct DialogAction<L, Action = NoAction> {
+    label: Label<L>,
     action: Action,
 }
 
-impl<Action> Debug for DialogAction<Action> {
+impl<L: Debug, Action> Debug for DialogAction<L, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DialogAction")
             .field("label", &self.label)
@@ -55,10 +55,10 @@ impl<Action> Debug for DialogAction<Action> {
     }
 }
 
-impl DialogAction<NoAction> {
+impl<L: LabelKind> DialogAction<L, NoAction> {
     /// Creates a dialog action with the given semantic label.
     #[must_use]
-    pub fn new(label: impl IntoLabel) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>) -> Self {
         Self {
             label: label.into_label(),
             action: noop,
@@ -66,13 +66,13 @@ impl DialogAction<NoAction> {
     }
 }
 
-impl<Action> DialogAction<Action> {
+impl<L, Action> DialogAction<L, Action> {
     /// Sets the action performed when the dialog action is tapped.
     #[must_use]
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> DialogAction<impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> DialogAction<L, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -83,8 +83,9 @@ impl<Action> DialogAction<Action> {
     }
 }
 
-impl<Action> View for DialogAction<Action>
+impl<L, Action> View for DialogAction<L, Action>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -106,9 +107,9 @@ where
 }
 
 /// A Material Design 3 basic dialog.
-pub struct Dialog<Actions = ()> {
-    headline: Label,
-    supporting_text: Label,
+pub struct Dialog<H, S, Actions = ()> {
+    headline: Label<H>,
+    supporting_text: Label<S>,
     accessibility_label: Str,
     actions: Actions,
     presented: Computed<bool>,
@@ -117,7 +118,7 @@ pub struct Dialog<Actions = ()> {
     escape_action: SharedAction,
 }
 
-impl<Actions> Debug for Dialog<Actions> {
+impl<H: Debug, S: Debug, Actions> Debug for Dialog<H, S, Actions> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Dialog")
             .field("headline", &self.headline)
@@ -126,10 +127,13 @@ impl<Actions> Debug for Dialog<Actions> {
     }
 }
 
-impl Dialog<()> {
+impl<H: LabelKind, S: LabelKind> Dialog<H, S, ()> {
     /// Creates a Material dialog with headline and supporting text.
     #[must_use]
-    pub fn new(headline: impl IntoLabel, supporting_text: impl IntoLabel) -> Self {
+    pub fn new(
+        headline: impl IntoLabel<Kind = H>,
+        supporting_text: impl IntoLabel<Kind = S>,
+    ) -> Self {
         let headline = headline.into_label();
         let supporting_text = supporting_text.into_label();
         let accessibility_label = label_plain_text(&headline);
@@ -146,10 +150,10 @@ impl Dialog<()> {
     }
 }
 
-impl<Actions> Dialog<Actions> {
+impl<H, S, Actions> Dialog<H, S, Actions> {
     /// Sets the dialog action row.
     #[must_use]
-    pub fn actions<NewActions>(self, actions: NewActions) -> Dialog<NewActions> {
+    pub fn actions<NewActions>(self, actions: NewActions) -> Dialog<H, S, NewActions> {
         Dialog {
             headline: self.headline,
             supporting_text: self.supporting_text,
@@ -194,9 +198,11 @@ impl<Actions> Dialog<Actions> {
     }
 }
 
-impl<Actions> View for Dialog<Actions>
+impl<H, S, Actions> View for Dialog<H, S, Actions>
 where
-    Actions: TupleViews + 'static,
+    H: LabelKind,
+    S: LabelKind,
+    Actions: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         let presented = self.presented;
@@ -420,7 +426,7 @@ struct DialogActions<Actions> {
 
 impl<Actions> View for DialogActions<Actions>
 where
-    Actions: TupleViews + 'static,
+    Actions: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         waterui::component::hstack(self.actions).spacing(DIALOG_ACTION_SPACING)
@@ -429,13 +435,16 @@ where
 
 /// Creates a Material Design 3 dialog.
 #[must_use]
-pub fn dialog(headline: impl IntoLabel, supporting_text: impl IntoLabel) -> Dialog<()> {
+pub fn dialog<H: IntoLabel, S: IntoLabel>(
+    headline: H,
+    supporting_text: S,
+) -> Dialog<H::Kind, S::Kind, ()> {
     Dialog::new(headline, supporting_text)
 }
 
 /// Creates a Material Design 3 dialog action.
 #[must_use]
-pub fn dialog_action(label: impl IntoLabel) -> DialogAction {
+pub fn dialog_action<L: IntoLabel>(label: L) -> DialogAction<L::Kind> {
     DialogAction::new(label)
 }
 

@@ -64,7 +64,7 @@ pub fn look(spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {
 /// A segment's label colour: `on-secondary-container` while selected,
 /// `on-surface` otherwise, on-surface at 38% while disabled.
 fn label_color() -> Driven<Color, Segment> {
-    waterui_core::interaction::StateValue::new(Color::from(OnSurface))
+    waterui::interaction::StateValue::new(Color::from(OnSurface))
         .when(
             InteractionState::DISABLED,
             Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY)),

@@ -14,7 +14,7 @@ use waterui::accessibility::AccessibilityRole;
 use waterui::layout::padding::EdgeInsets;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Environment, View, ViewExt as _};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::color::{OnPrimaryContainer, OnSurface, PrimaryContainer, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
@@ -102,7 +102,7 @@ impl<Actions> FloatingToolbar<Actions> {
 
 impl<Actions> View for FloatingToolbar<Actions>
 where
-    Actions: TupleViews + 'static,
+    Actions: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         let style = self.style;
@@ -167,7 +167,7 @@ impl<Actions> DockedToolbar<Actions> {
 
 impl<Actions> View for DockedToolbar<Actions>
 where
-    Actions: TupleViews + 'static,
+    Actions: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         // `DockedToolbarTokens.ContainerShape` is `CornerNone`: it is flush

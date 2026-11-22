@@ -15,7 +15,7 @@ use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
 
 use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer};
@@ -69,12 +69,12 @@ where
 /// A Material Design 3 list item.
 #[derive(Clone)]
 pub struct MaterialListItem {
-    headline: Label,
+    headline: Label<ErasedLabel>,
     accessibility_label: Str,
-    supporting_text: Option<Label>,
-    trailing_supporting_text: Option<Label>,
-    leading: Option<AnyViewBuilder>,
-    trailing: Option<AnyViewBuilder>,
+    supporting_text: Option<Label<ErasedLabel>>,
+    trailing_supporting_text: Option<Label<ErasedLabel>>,
+    leading: Option<AnyViewBuilder<AnyView>>,
+    trailing: Option<AnyViewBuilder<AnyView>>,
     action: Option<SharedAction>,
     selected: Option<Computed<bool>>,
 }
@@ -93,7 +93,7 @@ impl MaterialListItem {
     /// Creates a one-line Material list item.
     #[must_use]
     pub fn new(headline: impl IntoLabel) -> Self {
-        let headline = headline.into_label();
+        let headline = headline.into_label().erase();
         let accessibility_label = label_plain_text(&headline);
         Self {
             headline,
@@ -110,14 +110,14 @@ impl MaterialListItem {
     /// Adds supporting text and uses the two-line list item height.
     #[must_use]
     pub fn supporting_text(mut self, text: impl IntoLabel) -> Self {
-        self.supporting_text = Some(text.into_label());
+        self.supporting_text = Some(text.into_label().erase());
         self
     }
 
     /// Adds trailing supporting text.
     #[must_use]
     pub fn trailing_supporting_text(mut self, text: impl IntoLabel) -> Self {
-        self.trailing_supporting_text = Some(text.into_label());
+        self.trailing_supporting_text = Some(text.into_label().erase());
         self
     }
 
@@ -317,10 +317,17 @@ impl MaterialListItem {
     }
 }
 
+/// A Material list item is a row whose content is the item itself.
 impl ListContent for MaterialListItem {
-    fn collect_items(self, sink: &mut ListItemSink) {
+    type Row = Self;
+
+    fn collect_items<R, W>(self, sink: &mut ListItemSink<R>, wrap: W)
+    where
+        R: View,
+        W: Fn(Self::Row) -> R + Clone + 'static,
+    {
         sink.push(AnyViewBuilder::new(move || {
-            WaterListItem::new(self.clone().row_view())
+            WaterListItem::new(wrap(self.clone()))
         }));
     }
 }

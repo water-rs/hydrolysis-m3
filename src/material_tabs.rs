@@ -2,77 +2,62 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::navigation::tab::{TabsLayout, tab_style};
-use waterui::reactive::Signal as _;
+use waterui::navigation::tab::{TabSet, Tabs, tab_style};
+use waterui::navigation::{NavigationToolbarItems, NavigationView};
 use waterui::{Binding, Environment, View};
 use waterui_controls::label::IntoLabel;
 use waterui_core::handler::ViewBuilder;
-use waterui_core::id::Mapping;
-use waterui_core::views::{AnyViews, SharedAnyViews, Views};
 
 /// A Material Design 3 tab item — the shared [`Tab`] shape under the
 /// Material name: a tab is label + content on every platform.
+///
+/// [`Tab`]: waterui::navigation::tab::Tab
 pub use waterui::navigation::tab::Tab as MaterialTab;
 
 /// A Material Design 3 primary tabs container.
 ///
-/// `tabs` is any [`Views`] collection whose view is [`MaterialTab`] and
-/// whose id is the selection's type — a fixed `Vec<MaterialTab>` selects by
-/// `usize` index, a `ForEach` over a `List` of `SelfId`s keeps the
-/// application's own tab type. Membership changes keep a surviving tab's
-/// retained state — navigation stack, focus, in-flight gestures.
-pub struct MaterialTabs<T: 'static> {
-    selection: Binding<T>,
-    items: SharedAnyViews<MaterialTab>,
-    ids: Mapping<T>,
-}
+/// `tabs` is a [`TabSet`] whose id is the selection's type — a tuple or a
+/// `Vec` of [`MaterialTab`]s selects by `usize` index, a `ForEach` over a
+/// `List` of `SelfId`s keeps the application's own tab type. Membership
+/// changes keep a surviving tab's retained state — navigation stack, focus,
+/// in-flight gestures.
+pub struct MaterialTabs<T: TabSet>(Tabs<T, ()>);
 
-impl<T: Debug + 'static> Debug for MaterialTabs<T> {
+impl<T: TabSet> Debug for MaterialTabs<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MaterialTabs")
-            .field("tabs", &self.items.len().snapshot())
-            .finish_non_exhaustive()
+        f.debug_tuple("MaterialTabs").field(&self.0).finish()
     }
 }
 
-impl<T: Ord + Clone + 'static> MaterialTabs<T> {
+impl<T: TabSet> MaterialTabs<T> {
     /// Creates an adaptive Material tabs container.
     #[must_use]
-    pub fn new(
-        selection: &Binding<T>,
-        tabs: impl Views<View = MaterialTab, Id = T> + 'static,
-    ) -> Self {
-        let (items, ids) = AnyViews::new_with_ids(tabs);
-        let items = SharedAnyViews::from(items);
-        Self {
-            selection: selection.clone(),
-            items,
-            ids,
-        }
+    pub fn new(selection: &Binding<T::Id>, tabs: T) -> Self {
+        Self(Tabs::new(selection, tabs).style(tab_style::tab_bar()))
     }
 }
 
-impl<T: Ord + Clone + 'static> View for MaterialTabs<T> {
+impl<T: TabSet> View for MaterialTabs<T> {
     fn body(self, _env: &Environment) -> impl View {
-        TabsLayout::new(self.ids.binding(&self.selection), self.items).style(tab_style::tab_bar())
+        self.0
     }
 }
 
 /// Creates a Material Design 3 primary tabs container.
 #[must_use]
-pub fn material_tabs<T: Ord + Clone + 'static>(
-    selection: &Binding<T>,
-    tabs: impl Views<View = MaterialTab, Id = T> + 'static,
-) -> MaterialTabs<T> {
+pub fn material_tabs<T: TabSet>(selection: &Binding<T::Id>, tabs: T) -> MaterialTabs<T> {
     MaterialTabs::new(selection, tabs)
 }
 
 /// Creates a Material Design 3 tab.
 #[must_use]
-pub fn material_tab(
-    label: impl IntoLabel,
-    content: impl ViewBuilder<Output = waterui::navigation::NavigationView>,
-) -> MaterialTab {
+pub fn material_tab<L, C, V, Tb>(label: L, content: C) -> MaterialTab<C, L::Kind>
+where
+    L: IntoLabel,
+    C: ViewBuilder<Output = NavigationView<V, Tb>>,
+    V: View,
+    Tb: NavigationToolbarItems,
+{
     MaterialTab::new(label, content)
 }
 

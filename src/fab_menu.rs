@@ -11,7 +11,7 @@ use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::{Binding, Computed, SignalExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 
 use crate::color::{OnPrimary, OnPrimaryContainer, Primary, PrimaryContainer};
@@ -44,7 +44,7 @@ const ITEM_FADE_FRACTION: f32 = 0.5;
 
 /// One action in a [`FloatingActionButtonMenu`].
 pub struct FabMenuItem {
-    label: Label,
+    label: Label<ErasedLabel>,
     icon: AnyView,
     action: BoxedAction<()>,
 }
@@ -65,7 +65,7 @@ impl FabMenuItem {
         F: Handler<Args, ()> + 'static,
     {
         Self {
-            label: label.into_label(),
+            label: label.into_label().erase(),
             icon: AnyView::new(icon),
             action: Box::new(boxed_action(action)),
         }

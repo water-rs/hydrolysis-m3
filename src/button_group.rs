@@ -23,7 +23,7 @@ use waterui::reactive::{Signal as _, SignalExt as _, binding, zip};
 use waterui::shape::{ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
 use waterui_controls::button::Button;
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
@@ -119,7 +119,7 @@ impl SegmentPosition {
 
 /// One choice in a [`ConnectedButtonGroup`].
 pub struct ConnectedButton {
-    label: Label,
+    label: Label<ErasedLabel>,
     selected: Binding<bool>,
     action: BoxedAction<()>,
 }
@@ -140,7 +140,7 @@ impl ConnectedButton {
         F: Handler<Args, ()> + 'static,
     {
         Self {
-            label: label.into_label(),
+            label: label.into_label().erase(),
             selected: selected.clone(),
             action: Box::new(boxed_action(action)),
         }
@@ -315,7 +315,7 @@ const GROUP_EXPANDED_RATIO: f32 = 0.15;
 
 /// One button in a [`ButtonGroup`].
 pub struct GroupButton {
-    label: Label,
+    label: Label<ErasedLabel>,
     action: BoxedAction<()>,
     compression_limit: f32,
 }
@@ -337,7 +337,7 @@ impl GroupButton {
         F: Handler<Args, ()> + 'static,
     {
         Self {
-            label: label.into_label(),
+            label: label.into_label().erase(),
             action: Box::new(boxed_action(action)),
             compression_limit: SEGMENT_HORIZONTAL_SPACE,
         }

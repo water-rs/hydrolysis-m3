@@ -8,11 +8,11 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
-use waterui_core::view::TupleViews;
+use waterui_core::view::ViewSequence;
 
 use crate::color::{
     OnSecondaryContainer, OnSurfaceVariant, Secondary, SecondaryContainer, SurfaceContainer,
@@ -59,7 +59,7 @@ impl<Tabs> NavigationBar<Tabs> {
 
 impl<Tabs> View for NavigationBar<Tabs>
 where
-    Tabs: TupleViews + 'static,
+    Tabs: ViewSequence,
 {
     fn body(self, _env: &Environment) -> impl View {
         material_elevation(
@@ -77,15 +77,15 @@ where
 }
 
 /// A Material Design 3 navigation tab.
-pub struct NavigationTab<Icon, Action = NoAction> {
-    label: Label,
+pub struct NavigationTab<L, Icon, Action = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     icon: Icon,
     selected: Binding<bool>,
     action: Action,
 }
 
-impl<Icon, Action> Debug for NavigationTab<Icon, Action> {
+impl<L: Debug, Icon, Action> Debug for NavigationTab<L, Icon, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NavigationTab")
             .field("label", &self.label)
@@ -93,10 +93,10 @@ impl<Icon, Action> Debug for NavigationTab<Icon, Action> {
     }
 }
 
-impl<Icon> NavigationTab<Icon, NoAction> {
+impl<L: LabelKind, Icon> NavigationTab<L, Icon, NoAction> {
     /// Creates a navigation tab with a semantic label, icon, and selected state.
     #[must_use]
-    pub fn new(label: impl IntoLabel, icon: Icon, selected: &Binding<bool>) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>, icon: Icon, selected: &Binding<bool>) -> Self {
         let label = label.into_label();
         let accessibility_label = label_plain_text(&label);
         Self {
@@ -109,13 +109,13 @@ impl<Icon> NavigationTab<Icon, NoAction> {
     }
 }
 
-impl<Icon, Action> NavigationTab<Icon, Action> {
+impl<L, Icon, Action> NavigationTab<L, Icon, Action> {
     /// Sets the action performed when the navigation tab is tapped.
     #[must_use]
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> NavigationTab<Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> NavigationTab<L, Icon, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -129,8 +129,9 @@ impl<Icon, Action> NavigationTab<Icon, Action> {
     }
 }
 
-impl<Icon, Action> View for NavigationTab<Icon, Action>
+impl<L, Icon, Action> View for NavigationTab<L, Icon, Action>
 where
+    L: LabelKind,
     Icon: Clone + View + 'static,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
@@ -215,8 +216,8 @@ where
     }
 }
 
-fn navigation_tab_content(
-    label: Label,
+fn navigation_tab_content<L: LabelKind>(
+    label: Label<L>,
     icon: impl View,
     indicator_color: Color,
     icon_color: Color,
@@ -252,11 +253,11 @@ pub const fn navigation_bar<Tabs>(tabs: Tabs) -> NavigationBar<Tabs> {
 
 /// Creates a Material Design 3 navigation tab.
 #[must_use]
-pub fn navigation_tab<Icon>(
-    label: impl IntoLabel,
+pub fn navigation_tab<L: IntoLabel, Icon>(
+    label: L,
     icon: Icon,
     selected: &Binding<bool>,
-) -> NavigationTab<Icon> {
+) -> NavigationTab<L::Kind, Icon> {
     NavigationTab::new(label, icon, selected)
 }
 

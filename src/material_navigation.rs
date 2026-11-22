@@ -10,19 +10,20 @@ use waterui::navigation::{NavigationTitleDisplayMode, NavigationView};
 use waterui::reactive::{Binding, SignalExt as _};
 use waterui::{Environment, Str, ViewExt as _};
 
-/// A Material Design 3 navigation view with top app bar chrome.
+/// A Material Design 3 navigation view with top app bar chrome, keeping its
+/// content's type `V`.
 #[derive(Debug)]
-pub struct MaterialNavigationView {
-    view: NavigationView,
+pub struct MaterialNavigationView<V> {
+    view: NavigationView<V>,
     accessibility_label: Str,
     scroll_offset: Option<Binding<Point>>,
 }
 
 /// Creates a Material Design 3 navigation view.
-pub fn material_navigation_view(
+pub fn material_navigation_view<V: View>(
     title: impl IntoLabel,
-    content: impl View,
-) -> MaterialNavigationView {
+    content: V,
+) -> MaterialNavigationView<V> {
     let title = title.into_label();
     let accessibility_label = label_plain_text(&title);
     MaterialNavigationView {
@@ -41,17 +42,19 @@ pub fn material_navigation_view(
 /// tonal expression of the level-2 scrolled container elevation) and returns
 /// to `surface` at rest.
 #[must_use]
-pub fn material_scrolled_app_bar(
-    mut view: MaterialNavigationView,
+pub fn material_scrolled_app_bar<V>(
+    mut view: MaterialNavigationView<V>,
     offset: &Binding<Point>,
-) -> MaterialNavigationView {
+) -> MaterialNavigationView<V> {
     view.scroll_offset = Some(offset.clone());
     view
 }
 
 /// Uses the small top app bar presentation.
 #[must_use]
-pub fn material_small_top_app_bar(mut view: MaterialNavigationView) -> MaterialNavigationView {
+pub fn material_small_top_app_bar<V>(
+    mut view: MaterialNavigationView<V>,
+) -> MaterialNavigationView<V> {
     view.view = view
         .view
         .navigation_title_display_mode(NavigationTitleDisplayMode::Inline);
@@ -60,14 +63,16 @@ pub fn material_small_top_app_bar(mut view: MaterialNavigationView) -> MaterialN
 
 /// Uses the large top app bar presentation.
 #[must_use]
-pub fn material_large_top_app_bar(mut view: MaterialNavigationView) -> MaterialNavigationView {
+pub fn material_large_top_app_bar<V>(
+    mut view: MaterialNavigationView<V>,
+) -> MaterialNavigationView<V> {
     view.view = view
         .view
         .navigation_title_display_mode(NavigationTitleDisplayMode::Large);
     view
 }
 
-impl View for MaterialNavigationView {
+impl<V: View> View for MaterialNavigationView<V> {
     fn body(self, _env: &Environment) -> impl View {
         let view = match &self.scroll_offset {
             Some(offset) => self.view.navigation_bar_color(

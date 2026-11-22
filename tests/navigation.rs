@@ -32,7 +32,7 @@ use waterui::component::{button, hstack, text, vstack};
 use waterui::id::SelfId;
 use waterui::navigation::{
     NavigationLink, NavigationSplitView, NavigationStack, NavigationToolbar, NavigationToolbarItem,
-    NavigationToolbarPlacement, NavigationView, Tab, Tabs,
+    NavigationToolbarItems, NavigationToolbarPlacement, NavigationView, Tab, Tabs,
 };
 use waterui::{Binding, Str, View, ViewExt};
 use waterui_testing::{NodeBounds, OffscreenApp, Role, ui};
@@ -197,7 +197,7 @@ fn tabs_content_fits_pane() {
             vstack((
                 Tabs::new(
                     &selection,
-                    vec![
+                    (
                         Tab::new("Messages", move || {
                             NavigationView::new(
                                 "Messages",
@@ -207,7 +207,7 @@ fn tabs_content_fits_pane() {
                         Tab::new("Settings", move || {
                             NavigationView::new("Settings", text("settings"))
                         }),
-                    ],
+                    ),
                 ),
                 text("dock").height(BAR_HEIGHT).a11y_label("dock"),
             ))
@@ -294,7 +294,7 @@ fn navigation_content_relayouts_when_a_measure_read_text_grows() {
 
 /// The chat-detail shape from the issue: a title, a subtitle under it, and
 /// content.
-fn chat_detail_view() -> NavigationView {
+fn chat_detail_view() -> NavigationView<impl View> {
     NavigationView::new("dogfood crew", text("chat body")).navigation_subtitle(text("5 members"))
 }
 
@@ -320,7 +320,7 @@ fn navigation_subtitle_emits_on_offscreen_mount() {
 
 /// One toolbar action in each group the bar draws: leading, principal (the
 /// title area), trailing, and bottom.
-fn toolbar_view() -> NavigationView {
+fn toolbar_view() -> NavigationView<impl View, impl NavigationToolbarItems> {
     NavigationView::new("Inbox", text("mail body")).navigation_toolbar(
         NavigationToolbar::default()
             .item(NavigationToolbarItem::new(

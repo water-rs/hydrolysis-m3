@@ -1,11 +1,12 @@
 //! Material Design 3 menu convenience API.
 
+use waterui::component::label::LabelKind;
 use waterui::component::{IntoLabel, Label};
 use waterui::widget::Divider;
 use waterui_controls::menu::{Command, CommandBuilder, Menu, MenuItem, MenuView};
 
 /// A Material Design 3 menu trigger and popup menu.
-pub type MaterialMenu = Menu;
+pub type MaterialMenu<L> = Menu<L>;
 
 /// A Material Design 3 menu item.
 pub type MaterialMenuItem = MenuItem;
@@ -18,7 +19,7 @@ pub type MaterialMenuItemBuilder = CommandBuilder;
 
 /// Creates a Material Design 3 menu.
 #[must_use]
-pub fn material_menu(label: impl IntoLabel, items: impl MenuView) -> MaterialMenu {
+pub fn material_menu<L: IntoLabel>(label: L, items: impl MenuView) -> MaterialMenu<L::Kind> {
     Menu::new(label, items)
 }
 
@@ -30,7 +31,7 @@ pub fn material_menu_item(label: impl IntoLabel) -> MaterialMenuItemBuilder {
 
 /// Creates a Material Design 3 submenu.
 #[must_use]
-pub fn material_sub_menu(label: impl IntoLabel, items: impl MenuView) -> MaterialMenu {
+pub fn material_sub_menu<L: IntoLabel>(label: L, items: impl MenuView) -> MaterialMenu<L::Kind> {
     Menu::new(label, items)
 }
 
@@ -41,8 +42,8 @@ pub const fn material_menu_divider() -> Divider {
 
 /// Creates an icon-only Material Design 3 menu trigger label.
 #[must_use]
-pub fn material_menu_icon_label(label: impl Into<Label>) -> Label {
-    label.into().icon_only()
+pub const fn material_menu_icon_label<K: LabelKind>(label: Label<K>) -> Label<K> {
+    label.icon_only()
 }
 
 #[cfg(test)]

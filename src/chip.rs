@@ -10,7 +10,7 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{FixedRoundedRectangle, Rectangle, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
-use waterui_controls::label::{IntoLabel, Label};
+use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
@@ -53,14 +53,14 @@ const INPUT_CHIP_REMOVE_ICON_LINE_WIDTH: f32 = 2.0;
 ///
 /// This implementation is pure `WaterUI` composition: no Hydrolysis renderer type
 /// or backend-specific view ID is introduced.
-pub struct OutlinedChip<Action = NoAction, LabelColor = OnSurface> {
-    label: Label,
+pub struct OutlinedChip<L, Action = NoAction, LabelColor = OnSurface> {
+    label: Label<L>,
     accessibility_label: Str,
     action: Action,
     label_color: PhantomData<LabelColor>,
 }
 
-impl<Action, LabelColor> Debug for OutlinedChip<Action, LabelColor> {
+impl<L: Debug, Action, LabelColor> Debug for OutlinedChip<L, Action, LabelColor> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OutlinedChip")
             .field("label", &self.label)
@@ -68,10 +68,10 @@ impl<Action, LabelColor> Debug for OutlinedChip<Action, LabelColor> {
     }
 }
 
-impl<LabelColor> OutlinedChip<NoAction, LabelColor> {
+impl<L: LabelKind, LabelColor> OutlinedChip<L, NoAction, LabelColor> {
     /// Creates an outlined chip with the given semantic label.
     #[must_use]
-    pub fn new(label: impl IntoLabel) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>) -> Self {
         let label = label.into_label();
         let accessibility_label = label_plain_text(&label);
         Self {
@@ -83,13 +83,13 @@ impl<LabelColor> OutlinedChip<NoAction, LabelColor> {
     }
 }
 
-impl<Action, LabelColor> OutlinedChip<Action, LabelColor> {
+impl<L, Action, LabelColor> OutlinedChip<L, Action, LabelColor> {
     /// Sets the action performed when the chip is tapped.
     #[must_use]
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> OutlinedChip<impl FnMut(&Environment) -> Result<(), ExtractionError>, LabelColor>
+    ) -> OutlinedChip<L, impl FnMut(&Environment) -> Result<(), ExtractionError>, LabelColor>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -102,8 +102,9 @@ impl<Action, LabelColor> OutlinedChip<Action, LabelColor> {
     }
 }
 
-impl<Action, LabelColor> View for OutlinedChip<Action, LabelColor>
+impl<L, Action, LabelColor> View for OutlinedChip<L, Action, LabelColor>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     LabelColor: Default + Into<Color> + 'static,
 {
@@ -150,34 +151,34 @@ where
 ///
 /// Assist chips represent a smart or supplemental action related to nearby
 /// content.
-pub type AssistChip<Action = NoAction> = OutlinedChip<Action, OnSurface>;
+pub type AssistChip<L, Action = NoAction> = OutlinedChip<L, Action, OnSurface>;
 
 /// A Material Design 3 suggestion chip.
 ///
 /// Suggestion chips present quick suggestions related to user input or content.
-pub type SuggestionChip<Action = NoAction> = OutlinedChip<Action, OnSurfaceVariant>;
+pub type SuggestionChip<L, Action = NoAction> = OutlinedChip<L, Action, OnSurfaceVariant>;
 
 /// A Material Design 3 filter chip.
 ///
 /// Filter chips toggle a selected state and expose that state through the
 /// accessibility tree.
-pub struct FilterChip<Action = NoAction> {
-    label: Label,
+pub struct FilterChip<L, Action = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     selected: Binding<bool>,
     action: Action,
 }
 
 /// A Material Design 3 input chip with a trailing remove action.
-pub struct InputChip<Action = NoAction, RemoveAction = NoAction> {
-    label: Label,
+pub struct InputChip<L, Action = NoAction, RemoveAction = NoAction> {
+    label: Label<L>,
     accessibility_label: Str,
     remove_accessibility_label: Str,
     action: Action,
     remove_action: RemoveAction,
 }
 
-impl<Action, RemoveAction> Debug for InputChip<Action, RemoveAction> {
+impl<L: Debug, Action, RemoveAction> Debug for InputChip<L, Action, RemoveAction> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("InputChip")
             .field("label", &self.label)
@@ -185,10 +186,10 @@ impl<Action, RemoveAction> Debug for InputChip<Action, RemoveAction> {
     }
 }
 
-impl InputChip<NoAction, NoAction> {
+impl<L: LabelKind> InputChip<L, NoAction, NoAction> {
     /// Creates an input chip with the given semantic label.
     #[must_use]
-    pub fn new(label: impl IntoLabel) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>) -> Self {
         let label = label.into_label();
         let accessibility_label = label_plain_text(&label);
         let remove_accessibility_label = Str::from(format!("Remove {accessibility_label}"));
@@ -202,13 +203,13 @@ impl InputChip<NoAction, NoAction> {
     }
 }
 
-impl<Action, RemoveAction> InputChip<Action, RemoveAction> {
+impl<L, Action, RemoveAction> InputChip<L, Action, RemoveAction> {
     /// Sets the action performed when the primary chip area is tapped.
     #[must_use]
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> InputChip<impl FnMut(&Environment) -> Result<(), ExtractionError>, RemoveAction>
+    ) -> InputChip<L, impl FnMut(&Environment) -> Result<(), ExtractionError>, RemoveAction>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -226,7 +227,7 @@ impl<Action, RemoveAction> InputChip<Action, RemoveAction> {
     pub fn remove_action<F, Args>(
         self,
         action: F,
-    ) -> InputChip<Action, impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> InputChip<L, Action, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -240,7 +241,7 @@ impl<Action, RemoveAction> InputChip<Action, RemoveAction> {
     }
 }
 
-impl<Action> Debug for FilterChip<Action> {
+impl<L: Debug, Action> Debug for FilterChip<L, Action> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FilterChip")
             .field("label", &self.label)
@@ -248,10 +249,10 @@ impl<Action> Debug for FilterChip<Action> {
     }
 }
 
-impl FilterChip<NoAction> {
+impl<L: LabelKind> FilterChip<L, NoAction> {
     /// Creates a filter chip bound to the provided selected state.
     #[must_use]
-    pub fn new(label: impl IntoLabel, selected: &Binding<bool>) -> Self {
+    pub fn new(label: impl IntoLabel<Kind = L>, selected: &Binding<bool>) -> Self {
         let label = label.into_label();
         let accessibility_label = label_plain_text(&label);
         Self {
@@ -263,13 +264,13 @@ impl FilterChip<NoAction> {
     }
 }
 
-impl<Action> FilterChip<Action> {
+impl<L, Action> FilterChip<L, Action> {
     /// Sets the action performed after the chip toggles its selected state.
     #[must_use]
     pub fn action<F, Args>(
         self,
         action: F,
-    ) -> FilterChip<impl FnMut(&Environment) -> Result<(), ExtractionError>>
+    ) -> FilterChip<L, impl FnMut(&Environment) -> Result<(), ExtractionError>>
     where
         F: Handler<Args, ()> + 'static,
     {
@@ -282,8 +283,9 @@ impl<Action> FilterChip<Action> {
     }
 }
 
-impl<Action> View for FilterChip<Action>
+impl<L, Action> View for FilterChip<L, Action>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
@@ -372,8 +374,9 @@ where
     }
 }
 
-impl<Action, RemoveAction> View for InputChip<Action, RemoveAction>
+impl<L, Action, RemoveAction> View for InputChip<L, Action, RemoveAction>
 where
+    L: LabelKind,
     Action: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
     RemoveAction: FnMut(&Environment) -> Result<(), ExtractionError> + 'static,
 {
@@ -430,25 +433,25 @@ where
 
 /// Creates a Material Design 3 assist chip with the given semantic label.
 #[must_use]
-pub fn assist_chip(label: impl IntoLabel) -> AssistChip {
+pub fn assist_chip<L: IntoLabel>(label: L) -> AssistChip<L::Kind> {
     AssistChip::new(label)
 }
 
 /// Creates a Material Design 3 suggestion chip with the given semantic label.
 #[must_use]
-pub fn suggestion_chip(label: impl IntoLabel) -> SuggestionChip {
+pub fn suggestion_chip<L: IntoLabel>(label: L) -> SuggestionChip<L::Kind> {
     SuggestionChip::new(label)
 }
 
 /// Creates a Material Design 3 filter chip with the given semantic label.
 #[must_use]
-pub fn filter_chip(label: impl IntoLabel, selected: &Binding<bool>) -> FilterChip {
+pub fn filter_chip<L: IntoLabel>(label: L, selected: &Binding<bool>) -> FilterChip<L::Kind> {
     FilterChip::new(label, selected)
 }
 
 /// Creates a Material Design 3 input chip with the given semantic label.
 #[must_use]
-pub fn input_chip(label: impl IntoLabel) -> InputChip {
+pub fn input_chip<L: IntoLabel>(label: L) -> InputChip<L::Kind> {
     InputChip::new(label)
 }
 
