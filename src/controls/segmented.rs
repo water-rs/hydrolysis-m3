@@ -10,9 +10,9 @@
 //! function of the segment's interaction state, so a hover, a press or a
 //! selection change records nothing.
 
-use hydrolysis::draw::kurbo::{BezPath, Point, RoundedRect, RoundedRectRadii, Stroke, Vec2};
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{BezPath, Point, RoundedRect, RoundedRectRadii, Stroke, Vec2};
+use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Custom, Driven, Inputs, PressFeedback, Segment, SegmentLabel,
     SegmentedLayout, SegmentedLook, SegmentedSpec, SegmentedValue, Surface,
 };
@@ -209,9 +209,9 @@ mod tests {
         PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
         PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_MIN_WIDTH,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
-    use hydrolysis::theme::{Inputs, Segment, SegmentedSpec, SpecTint};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii};
+    use hydrolysis_style::theme::{Inputs, Segment, SegmentedSpec, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;

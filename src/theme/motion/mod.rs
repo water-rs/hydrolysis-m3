@@ -8,15 +8,15 @@ pub mod tokens;
 
 use core::time::Duration;
 
-use hydrolysis::draw::kurbo::Size;
+use hydrolysis_style::draw::kurbo::Size;
 #[cfg(any(
     feature = "text-field",
     feature = "secure-field",
     feature = "date-picker",
     feature = "color-picker"
 ))]
-use hydrolysis::theme::TextCaretMotion;
-use hydrolysis::theme::{HitRegion, Motion, Ripple, Transition, ValueMotion};
+use hydrolysis_style::theme::TextCaretMotion;
+use hydrolysis_style::theme::{HitRegion, Motion, Ripple, Transition, ValueMotion};
 use waterui::animation::Animation;
 #[cfg(feature = "navigation")]
 use waterui::easing::EasingCurve;
@@ -27,7 +27,7 @@ use super::dimensions::MINIMUM_TOUCH_TARGET;
 #[cfg(feature = "navigation")]
 use super::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
 #[cfg(feature = "navigation")]
-use hydrolysis::theme::NavigationMotion;
+use hydrolysis_style::theme::NavigationMotion;
 use tokens::{duration, easing, motion};
 
 /// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small

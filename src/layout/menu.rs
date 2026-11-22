@@ -5,9 +5,9 @@
 //! its layout and records the parts below once, at rest: a menu has no live
 //! state of its own, its rows are buttons with looks of their own.
 
-use hydrolysis::draw::kurbo::Rect;
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::Rect;
+use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis_style::theme::{
     CornerShape, Custom, Driven, Elevation, Inputs, MenuLayout, MenuLook, MenuSpec, Surface,
 };
 use waterui_core::Environment;
@@ -102,9 +102,9 @@ mod tests {
         MENU_HORIZONTAL_PADDING, MENU_MAX_WIDTH, MENU_MIN_WIDTH, MENU_ROW_HEIGHT,
         MENU_VERTICAL_PADDING,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::Rect;
-    use hydrolysis::theme::MenuSpec;
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::Rect;
+    use hydrolysis_style::theme::MenuSpec;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;
 

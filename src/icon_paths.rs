@@ -7,7 +7,7 @@
 //! `androidx.compose.material.icons`.
 
 #[cfg(any(feature = "list", feature = "stepper", feature = "navigation"))]
-use hydrolysis::draw::kurbo::{BezPath, Point, Rect};
+use hydrolysis_style::draw::kurbo::{BezPath, Point, Rect};
 
 /// The grid every Material icon is authored on.
 const ICON_GRID: f64 = 24.0;
@@ -199,7 +199,7 @@ pub fn add(grid: IconGrid) -> BezPath {
 mod tests {
     use super::{IconGrid, delete, drag_handle};
     #[cfg(any(feature = "list", feature = "stepper", feature = "navigation"))]
-    use hydrolysis::draw::kurbo::{Rect, Shape as _};
+    use hydrolysis_style::draw::kurbo::{Rect, Shape as _};
 
     /// Both icons must stay inside the box they are fitted to, or they would
     /// bleed into neighbouring row content.

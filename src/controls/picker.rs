@@ -9,9 +9,9 @@
 //! hover or a focus records nothing. The popup the field opens is the
 //! [menu look](crate::layout::menu).
 
-use hydrolysis::draw::kurbo::{BezPath, Point, Rect, Stroke};
-use hydrolysis::draw::{Draw as _, Paint};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{BezPath, Point, Rect, Stroke};
+use hydrolysis_style::draw::{Draw as _, Paint};
+use hydrolysis_style::theme::{
     Chrome, Custom, Driven, Inputs, Label, MenuPickerLayout, MenuPickerLook, PickerSpec,
 };
 use waterui_core::Environment;
@@ -139,10 +139,10 @@ mod tests {
         INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
         PICKER_INDICATOR_SPACE,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::Paint;
-    use hydrolysis::draw::kurbo::{Rect, Shape as _};
-    use hydrolysis::theme::{Inputs, PickerSpec, SpecTint};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::Paint;
+    use hydrolysis_style::draw::kurbo::{Rect, Shape as _};
+    use hydrolysis_style::theme::{Inputs, PickerSpec, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;
@@ -191,7 +191,7 @@ mod tests {
         let colors = MaterialColorScheme::baseline_light();
         let paint = indicator_paint(&env());
         let at = |state| paint.target(&at(state));
-        let solid = |color: hydrolysis::draw::WorkingColor| Paint::from(color);
+        let solid = |color: hydrolysis_style::draw::WorkingColor| Paint::from(color);
 
         assert_eq!(
             at(InteractionState::empty()),

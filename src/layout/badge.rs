@@ -1,8 +1,8 @@
 //! The Material 3 badge look from the `md.comp.badge.*` tokens.
 
-use hydrolysis::draw::kurbo::{Circle, Rect, RoundedRect, RoundedRectRadii};
-use hydrolysis::draw::{Draw as _, Paint};
-use hydrolysis::theme::{BadgeLook, BadgeMetrics, Custom, Driven};
+use hydrolysis_style::draw::kurbo::{Circle, Rect, RoundedRect, RoundedRectRadii};
+use hydrolysis_style::draw::{Draw as _, Paint};
+use hydrolysis_style::theme::{BadgeLook, BadgeMetrics, Custom, Driven};
 use waterui_core::Environment;
 use waterui_graphics::color::Color;
 

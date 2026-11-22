@@ -10,9 +10,9 @@
 //! icon is a part of it, and an end at the limit of the range is disabled, so
 //! it reads in the disabled colours.
 
-use hydrolysis::draw::kurbo::{BezPath, Rect, RoundedRectRadii, Size};
-use hydrolysis::draw::{Draw as _, Paint};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{BezPath, Rect, RoundedRectRadii, Size};
+use hydrolysis_style::draw::{Draw as _, Paint};
+use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Custom, Driven, Inputs, StepperLook, StepperSpec, Surface,
 };
 use waterui::interaction::InteractionState;
@@ -129,9 +129,9 @@ mod tests {
         STEPPER_BUTTON_SIZE, STEPPER_BUTTON_SPACING, STEPPER_ICON_SIZE,
         STEPPER_INNER_CORNER_RADIUS, STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
-    use hydrolysis::theme::{Corners, Inputs, SpecTint, StepperSpec};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
+    use hydrolysis_style::theme::{Corners, Inputs, SpecTint, StepperSpec};
     use waterui::interaction::InteractionState;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;

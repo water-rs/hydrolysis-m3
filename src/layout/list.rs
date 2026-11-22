@@ -1,9 +1,9 @@
 //! The Material 3 list look: rows, separators, the reorder lift, the
 //! trailing controls of an edited list and the swipe-to-dismiss background.
 
-use hydrolysis::draw::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii, Size, Vec2};
-use hydrolysis::draw::{Draw as _, Paint, Shadow as ShadowCast, ShapeData};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{Point, Rect, RoundedRect, RoundedRectRadii, Size, Vec2};
+use hydrolysis_style::draw::{Draw as _, Paint, Shadow as ShadowCast, ShapeData};
+use hydrolysis_style::theme::{
     Chrome, CornerShape, Custom, Driven, Inputs, ListControls, ListDividerMetrics, ListGestures,
     ListLook, ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec,
     ListTrailingControlMetrics, Surface,
@@ -177,7 +177,7 @@ fn control(layer: impl Into<Color>, size: Size, alignment: Vec2) -> Chrome {
 /// A control's icon, `shape` over its frame, filled with `color`.
 fn icon(
     color: impl Into<Color>,
-    shape: impl Fn(Rect) -> hydrolysis::draw::kurbo::BezPath + 'static,
+    shape: impl Fn(Rect) -> hydrolysis_style::draw::kurbo::BezPath + 'static,
     env: &Environment,
 ) -> Icon {
     Custom::new(
@@ -234,7 +234,7 @@ fn swipe_background(env: &Environment) -> SwipeBackground {
 ///
 /// The glyph grows from a reduced size to full as the swipe approaches its
 /// threshold.
-fn swipe_glyph(frame: Rect, progress: f64) -> hydrolysis::draw::kurbo::BezPath {
+fn swipe_glyph(frame: Rect, progress: f64) -> hydrolysis_style::draw::kurbo::BezPath {
     let inset = LIST_SWIPE_ICON_EDGE_INSET + LIST_SWIPE_ICON_SIZE / 2.0;
     let center_x = if progress < 0.0 {
         frame.x1 - inset
@@ -258,7 +258,7 @@ mod tests {
         LIST_ONE_LINE_ROW_HEIGHT, LIST_TRAILING_CONTROL_SPACING,
         LIST_TRAILING_CONTROL_VERTICAL_INSET, LIST_VERTICAL_INSET,
     };
-    use hydrolysis::draw::kurbo::{Rect, Shape as _};
+    use hydrolysis_style::draw::kurbo::{Rect, Shape as _};
 
     #[test]
     fn list_metrics_match_compose_list_tokens() {

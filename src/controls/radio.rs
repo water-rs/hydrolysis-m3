@@ -7,9 +7,9 @@
 //! nothing: the dot grows or shrinks on the emphasized decelerate curve over
 //! `medium2` while its opacity and the ring's colour snap over at `short1`.
 
-use hydrolysis::draw::kurbo::{Circle, Size, Stroke};
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{Circle, Size, Stroke};
+use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis_style::theme::{
     Custom, Driven, Inputs, Label, PickerSpec, RadioGroupLook, RadioLayout, ToggleControl,
 };
 use waterui::interaction::InteractionState;
@@ -171,10 +171,10 @@ mod tests {
         PICKER_LABEL_SPACING, PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS,
         PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_OUTER_RING_WIDTH,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::{Rect, Size};
-    use hydrolysis::draw::{Paint, WorkingColor};
-    use hydrolysis::theme::{Inputs, PickerSpec, SpecTint};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::{Rect, Size};
+    use hydrolysis_style::draw::{Paint, WorkingColor};
+    use hydrolysis_style::theme::{Inputs, PickerSpec, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;

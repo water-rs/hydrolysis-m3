@@ -26,9 +26,9 @@ use crate::navigation_bar::{
 };
 use crate::navigation_rail::{COLLAPSED_ACTIVE_INDICATOR_HEIGHT, COLLAPSED_ACTIVE_INDICATOR_WIDTH};
 use crate::theme::motion;
-use hydrolysis::draw::kurbo::{Rect, RoundedRect, RoundedRectRadii, Vec2};
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{Rect, RoundedRect, RoundedRectRadii, Vec2};
+use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis_style::theme::{
     Chrome, CornerShape, Custom, Driven, Inputs, Surface, TabItem, TabItemGeometry, TabItemLayout,
     TabsLook, TabsMetrics,
 };
@@ -220,10 +220,10 @@ mod tests {
         NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
         TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::Rect;
-    use hydrolysis::draw::{Paint, WorkingColor};
-    use hydrolysis::theme::{Inputs, TabItem, TabItemGeometry, TabItemLayout};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::Rect;
+    use hydrolysis_style::draw::{Paint, WorkingColor};
+    use hydrolysis_style::theme::{Inputs, TabItem, TabItemGeometry, TabItemLayout};
     use waterui::interaction::InteractionState;
     use waterui::navigation::tab::NativeTabStyle;
     use waterui_core::{Binding, Environment, Signal as _, SignalExt as _};

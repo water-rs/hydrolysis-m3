@@ -8,7 +8,7 @@
 
 use core::fmt::{self, Debug};
 
-use hydrolysis::draw::kurbo::RoundedRectRadii;
+use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
 use waterui::gesture::DragGesture;
@@ -28,7 +28,7 @@ use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_a
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
 use crate::semantics::{conditional_color, drag_held, interaction_chrome};
-use hydrolysis::theme::Corners;
+use hydrolysis_style::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;

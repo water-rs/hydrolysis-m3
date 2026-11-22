@@ -15,7 +15,7 @@ use waterui_core::handler::{
 };
 
 use crate::action::{NoAction, noop};
-use hydrolysis::draw::kurbo::RoundedRectRadii;
+use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 use waterui::interaction::Disabled;
 use waterui_core::view::ViewSequence;
 
@@ -23,7 +23,7 @@ use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer,
 use crate::icons::CheckmarkIcon;
 use crate::semantics::{conditional_color, interaction_chrome, label_plain_text};
 use crate::theme::typography;
-use hydrolysis::theme::Corners;
+use hydrolysis_style::theme::Corners;
 
 const OUTLINED_SEGMENTED_BUTTON_CONTAINER_HEIGHT: f32 = 40.0;
 const OUTLINED_SEGMENTED_BUTTON_CONTAINER_SHAPE: f32 = 20.0;

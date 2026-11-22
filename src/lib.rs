@@ -5,8 +5,8 @@
 //! Material Design 3 widget metrics and drawing primitives.
 //!
 //! This crate is a style package: [`Material3`] implements the
-//! widget chrome contract from `hydrolysis::theme` and the
-//! [`hydrolysis::Style`] contract the rendered Hydrolysis runtime is
+//! widget chrome contract from `hydrolysis_style::theme` and the
+//! [`hydrolysis_style::Style`] contract the rendered Hydrolysis runtime is
 //! constructed with — `hydrolysis::run(app, Material3::defaults())`.
 
 pub mod button_group;
@@ -86,45 +86,47 @@ pub(crate) use navigation::{navigation as navigation_chrome, tabs};
 pub(crate) use theme::dimensions;
 
 use core::cell::OnceCell;
-use hydrolysis::draw::BlendSpace;
+use hydrolysis_style::draw::BlendSpace;
 #[cfg(feature = "toggle")]
-use hydrolysis::draw::WorkingColor;
+use hydrolysis_style::draw::WorkingColor;
 
-pub use hydrolysis::theme::{
+pub use hydrolysis_style::theme::{
     BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, IndicatorLook, InteractionFocusBinding,
     LinearProgressLook, ModalInteraction, ProgressSpec, ScrollIndicatorLook, WidgetTheme,
 };
 #[cfg(feature = "toggle")]
-pub use hydrolysis::theme::{CheckboxLook, SwitchLook, ToggleSpec};
+pub use hydrolysis_style::theme::{CheckboxLook, SwitchLook, ToggleSpec};
 #[cfg(any(
     feature = "text-field",
     feature = "secure-field",
     feature = "date-picker",
     feature = "color-picker"
 ))]
-pub use hydrolysis::theme::{InputFieldMetrics, TextCaretMotion, TextFieldLook, TextFieldSpec};
+pub use hydrolysis_style::theme::{
+    InputFieldMetrics, TextCaretMotion, TextFieldLook, TextFieldSpec,
+};
 #[cfg(feature = "list")]
-pub use hydrolysis::theme::{
+pub use hydrolysis_style::theme::{
     ListDividerMetrics, ListLook, ListMetrics, ListRowMetrics, ListSectionMetrics, ListSpec,
     ListTrailingControlMetrics,
 };
 #[cfg(feature = "menu")]
-pub use hydrolysis::theme::{MenuLook, MenuSpec};
+pub use hydrolysis_style::theme::{MenuLook, MenuSpec};
 #[cfg(any(feature = "picker", feature = "date-picker"))]
-pub use hydrolysis::theme::{MenuPickerLook, PickerSpec};
+pub use hydrolysis_style::theme::{MenuPickerLook, PickerSpec};
 #[cfg(feature = "navigation")]
-pub use hydrolysis::theme::{
+pub use hydrolysis_style::theme::{
     NavigationBarLook, NavigationMetrics, NavigationMotion, NavigationSpec, TabItemGeometry,
     TabItemLayout, TabsLook, TabsMetrics, TabsSpec,
 };
 #[cfg(feature = "picker")]
-pub use hydrolysis::theme::{RadioGroupLook, SegmentedLook, SegmentedSpec};
+pub use hydrolysis_style::theme::{RadioGroupLook, SegmentedLook, SegmentedSpec};
 #[cfg(feature = "slider")]
-pub use hydrolysis::theme::{SliderLook, SliderSpec};
+pub use hydrolysis_style::theme::{SliderLook, SliderSpec};
 #[cfg(feature = "stepper")]
-pub use hydrolysis::theme::{StepperLook, StepperSpec};
+pub use hydrolysis_style::theme::{StepperLook, StepperSpec};
 #[cfg(feature = "table")]
-pub use hydrolysis::theme::{TableLook, TableMetrics};
+pub use hydrolysis_style::theme::{TableLook, TableMetrics};
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
@@ -209,7 +211,7 @@ pub use tooltip::{PlainTooltip, RichTooltip, TooltipAnchor, plain_tooltip, rich_
 /// Material Design 3 style for the Hydrolysis runtime.
 ///
 /// `Material3` is both the [`WidgetTheme`] the backend resolves widget chrome
-/// through and the [`hydrolysis::Style`] whose `install_tokens` writes the
+/// through and the [`hydrolysis_style::Style`] whose `install_tokens` writes the
 /// Material color and typography tokens into the environment:
 /// `hydrolysis::run(app, Material3::defaults())`.
 ///
@@ -349,7 +351,7 @@ impl Material3Colors {
     }
 }
 
-impl hydrolysis::Style for Material3 {
+impl hydrolysis_style::Style for Material3 {
     /// Writes the Material color and typography tokens into `env`, over the
     /// framework defaults the runtime installs first.
     ///

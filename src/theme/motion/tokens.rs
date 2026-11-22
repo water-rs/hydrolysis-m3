@@ -10,7 +10,7 @@
 //! Values mirror the M3 motion token reference.
 
 use core::time::Duration;
-use hydrolysis::draw::{Curve, curve_value};
+use hydrolysis_style::draw::{Curve, curve_value};
 use num_traits::ToPrimitive as _;
 use waterui::animation::Animation;
 

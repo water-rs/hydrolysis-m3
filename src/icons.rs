@@ -5,7 +5,7 @@
 //! it whenever the colour signal it resolved against changes, which is the
 //! precise update the reactive contract asks for.
 
-use hydrolysis::draw::WorkingColor;
+use hydrolysis_style::draw::WorkingColor;
 use waterui::{Environment, View};
 use waterui_core::layout::{Point, Size};
 use waterui_core::reactive::SignalExt as _;
@@ -84,7 +84,7 @@ where
 mod tests {
     use core::time::Duration;
 
-    use hydrolysis::draw::WorkingColor;
+    use hydrolysis_style::draw::WorkingColor;
     use waterui::Environment;
     use waterui::reactive::binding;
     use waterui_core::reactive::SignalExt as _;

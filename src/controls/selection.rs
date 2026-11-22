@@ -4,9 +4,9 @@ use crate::theme::motion::{
     self, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY, PRESSED_STATE_LAYER_OPACITY,
     RIPPLE_INITIAL_SCALE,
 };
-use hydrolysis::draw::kurbo::Circle;
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
-use hydrolysis::theme::{Custom, Driven, Inputs, Motion, Transition};
+use hydrolysis_style::draw::kurbo::Circle;
+use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis_style::theme::{Custom, Driven, Inputs, Motion, Transition};
 use waterui::interaction::InteractionState;
 use waterui::reactive::Computed;
 use waterui_core::Environment;

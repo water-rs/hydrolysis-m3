@@ -4,7 +4,7 @@
 //! `hydrolysis_m3::Material3` style and can be used anywhere a `WaterUI`
 //! color is accepted.
 
-use hydrolysis::draw::WorkingColor;
+use hydrolysis_style::draw::WorkingColor;
 use waterui::View;
 use waterui::color::{Color, WithOpacity};
 use waterui::contract_violation;
@@ -195,7 +195,7 @@ mod tests {
 
     use super::*;
     use crate::{Material3, MaterialColorMode};
-    use hydrolysis::Style as _;
+    use hydrolysis_style::Style as _;
 
     fn assert_resolved_color_eq(actual: WorkingColor, expected: WorkingColor) {
         assert_eq!(

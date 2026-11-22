@@ -4,9 +4,9 @@
 //! `on-surface-variant` at 55%, 2.5dp thick and widening to 6.5dp while it
 //! is dragged.
 
-use hydrolysis::draw::kurbo::{RoundedRect, RoundedRectRadii};
-use hydrolysis::draw::{Draw as _, Paint};
-use hydrolysis::theme::{Custom, Driven, ScrollIndicatorLook};
+use hydrolysis_style::draw::kurbo::{RoundedRect, RoundedRectRadii};
+use hydrolysis_style::draw::{Draw as _, Paint};
+use hydrolysis_style::theme::{Custom, Driven, ScrollIndicatorLook};
 use waterui_core::Environment;
 
 use crate::color::OnSurfaceVariant;
@@ -50,7 +50,7 @@ fn thumb(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
 #[cfg(test)]
 mod tests {
     use super::look;
-    use hydrolysis::Style as _;
+    use hydrolysis_style::Style as _;
     use waterui_core::Environment;
 
     #[test]

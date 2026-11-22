@@ -10,15 +10,15 @@
 use core::f64::consts::{FRAC_PI_2, TAU};
 use core::time::Duration;
 
-use hydrolysis::draw::kurbo::{
+use hydrolysis_style::draw::kurbo::{
     Affine, Arc, BezPath, Circle, Point, Rect, RoundedRect, RoundedRectRadii, Shape as _, Size,
     Stroke,
 };
-use hydrolysis::draw::{
+use hydrolysis_style::draw::{
     Curve, Draw as _, Easing, Fixed, Keyframes, Live, Paint, Recorder, Repeat, ShapeData, Spring,
     WorkingColor,
 };
-use hydrolysis::theme::{
+use hydrolysis_style::theme::{
     Custom, Driven, IndicatorLook, Inputs, LinearProgressLook, ProgressControl, ProgressSpec,
 };
 use waterui_core::Environment;
@@ -806,9 +806,9 @@ fn loading_part(spec: &ProgressSpec, env: &Environment) -> Blob {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::curve_value;
-    use hydrolysis::theme::SpecTint;
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::curve_value;
+    use hydrolysis_style::theme::SpecTint;
     use waterui_core::layout::LayoutDirection;
 
     fn env() -> Environment {

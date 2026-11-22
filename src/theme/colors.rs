@@ -1,4 +1,4 @@
-use hydrolysis::draw::WorkingColor;
+use hydrolysis_style::draw::WorkingColor;
 use material_color_utils::{
     MaterializedScheme,
     dynamic::{

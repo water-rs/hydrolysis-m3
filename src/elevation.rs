@@ -1,7 +1,7 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
 #[cfg(feature = "list")]
-use hydrolysis::theme::{Driven, Inputs};
+use hydrolysis_style::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
@@ -194,16 +194,16 @@ pub(crate) fn shadows_for_level(level: MaterialElevationLevel) -> (LevelShadow, 
 /// role, as the elevation of a control's chrome.
 pub(crate) fn chrome_elevation(
     level: MaterialElevationLevel,
-    shadow: hydrolysis::draw::WorkingColor,
-) -> hydrolysis::theme::Elevation {
+    shadow: hydrolysis_style::draw::WorkingColor,
+) -> hydrolysis_style::theme::Elevation {
     let tokens = ElevationTokens::for_level(level);
-    let cast = |token: ElevationShadow, base_opacity| hydrolysis::draw::Shadow {
+    let cast = |token: ElevationShadow, base_opacity| hydrolysis_style::draw::Shadow {
         sigma: f64::from(token.blur),
-        offset: hydrolysis::draw::kurbo::Vec2::new(0.0, f64::from(token.y)),
+        offset: hydrolysis_style::draw::kurbo::Vec2::new(0.0, f64::from(token.y)),
         spread: 0.0,
         color: shadow.with_alpha(token.opacity(base_opacity)),
     };
-    hydrolysis::theme::Elevation::new(
+    hydrolysis_style::theme::Elevation::new(
         cast(tokens.key, KEY_OPACITY),
         cast(tokens.ambient, AMBIENT_OPACITY),
     )
@@ -216,13 +216,13 @@ pub(crate) fn cast_shadows<V: 'static>(
     level: MaterialElevationLevel,
     env: &Environment,
 ) -> (
-    Driven<hydrolysis::draw::Shadow, V>,
-    Driven<hydrolysis::draw::Shadow, V>,
+    Driven<hydrolysis_style::draw::Shadow, V>,
+    Driven<hydrolysis_style::draw::Shadow, V>,
 ) {
     let cast = |key: bool| {
         Driven::follow(
             Color::from(Shadow).resolve(env),
-            move |shadow: &hydrolysis::draw::WorkingColor, _inputs: &Inputs<'_, V>| {
+            move |shadow: &hydrolysis_style::draw::WorkingColor, _inputs: &Inputs<'_, V>| {
                 let elevation = chrome_elevation(level, *shadow);
                 if key {
                     elevation.key
