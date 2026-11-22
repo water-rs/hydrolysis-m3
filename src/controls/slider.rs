@@ -6,9 +6,9 @@
 //! normalized value and the interaction state, so a drag moves operands and
 //! records nothing.
 
-use hydrolysis::draw::kurbo::{Circle, Point, Rect, RoundedRect, RoundedRectRadii, Size};
-use hydrolysis::draw::{Draw as _, Paint, Shadow, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{Circle, Point, Rect, RoundedRect, RoundedRectRadii, Size};
+use hydrolysis_style::draw::{Draw as _, Paint, Shadow, WorkingColor};
+use hydrolysis_style::theme::{
     Custom, DragMapping, Driven, Inputs, Knob, SliderLayout, SliderLook, SliderSpec, ValueIndicator,
 };
 use waterui::interaction::InteractionState;
@@ -306,12 +306,12 @@ const fn state_layer_opacity(state: InteractionState) -> f32 {
 /// underlay so content behind it cannot bleed through.
 fn handle(tokens: &SliderSizeTokens, tint: Color, env: &Environment) -> HandlePart {
     let tokens = *tokens;
-    let elevation = |pick: fn(&hydrolysis::theme::Elevation) -> Shadow| {
+    let elevation = |pick: fn(&hydrolysis_style::theme::Elevation) -> Shadow| {
         Driven::follow(
             Color::from(ShadowRole).resolve(env),
             move |shadow: &WorkingColor, inputs: &Inputs<'_, f64>| {
                 if inputs.state.contains(InteractionState::DISABLED) {
-                    pick(&hydrolysis::theme::Elevation::NONE)
+                    pick(&hydrolysis_style::theme::Elevation::NONE)
                 } else {
                     pick(&chrome_elevation(MaterialElevationLevel::LEVEL1, *shadow))
                 }
@@ -385,8 +385,8 @@ fn value_indicator(env: &Environment) -> ValueIndicator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hydrolysis::Style as _;
-    use hydrolysis::theme::SpecTint;
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::theme::SpecTint;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;
 

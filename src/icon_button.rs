@@ -2,8 +2,8 @@
 
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
-use hydrolysis::draw::kurbo::Size;
-use hydrolysis::theme::{ButtonLook, ButtonSpec, CornerShape, Corners, Surface};
+use hydrolysis_style::draw::kurbo::Size;
+use hydrolysis_style::theme::{ButtonLook, ButtonSpec, CornerShape, Corners, Surface};
 
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::border::Border;
@@ -515,15 +515,15 @@ mod tests {
         ICON_BUTTON_TOUCH_TARGET_SIZE, IconButtonSize, IconButtonVariantTokens, OutlinedIconButton,
         look,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::{Rect, Size, Vec2};
-    use hydrolysis::theme::{ButtonSpec, Fill, Inputs, SpecTint};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::{Rect, Size, Vec2};
+    use hydrolysis_style::theme::{ButtonSpec, Fill, Inputs, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
     use waterui_core::layout::LayoutDirection;
 
-    fn icon_look(style: ButtonStyle, size: ControlSize) -> hydrolysis::theme::ButtonLook {
+    fn icon_look(style: ButtonStyle, size: ControlSize) -> hydrolysis_style::theme::ButtonLook {
         let mut env = waterui::Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
         look(
@@ -586,7 +586,7 @@ mod tests {
         );
         assert_eq!(
             fill.target(&rest),
-            hydrolysis::draw::Paint::from(hydrolysis::draw::WorkingColor::TRANSPARENT,)
+            hydrolysis_style::draw::Paint::from(hydrolysis_style::draw::WorkingColor::TRANSPARENT,)
         );
         let mut env = waterui::Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
@@ -606,7 +606,7 @@ mod tests {
         };
         assert_eq!(
             fill.target(&rest),
-            hydrolysis::draw::Paint::from(colors.primary.working())
+            hydrolysis_style::draw::Paint::from(colors.primary.working())
         );
     }
 
@@ -670,8 +670,8 @@ mod tests {
     fn outlined_icon_button_border_uses_outline_variant() {
         use super::{IconButtonVariantTokens, SelectedOutlinedIconButton};
         use crate::{Material3, theme::colors::MaterialColorScheme};
-        use hydrolysis::Style as _;
-        use hydrolysis::draw::WorkingColor;
+        use hydrolysis_style::Style as _;
+        use hydrolysis_style::draw::WorkingColor;
         use waterui::{Environment, Signal};
 
         fn assert_resolves_to(actual: WorkingColor, expected: WorkingColor) {

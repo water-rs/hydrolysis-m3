@@ -22,7 +22,7 @@ use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
 
 use crate::action::{NoAction, noop};
-use hydrolysis::draw::kurbo::RoundedRectRadii;
+use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
 use crate::semantics::interaction_chrome;
@@ -321,7 +321,7 @@ fn half_style(
     state_layer_color: impl Into<Color>,
     resting: RoundedRectRadii,
     soft: RoundedRectRadii,
-) -> hydrolysis::theme::Chrome {
+) -> hydrolysis_style::theme::Chrome {
     interaction_chrome(
         state_layer_color,
         StateValue::new(resting)

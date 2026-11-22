@@ -7,11 +7,11 @@
 //! outline's width, the check glyph and the state layer are live operands
 //! the engine animates. A toggle, hover, press or drag records nothing.
 
-use hydrolysis::draw::kurbo::{
+use hydrolysis_style::draw::kurbo::{
     Affine, BezPath, Circle, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, Size, Stroke,
 };
-use hydrolysis::draw::{Draw as _, Paint, Shadow as ShadowCast, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::{Draw as _, Paint, Shadow as ShadowCast, WorkingColor};
+use hydrolysis_style::theme::{
     CheckboxLook, Custom, Driven, Inputs, SwitchDrag, SwitchLook, ToggleControl, ToggleSpec,
     ValueMotion,
 };
@@ -261,7 +261,7 @@ fn thumb_shadow(progress: Progress, env: &Environment) -> ShadowPart {
             Color::from(Shadow).resolve(env),
             move |shadow: &WorkingColor, inputs: &Inputs<'_, bool>| {
                 let elevation = if disabled(inputs) {
-                    hydrolysis::theme::Elevation::NONE
+                    hydrolysis_style::theme::Elevation::NONE
                 } else {
                     chrome_elevation(MaterialElevationLevel::LEVEL1, *shadow)
                 };
@@ -529,11 +529,11 @@ mod tests {
         TOGGLE_SWITCH_WIDTH,
     };
     use crate::theme::motion::tokens::duration;
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::Paint;
-    use hydrolysis::draw::kurbo::{Circle, Point, Rect, Vec2};
-    use hydrolysis::theme::ValueMotion;
-    use hydrolysis::theme::{Inputs, SpecTint, SwitchDrag, SwitchLook, ToggleSpec};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::Paint;
+    use hydrolysis_style::draw::kurbo::{Circle, Point, Rect, Vec2};
+    use hydrolysis_style::theme::ValueMotion;
+    use hydrolysis_style::theme::{Inputs, SpecTint, SwitchDrag, SwitchLook, ToggleSpec};
     use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::toggle::ToggleStyle;
@@ -608,8 +608,8 @@ mod tests {
         assert_eq!(checkbox.control().size(), kurbo_size(18.0, 18.0));
     }
 
-    fn kurbo_size(width: f64, height: f64) -> hydrolysis::draw::kurbo::Size {
-        hydrolysis::draw::kurbo::Size::new(width, height)
+    fn kurbo_size(width: f64, height: f64) -> hydrolysis_style::draw::kurbo::Size {
+        hydrolysis_style::draw::kurbo::Size::new(width, height)
     }
 
     /// Compose's `ThumbPadding` is `(32 - 24) / 2 = 4`, and the thumb sits in a
@@ -726,7 +726,7 @@ mod tests {
     /// tint; an untinted one's draw in `Primary`, the `Accent` token's value.
     #[test]
     fn toggles_draw_with_the_subtrees_tint() {
-        use hydrolysis::draw::WorkingColor;
+        use hydrolysis_style::draw::WorkingColor;
         use waterui::theme::Tint;
         use waterui_core::Signal as _;
         use waterui_graphics::color::Working;

@@ -5,9 +5,9 @@
 //! 56dp header / 52dp row rhythm of the Material data-table spec are
 //! `WaterUI`'s own choice.
 
-use hydrolysis::draw::kurbo::{Line, Stroke};
-use hydrolysis::draw::{Draw as _, Paint};
-use hydrolysis::theme::{Custom, Driven, TableLook, TableMetrics};
+use hydrolysis_style::draw::kurbo::{Line, Stroke};
+use hydrolysis_style::draw::{Draw as _, Paint};
+use hydrolysis_style::theme::{Custom, Driven, TableLook, TableMetrics};
 use waterui_core::Environment;
 
 use crate::color::{OutlineVariant, Surface};

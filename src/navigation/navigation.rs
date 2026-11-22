@@ -24,8 +24,8 @@ use crate::dimensions::{
 use crate::icon_button::pressed_corner_radius;
 use crate::icon_paths::{self, IconGrid};
 use crate::theme::motion;
-use hydrolysis::draw::{Draw as _, Paint};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::{Draw as _, Paint};
+use hydrolysis_style::theme::{
     BarSurface, Chrome, CornerShape, Custom, Driven, Inputs, NavigationBarLook, Surface,
 };
 use waterui_core::Environment;
@@ -109,10 +109,10 @@ mod tests {
     };
     use crate::theme::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
     use crate::theme::motion::tokens::duration;
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::Paint;
-    use hydrolysis::draw::kurbo::Rect;
-    use hydrolysis::theme::{BarSurface, Corners, Inputs};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::Paint;
+    use hydrolysis_style::draw::kurbo::Rect;
+    use hydrolysis_style::theme::{BarSurface, Corners, Inputs};
     use waterui::interaction::InteractionState;
     use waterui_core::{Environment, Signal as _};
 

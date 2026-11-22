@@ -14,19 +14,19 @@
 //! (`md.comp.filled-select.text-field.*` repeats the filled text field's
 //! values), so [`picker`](super::picker) takes them from here.
 
-use hydrolysis::draw::WorkingColor;
-use hydrolysis::draw::kurbo::RoundedRectRadii;
+use hydrolysis_style::draw::WorkingColor;
+use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 #[cfg(any(
     feature = "text-field",
     feature = "secure-field",
     feature = "date-picker",
     feature = "color-picker"
 ))]
-use hydrolysis::theme::{
+use hydrolysis_style::theme::{
     Border, Caret, Driven, FloatingLabel, InputFieldMetrics, Inputs, Label, TextFieldLook,
     TextFieldSpec,
 };
-use hydrolysis::theme::{
+use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
 use waterui::interaction::InteractionState;
@@ -295,7 +295,7 @@ fn value() -> Label {
     feature = "date-picker",
     feature = "color-picker"
 ))]
-fn selection(env: &Environment) -> Driven<hydrolysis::draw::Paint> {
+fn selection(env: &Environment) -> Driven<hydrolysis_style::draw::Paint> {
     solid_paint(Primary.with_opacity(INPUT_SELECTION_OPACITY), env)
 }
 
@@ -310,10 +310,10 @@ mod tests {
         INPUT_FILLED_CONTAINER_TOP_RADIUS, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
         INPUT_LABEL_FLOAT_SCALE,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::{Rect, RoundedRectRadii};
-    use hydrolysis::draw::{Paint, WorkingColor};
-    use hydrolysis::theme::{Inputs, Label, SpecTint, TextFieldLook, TextFieldSpec};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii};
+    use hydrolysis_style::draw::{Paint, WorkingColor};
+    use hydrolysis_style::theme::{Inputs, Label, SpecTint, TextFieldLook, TextFieldSpec};
     use waterui::interaction::InteractionState;
     use waterui_core::layout::LayoutDirection;
     use waterui_core::{Environment, Signal as _};

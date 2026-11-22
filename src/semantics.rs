@@ -1,5 +1,5 @@
-use hydrolysis::draw::WorkingColor;
-use hydrolysis::theme::{
+use hydrolysis_style::draw::WorkingColor;
+use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
 use waterui::color::Color;

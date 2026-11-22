@@ -4,7 +4,7 @@ use core::fmt::{self, Debug};
 use core::time::Duration;
 use waterui::OneOf2;
 
-use hydrolysis::theme::InteractionFocusBinding;
+use hydrolysis_style::theme::InteractionFocusBinding;
 use waterui::accessibility::AccessibilityRole;
 use waterui::layout::padding::EdgeInsets;
 use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};

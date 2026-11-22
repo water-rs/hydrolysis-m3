@@ -1770,6 +1770,7 @@ name = "hydrolysis-m3"
 version = "0.3.1"
 dependencies = [
  "hydrolysis",
+ "hydrolysis-style",
  "image",
  "material-color-utils",
  "num-traits",

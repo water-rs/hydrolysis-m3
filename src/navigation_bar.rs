@@ -199,11 +199,11 @@ where
             // The state layer is the active indicator's pill, centred
             // horizontally at the item's top padding.
             .sized(
-                hydrolysis::draw::kurbo::Size::new(
+                hydrolysis_style::draw::kurbo::Size::new(
                     f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
                     f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
                 ),
-                hydrolysis::draw::kurbo::Vec2::new(
+                hydrolysis_style::draw::kurbo::Vec2::new(
                     0.5,
                     f64::from(NAVIGATION_BAR_ITEM_TOP_PADDING)
                         / f64::from(

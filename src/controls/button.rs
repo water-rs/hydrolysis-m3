@@ -1,9 +1,9 @@
 //! The Material 3 button look: filled, outlined, text and link buttons
 //! from the `md.comp.button.*` tokens.
 
-use hydrolysis::draw::kurbo::{Line, Point, Stroke};
-use hydrolysis::draw::{Draw as _, Paint, WorkingColor};
-use hydrolysis::theme::{
+use hydrolysis_style::draw::kurbo::{Line, Point, Stroke};
+use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
+use hydrolysis_style::theme::{
     Border, ButtonLook, ButtonSpec, Chrome, CornerShape, Corners, Custom, Driven, Elevation,
     Inputs, Label, PressFeedback, Surface,
 };
@@ -96,7 +96,7 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
     } else {
         let tokens = button_size_tokens(spec.size());
         look.padding(tokens.horizontal_space, BUTTON_TEXT_VERTICAL_PADDING)
-            .minimum_size(hydrolysis::draw::kurbo::Size::new(
+            .minimum_size(hydrolysis_style::draw::kurbo::Size::new(
                 BUTTON_MIN_WIDTH,
                 tokens.container_height,
             ))
@@ -291,10 +291,10 @@ mod tests {
         BUTTON_EXTRA_LARGE, BUTTON_EXTRA_SMALL, BUTTON_LARGE, BUTTON_MEDIUM, BUTTON_MIN_WIDTH,
         BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
     };
-    use hydrolysis::Style as _;
-    use hydrolysis::draw::kurbo::{Rect, Vec2};
-    use hydrolysis::draw::{Paint, WorkingColor};
-    use hydrolysis::theme::{ButtonLook, ButtonSpec, Corners, Fill, Inputs, SpecTint};
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::{Rect, Vec2};
+    use hydrolysis_style::draw::{Paint, WorkingColor};
+    use hydrolysis_style::theme::{ButtonLook, ButtonSpec, Corners, Fill, Inputs, SpecTint};
     use waterui::interaction::InteractionState;
     use waterui::theme::Tint;
     use waterui_controls::ControlSize;
