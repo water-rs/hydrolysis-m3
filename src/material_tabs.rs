@@ -2,8 +2,8 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::navigation::NavigationView;
 use waterui::navigation::tab::{TabSet, Tabs, tab_style};
+use waterui::navigation::{NavigationToolbarItems, NavigationView};
 use waterui::{Binding, Environment, View};
 use waterui_controls::label::IntoLabel;
 use waterui_core::handler::ViewBuilder;
@@ -51,10 +51,12 @@ pub fn material_tabs<T: TabSet>(selection: &Binding<T::Id>, tabs: T) -> Material
 
 /// Creates a Material Design 3 tab.
 #[must_use]
-pub fn material_tab<C, V>(label: impl IntoLabel, content: C) -> MaterialTab<C>
+pub fn material_tab<L, C, V, Tb>(label: L, content: C) -> MaterialTab<C, L::Kind>
 where
-    C: ViewBuilder<Output = NavigationView<V>>,
+    L: IntoLabel,
+    C: ViewBuilder<Output = NavigationView<V, Tb>>,
     V: View,
+    Tb: NavigationToolbarItems,
 {
     MaterialTab::new(label, content)
 }
