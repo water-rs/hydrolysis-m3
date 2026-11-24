@@ -112,10 +112,11 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
         let accessibility_label = self.accessibility_label.clone();
+        let label_color: Color = LabelColor::default().into();
         let label = self
             .label
             .font(typography::label_large())
-            .foreground(LabelColor::default());
+            .foreground(label_color);
 
         label
             .height(ASSIST_CHIP_CONTAINER_HEIGHT)
