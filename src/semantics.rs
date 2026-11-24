@@ -5,7 +5,7 @@ use hydrolysis_style::theme::{
 use waterui::color::Color;
 use waterui::contract_violation;
 use waterui::gesture::{DragEvent, GesturePhase};
-use waterui::reactive::{Computed, SignalExt as _, signal::IntoComputed, zip};
+use waterui::reactive::{Computed, SignalExt as _, impl_constant, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
 use waterui::{Environment, Signal as _, Str};
 use waterui_controls::label::{Label, LabelKind};
@@ -36,7 +36,7 @@ pub fn focus_indicator() -> FocusIndicator {
 
 /// The MD3 state layer in `color`, at the `StateTokens` opacities.
 pub fn state_layer(color: impl Into<Color>) -> StateLayer {
-    StateLayer::new(color).opacities(
+    StateLayer::new(color.into()).opacities(
         motion::HOVER_STATE_LAYER_OPACITY,
         motion::FOCUS_STATE_LAYER_OPACITY,
         motion::PRESSED_STATE_LAYER_OPACITY,
@@ -101,6 +101,8 @@ impl Resolvable for ConditionalColor {
         )
     }
 }
+
+impl_constant!(ConditionalColor);
 
 /// A font that resolves to `when_true` or `when_false` with `condition` — the
 /// typeface equivalent of [`conditional_color`], which the spec uses for the
