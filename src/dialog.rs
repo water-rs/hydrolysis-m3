@@ -10,10 +10,11 @@ use waterui::layout::{
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::signal::IntoComputed;
-use waterui::style::Anchor;
+use waterui::style::{Anchor, Scale};
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::AnyView;
+use waterui_core::Metadata;
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
@@ -233,20 +234,22 @@ where
         .a11y_label(self.accessibility_label)
         .a11y_role(AccessibilityRole::Dialog);
 
-        let surface = material_elevation(
-            MaterialElevationLevel::LEVEL3,
-            DIALOG_CONTAINER_SHAPE,
-            surface,
-        )
-        .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
-        .offset(
-            0.0,
-            motion::dialog_transform(presented.clone(), DIALOG_HIDDEN_OFFSET_Y, 0.0),
-        )
-        .scale_from(
-            1.0,
-            motion::dialog_transform(presented.clone(), 0.0, 1.0),
-            Anchor::new(0.5, 0.0),
+        let surface = Metadata::new(
+            material_elevation(
+                MaterialElevationLevel::LEVEL3,
+                DIALOG_CONTAINER_SHAPE,
+                surface,
+            )
+            .opacity(motion::dialog_opacity(presented.clone(), 0.0, 1.0))
+            .offset(
+                0.0,
+                motion::dialog_transform(presented.clone(), DIALOG_HIDDEN_OFFSET_Y, 0.0),
+            ),
+            Scale::xy_from(
+                1.0,
+                motion::dialog_transform(presented.clone(), 0.0, 1.0),
+                Anchor::new(0.5, 0.0),
+            ),
         )
         .padding_with(EdgeInsets::all(DIALOG_VIEWPORT_PADDING))
         .position_in(UnitPoint::CENTER);
