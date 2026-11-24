@@ -1,13 +1,15 @@
 //! Temporary rounded-rectangle adapter while `water-rs/waterui#4434` lands.
 //!
-//! Emits `ShapeKind::CustomPath` unit-space commands and constructs fills via
-//! [`FilledShape::new`] so `hydrolysis-m3` compiles against both pre- and
-//! post-`#4434` `waterui-shape` without naming the removed `Fixed*` or
-//! `Uneven*` types. Deleted right after `#4434` lands in favor of
-//! `RoundedRectangle` with `CornerRadius` / `CornerRadii`.
+//! Emits `ShapeKind::CustomPath` unit-space commands and returns `impl View`
+//! from `FilledShape::new` so `hydrolysis-m3` compiles against both `FilledShape`
+//! (pre-`#4434`) and `FilledShape<S = ()>` (`waterui` `main` / `#4434`) without
+//! naming `FilledShape`'s type parameter or the removed `Fixed*` / `Uneven*`
+//! types. Deleted right after `#4434` lands in favor of `RoundedRectangle` with
+//! `CornerRadius` / `CornerRadii`.
 
 use core::f32::consts::{FRAC_PI_2, PI};
 
+use waterui::View;
 use waterui::color::Color;
 use waterui::shape::{FilledShape, PathCommand, Shape};
 
@@ -48,7 +50,7 @@ impl CompatRoundedRect {
     }
 
     /// Fills this shape with `color`.
-    pub fn fill(self, color: impl Into<Color>) -> FilledShape {
+    pub fn fill(self, color: impl Into<Color>) -> impl View {
         FilledShape::new(self, color)
     }
 }
