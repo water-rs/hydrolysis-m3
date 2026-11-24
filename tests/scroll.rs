@@ -146,7 +146,7 @@ fn folder_chip(name: &'static str, active: bool) -> impl View {
     use waterui::theme::color::{Accent, SurfaceVariant};
 
     let label_view = if active {
-        OneOf2::A(text(name).caption().bold().foreground(Accent))
+        OneOf2::A(text(name).caption().bold(true).foreground(Accent))
     } else {
         OneOf2::B(text(name).caption().muted())
     };

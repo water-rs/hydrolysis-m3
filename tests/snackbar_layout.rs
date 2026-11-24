@@ -7,6 +7,8 @@
 //! offscreen through the styled builder, so they live beside the theme that
 //! lays the bar out.
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 use waterui::prelude::*;
@@ -21,18 +23,24 @@ fn show(
     ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
     snackbar: Snackbar,
 ) -> (OffscreenApp, SnackbarManager) {
-    let (manager, overlay) = SnackbarManager::new();
     let theme = SnackbarTheme {
         min_width: MIN_WIDTH,
         max_width: MAX_WIDTH,
         ..SnackbarTheme::default()
     };
-    let mut env = Environment::new();
-    env.insert(manager.clone());
-    env.insert(theme);
-    let mut app = ui
-        .environment(env)
-        .mount_offscreen(move || zstack((text("app content"), overlay.clone())));
+    let captured = Rc::new(RefCell::new(None));
+    let captured_mount = Rc::clone(&captured);
+    let mut app = ui.with(theme).mount_offscreen(move || {
+        let captured = Rc::clone(&captured_mount);
+        SnackbarManager::host(move |manager: SnackbarManager| {
+            *captured.borrow_mut() = Some(manager);
+            text("app content")
+        })
+    });
+    let manager = captured
+        .borrow_mut()
+        .take()
+        .expect("SnackbarManager::host installs the manager on mount");
     manager.show(snackbar);
     app.settle();
     (app, manager)

@@ -45,7 +45,7 @@ waterui-graphics = { version = "0.5.1", default-features = false }
 
 [dev-dependencies]
 waterui-form = { version = "0.5.1", default-features = false, features = ["all"] }
-waterui = { version = "0.5.2", default-features = false, features = ["avatar", "media"] }
+waterui = { version = "0.5.2", default-features = false, features = ["avatar", "image"] }
 # The tests render through hydrolysis's default Cherenkov painter and
 # `tests/inspect_element.rs` exercises the opt-in `inspector` context-menu entry.
 hydrolysis = { version = "0.3.1", features = ["inspector"] }
