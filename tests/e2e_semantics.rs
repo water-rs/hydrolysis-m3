@@ -180,9 +180,9 @@ fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBui
 fn material_button_styles_view() -> impl View {
     material_shell(
         vstack((
-            button("Filled"),
-            button("Outlined").bordered(),
-            button("Prominent").bordered_prominent(),
+            button("Filled").action(|| {}),
+            button("Outlined").bordered().action(|| {}),
+            button("Prominent").bordered_prominent().action(|| {}),
         ))
         .spacing(8.0),
     )

@@ -27,7 +27,7 @@ fn material_shell<V: View>(content: V) -> impl View {
 fn icon_button_chrome_view() -> impl View {
     material_shell(vstack((
         hstack((
-            button(label("Auto").icon(()).icon_only()),
+            button(label("Auto").icon(()).icon_only()).action(|| {}),
             material_menu(
                 material_menu_icon_label(label("More").icon(())),
                 (button("Refresh").action(|| {}),),
@@ -35,8 +35,12 @@ fn icon_button_chrome_view() -> impl View {
         ))
         .spacing(12.0),
         hstack((
-            button(label("Prominent").icon(()).icon_only()).bordered_prominent(),
-            button(label("Outlined").icon(()).icon_only()).bordered(),
+            button(label("Prominent").icon(()).icon_only())
+                .bordered_prominent()
+                .action(|| {}),
+            button(label("Outlined").icon(()).icon_only())
+                .bordered()
+                .action(|| {}),
         ))
         .spacing(12.0),
     )))
@@ -48,12 +52,14 @@ fn icon_button_chrome_view() -> impl View {
 fn icon_button_content_color_view() -> impl View {
     material_shell(
         hstack((
-            button(label("Auto").icon(text("*")).icon_only()),
+            button(label("Auto").icon(text("*")).icon_only()).action(|| {}),
             material_menu(
                 material_menu_icon_label(label("More").icon(text("+"))),
                 (button("Refresh").action(|| {}),),
             ),
-            button(label("Prominent").icon(text("#")).icon_only()).bordered_prominent(),
+            button(label("Prominent").icon(text("#")).icon_only())
+                .bordered_prominent()
+                .action(|| {}),
         ))
         .spacing(12.0),
     )

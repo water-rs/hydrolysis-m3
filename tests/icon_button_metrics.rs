@@ -56,8 +56,8 @@ fn assert_close(actual: f64, expected: f64, epsilon: f64, context: &str) {
 fn icon_only_button_view() -> impl waterui::View {
     control_shell(
         vstack((
-            button(label("Search").icon(()).icon_only()),
-            button("Cancel"),
+            button(label("Search").icon(()).icon_only()).action(|| {}),
+            button("Cancel").action(|| {}),
         ))
         .spacing(12.0),
     )
@@ -172,11 +172,11 @@ fn icon_only_button_draws_the_state_layer_centred_in_its_bounds(app: &mut Offscr
 fn icon_button_row_view() -> impl waterui::View {
     control_shell(
         hstack((
-            button(label("First").icon(()).icon_only()),
-            button(label("Second").icon(()).icon_only()),
-            button(label("Third").icon(()).icon_only()),
-            button(label("Fourth").icon(()).icon_only()),
-            button(label("Fifth").icon(()).icon_only()),
+            button(label("First").icon(()).icon_only()).action(|| {}),
+            button(label("Second").icon(()).icon_only()).action(|| {}),
+            button(label("Third").icon(()).icon_only()).action(|| {}),
+            button(label("Fourth").icon(()).icon_only()).action(|| {}),
+            button(label("Fifth").icon(()).icon_only()).action(|| {}),
         ))
         .spacing(12.0),
     )
@@ -239,7 +239,7 @@ fn icon_only_menu_view() -> impl waterui::View {
                 label("More").icon(()).icon_only(),
                 (button("Refresh").action(|| {}),),
             ),
-            button(label("Search").icon(()).icon_only()),
+            button(label("Search").icon(()).icon_only()).action(|| {}),
         ))
         .spacing(12.0),
     )
