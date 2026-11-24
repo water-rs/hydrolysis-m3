@@ -11,7 +11,7 @@ use waterui::layout::{
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui::reactive::{SignalExt as _, binding};
-use waterui::shape::{Capsule, FixedUnevenRoundedRectangle, ShapeExt as _};
+use waterui::shape::{Capsule, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
@@ -29,6 +29,7 @@ use crate::elevation::{MaterialElevationLevel, material_elevation};
 use crate::semantics::{
     conditional_color, conditional_font, interaction_chrome_radius, label_plain_text,
 };
+use crate::shape_compat::CompatRoundedRect;
 use crate::theme::{motion, typography};
 
 const NAVIGATION_DRAWER_CONTAINER_WIDTH: f32 = 360.0;
@@ -138,7 +139,7 @@ where
         if self.modal {
             let panel_content = FixedContainer::new(NavigationDrawerPanelLayout, (self.content,))
                 .background(
-                    FixedUnevenRoundedRectangle::new(
+                    CompatRoundedRect::uneven(
                         0.0,
                         NAVIGATION_DRAWER_CONTAINER_SHAPE,
                         0.0,

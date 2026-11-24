@@ -8,7 +8,6 @@ use waterui::layout::{
     Rect, Size, SubView, SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
 };
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
-use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::signal::IntoComputed;
 use waterui::style::{Anchor, Scale};
 use waterui::{Computed, Environment, SignalExt as _, Str, View, ViewExt as _};
@@ -26,6 +25,7 @@ use crate::ModalInteraction;
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, Scrim, SurfaceContainerHigh};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
 use crate::semantics::{interaction_chrome_radius, label_plain_text};
+use crate::shape_compat::CompatRoundedRect;
 use crate::theme::{motion, typography};
 
 const DIALOG_CONTAINER_MIN_WIDTH: f32 = 280.0;
@@ -220,7 +220,7 @@ where
                 actions: self.actions,
             },
         )
-        .background(FixedRoundedRectangle::new(DIALOG_CONTAINER_SHAPE).fill(SurfaceContainerHigh))
+        .background(CompatRoundedRect::uniform(0.1).fill(SurfaceContainerHigh))
         .background(
             SurfaceContainerHigh
                 .with_opacity(0.0)

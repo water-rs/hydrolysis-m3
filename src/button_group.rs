@@ -20,7 +20,6 @@ use waterui::layout::{
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::watcher::BoxWatcherGuard;
 use waterui::reactive::{Signal as _, SignalExt as _, binding, zip};
-use waterui::shape::{ShapeExt as _, UnevenRoundedRectangle};
 use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
 use waterui_controls::button::Button;
 use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
@@ -28,6 +27,7 @@ use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_a
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
 use crate::semantics::{conditional_color, drag_held, interaction_chrome};
+use crate::shape_compat::CompatRoundedRect;
 use hydrolysis_style::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
@@ -215,7 +215,7 @@ impl View for ConnectedButtonGroup {
 
                 let shape = zip::zip(selected.clone(), pressed).map(move |(selected, pressed)| {
                     let (leading, trailing) = position.radii(inner_radius(selected, pressed));
-                    UnevenRoundedRectangle::new(
+                    CompatRoundedRect::uneven(
                         normalized(leading),
                         normalized(trailing),
                         normalized(leading),
@@ -289,7 +289,7 @@ struct ReactiveSegmentShape<S> {
 
 impl<S> View for ReactiveSegmentShape<S>
 where
-    S: waterui::Signal<Output = UnevenRoundedRectangle> + 'static,
+    S: waterui::Signal<Output = CompatRoundedRect> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let color = self.color;

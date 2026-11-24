@@ -16,7 +16,7 @@ use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::padding::EdgeInsets;
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{SignalExt as _, binding};
-use waterui::shape::{FilledShape, Path, ShapeExt as _, UnevenRoundedRectangle};
+use waterui::shape::{FilledShape, Path};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
@@ -26,6 +26,7 @@ use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
 use crate::semantics::interaction_chrome;
+use crate::shape_compat::CompatRoundedRect;
 
 /// `SplitButtonSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -220,7 +221,7 @@ where
             } else {
                 inner
             };
-            UnevenRoundedRectangle::new(outer, seam, outer, seam)
+            CompatRoundedRect::uneven(outer, seam, outer, seam)
         });
         let trailing_state = binding(InteractionState::empty());
         let trailing_shape = trailing_state.map(move |state: InteractionState| {
@@ -229,7 +230,7 @@ where
             } else {
                 inner
             };
-            UnevenRoundedRectangle::new(seam, outer, seam, outer)
+            CompatRoundedRect::uneven(seam, outer, seam, outer)
         });
 
         let leading = AnyView::new(
@@ -371,7 +372,7 @@ struct ReactiveSplitShape<S> {
 
 impl<S> View for ReactiveSplitShape<S>
 where
-    S: waterui::Signal<Output = UnevenRoundedRectangle> + 'static,
+    S: waterui::Signal<Output = CompatRoundedRect> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let color = self.color;
