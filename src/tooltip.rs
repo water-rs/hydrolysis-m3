@@ -10,11 +10,10 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Signal, SignalExt as _};
-use waterui::style::{Anchor, Scale};
+use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind, TitleLabel};
-use waterui_core::Metadata;
 use waterui_core::handler::{Handler, SharedAction};
 
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
@@ -196,13 +195,9 @@ where
                     let popup = popup.clone();
                     let popup_scale = popup_scale.clone();
                     move |edge| {
-                        Metadata::new(
-                            popup.clone(),
-                            Scale::uniform_from(
-                                popup_scale.clone(),
-                                tooltip_scale_origin(edge, rich),
-                            ),
-                        )
+                        popup
+                            .clone()
+                            .scale_from(popup_scale.clone(), tooltip_scale_origin(edge, rich))
                     }
                 })
             }

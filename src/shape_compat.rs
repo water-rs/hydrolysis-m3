@@ -48,7 +48,7 @@ impl CompatRoundedRect {
     }
 
     /// Fills this shape with `color`.
-    pub fn fill(self, color: impl Into<Color>) -> FilledShape {
+    pub fn fill(self, color: impl Into<Color>) -> FilledShape<Self> {
         FilledShape::new(self, color)
     }
 }
