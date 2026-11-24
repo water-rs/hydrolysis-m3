@@ -3,10 +3,9 @@
 use waterui::Environment;
 use waterui_core::handler::ExtractionError;
 
-/// The stored action's signature: the framework's button action, which fails
-/// when one of the handler's parameters cannot be extracted from the
-/// environment.
-pub use waterui_controls::button::NoAction;
+/// The stored action's signature: a handler that runs against the
+/// environment and fails when one of its parameters cannot be extracted.
+pub type NoAction = fn(&Environment) -> Result<(), ExtractionError>;
 
 /// The action of a control with none configured: it does nothing and cannot
 /// fail.

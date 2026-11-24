@@ -35,8 +35,8 @@ fn controls(checked: bool) -> impl View {
         toggle("Disabled checkbox (on)", &checkbox_on)
             .checkbox()
             .disabled(true),
-        button("Enabled button"),
-        button("Disabled button").disabled(true),
+        button("Enabled button").action(|| {}),
+        button("Disabled button").action(|| {}).disabled(true),
         slider("Disabled volume", &volume).disabled(true),
     ))
     .padding()

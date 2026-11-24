@@ -33,7 +33,7 @@ fn save(app: &mut OffscreenApp, stage: &str) {
 }
 
 fn press_me_button() -> impl View {
-    button("Press Me")
+    button("Press Me").action(|| {})
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
@@ -54,7 +54,7 @@ fn plain_button_press_shows_growing_ripple(app: &mut OffscreenApp) {
 }
 
 fn release_me_button() -> impl View {
-    button("Release Me")
+    button("Release Me").action(|| {})
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
@@ -84,7 +84,7 @@ fn released_ripple_fades_at_full_size_without_shrinking(app: &mut OffscreenApp) 
 }
 
 fn tap_tap_button() -> impl View {
-    button("Tap Tap")
+    button("Tap Tap").action(|| {})
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
@@ -113,7 +113,7 @@ fn rapid_represses_overlap_independent_waves(app: &mut OffscreenApp) {
 }
 
 fn hover_me_button() -> impl View {
-    button("Hover Me")
+    button("Hover Me").action(|| {})
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]

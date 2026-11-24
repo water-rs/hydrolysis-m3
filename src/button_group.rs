@@ -429,13 +429,13 @@ impl View for ButtonGroup {
                     // A group button keeps the default filled-tonal chrome:
                     // the press widens its container, so it needs one.
                     Button::new(button.label)
+                        .action(move |env: Environment| {
+                            action(&env).report_extraction();
+                        })
                         .gesture(DragGesture::new(0.0), move |env: Environment| {
                             if let Some(held) = drag_held(&env, "group button") {
                                 pressed.set(held);
                             }
-                        })
-                        .on_tap(move |env: Environment| {
-                            action(&env).report_extraction();
                         }),
                 )
             })

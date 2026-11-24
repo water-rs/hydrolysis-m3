@@ -15,6 +15,7 @@ use waterui_testing::{OffscreenApp, Role};
 fn disabled_filled_icon_button() -> impl View {
     vstack((button(label("Disabled").icon(()).icon_only())
         .bordered_prominent()
+        .action(|| {})
         .disabled(true),))
     .padding_with(16.0)
 }
