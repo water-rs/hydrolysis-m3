@@ -13,7 +13,6 @@ use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::{HorizontalAlignment, padding::EdgeInsets};
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
-use waterui::shape::{FixedRoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
@@ -21,6 +20,7 @@ use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
 use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer};
 use crate::dimensions::{LIST_ONE_LINE_ROW_HEIGHT, LIST_VERTICAL_INSET};
 use crate::semantics::{interaction_chrome, label_plain_text};
+use crate::shape_compat::CompatRoundedRect;
 use crate::theme::typography;
 use num_traits::ToPrimitive;
 
@@ -251,7 +251,7 @@ impl MaterialListItem {
             } else {
                 Color::transparent()
             };
-            FixedRoundedRectangle::new(list_item_corner_radius(state)).fill(fill)
+            CompatRoundedRect::uniform(list_item_corner_radius(state)).fill(fill)
         });
         // md.comp.list.list-item.selected.*.state-layer.color =
         // on-secondary-container while selected, on-surface otherwise.
@@ -306,7 +306,7 @@ impl MaterialListItem {
             } else {
                 Color::transparent()
             };
-            FixedRoundedRectangle::new(list_item_corner_radius(state)).fill(fill)
+            CompatRoundedRect::uniform(list_item_corner_radius(state)).fill(fill)
         });
         AnyView::new(
             item.interaction_state(state)

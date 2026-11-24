@@ -8,7 +8,7 @@ use waterui::color::Color;
 use waterui::layout::frame::Frame;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{FixedRoundedRectangle, Rectangle, ShapeExt as _};
+use waterui::shape::{Rectangle, ShapeExt as _};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
@@ -22,6 +22,7 @@ use crate::color::{
 };
 use crate::icons::CheckmarkIcon;
 use crate::semantics::{conditional_color, interaction_chrome_radius, label_plain_text};
+use crate::shape_compat::CompatRoundedRect;
 use crate::theme::typography;
 
 const ASSIST_CHIP_CONTAINER_HEIGHT: f32 = 32.0;
@@ -127,7 +128,10 @@ where
             // flat chips publish no container color — the background is
             // transparent (md.comp.assist-chip.flat has no container.color).
             .background(
-                FixedRoundedRectangle::new(ASSIST_CHIP_CONTAINER_SHAPE).fill(Color::transparent()),
+                CompatRoundedRect::uniform(
+                    ASSIST_CHIP_CONTAINER_SHAPE / ASSIST_CHIP_CONTAINER_HEIGHT,
+                )
+                .fill(Color::transparent()),
             )
             // md.comp.assist-chip.flat.outline.color = outline-variant.
             .border_with(
@@ -354,7 +358,10 @@ where
             0.0,
             FILTER_CHIP_TRAILING_SPACE,
         ))
-        .background(FixedRoundedRectangle::new(FILTER_CHIP_CONTAINER_SHAPE).fill(background))
+        .background(
+            CompatRoundedRect::uniform(FILTER_CHIP_CONTAINER_SHAPE / FILTER_CHIP_CONTAINER_HEIGHT)
+                .fill(background),
+        )
         .border_with(
             Border::new(outline, FILTER_CHIP_UNSELECTED_OUTLINE_WIDTH)
                 .corner_radius(FILTER_CHIP_CONTAINER_SHAPE),
@@ -422,7 +429,8 @@ where
         // The unselected input chip publishes no container color; its outline
         // is outline-variant (md.comp.input-chip.flat.unselected.outline.color).
         .background(
-            FixedRoundedRectangle::new(INPUT_CHIP_CONTAINER_SHAPE).fill(Color::transparent()),
+            CompatRoundedRect::uniform(INPUT_CHIP_CONTAINER_SHAPE / INPUT_CHIP_CONTAINER_HEIGHT)
+                .fill(Color::transparent()),
         )
         .border_with(
             Border::new(OutlineVariant, INPUT_CHIP_UNSELECTED_OUTLINE_WIDTH)

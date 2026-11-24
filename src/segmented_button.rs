@@ -7,7 +7,7 @@ use waterui::border::Border;
 use waterui::component::hstack;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{Rectangle, ShapeExt as _, UnevenRoundedRectangle};
+use waterui::shape::{Rectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
@@ -22,6 +22,7 @@ use waterui_core::view::ViewSequence;
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;
 use crate::semantics::{conditional_color, interaction_chrome, label_plain_text};
+use crate::shape_compat::CompatRoundedRect;
 use crate::theme::typography;
 use hydrolysis_style::theme::Corners;
 
@@ -109,8 +110,8 @@ impl SegmentedButtonShape {
         }
     }
 
-    const fn shape(self) -> UnevenRoundedRectangle {
-        UnevenRoundedRectangle::new(
+    const fn shape(self) -> CompatRoundedRect {
+        CompatRoundedRect::uneven(
             self.top_leading,
             self.top_trailing,
             self.bottom_leading,
