@@ -9,7 +9,7 @@ use waterui::accessibility::AccessibilityRole;
 use waterui::layout::padding::EdgeInsets;
 use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
 use waterui::prelude::dynamic::watch;
-use waterui::reactive::{Signal, SignalExt as _};
+use waterui::reactive::{Signal, SignalExt as _, binding};
 use waterui::shape::{CornerRadius, RoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
@@ -77,10 +77,10 @@ struct TooltipVisibility {
 impl TooltipVisibility {
     fn new(persistent: bool) -> Self {
         Self {
-            open: Binding::bool(false),
-            generation: Binding::container(0),
-            target_hovered: Binding::bool(false),
-            focused: Binding::bool(false),
+            open: binding(false),
+            generation: binding(0_u64),
+            target_hovered: binding(false),
+            focused: binding(false),
             persistent,
         }
     }
@@ -158,7 +158,7 @@ where
         let long_press = self.visibility.clone();
         let focus_change = self.visibility.clone();
         let escape = self.visibility.clone();
-        let focused = Binding::bool(false);
+        let focused: Binding<bool> = binding(false);
         let focus_binding = InteractionFocusBinding::new(&focused)
             .escape_action(SharedAction::new(move |_: Environment| escape.dismiss()));
         let open = self.visibility.open.clone();
@@ -179,7 +179,7 @@ where
         // `placed` is written back with the edge the overlay actually landed
         // on, so the scale transition always grows out of the edge touching
         // the anchor — after a flip, the opposite edge from the requested one.
-        let placed = Binding::container(requested_edge);
+        let placed: Binding<AnchorEdge> = binding(requested_edge);
         let rich = self.rich;
         let popup = self.popup;
         // `AnchoredOverlay` calls its content builder on every presentation:
