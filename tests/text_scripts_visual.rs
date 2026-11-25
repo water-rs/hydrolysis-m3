@@ -13,10 +13,9 @@
 //! confirm, because a glyph id says nothing about whether the shape drawn is
 //! the letter — so the gallery is ignored by default and reviewed by eye.
 
-use hydrolysis_m3::Material3;
 use waterui::component::{hstack, vstack};
 use waterui::prelude::*;
-use waterui_testing::{OffscreenApp, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, UiBuilder};
 
 /// One line per script, each labelled in Latin so a reviewer can tell which
 /// row failed without being able to read the row itself.
@@ -54,7 +53,7 @@ fn gallery() -> impl View {
     .padding_with(16.0)
 }
 
-fn capture(ui: UiBuilder<Styled<Material3>>, stage: &str) {
+fn capture(ui: UiBuilder, stage: &str) {
     let mut app: OffscreenApp = ui.mount_offscreen(gallery);
     let _ = app.capture_snapshot("text-scripts", "gallery", stage);
 }
@@ -62,7 +61,7 @@ fn capture(ui: UiBuilder<Styled<Material3>>, stage: &str) {
 // Moved from waterui's tests/text_scripts.rs.
 #[ignore = "writes a visual acceptance PNG for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (520, 420))]
-fn script_gallery_light(ui: UiBuilder<Styled<Material3>>) {
+fn script_gallery_light(ui: UiBuilder) {
     capture(ui, "light");
 }
 
@@ -72,6 +71,6 @@ fn script_gallery_light(ui: UiBuilder<Styled<Material3>>) {
     theme = hydrolysis_m3::Material3::with_colors(hydrolysis_m3::MaterialColorScheme::baseline_dark()),
     viewport = (520, 420)
 )]
-fn script_gallery_dark(ui: UiBuilder<Styled<Material3>>) {
+fn script_gallery_dark(ui: UiBuilder) {
     capture(ui, "dark");
 }

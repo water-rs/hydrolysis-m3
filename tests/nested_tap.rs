@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use hydrolysis_m3::Material3;
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
-use waterui::component::list::{List, ListItem};
+use waterui::component::list::List;
 use waterui::component::{hstack, spacer, text};
 use waterui::id::SelfId;
 use waterui::reactive::collection::List as ReactiveList;
@@ -45,15 +45,15 @@ fn thumb_label(row: i32) -> String {
 /// A message-row-shaped item from the #175 report: the row's own label on the
 /// leading edge and a reaction pill carrying a nested `on_tap` on the
 /// trailing edge.
-fn message_row(row: i32, reactions: Rc<Cell<i32>>) -> ListItem<impl View> {
-    ListItem::new(hstack((
+fn message_row(row: i32, reactions: Rc<Cell<i32>>) -> impl View {
+    hstack((
         text(row_label(row)),
         spacer(),
         text(reaction_label(row))
             .on_tap(move || reactions.set(row))
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants),
-    )))
+    ))
 }
 
 /// The rendered runtime sends the same pointer sequence through the hit test:
@@ -102,15 +102,15 @@ fn nested_tap_fires_on_offscreen_mount_without_selecting() {
 /// a geometric rule that concedes centre-covering regions to the press loses
 /// it. The ancestry rule claims it anyway — the thumb is registered by a
 /// descendant of the row's own view.
-fn centered_thumb_row(row: i32, reactions: Rc<Cell<i32>>) -> ListItem<impl View> {
-    ListItem::new(hstack((
+fn centered_thumb_row(row: i32, reactions: Rc<Cell<i32>>) -> impl View {
+    hstack((
         spacer(),
         text(thumb_label(row))
             .on_tap(move || reactions.set(row))
             .a11y_role(AccessibilityRole::Button)
             .a11y_children(AccessibilityChildren::ExcludeDescendants),
         spacer(),
-    )))
+    ))
 }
 
 /// On the rendered runtime a tap dead-centre on the row still reaches the
@@ -157,8 +157,8 @@ fn centered_nested_tap_claims_press_on_offscreen_mount() {
 /// root — is not a descendant of it, so it never claims the press: the row
 /// selects AND the handler fires — the coexistence a nested `on_tap` no longer
 /// needs geometry to distinguish.
-fn tapped_row(row: i32, taps: Rc<Cell<i32>>) -> ListItem<impl View> {
-    ListItem::new(hstack((text(row_label(row)), spacer())).on_tap(move || taps.set(row)))
+fn tapped_row(row: i32, taps: Rc<Cell<i32>>) -> impl View {
+    hstack((text(row_label(row)), spacer())).on_tap(move || taps.set(row))
 }
 
 #[test]

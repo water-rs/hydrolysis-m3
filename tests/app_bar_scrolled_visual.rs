@@ -7,11 +7,11 @@
 
 use std::time::Duration;
 
-use hydrolysis_m3::{Material3, material_navigation_view, material_scrolled_app_bar};
+use hydrolysis_m3::{material_navigation_view, material_scrolled_app_bar};
 use waterui::layout::Point;
 use waterui::prelude::*;
 use waterui::reactive::binding;
-use waterui_testing::{Styled, UiBuilder};
+use waterui_testing::UiBuilder;
 
 fn mail() -> impl View {
     let offset = binding(Point::zero());
@@ -26,7 +26,7 @@ fn mail() -> impl View {
 
 #[ignore = "writes a visual acceptance PNG for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 520))]
-fn app_bar_lifts_once_content_scrolls_under_it(ui: UiBuilder<Styled<Material3>>) {
+fn app_bar_lifts_once_content_scrolls_under_it(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(mail);
     app.settle();
     let _ = app.capture_snapshot("app-bar-scrolled", "gallery", "rest");

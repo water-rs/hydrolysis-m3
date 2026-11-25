@@ -20,6 +20,7 @@ use waterui::layout::{
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::watcher::BoxWatcherGuard;
 use waterui::reactive::{Signal as _, SignalExt as _, binding, zip};
+use waterui::shape::{CornerRadii, RoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
 use waterui_controls::button::Button;
 use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
@@ -27,7 +28,6 @@ use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_a
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
 use crate::semantics::{conditional_color, drag_held, interaction_chrome};
-use crate::shape_compat::CompatRoundedRect;
 use hydrolysis_style::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
@@ -47,12 +47,6 @@ const PRESSED_INNER_CORNER_RADIUS: f32 = 4.0;
 const OUTER_CORNER_RADIUS: f32 = CONTAINER_HEIGHT / 2.0;
 /// `ButtonGroupSmallTokens.LeadingSpace` for the segment's own padding.
 const SEGMENT_HORIZONTAL_SPACE: f32 = 16.0;
-
-/// Corner radii normalize against the shorter side, and every segment is
-/// exactly `CONTAINER_HEIGHT` tall.
-const fn normalized(radius: f32) -> f32 {
-    radius / CONTAINER_HEIGHT
-}
 
 /// The inner corner radius of a segment given its state.
 ///
@@ -215,12 +209,7 @@ impl View for ConnectedButtonGroup {
 
                 let shape = zip::zip(selected.clone(), pressed).map(move |(selected, pressed)| {
                     let (leading, trailing) = position.radii(inner_radius(selected, pressed));
-                    CompatRoundedRect::uneven(
-                        normalized(leading),
-                        normalized(trailing),
-                        normalized(leading),
-                        normalized(trailing),
-                    )
+                    RoundedRectangle::new(CornerRadii::new(leading, trailing, leading, trailing))
                 });
                 let container =
                     conditional_color(selected.clone(), SecondaryContainer, SurfaceContainer);
@@ -289,7 +278,7 @@ struct ReactiveSegmentShape<S> {
 
 impl<S> View for ReactiveSegmentShape<S>
 where
-    S: waterui::Signal<Output = CompatRoundedRect> + 'static,
+    S: waterui::Signal<Output = RoundedRectangle> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let color = self.color;
@@ -576,7 +565,7 @@ mod tests {
     use super::{
         BETWEEN_SPACE, ButtonGroupLayout, CONTAINER_HEIGHT, GROUP_BETWEEN_SPACE,
         GROUP_EXPANDED_RATIO, INNER_CORNER_RADIUS, OUTER_CORNER_RADIUS,
-        PRESSED_INNER_CORNER_RADIUS, SegmentPosition, inner_radius, normalized,
+        PRESSED_INNER_CORNER_RADIUS, SegmentPosition, inner_radius,
     };
     use waterui::reactive::binding;
 
@@ -695,20 +684,19 @@ mod tests {
         assert_eq!(inner_radius(true, true), OUTER_CORNER_RADIUS);
     }
 
-    /// Every radius the group uses stays inside the range a normalized corner
-    /// can express; above 0.5 it would clamp and the tucked corners would
-    /// silently round as much as the outer ones.
+    /// Every corner radius stays within half the container height so corners do
+    /// not clamp and flatten the difference between tucked and outer edges.
     #[test]
-    fn every_corner_radius_normalizes_within_range() {
+    fn every_corner_radius_fits_within_half_container_height() {
         for radius in [
             INNER_CORNER_RADIUS,
             PRESSED_INNER_CORNER_RADIUS,
             OUTER_CORNER_RADIUS,
         ] {
-            let normalized = normalized(radius);
             assert!(
-                normalized > 0.0 && normalized <= 0.5,
-                "{radius} -> {normalized}"
+                radius > 0.0 && radius <= CONTAINER_HEIGHT / 2.0,
+                "{radius} exceeds half height {}",
+                CONTAINER_HEIGHT / 2.0
             );
         }
     }

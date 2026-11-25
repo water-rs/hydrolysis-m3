@@ -11,7 +11,7 @@ use waterui::layout::scroll::scroll_horizontal;
 use waterui::prelude::*;
 use waterui::{Binding, Str};
 use waterui_controls::field;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 /// With no width proposal on its stretch axis the field keeps its intrinsic
 /// width — the theme's ideal `min_width` (280 under Material 3), not a hard
@@ -48,9 +48,7 @@ fn lone_text_field_keeps_ideal_width(app: &mut OffscreenApp) {
 const LONG: &str = "A label long enough to wrap into several lines at this width";
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (900, 600))]
-fn a_changed_text_is_measured_again_inside_a_retained_sub_view(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_changed_text_is_measured_again_inside_a_retained_sub_view(ui: UiBuilder) {
     use waterui::id::SelfId;
     use waterui::navigation::{NavigationSplitView, NavigationStack, NavigationView};
 

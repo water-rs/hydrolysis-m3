@@ -7,11 +7,11 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use waterui::Identifiable;
-use waterui::component::list::{List, ListDelete, ListItem, ListMove};
+use waterui::component::list::{List, ListDelete, ListMove};
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui::reactive::collection::List as ReactiveList;
-use waterui_testing::{DragOptions, Role, Styled, UiBuilder};
+use waterui_testing::{DragOptions, Role, UiBuilder};
 
 const ROW_COUNT: usize = 6;
 const VIEWPORT_WIDTH: f32 = 400.0;
@@ -77,7 +77,7 @@ fn move_row(ListMove(movement): ListMove, State(mut fixture): State<Fixture>) {
 )]
 fn list_view(fixture: Fixture) -> impl View {
     let list = List::for_each(fixture.rows.clone(), |row: Row| {
-        ListItem::new(text(format!("Row {}", row.id)).padding())
+        text(format!("Row {}", row.id)).padding()
     })
     .editing(fixture.editing.clone())
     .on_delete(delete_row)
@@ -86,7 +86,7 @@ fn list_view(fixture: Fixture) -> impl View {
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn swiping_a_row_past_the_threshold_deletes_it(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn swiping_a_row_past_the_threshold_deletes_it(ui: UiBuilder) {
     let fixture = Fixture::new(false);
     let probe = fixture.clone();
     let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
@@ -116,7 +116,7 @@ fn swiping_a_row_past_the_threshold_deletes_it(ui: UiBuilder<Styled<hydrolysis_m
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn swiping_a_row_short_of_the_threshold_keeps_it(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn swiping_a_row_short_of_the_threshold_keeps_it(ui: UiBuilder) {
     let fixture = Fixture::new(false);
     let probe = fixture.clone();
     let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
@@ -137,7 +137,7 @@ fn swiping_a_row_short_of_the_threshold_keeps_it(ui: UiBuilder<Styled<hydrolysis
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn a_press_inside_the_touch_slop_is_not_a_swipe(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_press_inside_the_touch_slop_is_not_a_swipe(ui: UiBuilder) {
     let fixture = Fixture::new(false);
     let probe = fixture.clone();
     let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
@@ -155,7 +155,7 @@ fn a_press_inside_the_touch_slop_is_not_a_swipe(ui: UiBuilder<Styled<hydrolysis_
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn dragging_the_move_handle_reorders_the_row(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn dragging_the_move_handle_reorders_the_row(ui: UiBuilder) {
     let fixture = Fixture::new(true);
     let probe = fixture.clone();
     let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));

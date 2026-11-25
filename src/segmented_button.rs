@@ -7,7 +7,7 @@ use waterui::border::Border;
 use waterui::component::hstack;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
-use waterui::shape::{Rectangle, ShapeExt as _};
+use waterui::shape::{CornerRadii, CornerRadius, Rectangle, RoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
@@ -22,7 +22,6 @@ use waterui_core::view::ViewSequence;
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;
 use crate::semantics::{conditional_color, interaction_chrome, label_plain_text};
-use crate::shape_compat::CompatRoundedRect;
 use crate::theme::typography;
 use hydrolysis_style::theme::Corners;
 
@@ -110,13 +109,13 @@ impl SegmentedButtonShape {
         }
     }
 
-    const fn shape(self) -> CompatRoundedRect {
-        CompatRoundedRect::uneven(
-            self.top_leading,
-            self.top_trailing,
-            self.bottom_leading,
-            self.bottom_trailing,
-        )
+    fn shape(self) -> RoundedRectangle {
+        RoundedRectangle::new(CornerRadii::new(
+            CornerRadius::fraction(self.top_leading),
+            CornerRadius::fraction(self.top_trailing),
+            CornerRadius::fraction(self.bottom_leading),
+            CornerRadius::fraction(self.bottom_trailing),
+        ))
     }
 
     const fn has_leading_separator(self) -> bool {

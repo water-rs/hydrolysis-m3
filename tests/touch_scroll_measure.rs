@@ -5,7 +5,7 @@
 //! still owns the scroll view and its writes must keep landing.
 
 use hydrolysis_m3::Material3;
-use waterui::component::list::{List, ListItem};
+use waterui::component::list::List;
 use waterui::component::text;
 use waterui::{View, ViewExt};
 use waterui_testing::{DragOptions, OffscreenApp, Role, VIRTUAL_FRAME, ui};
@@ -38,7 +38,7 @@ fn uneven_list() -> impl View {
                         .map(|line| format!("row {index} line {line}"))
                         .collect::<Vec<_>>()
                         .join("\n");
-                    ListItem::new(text(lines))
+                    text(lines)
                 }
             })
             .collect::<Vec<_>>(),

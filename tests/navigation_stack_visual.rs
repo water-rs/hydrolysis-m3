@@ -4,11 +4,10 @@ use std::cell::Cell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use hydrolysis_m3::Material3;
 use waterui::layout::stack::vstack;
 use waterui::text::Text;
 use waterui_navigation::{NavigationLink, NavigationStack, NavigationView};
-use waterui_testing::{Role, Styled, UiBuilder};
+use waterui_testing::{Role, UiBuilder};
 
 const VIEWPORT_WIDTH: u16 = 390;
 const VIEWPORT_HEIGHT: u16 = 844;
@@ -32,9 +31,7 @@ fn visual_stack(destination_appeared: Rc<Cell<bool>>) -> impl waterui::View {
     theme = hydrolysis_m3::Material3::defaults(),
     viewport = (390, 844)
 )]
-fn navigation_stack_exports_root_destination_and_interactive_pop_stages(
-    ui: UiBuilder<Styled<Material3>>,
-) {
+fn navigation_stack_exports_root_destination_and_interactive_pop_stages(ui: UiBuilder) {
     let destination_appeared = Rc::new(Cell::new(false));
     let destination_appeared_for_view = Rc::clone(&destination_appeared);
     let mut app =

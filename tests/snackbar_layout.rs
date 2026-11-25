@@ -13,16 +13,13 @@ use std::time::Duration;
 
 use waterui::prelude::*;
 use waterui::snackbar::{Snackbar, SnackbarManager, SnackbarTheme};
-use waterui_testing::{OffscreenApp, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, UiBuilder};
 
 const MIN_WIDTH: f32 = 300.0;
 const MAX_WIDTH: f32 = 600.0;
 
 /// Mounts an app whose window shows `snackbar`, and returns it settled.
-fn show(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-    snackbar: Snackbar,
-) -> (OffscreenApp, SnackbarManager) {
+fn show(ui: UiBuilder, snackbar: Snackbar) -> (OffscreenApp, SnackbarManager) {
     let theme = SnackbarTheme {
         min_width: MIN_WIDTH,
         max_width: MAX_WIDTH,
@@ -52,9 +49,7 @@ fn show(
 ///
 /// Origin: waterui `tests/snackbar_layout.rs`.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (900, 600))]
-fn a_short_closeable_snackbar_hugs_the_min_width_floor(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_short_closeable_snackbar_hugs_the_min_width_floor(ui: UiBuilder) {
     let (mut app, _manager) = show(
         ui,
         Snackbar::new("Saved").duration(Duration::ZERO).closeable(),
@@ -80,7 +75,7 @@ fn a_short_closeable_snackbar_hugs_the_min_width_floor(
 ///
 /// Origin: waterui `tests/snackbar_layout.rs`.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (900, 600))]
-fn a_plain_snackbar_hugs_its_message(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_plain_snackbar_hugs_its_message(ui: UiBuilder) {
     let (mut app, _manager) = show(
         ui,
         Snackbar::new("Copied to clipboard").duration(Duration::ZERO),

@@ -20,7 +20,7 @@ use waterui::{Binding, Str};
 use waterui_controls::{TextField, Toggle, button, slider::slider, stepper::stepper};
 use waterui_core::View;
 use waterui_testing::{
-    OffscreenApp, Role, Selector, SemanticApp, Styled, UiBuilder, WaitOptions, WaitResult,
+    OffscreenApp, Role, Selector, SemanticApp, UiBuilder, WaitOptions, WaitResult,
 };
 
 /// Wraps test content the way every Material control scenario in this file
@@ -223,7 +223,7 @@ fn material_button_reserves_its_container_box_for_every_style(app: &mut Offscree
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
-fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder<Styled<Material3>>) {
+fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
     let unselected = Binding::bool(false);
     let unselected_for_view = unselected;
     let already_selected = Binding::bool(true);
@@ -600,7 +600,7 @@ fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilde
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
-fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder<Styled<Material3>>) {
+fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder) {
     let opened = Binding::bool(true);
     let opened_for_view = opened.clone();
     let overlay_tapped = Binding::bool(false);
@@ -686,7 +686,7 @@ fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilde
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
-fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder<Styled<Material3>>) {
+fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder) {
     let reports_tapped = Binding::bool(false);
     let reports_for_action = reports_tapped.clone();
     let mut app = ui.mount_offscreen(move || {
@@ -780,7 +780,7 @@ fn material_card_exposes_group_semantics_and_preserves_content(app: &mut Semanti
 }
 
 fn material_badge_view() -> impl View {
-    material_shell(material_badge(3, text("Inbox")).label("Inbox, 3 new notifications"))
+    material_shell(material_badge(3_u32, text("Inbox")).label("Inbox, 3 new notifications"))
 }
 
 #[waterui::test(material_badge_view, viewport = (360, 320))]

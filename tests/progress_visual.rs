@@ -7,7 +7,7 @@
 use core::time::Duration;
 use waterui::component::progress::{Progress, progress};
 use waterui::prelude::*;
-use waterui_testing::{OffscreenApp, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, UiBuilder};
 
 fn indicators() -> impl View {
     vstack((
@@ -22,9 +22,7 @@ fn indicators() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 300))]
-fn linear_progress_renders_the_expressive_track_gap(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn linear_progress_renders_the_expressive_track_gap(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(indicators);
     let _ = app.capture_snapshot("material3-preview", "progress", "linear-expressive");
 }
@@ -47,7 +45,7 @@ fn indeterminate_indicators() -> impl View {
 /// would show the same frame every time.
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 220))]
-fn indeterminate_progress_moves_with_pumped_time(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn indeterminate_progress_moves_with_pumped_time(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(indeterminate_indicators);
     for step in 0..6 {
         app.pump_for(Duration::from_millis(300));
@@ -62,7 +60,7 @@ fn indeterminate_progress_moves_with_pumped_time(ui: UiBuilder<Styled<hydrolysis
 /// A value change animates the determinate parts in place.
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (300, 180))]
-fn determinate_progress_animates_to_its_new_value(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn determinate_progress_animates_to_its_new_value(ui: UiBuilder) {
     let value = Binding::f64(0.1);
     let mut app: OffscreenApp = ui.mount_offscreen({
         let value = value.clone();
@@ -95,7 +93,7 @@ fn circular_indicators() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (300, 120))]
-fn circular_progress_draws_its_track(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn circular_progress_draws_its_track(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(circular_indicators);
     let _ = app.capture_snapshot("material3-preview", "progress", "circular-expressive");
 }

@@ -24,7 +24,7 @@ mod support {
 
 use waterui::prelude::*;
 use waterui_controls::button;
-use waterui_testing::{OffscreenApp, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, UiBuilder};
 
 const LONG: &str = "A label long enough to wrap into several lines at this width";
 
@@ -32,7 +32,7 @@ const LONG: &str = "A label long enough to wrap into several lines at this width
 ///
 /// Origin: waterui `tests/text_line_limit.rs`.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (600, 600))]
-fn a_line_limit_caps_the_reserved_height(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_line_limit_caps_the_reserved_height(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(|| {
         vstack((
             text(LONG).a11y_label("unlimited").width(150.0),
@@ -59,7 +59,7 @@ fn a_line_limit_caps_the_reserved_height(ui: UiBuilder<Styled<hydrolysis_m3::Mat
 ///
 /// Origin: waterui `tests/text_line_limit.rs`.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (600, 600))]
-fn compressed_button_labels_stay_on_one_line(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn compressed_button_labels_stay_on_one_line(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(|| {
         hstack((
             button("Back").action(|| {}),
