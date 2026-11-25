@@ -95,7 +95,7 @@ fn truncated_row_view() -> impl View {
     ))
     .spacing(8.0)
     .leading()
-    .padding_with((6.0, 10.0))
+    .padding_with(EdgeInsets::symmetric(6.0, 10.0))
 }
 
 #[waterui::test(truncated_row_view, theme = hydrolysis_m3::Material3::defaults(), offscreen, viewport = (220, 120))]

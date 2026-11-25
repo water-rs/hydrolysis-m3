@@ -59,7 +59,7 @@ fn lazy_probe_width(row: impl Fn() -> AnyView + 'static + Clone) -> f32 {
                     }),
                     probe_row(),
                 ))
-                .padding_with((12.0, 16.0)),
+                .padding_with(EdgeInsets::symmetric(12.0, 16.0)),
             )
         });
     let first = probe_width(&mut app);
@@ -80,7 +80,7 @@ fn eager_probe_width(row: impl Fn() -> AnyView + 'static + Clone) -> f32 {
                     vstack((0..60).map(|_| row()).collect::<Vec<_>>()),
                     probe_row(),
                 ))
-                .padding_with((12.0, 16.0)),
+                .padding_with(EdgeInsets::symmetric(12.0, 16.0)),
             )
         });
     let first = probe_width(&mut app);

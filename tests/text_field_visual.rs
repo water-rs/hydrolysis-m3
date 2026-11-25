@@ -26,13 +26,13 @@ const SETTLE: Duration = Duration::from_millis(600);
 
 /// A labelled field holding `text`, disabled or not.
 fn labelled_field(text: &'static str, disabled: bool) -> impl Fn() -> AnyView {
-    let value = binding(waterui::Str::from(text));
+    let value: waterui::Binding<waterui::Str> = binding(waterui::Str::from(text));
     move || AnyView::new(vstack((field("Name", &value).disabled(disabled),)).padding())
 }
 
 /// A labelled field with no label view, standing its prompt in as the label.
 fn prompted_field() -> impl Fn() -> AnyView {
-    let value = binding(waterui::Str::from(""));
+    let value: waterui::Binding<waterui::Str> = binding(waterui::Str::from(""));
     move || {
         AnyView::new(vstack((field("Name", &value).hide_label().prompt("Search chats"),)).padding())
     }

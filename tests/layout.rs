@@ -269,7 +269,7 @@ fn compressed_row_view() -> impl View {
         .leading(),
     ))
     .spacing(10.0)
-    .padding_with((6.0, 10.0))
+    .padding_with(EdgeInsets::symmetric(6.0, 10.0))
 }
 
 #[waterui::test(compressed_row_view, theme = hydrolysis_m3::Material3::defaults(), offscreen, viewport = (340, 200))]
