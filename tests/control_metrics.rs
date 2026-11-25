@@ -15,7 +15,7 @@ use waterui::ViewExt as _;
 use waterui::component::{vstack, zstack};
 use waterui::graphics::color::Srgb;
 use waterui_controls::{Toggle, stepper};
-use waterui_testing::{Role, Styled, UiBuilder};
+use waterui_testing::{Role, UiBuilder};
 
 fn control_shell<V: View>(content: V) -> impl View {
     vstack((content,))
@@ -36,9 +36,7 @@ fn assert_close(actual: f64, expected: f64, epsilon: f64, context: &str) {
 // reported bounds are the switch's own, and a tap anywhere inside them
 // toggles the control (no dead zone beside the switch).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 240))]
-fn hidden_label_toggle_is_switch_sized_and_toggles_throughout(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn hidden_label_toggle_is_switch_sized_and_toggles_throughout(ui: UiBuilder) {
     let enabled = Binding::bool(false);
     let enabled_for_view = enabled.clone();
 
@@ -92,9 +90,7 @@ fn hidden_label_toggle_is_switch_sized_and_toggles_throughout(
 // stretcher's finite answer instead of promoting it, so the switch inside
 // it fills only because the leaf itself answers the proposed width.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 320))]
-fn toggle_frames_follow_style_and_label_visibility(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn toggle_frames_follow_style_and_label_visibility(ui: UiBuilder) {
     let views: [_; 5] = core::array::from_fn(|_| Binding::bool(false));
 
     let mut app = ui.mount_offscreen(move || {
@@ -169,9 +165,7 @@ fn toggle_frames_follow_style_and_label_visibility(
 // frame — the stepper's reported bounds are the buttons' own, and a tap
 // anywhere inside them steps the value (no dead zone beside the buttons).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 240))]
-fn hidden_label_stepper_is_button_sized_and_steps_throughout(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn hidden_label_stepper_is_button_sized_and_steps_throughout(ui: UiBuilder) {
     let quantity = Binding::i32(0);
     let quantity_for_view = quantity.clone();
 

@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::component::badge::Badge as WaterBadge;
+use waterui::component::badge::{Badge as WaterBadge, BadgeValue};
 use waterui::reactive::signal::IntoComputed;
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_core::Computed;
@@ -10,7 +10,7 @@ use waterui_core::Computed;
 /// A Material Design 3 badge attached to another view.
 #[derive(Clone)]
 pub struct MaterialBadge<Content> {
-    value: Computed<i32>,
+    value: Computed<BadgeValue>,
     content: Content,
     accessibility_label: Option<Str>,
 }
@@ -24,9 +24,10 @@ impl<Content> Debug for MaterialBadge<Content> {
 }
 
 impl<Content> MaterialBadge<Content> {
-    /// Creates a Material badge. A value of `0` renders the small dot variant.
+    /// Creates a Material badge. `0` and [`BadgeValue::Hidden`] hide the badge;
+    /// [`BadgeValue::Dot`] renders the small dot variant.
     #[must_use]
-    pub fn new(value: impl IntoComputed<i32>, content: Content) -> Self {
+    pub fn new(value: impl IntoComputed<BadgeValue>, content: Content) -> Self {
         Self {
             value: value.into_computed(),
             content,
@@ -58,7 +59,7 @@ where
 /// Creates a Material Design 3 badge.
 #[must_use]
 pub fn material_badge<Content>(
-    value: impl IntoComputed<i32>,
+    value: impl IntoComputed<BadgeValue>,
     content: Content,
 ) -> MaterialBadge<Content> {
     MaterialBadge::new(value, content)

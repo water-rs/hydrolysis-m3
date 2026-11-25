@@ -8,7 +8,7 @@ use hydrolysis_m3::{Material3, connected_button, connected_button_group};
 use waterui::prelude::vstack;
 use waterui::prelude::*;
 use waterui::reactive::binding;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 fn group() -> impl View {
     let day = binding(false);
@@ -23,7 +23,7 @@ fn group() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 120))]
-fn connected_group_tucks_its_inner_corners(ui: UiBuilder<Styled<Material3>>) {
+fn connected_group_tucks_its_inner_corners(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(group);
     let _ = app.capture_snapshot(
         "material3-preview",
@@ -67,7 +67,7 @@ fn spaced_group() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 120))]
-fn spaced_group_lays_its_buttons_out_in_a_row(ui: UiBuilder<Styled<Material3>>) {
+fn spaced_group_lays_its_buttons_out_in_a_row(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(spaced_group);
     let _ = app.capture_snapshot("material3-preview", "button-group", "spaced");
 }
@@ -86,7 +86,7 @@ fn spaced_group_exposes_every_button(ui: UiBuilder) {
 /// The buttons sit side by side, in order, separated by the group's between
 /// space — the layout places them, so this is what proves it ran.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 120))]
-fn spaced_group_places_its_buttons_in_order(ui: UiBuilder<Styled<Material3>>) {
+fn spaced_group_places_its_buttons_in_order(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(spaced_group);
 
     let mut bounds = |label: &str| {

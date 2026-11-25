@@ -5,11 +5,11 @@
 //! glyph, and a lifted row should read as raised above its neighbours.
 
 use waterui::Identifiable;
-use waterui::component::list::{List, ListDelete, ListItem, ListMove};
+use waterui::component::list::{List, ListDelete, ListMove};
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui::reactive::collection::List as ReactiveList;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 const ROW_COUNT: usize = 6;
 
@@ -46,7 +46,7 @@ fn list_view(editing: bool) -> impl View {
         editing: binding(editing),
     };
     let list = List::for_each(fixture.rows.clone(), |row: Row| {
-        ListItem::new(text(format!("Row {}", row.id)).padding())
+        text(format!("Row {}", row.id)).padding()
     })
     .editing(fixture.editing.clone())
     .on_delete(delete_row)
@@ -60,7 +60,7 @@ fn save(app: &mut OffscreenApp, case: &str, stage: &str) {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn swipe_reveals_the_dismiss_background(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn swipe_reveals_the_dismiss_background(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(|| list_view(false));
     save(&mut app, "list-swipe", "rest");
 
@@ -85,7 +85,7 @@ fn swipe_reveals_the_dismiss_background(ui: UiBuilder<Styled<hydrolysis_m3::Mate
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn reorder_drag_lifts_the_row(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn reorder_drag_lifts_the_row(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(|| list_view(true));
     save(&mut app, "list-reorder", "rest");
 

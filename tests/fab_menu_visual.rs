@@ -10,7 +10,7 @@ use waterui::prelude::theme_color::Foreground;
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui::shape::{Circle, ShapeExt as _};
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 #[allow(
     clippy::needless_pass_by_value,
@@ -27,7 +27,7 @@ fn menu(expanded: Binding<bool>) -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 320))]
-fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder<Styled<Material3>>) {
+fn fab_menu_reveals_its_items_from_the_bottom_up(ui: UiBuilder) {
     let expanded = binding(false);
     let toggle = expanded.clone();
     let mut app: OffscreenApp = ui.mount_offscreen(move || menu(expanded.clone()));

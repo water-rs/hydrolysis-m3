@@ -6,7 +6,7 @@
 use hydrolysis_m3::{Material3, NavigationRailLayout, navigation_rail, navigation_rail_item};
 use waterui::prelude::*;
 use waterui::reactive::binding;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 fn rail(layout: NavigationRailLayout) -> impl View {
     // A cloneable stand-in for a real icon: the item keeps its icon type.
@@ -24,14 +24,14 @@ fn rail(layout: NavigationRailLayout) -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
-fn navigation_rail_renders_collapsed(ui: UiBuilder<Styled<Material3>>) {
+fn navigation_rail_renders_collapsed(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(|| rail(NavigationRailLayout::Collapsed));
     let _ = app.capture_snapshot("material3-preview", "navigation-rail", "collapsed");
 }
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 320))]
-fn navigation_rail_renders_expanded(ui: UiBuilder<Styled<Material3>>) {
+fn navigation_rail_renders_expanded(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(|| rail(NavigationRailLayout::Expanded));
     let _ = app.capture_snapshot("material3-preview", "navigation-rail", "expanded");
 }

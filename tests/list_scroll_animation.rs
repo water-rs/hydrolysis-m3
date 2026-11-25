@@ -8,11 +8,11 @@ use core::time::Duration;
 
 use waterui::Identifiable;
 use waterui::animation::Animation;
-use waterui::component::list::{List, ListItem};
+use waterui::component::list::List;
 use waterui::prelude::*;
 
 use waterui::reactive::collection::List as ReactiveList;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 const ROWS: usize = 500;
 const TARGET_ROW: usize = 300;
@@ -50,7 +50,7 @@ fn fixture() -> Fixture {
 )]
 fn list_view(fixture: Fixture) -> impl View {
     let list = List::for_each(fixture.rows.clone(), |row: Row| {
-        ListItem::new(text(format!("Row {}", row.id)).padding())
+        text(format!("Row {}", row.id)).padding()
     })
     .scroll_controller(&fixture.scroll);
     vstack((list,))
@@ -73,7 +73,7 @@ fn top_visible_row(app: &mut OffscreenApp) -> Option<usize> {
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder) {
     let fixture = fixture();
     let scroll = fixture.scroll.clone();
     let mut app = ui.mount_offscreen(move || list_view(fixture.clone()));
@@ -122,7 +122,7 @@ fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder<Styled<hydrolysi
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
-fn a_short_jump_is_animated_end_to_end(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_short_jump_is_animated_end_to_end(ui: UiBuilder) {
     const NEARBY_ROW: usize = 12;
 
     let fixture = fixture();

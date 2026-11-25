@@ -49,7 +49,6 @@ pub mod material_shapes;
 #[cfg(feature = "navigation")]
 mod navigation;
 mod semantics;
-mod shape_compat;
 pub mod split_button;
 mod theme;
 

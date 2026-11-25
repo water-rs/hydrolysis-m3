@@ -16,7 +16,7 @@ use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::padding::EdgeInsets;
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{SignalExt as _, binding};
-use waterui::shape::{FilledShape, Path};
+use waterui::shape::{CornerRadii, FilledShape, Path, RoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
@@ -26,7 +26,6 @@ use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 
 use crate::color::{OnPrimary, OnSecondaryContainer, Primary, SecondaryContainer};
 use crate::semantics::interaction_chrome;
-use crate::shape_compat::CompatRoundedRect;
 
 /// `SplitButtonSmallTokens.ContainerHeight`.
 const CONTAINER_HEIGHT: f32 = 40.0;
@@ -51,12 +50,6 @@ const PRESSED_INNER_CORNER_RADIUS: f32 = 12.0;
 /// The outer corners are `CornerFull`, which on this container is half its
 /// height.
 const OUTER_CORNER_RADIUS: f32 = CONTAINER_HEIGHT / 2.0;
-
-/// Corner radii normalize against the shorter side of the shape, and both
-/// halves are exactly `CONTAINER_HEIGHT` tall.
-const fn normalized(radius: f32) -> f32 {
-    radius / CONTAINER_HEIGHT
-}
 
 /// Colour token set for a split button variant.
 pub trait SplitButtonVariantTokens: Default + 'static {
@@ -205,9 +198,9 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
         let mut trailing_action = self.trailing_action;
-        let outer = normalized(OUTER_CORNER_RADIUS);
-        let inner = normalized(INNER_CORNER_RADIUS);
-        let soft_inner = normalized(PRESSED_INNER_CORNER_RADIUS);
+        let outer = OUTER_CORNER_RADIUS;
+        let inner = INNER_CORNER_RADIUS;
+        let soft_inner = PRESSED_INNER_CORNER_RADIUS;
 
         // Round on the outside, tucked in against the seam. Each half reports
         // its own state through `.interaction_state`, and
@@ -221,7 +214,7 @@ where
             } else {
                 inner
             };
-            CompatRoundedRect::uneven(outer, seam, outer, seam)
+            RoundedRectangle::new(CornerRadii::new(outer, seam, outer, seam))
         });
         let trailing_state = binding(InteractionState::empty());
         let trailing_shape = trailing_state.map(move |state: InteractionState| {
@@ -230,7 +223,7 @@ where
             } else {
                 inner
             };
-            CompatRoundedRect::uneven(seam, outer, seam, outer)
+            RoundedRectangle::new(CornerRadii::new(seam, outer, seam, outer))
         });
 
         let leading = AnyView::new(
@@ -372,7 +365,7 @@ struct ReactiveSplitShape<S> {
 
 impl<S> View for ReactiveSplitShape<S>
 where
-    S: waterui::Signal<Output = CompatRoundedRect> + 'static,
+    S: waterui::Signal<Output = RoundedRectangle> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let color = self.color;
@@ -394,7 +387,7 @@ mod tests {
     use super::{
         BETWEEN_SPACE, CONTAINER_HEIGHT, INNER_CORNER_RADIUS, LEADING_BUTTON_LEADING_SPACE,
         LEADING_BUTTON_TRAILING_SPACE, OUTER_CORNER_RADIUS, TRAILING_BUTTON_SPACE,
-        TRAILING_ICON_SIZE, normalized,
+        TRAILING_ICON_SIZE,
     };
 
     /// Values from `androidx.compose.material3.tokens.SplitButtonSmallTokens`.
@@ -412,14 +405,19 @@ mod tests {
         assert_eq!(OUTER_CORNER_RADIUS, 20.0);
     }
 
-    /// Corner radii are normalized against the shorter side, and a normalized
-    /// radius above 0.5 would be clamped — which would silently round the
-    /// tucked-in corners as much as the outer ones.
+    /// Corner radii stay within half the container height so tucked-in seam
+    /// corners do not clamp and round as much as the outer ones.
     #[test]
-    fn corner_radii_stay_within_the_normalized_range() {
-        let outer = normalized(OUTER_CORNER_RADIUS);
-        let inner = normalized(INNER_CORNER_RADIUS);
-        assert!((outer - 0.5).abs() < 1e-6, "outer corner is fully round");
-        assert!(inner > 0.0 && inner < outer, "the seam is tucked in");
+    fn corner_radii_fit_within_half_container_height() {
+        assert!(
+            (OUTER_CORNER_RADIUS - CONTAINER_HEIGHT / 2.0).abs() < 1e-6,
+            "outer corner is fully round"
+        );
+        const {
+            assert!(
+                INNER_CORNER_RADIUS > 0.0 && INNER_CORNER_RADIUS < OUTER_CORNER_RADIUS,
+                "the seam is tucked in"
+            );
+        }
     }
 }

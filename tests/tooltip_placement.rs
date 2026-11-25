@@ -18,11 +18,11 @@
 
 use core::time::Duration;
 
-use hydrolysis_m3::{Material3, plain_tooltip, rich_tooltip};
+use hydrolysis_m3::{plain_tooltip, rich_tooltip};
 use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
 use waterui_controls::button;
 use waterui_core::View;
-use waterui_testing::{NodeBounds, OffscreenApp, Role, Snapshot, Styled, UiBuilder};
+use waterui_testing::{NodeBounds, OffscreenApp, Role, Snapshot, UiBuilder};
 
 /// A small scene; the popup for a wide label overflows it unless the layout
 /// clamps to the scene bounds.
@@ -172,7 +172,7 @@ fn hover_off(app: &mut OffscreenApp) {
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn plain_tooltip_opens_above_target_by_default(ui: UiBuilder<Styled<Material3>>) {
+fn plain_tooltip_opens_above_target_by_default(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(plain_target(), UnitPoint::CENTER));
     let (target, popup) = open_tooltip(&mut app, "+", PLAIN_LABEL);
     assert_above(popup, target, "plain tooltip default");
@@ -180,7 +180,7 @@ fn plain_tooltip_opens_above_target_by_default(ui: UiBuilder<Styled<Material3>>)
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn plain_tooltip_flips_below_target_at_top_edge(ui: UiBuilder<Styled<Material3>>) {
+fn plain_tooltip_flips_below_target_at_top_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(plain_target(), UnitPoint::TOP));
     let (target, popup) = open_tooltip(&mut app, "+", PLAIN_LABEL);
     assert_below(popup, target, "plain tooltip at top edge");
@@ -188,21 +188,21 @@ fn plain_tooltip_flips_below_target_at_top_edge(ui: UiBuilder<Styled<Material3>>
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn plain_tooltip_clamps_inside_scene_at_leading_edge(ui: UiBuilder<Styled<Material3>>) {
+fn plain_tooltip_clamps_inside_scene_at_leading_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(plain_target(), UnitPoint::LEADING));
     let (_target, popup) = open_tooltip(&mut app, "+", PLAIN_LABEL);
     assert_inside_scene(popup, "plain tooltip at leading edge");
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn plain_tooltip_clamps_inside_scene_at_trailing_edge(ui: UiBuilder<Styled<Material3>>) {
+fn plain_tooltip_clamps_inside_scene_at_trailing_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(plain_target(), UnitPoint::TRAILING));
     let (_target, popup) = open_tooltip(&mut app, "+", PLAIN_LABEL);
     assert_inside_scene(popup, "plain tooltip at trailing edge");
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn rich_tooltip_opens_below_target_by_default(ui: UiBuilder<Styled<Material3>>) {
+fn rich_tooltip_opens_below_target_by_default(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(rich_target(), UnitPoint::TOP));
     let (target, popup) = open_tooltip(&mut app, "+", RICH_TEXT);
     assert_below(popup, target, "rich tooltip default");
@@ -210,7 +210,7 @@ fn rich_tooltip_opens_below_target_by_default(ui: UiBuilder<Styled<Material3>>) 
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn rich_tooltip_flips_above_target_at_bottom_edge(ui: UiBuilder<Styled<Material3>>) {
+fn rich_tooltip_flips_above_target_at_bottom_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(rich_target(), UnitPoint::BOTTOM));
     let (target, popup) = open_tooltip(&mut app, "+", RICH_TEXT);
     assert_above(popup, target, "rich tooltip at bottom edge");
@@ -218,14 +218,14 @@ fn rich_tooltip_flips_above_target_at_bottom_edge(ui: UiBuilder<Styled<Material3
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn rich_tooltip_clamps_inside_scene_at_leading_edge(ui: UiBuilder<Styled<Material3>>) {
+fn rich_tooltip_clamps_inside_scene_at_leading_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(rich_target(), UnitPoint::LEADING));
     let (_target, popup) = open_tooltip(&mut app, "+", RICH_TEXT);
     assert_inside_scene(popup, "rich tooltip at leading edge");
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn rich_tooltip_clamps_inside_scene_at_trailing_edge(ui: UiBuilder<Styled<Material3>>) {
+fn rich_tooltip_clamps_inside_scene_at_trailing_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(rich_target(), UnitPoint::TRAILING));
     let (_target, popup) = open_tooltip(&mut app, "+", RICH_TEXT);
     assert_inside_scene(popup, "rich tooltip at trailing edge");
@@ -235,7 +235,7 @@ fn rich_tooltip_clamps_inside_scene_at_trailing_edge(ui: UiBuilder<Styled<Materi
 /// placed: mid-scale-in the drawn popup grows out of its top edge — the side
 /// touching the anchor — not the bottom edge the requested edge would imply.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn flipped_plain_tooltip_scales_from_the_placed_edge(ui: UiBuilder<Styled<Material3>>) {
+fn flipped_plain_tooltip_scales_from_the_placed_edge(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(plain_target(), UnitPoint::TOP));
     let target = app.query().role(Role::BUTTON).label("+").single().bounds();
     hover_over(&mut app, target);
@@ -275,7 +275,7 @@ fn flipped_plain_tooltip_scales_from_the_placed_edge(ui: UiBuilder<Styled<Materi
 /// A dismissed tooltip keeps drawing while its scale-out plays — the overlay
 /// leaves only once the transition inside it has finished.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn dismissed_tooltip_plays_its_scale_out(ui: UiBuilder<Styled<Material3>>) {
+fn dismissed_tooltip_plays_its_scale_out(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(plain_target(), UnitPoint::CENTER));
     let target = app.query().role(Role::BUTTON).label("+").single().bounds();
     hover_over(&mut app, target);
@@ -317,7 +317,7 @@ fn dismissed_tooltip_plays_its_scale_out(ui: UiBuilder<Styled<Material3>>) {
 /// (the regression where a `max_width` frame inside `material_elevation`
 /// inflated the shadow's bounds past the painted card) fails this.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 180))]
-fn rich_tooltip_shadow_hugs_the_card(ui: UiBuilder<Styled<Material3>>) {
+fn rich_tooltip_shadow_hugs_the_card(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(move || scene(rich_target(), UnitPoint::BOTTOM));
     app.press_named_key("Tab");
     let card = app

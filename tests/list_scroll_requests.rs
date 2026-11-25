@@ -28,7 +28,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use hydrolysis_m3::Material3;
-use waterui::component::list::{List, ListDelete, ListItem, ListMove};
+use waterui::component::list::{List, ListDelete, ListMove};
 use waterui::component::{hstack, spacer, text, vstack};
 use waterui::id::SelfId;
 use waterui::layout::scroll::ScrollController;
@@ -53,7 +53,7 @@ fn pending_scroll_list(
     items: ReactiveList<SelfId<usize>>,
     controller: ScrollController<usize>,
 ) -> impl View {
-    List::for_each(items, |item| ListItem::new(text(format!("row {}", *item))))
+    List::for_each(items, |item| text(format!("row {}", *item)))
         .scroll_controller(&controller)
         .a11y_label("messages")
 }
@@ -377,7 +377,7 @@ fn animate_to_lands_then_corrects_as_rows_remeasure_offscreen() {
         let controller = controller.clone();
         move || {
             List::for_each(items.clone(), |item| {
-                ListItem::new(vstack((text(format!("row {}", *item)),)).size(300.0, 112.0))
+                vstack((text(format!("row {}", *item)),)).size(300.0, 112.0)
             })
             .scroll_controller(&controller)
             .a11y_label("messages")
@@ -428,12 +428,12 @@ fn row_content_tap_survives_retained_swipe_order_offscreen() {
                 List::for_each(items, move |item| {
                     let row = *item;
                     let taps = Rc::clone(&taps);
-                    ListItem::new(watch(highlight.clone(), move |on| {
+                    watch(highlight.clone(), move |on| {
                         let label = if on { "high" } else { "low" };
                         let taps = Rc::clone(&taps);
                         hstack((text(format!("row {row} {label}")), spacer()))
                             .on_tap(move || taps.set(row))
-                    }))
+                    })
                 })
                 .on_delete(|_: ListDelete| {})
             }
@@ -484,12 +484,10 @@ fn edit_controls_emit_accessibility_nodes_offscreen() {
                 let moves = Rc::clone(&moves);
                 let items =
                     ReactiveList::from((1..=3).map(SelfId::new).collect::<Vec<SelfId<i32>>>());
-                List::for_each(items, move |item| {
-                    ListItem::new(text(format!("row {}", *item)))
-                })
-                .editing(true)
-                .on_delete(move |ListDelete(index)| deletes.set(index))
-                .on_move(move |ListMove(reorder)| moves.set((reorder.from(), reorder.to())))
+                List::for_each(items, move |item| text(format!("row {}", *item)))
+                    .editing(true)
+                    .on_delete(move |ListDelete(index)| deletes.set(index))
+                    .on_move(move |ListMove(reorder)| moves.set((reorder.from(), reorder.to())))
             }
         });
 
@@ -549,10 +547,7 @@ fn badge_list(
     items: waterui::reactive::collection::SignalCollection<Binding<Vec<FieldRow>>>,
 ) -> impl View {
     List::for_each(items, |item| {
-        ListItem::new(waterui::component::vstack((
-            text(format!("row {}", item.id)),
-            text(item.badge),
-        )))
+        waterui::component::vstack((text(format!("row {}", item.id)), text(item.badge)))
     })
 }
 
@@ -819,7 +814,7 @@ fn an_update_between_the_frames_passes_translates_once_offscreen() {
                             .collect(),
                     );
                 }
-                ListItem::new(text(format!("row {}", *item)))
+                text(format!("row {}", *item))
             })
             .scroll_controller(&controller)
             .a11y_label("messages")

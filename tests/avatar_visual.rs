@@ -10,12 +10,11 @@ use core::time::Duration;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use hydrolysis_m3::Material3;
 use waterui::media::photo::Event as PhotoEvent;
 use waterui::prelude::*;
-use waterui::shape::RoundedRectangle;
+use waterui::shape::{CornerRadius, RoundedRectangle};
 use waterui::widget::avatar::Avatar;
-use waterui_testing::{OffscreenApp, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, UiBuilder};
 
 /// A 320×200 test portrait: four saturated quadrants.
 ///
@@ -72,7 +71,7 @@ fn row(url: Url, side: f32, observed: Option<Rc<Cell<bool>>>) -> impl View {
         avatar("Ada Lovelace").size(side),
         avatar("山田 太郎")
             .size(side)
-            .shape(RoundedRectangle::new(0.25)),
+            .shape(RoundedRectangle::new(CornerRadius::fraction(0.25))),
         avatar("Katherine Johnson")
             .size(side)
             .ring(Color::new(theme_color::Accent), side / 20.0),
@@ -105,7 +104,7 @@ fn gallery(url: Url, loaded: Rc<Cell<bool>>) -> impl View {
         .padding_with(16.0)
 }
 
-fn capture(ui: UiBuilder<Styled<Material3>>, stage: &str) {
+fn capture(ui: UiBuilder, stage: &str) {
     let url = portrait_url();
     let loaded = Rc::new(Cell::new(false));
     let observer = Rc::clone(&loaded);
@@ -122,7 +121,7 @@ fn capture(ui: UiBuilder<Styled<Material3>>, stage: &str) {
 // Moved from waterui's tests/avatar.rs.
 #[ignore = "writes a visual acceptance PNG for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (820, 236))]
-fn avatar_gallery_light(ui: UiBuilder<Styled<Material3>>) {
+fn avatar_gallery_light(ui: UiBuilder) {
     capture(ui, "light");
 }
 
@@ -132,6 +131,6 @@ fn avatar_gallery_light(ui: UiBuilder<Styled<Material3>>) {
     theme = hydrolysis_m3::Material3::with_colors(hydrolysis_m3::MaterialColorScheme::baseline_dark()),
     viewport = (820, 236)
 )]
-fn avatar_gallery_dark(ui: UiBuilder<Styled<Material3>>) {
+fn avatar_gallery_dark(ui: UiBuilder) {
     capture(ui, "dark");
 }

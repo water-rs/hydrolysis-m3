@@ -10,6 +10,7 @@ use waterui::layout::padding::EdgeInsets;
 use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Signal, SignalExt as _};
+use waterui::shape::{CornerRadius, RoundedRectangle, ShapeExt as _};
 use waterui::style::Anchor;
 use waterui::task::{sleep, spawn_local};
 use waterui::{Binding, Environment, Str, View, ViewExt as _};
@@ -19,7 +20,6 @@ use waterui_core::handler::{Handler, SharedAction};
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
 use crate::semantics::{interaction_chrome_radius, label_plain_text};
-use crate::shape_compat::CompatRoundedRect;
 use crate::theme::{motion, typography};
 
 const PLAIN_TOOLTIP_CONTAINER_HEIGHT: f32 = 24.0;
@@ -309,12 +309,7 @@ impl<S: LabelKind> View for PlainTooltip<S> {
                 PLAIN_TOOLTIP_BOTTOM_SPACE,
                 PLAIN_TOOLTIP_TRAILING_SPACE,
             ))
-            .background(
-                CompatRoundedRect::uniform(
-                    PLAIN_TOOLTIP_CONTAINER_SHAPE / PLAIN_TOOLTIP_CONTAINER_HEIGHT,
-                )
-                .fill(InverseSurface),
-            )
+            .background(RoundedRectangle::new(PLAIN_TOOLTIP_CONTAINER_SHAPE).fill(InverseSurface))
             .min_width(28.0)
             .max_width(320.0)
             .min_height(PLAIN_TOOLTIP_CONTAINER_HEIGHT)
@@ -412,7 +407,7 @@ impl<S: LabelKind, T: LabelKind, A: LabelKind> View for RichTooltip<S, T, A> {
             RICH_TOOLTIP_BOTTOM_PADDING,
             RICH_TOOLTIP_HORIZONTAL_PADDING,
         ))
-        .background(CompatRoundedRect::uniform(0.1).fill(SurfaceContainer));
+        .background(RoundedRectangle::new(CornerRadius::fraction(0.1)).fill(SurfaceContainer));
 
         // `max_width` sits outside the elevation: a `Frame` resolves to the
         // offered extent (up to its cap), so a cap inside `material_elevation`

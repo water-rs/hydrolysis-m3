@@ -6,13 +6,14 @@ use hydrolysis_style::theme::Chrome;
 use waterui::accessibility::AccessibilityState;
 use waterui::color::Color;
 use waterui::component::list::{
-    List as WaterList, ListContent, ListItem as WaterListItem, ListItemSink,
+    ContentTags, List as WaterList, ListContent, ListItemSink, Untagged,
 };
 use waterui::component::{hstack, spacer, vstack};
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::layout::{HorizontalAlignment, padding::EdgeInsets};
 use waterui::prelude::dynamic::watch;
 use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
+use waterui::shape::{RoundedRectangle, ShapeExt as _};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
@@ -20,7 +21,6 @@ use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
 use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer};
 use crate::dimensions::{LIST_ONE_LINE_ROW_HEIGHT, LIST_VERTICAL_INSET};
 use crate::semantics::{interaction_chrome, label_plain_text};
-use crate::shape_compat::CompatRoundedRect;
 use crate::theme::typography;
 use num_traits::ToPrimitive;
 
@@ -251,7 +251,7 @@ impl MaterialListItem {
             } else {
                 Color::transparent()
             };
-            CompatRoundedRect::uniform(list_item_corner_radius(state)).fill(fill)
+            RoundedRectangle::new(list_item_corner_radius(state)).fill(fill)
         });
         // md.comp.list.list-item.selected.*.state-layer.color =
         // on-secondary-container while selected, on-surface otherwise.
@@ -306,7 +306,7 @@ impl MaterialListItem {
             } else {
                 Color::transparent()
             };
-            CompatRoundedRect::uniform(list_item_corner_radius(state)).fill(fill)
+            RoundedRectangle::new(list_item_corner_radius(state)).fill(fill)
         });
         AnyView::new(
             item.interaction_state(state)
@@ -326,10 +326,12 @@ impl ListContent for MaterialListItem {
         R: View,
         W: Fn(Self::Row) -> R + Clone + 'static,
     {
-        sink.push(AnyViewBuilder::new(move || {
-            WaterListItem::new(wrap(self.clone()))
-        }));
+        sink.push_row(AnyViewBuilder::new(move || wrap(self.clone())));
     }
+}
+
+impl<Tag> ContentTags<Tag> for MaterialListItem {
+    type Presence = Untagged;
 }
 
 impl View for MaterialListItem {
@@ -388,7 +390,7 @@ mod tests {
     #[test]
     fn list_selection_reports_selected() {
         use std::cell::RefCell;
-        use waterui::component::list::{List, ListItem};
+        use waterui::component::list::List;
         use waterui::interaction::InteractionState;
         use waterui::reactive::Signal as _;
         use waterui::reactive::binding;
@@ -405,7 +407,7 @@ mod tests {
                 SignalCollection::new((0..3_u64).map(SelfId::new).collect::<Vec<_>>()),
                 move |row| {
                     let index = row.into_inner();
-                    ListItem::new(super::material_list_item(format!("Row {index}")).action(|| {}))
+                    super::material_list_item(format!("Row {index}")).action(|| {})
                 },
             )
             .selection(&selection_for_list)

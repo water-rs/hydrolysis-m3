@@ -9,7 +9,7 @@ use core::time::Duration;
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui_controls::stepper::stepper;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 fn steppers() -> impl View {
     let mid = binding(3_i32);
@@ -28,7 +28,7 @@ fn steppers() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (420, 320))]
-fn stepper_renders_the_connected_button_group(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn stepper_renders_the_connected_button_group(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(steppers);
     let _ = app.capture_snapshot("material3-preview", "stepper", "states");
 }

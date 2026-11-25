@@ -10,11 +10,11 @@ use std::cell::Cell;
 use std::rc::Rc;
 use std::time::Duration;
 
-use waterui::component::list::{List, ListItem, Section, row};
+use waterui::component::list::{List, Section, row};
 use waterui::prelude::*;
 use waterui::reactive::{SignalExt, binding};
 use waterui::text::Text;
-use waterui_testing::{Role, Styled, UiBuilder};
+use waterui_testing::{Role, UiBuilder};
 
 /// How long a chrome update may take to reach the tree. Pumps are virtual, so
 /// this costs frames rather than wall-clock time.
@@ -163,14 +163,11 @@ fn an_unlabeled_section_adds_no_chrome_nodes(ui: UiBuilder) {
 /// The section marker rides the *first* item its content produces, so the
 /// header has to land above that row rather than anywhere else in the list.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 520))]
-fn a_section_opens_on_the_first_row_of_its_content(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_section_opens_on_the_first_row_of_its_content(ui: UiBuilder) {
     let mut app = ui.mount_offscreen(|| {
-        List::content((Section::new("Only").content((
-            || ListItem::new(text("First").padding()),
-            || ListItem::new(text("Second").padding()),
-        )),))
+        List::content((
+            Section::new("Only").content((|| text("First").padding(), || text("Second").padding())),
+        ))
     });
 
     let header = app.query().role(Role::HEADER).label("Only").single();

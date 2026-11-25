@@ -4,13 +4,13 @@
 use hydrolysis_style::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
+use waterui::shape::{RoundedRectangle, ShapeExt as _};
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
 use waterui::{Environment, View, ViewExt as _};
 #[cfg(feature = "list")]
 use waterui_graphics::color::Color;
 
 use crate::color::Shadow;
-use crate::shape_compat::CompatRoundedRect;
 
 const KEY_OPACITY: f32 = 0.19;
 const AMBIENT_OPACITY: f32 = 0.039;
@@ -139,7 +139,7 @@ impl ElevationTokens {
             Shadow.with_opacity(self.key.opacity(KEY_OPACITY)).into(),
             Vector::new(0.0, self.key.y),
             self.key.blur,
-            CompatRoundedRect::uniform(corner_radius),
+            RoundedRectangle::new(corner_radius),
         )
     }
 
@@ -150,7 +150,7 @@ impl ElevationTokens {
                 .into(),
             Vector::new(0.0, self.ambient.y),
             self.ambient.blur,
-            CompatRoundedRect::uniform(corner_radius),
+            RoundedRectangle::new(corner_radius),
         )
     }
 }
@@ -260,7 +260,7 @@ pub(crate) fn shadow_layer(
     fill: waterui::color::Color,
 ) -> impl View {
     let tokens = ElevationTokens::for_level(level);
-    CompatRoundedRect::uniform(corner_radius)
+    RoundedRectangle::new(corner_radius)
         .fill(fill)
         .shadow(tokens.ambient_shadow(corner_radius))
         .shadow(tokens.key_shadow(corner_radius))

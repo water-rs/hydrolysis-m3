@@ -6,7 +6,7 @@
 
 use core::time::Duration;
 use waterui::prelude::*;
-use waterui_testing::{OffscreenApp, Role, Styled, UiBuilder};
+use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 fn indicator() -> impl View {
     vstack((waterui::component::progress::loading().label("Loading"),)).padding()
@@ -14,7 +14,7 @@ fn indicator() -> impl View {
 
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (120, 120))]
-fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(indicator);
 
     // Sample across one morph interval (650ms). Pumping is what advances the
@@ -35,7 +35,7 @@ fn the_loading_indicator_morphs_as_it_turns(ui: UiBuilder<Styled<hydrolysis_m3::
 /// loop closes back on the first.
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (120, 120))]
-fn the_loading_indicator_visits_every_shape(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn the_loading_indicator_visits_every_shape(ui: UiBuilder) {
     let mut app: OffscreenApp = ui.mount_offscreen(indicator);
     app.pump_for(Duration::from_millis(325));
     for step in 0..9 {

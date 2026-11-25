@@ -15,7 +15,7 @@
 use std::time::Duration;
 
 use waterui::accessibility::AccessibilityGeometry;
-use waterui::component::list::{List, ListItem};
+use waterui::component::list::List;
 use waterui::graphics::color::Srgb;
 use waterui::id::SelfId;
 use waterui::layout::frame::Frame;
@@ -25,7 +25,7 @@ use waterui::layout::scroll::ScrollView;
 use waterui::navigation::NavigationView;
 use waterui::prelude::*;
 use waterui::{AnyView, Binding, Color, View};
-use waterui_testing::{DragOptions, Role, Styled, UiBuilder};
+use waterui_testing::{DragOptions, Role, UiBuilder};
 
 /// The window insets these tests publish — a status bar at the top, a
 /// navigation bar at the bottom and a small cutout on the leading edge.
@@ -93,7 +93,7 @@ fn keyboard_area_plugin(
 /// region on every edge. The trailing spacer fills the root so its content
 /// starts on the region's top edge instead of being centred in it.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn root_content_stays_inside_the_safe_area(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn root_content_stays_inside_the_safe_area(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -119,7 +119,7 @@ fn root_content_stays_inside_the_safe_area(ui: UiBuilder<Styled<hydrolysis_m3::M
 
 /// `.ignore_safe_area(ALL)` lays the root content out edge-to-edge.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn ignore_safe_area_all_reaches_the_window_origin(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn ignore_safe_area_all_reaches_the_window_origin(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -144,9 +144,7 @@ fn ignore_safe_area_all_reaches_the_window_origin(ui: UiBuilder<Styled<hydrolysi
 /// `.ignore_safe_area(TOP)` releases only the top inset: the content slides
 /// under the status bar but keeps the leading safe edge.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn ignore_safe_area_releases_only_the_flagged_edges(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn ignore_safe_area_releases_only_the_flagged_edges(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -177,9 +175,7 @@ fn ignore_safe_area_releases_only_the_flagged_edges(
 /// its TOP declaration releases it to the window edge; the second child ends
 /// mid-surface — the same declaration releases nothing for it.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn an_ignore_releases_only_on_an_edge_the_frame_touches(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn an_ignore_releases_only_on_an_edge_the_frame_touches(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -221,7 +217,7 @@ fn an_ignore_releases_only_on_an_edge_the_frame_touches(
 /// A later insets write — rotation, split-screen or the IME arriving —
 /// re-lays the window out against the new value.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_safe_area_change_relays_out_the_root(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_safe_area_change_relays_out_the_root(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -246,7 +242,7 @@ fn a_safe_area_change_relays_out_the_root(ui: UiBuilder<Styled<hydrolysis_m3::Ma
 /// finger lands on is the one drawn below the status bar, not one inset above
 /// it. Tapping the reported bounds must also activate the link.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn navigation_page_targets_follow_the_safe_area(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn navigation_page_targets_follow_the_safe_area(ui: UiBuilder) {
     use waterui::navigation::{NavigationLink, NavigationStack, NavigationView};
 
     fn stack() -> impl View {
@@ -302,9 +298,7 @@ fn navigation_page_targets_follow_the_safe_area(ui: UiBuilder<Styled<hydrolysis_
 /// would silently release nothing, ending at the keyboard boundary
 /// instead of the released one.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_retained_navigation_page_keeps_its_context_on_steady_frames(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_retained_navigation_page_keeps_its_context_on_steady_frames(ui: UiBuilder) {
     use waterui::navigation::NavigationStack;
 
     let container = waterui::binding(SAFE_INSETS);
@@ -345,9 +339,7 @@ fn a_retained_navigation_page_keeps_its_context_on_steady_frames(
 /// still has a context, so a second field focused under the keyboard band
 /// must still scroll clear inside a `NavigationStack`.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_second_field_in_a_navigation_stack_still_clears_the_keyboard(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_second_field_in_a_navigation_stack_still_clears_the_keyboard(ui: UiBuilder) {
     use waterui::navigation::NavigationStack;
 
     let container = waterui::binding(SAFE_INSETS);
@@ -406,7 +398,7 @@ fn a_second_field_in_a_navigation_stack_still_clears_the_keyboard(
 /// on through the keyboard band to the window edge exactly as the opaque
 /// case does (snapshot).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fill_inside_opacity_still_extends(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_fill_inside_opacity_still_extends(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -435,9 +427,7 @@ fn a_fill_inside_opacity_still_extends(ui: UiBuilder<Styled<hydrolysis_m3::Mater
 /// bottom edge slides under the keyboard band and stops at
 /// `window height - container bottom`.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn ignoring_only_the_keyboard_region_keeps_the_container_inset(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn ignoring_only_the_keyboard_region_keeps_the_container_inset(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -466,9 +456,7 @@ fn ignoring_only_the_keyboard_region_keeps_the_container_inset(
 /// still binds, so the frame ends on the keyboard boundary exactly as if no
 /// declaration were present.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn ignoring_only_the_container_region_releases_nothing_under_the_keyboard(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn ignoring_only_the_container_region_releases_nothing_under_the_keyboard(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -514,9 +502,7 @@ fn ignoring_only_the_container_region_releases_nothing_under_the_keyboard(
 /// window edge. The paint extension is a snapshot-only fact — the fill's own
 /// frame (and every a11y bound) stays on the boundary.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fill_background_paints_under_the_keyboard_region(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_fill_background_paints_under_the_keyboard_region(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -552,9 +538,7 @@ fn a_fill_background_paints_under_the_keyboard_region(
 /// default: a TOP declaration on the tree leaves a bottom background fill
 /// extending under the keyboard region.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fill_under_an_ancestor_top_ignore_still_extends_at_the_bottom(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_fill_under_an_ancestor_top_ignore_still_extends_at_the_bottom(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -600,9 +584,7 @@ fn a_fill_under_an_ancestor_top_ignore_still_extends_at_the_bottom(
 /// keyboard region (its frame ends on the container boundary) but still
 /// extends through the container band it does not ignore.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fill_under_a_keyboard_ignore_extends_through_the_container_band(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_fill_under_a_keyboard_ignore_extends_through_the_container_band(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -637,7 +619,7 @@ fn a_fill_under_a_keyboard_ignore_extends_through_the_container_band(
 /// edge and a bare `Color` strip at the top edge keep their own frames — no
 /// paint reaches into a region for them (snapshot read).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn non_fill_leaves_at_an_edge_do_not_extend(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn non_fill_leaves_at_an_edge_do_not_extend(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -672,9 +654,7 @@ fn non_fill_leaves_at_an_edge_do_not_extend(ui: UiBuilder<Styled<hydrolysis_m3::
 /// paint extension never changes a layout bound, so the snapshot is the
 /// check: the band stays the window background.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_non_fill_background_stays_inside_the_keyboard_region(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_non_fill_background_stays_inside_the_keyboard_region(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -699,9 +679,7 @@ fn a_non_fill_background_stays_inside_the_keyboard_region(
 /// its bottom lands exactly on the keyboard boundary — on focus, and again
 /// while the keyboard inset grows.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_scroll_surface_scrolls_the_focused_field_clear_of_the_keyboard(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_scroll_surface_scrolls_the_focused_field_clear_of_the_keyboard(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let value = Binding::container(waterui::Str::from(""));
@@ -761,9 +739,7 @@ fn a_scroll_surface_scrolls_the_focused_field_clear_of_the_keyboard(
 /// a `vstack((scroll(form), toolbar))` whose scroll frame ends above the
 /// keyboard scrolls the field to the frame's bottom, not into the toolbar.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_focused_field_clears_to_the_surface_frame_above_a_toolbar(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_focused_field_clears_to_the_surface_frame_above_a_toolbar(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let value = Binding::container(waterui::Str::from(""));
@@ -806,7 +782,7 @@ fn a_focused_field_clears_to_the_surface_frame_above_a_toolbar(
 /// A `List` is a scroll surface: a text field in a row under the keyboard
 /// band is scrolled clear to the list's frame bottom on focus.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_list_row_field_scrolls_clear_of_the_keyboard(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_list_row_field_scrolls_clear_of_the_keyboard(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let value = Binding::container(waterui::Str::from(""));
@@ -818,9 +794,9 @@ fn a_list_row_field_scrolls_clear_of_the_keyboard(ui: UiBuilder<Styled<hydrolysi
                 let value = value.clone();
                 move |item| {
                     if *item == field_row {
-                        ListItem::new(AnyView::new(field("Message", &value)))
+                        AnyView::new(field("Message", &value))
                     } else {
-                        ListItem::new(AnyView::new(text(format!("row-{}", *item))))
+                        AnyView::new(text(format!("row-{}", *item)))
                     }
                 }
             })
@@ -857,9 +833,7 @@ fn a_list_row_field_scrolls_clear_of_the_keyboard(ui: UiBuilder<Styled<hydrolysi
 /// builds the rows laid out under the keyboard band, not just the avoided
 /// window.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_lazy_stack_in_a_scroll_builds_rows_under_the_keyboard_band(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_lazy_stack_in_a_scroll_builds_rows_under_the_keyboard_band(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -891,9 +865,7 @@ fn a_lazy_stack_in_a_scroll_builds_rows_under_the_keyboard_band(
 /// the live drag handle valid instead of dropping the gesture after the
 /// first frame.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_touch_drag_over_several_frames_keeps_scrolling_under_nonzero_insets(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_touch_drag_over_several_frames_keeps_scrolling_under_nonzero_insets(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -951,9 +923,7 @@ fn a_touch_drag_over_several_frames_keeps_scrolling_under_nonzero_insets(
 /// pixel at the window's scale is still a touch — the nested declaration
 /// on the grown frame edge releases to the window edge.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fractional_geometry_still_touches_the_boundary(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_fractional_geometry_still_touches_the_boundary(ui: UiBuilder) {
     // 2.75x-density container insets: nothing in this geometry is an
     // integer — not the boundary (844 - 24.38), not the release amounts,
     // not the composer's measured text height.
@@ -996,7 +966,7 @@ fn a_fractional_geometry_still_touches_the_boundary(
 /// names no edge, so it releases nothing and no default extension applies.
 /// The snapshot is the check: the bands stay the window background.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fill_with_an_empty_ignore_extends_nowhere(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_fill_with_an_empty_ignore_extends_nowhere(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -1036,7 +1006,7 @@ fn a_fill_with_an_empty_ignore_extends_nowhere(ui: UiBuilder<Styled<hydrolysis_m
 /// boundaries, and only the named edge reaches the window edge — the
 /// status-bar band keeps the window background (snapshot).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fill_ignore_names_the_only_edge_that_extends(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_fill_ignore_names_the_only_edge_that_extends(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -1070,10 +1040,7 @@ fn a_fill_ignore_names_the_only_edge_that_extends(ui: UiBuilder<Styled<hydrolysi
 /// at 2.625, a real device density: the hosted frame maps from the layout
 /// record, so the clearance lands on the boundary in logical units
 /// whatever the window's scale.
-fn navigation_hosted_form_clears_the_focused_field(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-    scale: f64,
-) {
+fn navigation_hosted_form_clears_the_focused_field(ui: UiBuilder, scale: f64) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let value = Binding::container(waterui::Str::from(""));
@@ -1121,16 +1088,12 @@ fn navigation_hosted_form_clears_the_focused_field(
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_form_inside_navigation_content_clears_the_focused_field(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_form_inside_navigation_content_clears_the_focused_field(ui: UiBuilder) {
     navigation_hosted_form_clears_the_focused_field(ui, 1.0);
 }
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_form_inside_navigation_content_clears_the_focused_field_at_device_scale(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_form_inside_navigation_content_clears_the_focused_field_at_device_scale(ui: UiBuilder) {
     navigation_hosted_form_clears_the_focused_field(ui, 2.625);
 }
 
@@ -1141,9 +1104,7 @@ fn a_form_inside_navigation_content_clears_the_focused_field_at_device_scale(
 /// shows the fill beginning at the bar and the scrolled rows clipping at
 /// the bar's inner edge, never covering the title.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_navigation_page_background_stays_below_the_bar(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_navigation_page_background_stays_below_the_bar(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let offset = waterui::binding(waterui::layout::Point::zero());
     let mut app = ui.install(safe_area_plugin(&insets)).mount_offscreen({
@@ -1191,9 +1152,7 @@ fn a_navigation_page_background_stays_below_the_bar(
 /// top, below the bar (48 inset + the bar's height), never at the window
 /// edge.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn an_ignore_top_inside_navigation_content_stays_below_the_bar(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn an_ignore_top_inside_navigation_content_stays_below_the_bar(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -1229,9 +1188,7 @@ fn an_ignore_top_inside_navigation_content_stays_below_the_bar(
 /// probe at the page's bottom edge discriminates reachability: released
 /// past the keyboard, it lands on the container boundary.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_navigation_page_touching_the_bottom_still_extends_its_fill(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_navigation_page_touching_the_bottom_still_extends_its_fill(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -1272,9 +1229,7 @@ fn a_navigation_page_touching_the_bottom_still_extends_its_fill(
 /// touches none of them, so its fill extends nowhere — the snapshot shows
 /// a small fill under the anchor, not a window-flooding one.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn an_anchored_overlay_fill_stays_at_its_own_frame(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn an_anchored_overlay_fill_stays_at_its_own_frame(ui: UiBuilder) {
     use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay};
 
     let insets = waterui::binding(SAFE_INSETS);
@@ -1322,9 +1277,7 @@ fn an_anchored_overlay_fill_stays_at_its_own_frame(
 /// it is covered — the snapshot shows the fill starting at the column's
 /// leading edge with the sidebar unpainted-over beside it.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (1400, 900))]
-fn a_split_detail_background_does_not_cross_the_sidebar(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_split_detail_background_does_not_cross_the_sidebar(ui: UiBuilder) {
     use waterui::navigation::NavigationSplitView;
 
     let insets = waterui::binding(SAFE_INSETS);
@@ -1336,7 +1289,7 @@ fn a_split_detail_background_does_not_cross_the_sidebar(
                 &selection,
                 || {
                     List::for_each((0..8).map(SelfId::new).collect::<Vec<_>>(), |item| {
-                        ListItem::new(text(format!("side {}", *item)))
+                        text(format!("side {}", *item))
                     })
                 },
                 |id| {
@@ -1372,9 +1325,7 @@ fn a_split_detail_background_does_not_cross_the_sidebar(
 /// KEYBOARD under the navigation view with CONTAINER inside, and CONTAINER
 /// under the navigation view with KEYBOARD inside.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn nested_releases_never_move_the_navigation_boundary_inward(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn nested_releases_never_move_the_navigation_boundary_inward(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
 
@@ -1436,9 +1387,7 @@ fn nested_releases_never_move_the_navigation_boundary_inward(
 /// the inset arrives already paints the field above the new keyboard top —
 /// not one frame later.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_keyboard_inset_change_clears_the_field_on_that_frame(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_keyboard_inset_change_clears_the_field_on_that_frame(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let value = Binding::container(waterui::Str::from(""));
@@ -1478,7 +1427,7 @@ fn a_keyboard_inset_change_clears_the_field_on_that_frame(
 /// field lands on the keyboard boundary, never over-scrolled by a second
 /// surface reading the field's pre-clearance rect.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_field_in_a_nested_scroll_is_cleared_once(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_field_in_a_nested_scroll_is_cleared_once(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let value = Binding::container(waterui::Str::from(""));
@@ -1533,7 +1482,7 @@ fn a_field_in_a_nested_scroll_is_cleared_once(ui: UiBuilder<Styled<hydrolysis_m3
 /// through the bar — the snapshot shows the fill stopping at the tab
 /// bar's top edge.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_tab_page_background_stops_at_the_tab_bar(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_tab_page_background_stops_at_the_tab_bar(ui: UiBuilder) {
     use waterui::navigation::{Tab, Tabs};
 
     let insets = waterui::binding(SAFE_INSETS);
@@ -1579,7 +1528,7 @@ fn a_tab_page_background_stops_at_the_tab_bar(ui: UiBuilder<Styled<hydrolysis_m3
 /// hosted content keeps the deeper boundary: a focused field inside it
 /// still clears the keyboard.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_tab_bar_stays_docked_under_the_keyboard(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn a_tab_bar_stays_docked_under_the_keyboard(ui: UiBuilder) {
     use waterui::navigation::{Tab, Tabs};
 
     let container = waterui::binding(SAFE_INSETS);
@@ -1708,9 +1657,7 @@ fn a_tab_bar_stays_docked_under_the_keyboard(ui: UiBuilder<Styled<hydrolysis_m3:
 /// keyboard deeper than the bottom inset, its items sit in the band under
 /// the keyboard region instead of riding on top of it.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_navigation_bottom_toolbar_stays_docked_under_the_keyboard(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_navigation_bottom_toolbar_stays_docked_under_the_keyboard(ui: UiBuilder) {
     use waterui::navigation::{
         NavigationToolbar, NavigationToolbarItem, NavigationToolbarPlacement,
     };
@@ -1750,9 +1697,7 @@ fn a_navigation_bottom_toolbar_stays_docked_under_the_keyboard(
 /// stacks on the docked tab bar with the keyboard down and up, never
 /// riding onto the keyboard while the tab bar sits under it.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_stack_page_toolbar_inside_a_tab_stacks_on_the_docked_tab_bar(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_stack_page_toolbar_inside_a_tab_stacks_on_the_docked_tab_bar(ui: UiBuilder) {
     use waterui::navigation::{
         NavigationStack, NavigationToolbar, NavigationToolbarItem, NavigationToolbarPlacement, Tab,
         Tabs,
@@ -1827,9 +1772,7 @@ fn a_stack_page_toolbar_inside_a_tab_stacks_on_the_docked_tab_bar(
 /// establishes applies only to content whose edge lands on it, not to
 /// every descendant carrying the boundary down a `child()` chain.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_fixed_height_tabs_inside_tab_content_docks_its_own_bar(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_fixed_height_tabs_inside_tab_content_docks_its_own_bar(ui: UiBuilder) {
     use waterui::navigation::{
         NavigationToolbar, NavigationToolbarItem, NavigationToolbarPlacement, Tab, Tabs,
     };
@@ -1924,9 +1867,7 @@ fn a_fixed_height_tabs_inside_tab_content_docks_its_own_bar(
 /// background stays inside the panel — the snapshot shows a small tinted
 /// accessory row, not a window-wide fill.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_context_menu_panel_background_stays_at_the_panel(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_context_menu_panel_background_stays_at_the_panel(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -1976,9 +1917,7 @@ fn a_context_menu_panel_background_stays_at_the_panel(
 /// probe inside it lands on the container boundary (the row's fixed
 /// intrinsic height places its bottom edge exactly on the boundary).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_lazy_stack_outside_a_scroll_gives_items_a_context(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_lazy_stack_outside_a_scroll_gives_items_a_context(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
     let mut app = ui
@@ -2038,9 +1977,7 @@ fn a_lazy_stack_outside_a_scroll_gives_items_a_context(
 /// probe on the page's top edge discriminates reachability: released, it
 /// lands on the window edge itself.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn a_navigation_page_without_a_bar_passes_the_edge_through(
-    ui: UiBuilder<Styled<hydrolysis_m3::Material3>>,
-) {
+fn a_navigation_page_without_a_bar_passes_the_edge_through(ui: UiBuilder) {
     let insets = waterui::binding(SAFE_INSETS);
     let mut app = ui
         .install(safe_area_plugin(&insets))
@@ -2082,7 +2019,7 @@ fn a_navigation_page_without_a_bar_passes_the_edge_through(
 /// settled and mid-push — and `tab-bar-extension/insets` the bottom-docked
 /// tab bar's surface at the window edge.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (390, 844))]
-fn chrome_surface_extension_captures(ui: UiBuilder<Styled<hydrolysis_m3::Material3>>) {
+fn chrome_surface_extension_captures(ui: UiBuilder) {
     use waterui::navigation::{
         NavigationLink, NavigationStack, NavigationToolbar, NavigationToolbarItem,
         NavigationToolbarPlacement, Tab, Tabs,
