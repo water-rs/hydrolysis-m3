@@ -231,7 +231,7 @@ where
             action,
             &disabled,
         )
-        .a11y_state_signal(accessibility_state)
+        .a11y_state(accessibility_state)
     }
 }
 
