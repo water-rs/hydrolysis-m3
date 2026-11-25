@@ -2,7 +2,7 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::navigation::tab::{TabSet, Tabs, tab_style};
+use waterui::navigation::tab::{TabSet, TabStyle, Tabs};
 use waterui::navigation::{NavigationToolbarItems, NavigationView};
 use waterui::{Binding, Environment, View};
 use waterui_controls::label::IntoLabel;
@@ -33,7 +33,7 @@ impl<T: TabSet> MaterialTabs<T> {
     /// Creates an adaptive Material tabs container.
     #[must_use]
     pub fn new(selection: &Binding<T::Id>, tabs: T) -> Self {
-        Self(Tabs::new(selection, tabs).style(tab_style::tab_bar()))
+        Self(Tabs::new(selection, tabs).style(TabStyle::TabBar))
     }
 }
 

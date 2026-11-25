@@ -32,7 +32,7 @@ use hydrolysis_style::theme::{
     Chrome, CornerShape, Custom, Driven, Inputs, Surface, TabItem, TabItemGeometry, TabItemLayout,
     TabsLook, TabsMetrics,
 };
-use waterui::navigation::tab::NativeTabStyle;
+use waterui::navigation::tab::TabStyle;
 use waterui_core::{Computed, Environment, SignalExt as _};
 use waterui_graphics::color::Color;
 
@@ -102,15 +102,16 @@ fn indicator_rect(item: &TabItemGeometry) -> Rect {
             Rect::new(item.bounds.x0, y0, item.bounds.x1, y0 + height)
         }
         (TabItemLayout::Vertical, Some(icon)) => {
-            let (width, height) = match item.placement {
-                NativeTabStyle::Automatic | NativeTabStyle::TabBar => (
-                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
-                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
-                ),
-                NativeTabStyle::Sidebar => (
+            let (width, height) = if matches!(item.placement, TabStyle::Sidebar) {
+                (
                     f64::from(COLLAPSED_ACTIVE_INDICATOR_WIDTH),
                     f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT),
-                ),
+                )
+            } else {
+                (
+                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH),
+                    f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT),
+                )
             };
             Rect::from_center_size(icon.center(), (width, height))
         }
@@ -225,7 +226,7 @@ mod tests {
     use hydrolysis_style::draw::{Paint, WorkingColor};
     use hydrolysis_style::theme::{Inputs, TabItem, TabItemGeometry, TabItemLayout};
     use waterui::interaction::InteractionState;
-    use waterui::navigation::tab::NativeTabStyle;
+    use waterui::navigation::tab::TabStyle;
     use waterui_core::{Binding, Environment, Signal as _, SignalExt as _};
 
     fn environment() -> Environment {
@@ -285,7 +286,7 @@ mod tests {
         assert_eq!(metrics.bar_height, NAV_BAR_HEIGHT);
     }
 
-    fn vertical_item(placement: NativeTabStyle, icon: Option<Rect>) -> TabItemGeometry {
+    fn vertical_item(placement: TabStyle, icon: Option<Rect>) -> TabItemGeometry {
         TabItemGeometry {
             bounds: Rect::new(100.0, 0.0, 200.0, 80.0),
             icon,
@@ -298,7 +299,7 @@ mod tests {
     #[test]
     fn a_bar_item_indicator_is_a_pill_centred_on_the_icon() {
         let icon = Rect::new(138.0, 16.0, 162.0, 40.0);
-        let pill = indicator_rect(&vertical_item(NativeTabStyle::TabBar, Some(icon)));
+        let pill = indicator_rect(&vertical_item(TabStyle::TabBar, Some(icon)));
 
         // The nav-bar active indicator is 56x32 dp, centred on the icon.
         assert_eq!(pill.size().width, 56.0);
@@ -309,7 +310,7 @@ mod tests {
     #[test]
     fn a_sidebar_item_indicator_is_the_rail_pill_centred_on_the_icon() {
         let icon = Rect::new(138.0, 16.0, 162.0, 40.0);
-        let pill = indicator_rect(&vertical_item(NativeTabStyle::Sidebar, Some(icon)));
+        let pill = indicator_rect(&vertical_item(TabStyle::Sidebar, Some(icon)));
 
         assert_eq!(pill.size().width, 56.0);
         assert_eq!(pill.size().height, 32.0);
@@ -318,7 +319,7 @@ mod tests {
 
     #[test]
     fn an_iconless_vertical_item_wraps_its_title() {
-        let item = vertical_item(NativeTabStyle::TabBar, None);
+        let item = vertical_item(TabStyle::TabBar, None);
         let pill = indicator_rect(&item);
 
         assert_eq!(pill.center(), item.title.center());
@@ -335,7 +336,7 @@ mod tests {
             icon: Some(Rect::new(40.0, 20.0, 64.0, 44.0)),
             title: Rect::new(68.0, 24.0, 180.0, 40.0),
             layout: TabItemLayout::Horizontal,
-            placement: NativeTabStyle::TabBar,
+            placement: TabStyle::TabBar,
         }
     }
 
@@ -359,10 +360,7 @@ mod tests {
     /// pill lies in them.
     #[test]
     fn the_chrome_alignment_places_the_chrome_on_the_pill() {
-        let geometry = vertical_item(
-            NativeTabStyle::TabBar,
-            Some(Rect::new(138.0, 16.0, 162.0, 40.0)),
-        );
+        let geometry = vertical_item(TabStyle::TabBar, Some(Rect::new(138.0, 16.0, 162.0, 40.0)));
         let pill = indicator_rect(&geometry);
         let align = alignment(pill, geometry.bounds);
         let x0 = (geometry.bounds.width() - pill.width()).mul_add(align.x, geometry.bounds.x0);
