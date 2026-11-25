@@ -12,7 +12,6 @@
 pub mod button_group;
 pub mod chip;
 pub mod color;
-pub mod dialog;
 pub mod drag_handle;
 pub mod elevation;
 pub mod fab;
@@ -79,7 +78,7 @@ pub(crate) use layout::list;
 pub(crate) use layout::menu;
 #[cfg(feature = "table")]
 pub(crate) use layout::table;
-pub(crate) use layout::{badge, card, scroll, snackbar};
+pub(crate) use layout::{badge, card, dialog, scroll, snackbar};
 
 #[cfg(feature = "navigation")]
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
@@ -140,7 +139,6 @@ pub use chip::{
     AssistChip, FilterChip, InputChip, OutlinedChip, SuggestionChip, assist_chip, filter_chip,
     input_chip, suggestion_chip,
 };
-pub use dialog::{Dialog, DialogAction, dialog, dialog_action};
 pub use drag_handle::{VerticalDragHandle, vertical_drag_handle};
 pub use elevation::{MaterialElevation, MaterialElevationLevel, material_elevation};
 pub use fab::{
@@ -410,6 +408,7 @@ fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
     theme::typography::defaults(env);
     env.insert(colors);
     env.insert(card::theme(&colors));
+    env.insert(dialog::theme(&colors));
     env.insert(fab::theme());
     env.insert(snackbar::theme(&colors));
 }
@@ -432,6 +431,7 @@ fn insert_dynamic_tokens(
         dark,
     ));
     env.insert(card::theme(&initial));
+    env.insert(dialog::theme(&initial));
     env.insert(fab::theme());
     env.insert(snackbar::theme(&initial));
 }

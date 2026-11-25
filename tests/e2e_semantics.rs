@@ -3,9 +3,9 @@
 use core::time::Duration;
 
 use hydrolysis_m3::{
-    Material3, MaterialColorScheme, assist_chip, dialog, dialog_action, extended_fab, fab,
-    filled_icon_button, filter_chip, icon_button, input_chip, material_badge, material_card,
-    material_list, material_list_item, material_menu, material_menu_divider, material_menu_item,
+    Material3, MaterialColorScheme, assist_chip, extended_fab, fab, filled_icon_button,
+    filter_chip, icon_button, input_chip, material_badge, material_card, material_list,
+    material_list_item, material_menu, material_menu_divider, material_menu_item,
     material_navigation_view, material_sub_menu, material_tab, material_tabs, navigation_bar,
     navigation_drawer, navigation_drawer_item, navigation_tab, outlined_icon_button,
     outlined_segmented_button, outlined_segmented_button_set, plain_tooltip, rich_tooltip,
@@ -461,45 +461,6 @@ fn anchored_material_tooltip_opens_on_keyboard_focus(ui: UiBuilder) {
     app.query()
         .label("Adds this item to your favorites")
         .assert_not_exists();
-}
-
-#[waterui::test(viewport = (360, 320))]
-fn material_dialog_exposes_semantics_and_action_buttons(ui: UiBuilder) {
-    let cancel_tapped = Binding::bool(false);
-    let confirm_tapped = Binding::bool(false);
-    let cancel_for_view = cancel_tapped.clone();
-    let confirm_for_view = confirm_tapped.clone();
-    let mut app = ui.theme(Material3::defaults()).mount(move || {
-        material_shell(
-            dialog("Delete draft?", "This action cannot be undone.").actions((
-                dialog_action("Cancel").action({
-                    let cancel_for_view = cancel_for_view.clone();
-                    move || cancel_for_view.set(true)
-                }),
-                dialog_action("Delete").action({
-                    let confirm_for_view = confirm_for_view.clone();
-                    move || confirm_for_view.set(true)
-                }),
-            )),
-        )
-    });
-
-    app.query().label("Delete draft?").assert_exists();
-    app.query()
-        .label("This action cannot be undone.")
-        .assert_exists();
-    for label in ["Cancel", "Delete"] {
-        app.query().role(Role::BUTTON).label(label).assert_exists();
-        app.query().role(Role::BUTTON).label(label).tap();
-    }
-    assert!(
-        cancel_tapped.snapshot(),
-        "cancel action tap should update state"
-    );
-    assert!(
-        confirm_tapped.snapshot(),
-        "confirm action tap should update state"
-    );
 }
 
 #[waterui::test(viewport = (360, 320))]
