@@ -6,10 +6,10 @@
 use core::time::Duration;
 
 use hydrolysis_m3::{Material3, fab_menu, fab_menu_item};
-use waterui::prelude::theme_color::Foreground;
 use waterui::prelude::*;
 use waterui::reactive::binding;
 use waterui::shape::{Circle, ShapeExt as _};
+use waterui::theme::color::Foreground;
 use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 #[allow(

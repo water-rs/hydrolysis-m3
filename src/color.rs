@@ -187,8 +187,8 @@ define_material_color_tokens! {
 mod tests {
     use material_color_utils::utils::color_utils::Argb;
     use waterui::Plugin as _;
-    use waterui::prelude::theme_color;
     use waterui::reactive::Computed;
+    use waterui::theme::color as theme_color;
     use waterui::theme::{
         ColorScheme, Theme, current_color_scheme, installed_color_scheme, installed_color_signal,
     };

@@ -13,6 +13,7 @@ use std::rc::Rc;
 use waterui::media::photo::Event as PhotoEvent;
 use waterui::prelude::*;
 use waterui::shape::{CornerRadius, RoundedRectangle};
+use waterui::theme::color::Accent;
 use waterui::widget::avatar::Avatar;
 use waterui_testing::{OffscreenApp, UiBuilder};
 
@@ -74,7 +75,7 @@ fn row(url: Url, side: f32, observed: Option<Rc<Cell<bool>>>) -> impl View {
             .shape(RoundedRectangle::new(CornerRadius::fraction(0.25))),
         avatar("Katherine Johnson")
             .size(side)
-            .ring(Color::new(theme_color::Accent), side / 20.0),
+            .ring(Color::new(Accent), side / 20.0),
         avatar("Grace Hopper").image(url).size(side),
         observed.map(|observed| {
             Avatar::new("Grace Hopper", move || {
@@ -89,7 +90,7 @@ fn row(url: Url, side: f32, observed: Option<Rc<Cell<bool>>>) -> impl View {
                     })
             })
             .size(side)
-            .ring(Color::new(theme_color::Accent), side / 20.0)
+            .ring(Color::new(Accent), side / 20.0)
         }),
     ))
     .spacing(16.0)
