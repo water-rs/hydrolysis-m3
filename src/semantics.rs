@@ -3,7 +3,6 @@ use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
 use waterui::color::Color;
-use waterui::contract_violation;
 use waterui::gesture::{DragEvent, GesturePhase};
 use waterui::reactive::{Computed, SignalExt as _, impl_constant, signal::IntoComputed, zip};
 use waterui::text::font::{Font, ResolvedFont};
@@ -142,24 +141,9 @@ impl Resolvable for ConditionalFont {
     }
 }
 
-/// Whether the drag gesture `env` delivers holds its press (started or
-/// updated), for `owner`'s press tracking.
-///
-/// A backend places a `DragEvent` in the environment before it runs a drag
-/// handler; a handler that finds none is a backend contract violation. A
-/// release build reports it and returns `None`, and the caller leaves its
-/// press state as it was.
-pub fn drag_held(env: &Environment, owner: &str) -> Option<bool> {
-    let Some(event) = env.get::<DragEvent>() else {
-        contract_violation!(
-            "{owner} drag gesture ran without a DragEvent in its environment; its press state is left unchanged"
-        );
-        return None;
-    };
-    Some(matches!(
-        event.phase(),
-        GesturePhase::Started | GesturePhase::Updated
-    ))
+/// Whether `drag` holds its press (started or updated).
+pub const fn is_drag_held(drag: &DragEvent) -> bool {
+    matches!(drag.phase(), GesturePhase::Started | GesturePhase::Updated)
 }
 
 #[cfg(any(
@@ -192,13 +176,25 @@ pub fn gather<const N: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use waterui::gesture::PointerButton;
+    use waterui::layout::Point;
 
     #[test]
-    #[cfg_attr(
-        debug_assertions,
-        should_panic(expected = "test owner drag gesture ran without a DragEvent")
-    )]
-    fn a_drag_handler_without_an_event_leaves_the_press_unchanged() {
-        assert_eq!(drag_held(&Environment::new(), "test owner"), None);
+    fn drag_is_held_only_while_started_or_updated() {
+        for (phase, expected) in [
+            (GesturePhase::Started, true),
+            (GesturePhase::Updated, true),
+            (GesturePhase::Ended, false),
+            (GesturePhase::Cancelled, false),
+        ] {
+            let event = DragEvent::new(
+                phase,
+                Point::new(0.0, 0.0),
+                Point::new(0.0, 0.0),
+                Point::new(0.0, 0.0),
+                PointerButton::Primary,
+            );
+            assert_eq!(is_drag_held(&event), expected);
+        }
     }
 }
