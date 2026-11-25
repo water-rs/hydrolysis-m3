@@ -11,7 +11,7 @@ use core::fmt::{self, Debug};
 use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 use waterui::accessibility::{AccessibilityRole, AccessibilityState};
 use waterui::color::Color;
-use waterui::gesture::DragGesture;
+use waterui::gesture::{DragEvent, DragGesture};
 use waterui::layout::padding::EdgeInsets;
 use waterui::layout::{
     Layout, LayoutError, LayoutInvalidationCallback, PlacementInput, Point, ProposalSize, Rect,
@@ -27,7 +27,7 @@ use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
-use crate::semantics::{conditional_color, drag_held, interaction_chrome};
+use crate::semantics::{conditional_color, interaction_chrome, is_drag_held};
 use hydrolysis_style::theme::Corners;
 
 /// `ConnectedButtonGroupSmallTokens.ContainerHeight`.
@@ -237,10 +237,8 @@ impl View for ConnectedButtonGroup {
                     // gesture-only segment would be invisible to assistive
                     // technology. The drag gesture rides alongside purely to
                     // track the press that tightens the inner corners.
-                    .gesture(DragGesture::new(0.0), move |env: Environment| {
-                        if let Some(held) = drag_held(&env, "connected button") {
-                            pressed_for_gesture.set(held);
-                        }
+                    .gesture(DragGesture::new(0.0), move |drag: DragEvent| {
+                        pressed_for_gesture.set(is_drag_held(&drag));
                     })
                     .on_tap(move |env: Environment| {
                         action(&env).report_extraction();
@@ -421,10 +419,8 @@ impl View for ButtonGroup {
                         .action(move |env: Environment| {
                             action(&env).report_extraction();
                         })
-                        .gesture(DragGesture::new(0.0), move |env: Environment| {
-                            if let Some(held) = drag_held(&env, "group button") {
-                                pressed.set(held);
-                            }
+                        .gesture(DragGesture::new(0.0), move |drag: DragEvent| {
+                            pressed.set(is_drag_held(&drag));
                         }),
                 )
             })
