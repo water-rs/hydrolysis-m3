@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use waterui::navigation::{
     NativeNavigationTransition, NavigationLink, NavigationPath, NavigationStack,
-    NavigationTransition, NavigationTransitionDirection, NavigationTransitionFrame,
+    NavigationTransition, NavigationTransitionDirection, NavigationTransitionPair,
     NavigationTransitionViewExt as _, NavigationView, RetainedNavigationTransition,
     navigation_transition,
 };
@@ -40,13 +40,9 @@ struct CountingTransition {
 }
 
 impl NavigationTransition for CountingTransition {
-    fn frame(
-        &self,
-        _progress: f32,
-        _direction: NavigationTransitionDirection,
-    ) -> NavigationTransitionFrame {
+    fn transitions(&self, direction: NavigationTransitionDirection) -> NavigationTransitionPair {
         self.frames.set(self.frames.get() + 1);
-        NavigationTransitionFrame::IDENTITY
+        navigation_transition::Fade.transitions(direction)
     }
 
     fn native(&self) -> Option<NativeNavigationTransition> {
@@ -54,7 +50,7 @@ impl NavigationTransition for CountingTransition {
     }
 
     fn retained(&self) -> RetainedNavigationTransition {
-        RetainedNavigationTransition::Frames
+        RetainedNavigationTransition::Transitions
     }
 }
 
@@ -78,12 +74,12 @@ fn gallery(frames: Rc<Cell<usize>>) -> impl View {
                 .navigation_transition_destination(tile_id(index)),
         );
         if index == 1 {
-            page.transition(counting.clone())
+            page.page_transition(counting.clone())
         } else {
             page
         }
     })
-    .transition(navigation_transition::automatic())
+    .page_transition(navigation_transition::automatic())
 }
 
 /// Opening a tile uses the transition its own destination declared.

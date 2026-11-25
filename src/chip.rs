@@ -367,7 +367,7 @@ where
         .a11y_label(self.accessibility_label)
         .a11y_role(AccessibilityRole::Button)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
-        .a11y_state_signal(accessibility_state)
+        .a11y_state(accessibility_state)
         .install(interaction_chrome_radius(
             state_layer_color,
             f64::from(FILTER_CHIP_CONTAINER_SHAPE),

@@ -339,7 +339,7 @@ where
             })
             .a11y_label(accessibility_label)
             .a11y_role(AccessibilityRole::Tab)
-            .a11y_state_signal(accessibility_state)
+            .a11y_state(accessibility_state)
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
     }
 }
