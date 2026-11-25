@@ -8,7 +8,7 @@ use waterui::Identifiable;
 use waterui::component::list::{List, ListDelete, ListMove};
 use waterui::prelude::*;
 use waterui::reactive::binding;
-use waterui::reactive::collection::List as ReactiveList;
+use waterui::reactive::collection::StateList;
 use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 const ROW_COUNT: usize = 6;
@@ -21,15 +21,17 @@ struct Row {
 
 #[derive(Clone)]
 struct Fixture {
-    rows: ReactiveList<Row>,
+    rows: StateList<Row>,
     editing: Binding<bool>,
 }
 
-fn delete_row(ListDelete(index): ListDelete, State(mut fixture): State<Fixture>) {
-    let _ = fixture.rows.remove(index);
+fn delete_row(ListDelete(id): ListDelete<u64>, State(mut fixture): State<Fixture>) {
+    if let Some(index) = fixture.rows.snapshot().iter().position(|row| row.id == id) {
+        let _ = fixture.rows.remove(index);
+    }
 }
 
-fn move_row(ListMove(movement): ListMove, State(mut fixture): State<Fixture>) {
+fn move_row(ListMove(movement): ListMove<u64>, State(mut fixture): State<Fixture>) {
     let mut rows = fixture.rows.snapshot();
     let row = rows.remove(movement.from());
     rows.insert(movement.to(), row);
@@ -38,7 +40,7 @@ fn move_row(ListMove(movement): ListMove, State(mut fixture): State<Fixture>) {
 
 fn list_view(editing: bool) -> impl View {
     let fixture = Fixture {
-        rows: ReactiveList::from(
+        rows: StateList::from(
             (0..ROW_COUNT)
                 .map(|index| Row { id: index as u64 })
                 .collect::<Vec<_>>(),

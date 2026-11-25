@@ -11,7 +11,7 @@ use waterui::animation::Animation;
 use waterui::component::list::List;
 use waterui::prelude::*;
 
-use waterui::reactive::collection::List as ReactiveList;
+use waterui::reactive::collection::StateList;
 use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
 const ROWS: usize = 500;
@@ -29,13 +29,13 @@ struct Row {
 
 #[derive(Clone)]
 struct Fixture {
-    rows: ReactiveList<Row>,
+    rows: StateList<Row>,
     scroll: ScrollController<usize>,
 }
 
 fn fixture() -> Fixture {
     Fixture {
-        rows: ReactiveList::from(
+        rows: StateList::from(
             (0..ROWS)
                 .map(|index| Row { id: index as u64 })
                 .collect::<Vec<_>>(),

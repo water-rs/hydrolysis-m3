@@ -368,7 +368,9 @@ fn navigation_search_field_emits_on_offscreen_mount() {
         .viewport(390, 844)
         .theme(Material3::defaults())
         .mount_offscreen(move || {
-            NavigationView::new("Mail", text("mail body")).searchable(&query, "Search mail")
+            NavigationView::new("Mail", text("mail body"))
+                .searchable(&query)
+                .search_prompt("Search mail")
         });
     app.settle();
     assert!(

@@ -32,7 +32,7 @@ use waterui::component::list::{List, ListDelete, ListMove};
 use waterui::component::{hstack, spacer, text, vstack};
 use waterui::id::SelfId;
 use waterui::layout::scroll::ScrollController;
-use waterui::reactive::collection::List as ReactiveList;
+use waterui::reactive::collection::StateList;
 use waterui::{Binding, View, ViewExt};
 use waterui_core::dynamic::watch;
 use waterui_testing::{DragOptions, OffscreenApp, Role, RuntimeDriver, SemanticApp, ui};
@@ -50,7 +50,7 @@ const GROWN_ROW_COUNT: usize = 20;
 /// attached and an accessibility label to query it by.
 #[allow(clippy::needless_pass_by_value)]
 fn pending_scroll_list(
-    items: ReactiveList<SelfId<usize>>,
+    items: StateList<SelfId<usize>>,
     controller: ScrollController<usize>,
 ) -> impl View {
     List::for_each(items, |item| text(format!("row {}", *item)))
@@ -71,7 +71,7 @@ fn mount_list<V: View>(view: impl Fn() -> V + 'static) -> OffscreenApp {
 
 /// Mounts [`pending_scroll_list`] over `items`, driven by `controller`.
 fn mount_messages(
-    items: &ReactiveList<SelfId<usize>>,
+    items: &StateList<SelfId<usize>>,
     controller: &ScrollController<usize>,
 ) -> OffscreenApp {
     let items = items.clone();
@@ -111,7 +111,7 @@ fn scroll_y<R: RuntimeDriver>(app: &mut SemanticApp<R>) -> f64 {
 /// shows which rows are realized.
 #[test]
 fn pending_scroll_target_above_row_count_waits_for_contents_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let controller = ScrollController::new(0);
     controller.scroll_to(SCROLL_TARGET);
     let mut app = mount_messages(&items, &controller);
@@ -135,7 +135,7 @@ fn pending_scroll_target_above_row_count_waits_for_contents_offscreen() {
 /// between the two requests' rest and landing points.
 #[test]
 fn animate_to_a_row_glides_and_lands_where_the_jump_would_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..GROWN_ROW_COUNT).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -183,7 +183,7 @@ fn querying_between_frames_of_animate_to_observes_every_frame_offscreen() {
     /// A linear run moves the same distance every frame, so a sample that
     /// moved further than that saw the clock advance behind its back.
     const DURATION: std::time::Duration = std::time::Duration::from_millis(320);
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..GROWN_ROW_COUNT).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -234,7 +234,7 @@ fn querying_between_frames_of_animate_to_observes_every_frame_offscreen() {
 /// its row (water-rs/waterui#1901).
 #[test]
 fn animate_to_survives_rows_inserted_during_the_flight_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..30).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -269,7 +269,7 @@ fn animate_to_survives_rows_inserted_during_the_flight_offscreen() {
 /// does not jump under the user's finger (water-rs/waterui#1901).
 #[test]
 fn animate_to_interrupted_then_rows_change_still_anchors_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..40).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -315,7 +315,7 @@ fn animate_to_interrupted_then_rows_change_still_anchors_offscreen() {
 /// (water-rs/waterui#1901).
 #[test]
 fn out_of_range_pending_scroll_still_anchors_membership_changes_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..30).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -344,7 +344,7 @@ fn out_of_range_pending_scroll_still_anchors_membership_changes_offscreen() {
 /// lands on the clamp, the row is already in view, and the request consumes.
 #[test]
 fn animate_to_a_row_in_the_last_screenful_lands_on_the_clamp_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..10).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -370,7 +370,7 @@ fn animate_to_a_row_in_the_last_screenful_lands_on_the_clamp_offscreen() {
 /// (the motion is over; settling the final position is a correction).
 #[test]
 fn animate_to_lands_then_corrects_as_rows_remeasure_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..20).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_list({
@@ -423,8 +423,7 @@ fn row_content_tap_survives_retained_swipe_order_offscreen() {
             move || {
                 let highlight = highlight.clone();
                 let taps = Rc::clone(&taps);
-                let items =
-                    ReactiveList::from((1..=3).map(SelfId::new).collect::<Vec<SelfId<i32>>>());
+                let items = StateList::from((1..=3).map(SelfId::new).collect::<Vec<SelfId<i32>>>());
                 List::for_each(items, move |item| {
                     let row = *item;
                     let taps = Rc::clone(&taps);
@@ -435,7 +434,7 @@ fn row_content_tap_survives_retained_swipe_order_offscreen() {
                             .on_tap(move || taps.set(row))
                     })
                 })
-                .on_delete(|_: ListDelete| {})
+                .on_delete(|_: ListDelete<i32>| {})
             }
         });
 
@@ -471,7 +470,7 @@ fn row_content_tap_survives_retained_swipe_order_offscreen() {
 /// `Click` runs the same handler its pointer target does.
 #[test]
 fn edit_controls_emit_accessibility_nodes_offscreen() {
-    let deletes = Rc::new(Cell::new(usize::MAX));
+    let deletes = Rc::new(Cell::new(i32::MAX));
     let moves = Rc::new(Cell::new((usize::MAX, usize::MAX)));
     let mut app = ui()
         .viewport(360, 240)
@@ -482,12 +481,13 @@ fn edit_controls_emit_accessibility_nodes_offscreen() {
             move || {
                 let deletes = Rc::clone(&deletes);
                 let moves = Rc::clone(&moves);
-                let items =
-                    ReactiveList::from((1..=3).map(SelfId::new).collect::<Vec<SelfId<i32>>>());
+                let items = StateList::from((1..=3).map(SelfId::new).collect::<Vec<SelfId<i32>>>());
                 List::for_each(items, move |item| text(format!("row {}", *item)))
                     .editing(true)
-                    .on_delete(move |ListDelete(index)| deletes.set(index))
-                    .on_move(move |ListMove(reorder)| moves.set((reorder.from(), reorder.to())))
+                    .on_delete(move |ListDelete(id): ListDelete<i32>| deletes.set(id))
+                    .on_move(move |ListMove(reorder): ListMove<i32>| {
+                        moves.set((reorder.from(), reorder.to()));
+                    })
             }
         });
 
@@ -512,8 +512,8 @@ fn edit_controls_emit_accessibility_nodes_offscreen() {
     delete_nodes[1].tap(&mut app);
     assert_eq!(
         deletes.get(),
-        1,
-        "tapping row 1's delete control deletes it"
+        2,
+        "tapping row 1's delete control deletes item 2"
     );
 
     let move_downs = app.query().role(Role::BUTTON).label("Move down").all();
@@ -610,7 +610,7 @@ fn for_each_same_id_item_update_rematerializes_row_offscreen() {
 /// through the insertion (water-rs/waterui#1901).
 #[test]
 fn a_fling_survives_rows_inserted_above_the_viewport_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..40).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -664,7 +664,7 @@ fn a_fling_survives_rows_inserted_above_the_viewport_offscreen() {
 /// (water-rs/waterui#1901).
 #[test]
 fn animate_to_running_reanchors_rows_inserted_above_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..40).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -711,7 +711,7 @@ fn animate_to_running_reanchors_rows_inserted_above_offscreen() {
 /// would remove the deleted height twice (water-rs/waterui#1901).
 #[test]
 fn rows_deleted_above_the_bottom_land_on_the_new_end_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..40).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -739,7 +739,7 @@ fn rows_deleted_above_the_bottom_land_on_the_new_end_offscreen() {
 /// deleted height plus one frame of the run (water-rs/waterui#1901).
 #[test]
 fn rows_deleted_above_a_run_past_the_new_end_translate_once_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..40).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let mut app = mount_messages(&items, &controller);
@@ -791,7 +791,7 @@ fn rows_deleted_above_a_run_past_the_new_end_translate_once_offscreen() {
 /// of passing vacuously.
 #[test]
 fn an_update_between_the_frames_passes_translates_once_offscreen() {
-    let mut items = ReactiveList::<SelfId<usize>>::new();
+    let mut items = StateList::<SelfId<usize>>::new();
     let _ = items.replace((0..40).map(SelfId::new).collect());
     let controller = ScrollController::new(0);
     let prepended = Rc::new(Cell::new(false));

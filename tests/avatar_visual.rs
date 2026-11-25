@@ -69,14 +69,14 @@ fn portrait_url() -> Url {
 fn row(url: Url, side: f32, observed: Option<Rc<Cell<bool>>>) -> impl View {
     let watched = url.clone();
     hstack((
-        avatar("Ada Lovelace").size(side),
+        avatar("Ada Lovelace").side(side),
         avatar("山田 太郎")
-            .size(side)
+            .side(side)
             .shape(RoundedRectangle::new(CornerRadius::fraction(0.25))),
         avatar("Katherine Johnson")
-            .size(side)
+            .side(side)
             .ring(Color::new(Accent), side / 20.0),
-        avatar("Grace Hopper").image(url).size(side),
+        avatar("Grace Hopper").image(url).side(side),
         observed.map(|observed| {
             Avatar::new("Grace Hopper", move || {
                 let observed = Rc::clone(&observed);
@@ -89,7 +89,7 @@ fn row(url: Url, side: f32, observed: Option<Rc<Cell<bool>>>) -> impl View {
                         }
                     })
             })
-            .size(side)
+            .side(side)
             .ring(Color::new(Accent), side / 20.0)
         }),
     ))

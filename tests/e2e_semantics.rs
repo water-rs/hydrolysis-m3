@@ -874,7 +874,7 @@ fn material_focused_text_field_snapshot(app: &mut OffscreenApp) {
 fn collection_membership_view() -> impl View {
     use waterui::Identifiable;
     use waterui::component::ZStack;
-    use waterui::reactive::collection::List;
+    use waterui::reactive::collection::StateList;
 
     #[derive(Clone, Identifiable)]
     struct Row {
@@ -883,7 +883,7 @@ fn collection_membership_view() -> impl View {
         label: Str,
     }
 
-    let list = List::from(vec![
+    let list = StateList::from(vec![
         Row {
             id: 1,
             label: Str::from("Alpha"),
