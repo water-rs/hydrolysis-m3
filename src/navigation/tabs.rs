@@ -34,7 +34,7 @@ use hydrolysis_style::theme::{
 };
 use waterui::navigation::tab::NativeTabStyle;
 use waterui_core::{Computed, Environment, SignalExt as _};
-use waterui_graphics::color::{Color, signal_color};
+use waterui_graphics::color::Color;
 
 /// The measures of the compact bar's vertical items
 /// (`md.comp.primary-navigation-tab.container.height` and
@@ -155,7 +155,7 @@ fn alignment(pill: Rect, bounds: Rect) -> Vec2 {
 )]
 fn item_chrome(item: &TabItem, selected: Computed<bool>) -> Chrome {
     let pill = indicator_rect(&item.geometry);
-    let tint = signal_color(selected.map(|selected| {
+    let tint = Color::from_signal(selected.map(|selected| {
         if selected {
             Color::from(Primary)
         } else {

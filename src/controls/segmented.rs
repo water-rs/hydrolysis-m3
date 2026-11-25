@@ -20,7 +20,7 @@ use num_traits::ToPrimitive;
 use waterui::interaction::InteractionState;
 use waterui::reactive::zip::zip;
 use waterui_core::{Computed, Environment, SignalExt};
-use waterui_graphics::color::{Color, signal_color};
+use waterui_graphics::color::Color;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer};
 use crate::controls::button::disabled_paint;
@@ -185,7 +185,7 @@ fn selected_container(env: &Environment) -> ShapePart {
     reason = "`SegmentedLook::segment_chrome` fixes the callback signature, which hands the flag over by value"
 )]
 fn segment_chrome(segment: Segment, selected: Computed<bool>) -> Chrome {
-    let tint = signal_color(selected.map(|selected| {
+    let tint = Color::from_signal(selected.map(|selected| {
         if selected {
             Color::from(OnSecondaryContainer)
         } else {
