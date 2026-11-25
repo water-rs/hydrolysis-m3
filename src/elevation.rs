@@ -5,7 +5,7 @@ use hydrolysis_style::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::{RoundedRectangle, ShapeExt as _};
-use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow, Vector};
+use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow};
 use waterui::{Environment, View, ViewExt as _};
 #[cfg(feature = "list")]
 use waterui_graphics::color::Color;
@@ -135,23 +135,17 @@ impl ElevationTokens {
     }
 
     fn key_shadow(self, corner_radius: f32) -> ViewShadow {
-        ViewShadow::new(
-            Shadow.with_opacity(self.key.opacity(KEY_OPACITY)).into(),
-            Vector::new(0.0, self.key.y),
-            self.key.blur,
-            RoundedRectangle::new(corner_radius),
-        )
+        ViewShadow::splat(self.key.blur)
+            .color(Shadow.with_opacity(self.key.opacity(KEY_OPACITY)))
+            .offset(0.0, self.key.y)
+            .silhouette(RoundedRectangle::new(corner_radius))
     }
 
     fn ambient_shadow(self, corner_radius: f32) -> ViewShadow {
-        ViewShadow::new(
-            Shadow
-                .with_opacity(self.ambient.opacity(AMBIENT_OPACITY))
-                .into(),
-            Vector::new(0.0, self.ambient.y),
-            self.ambient.blur,
-            RoundedRectangle::new(corner_radius),
-        )
+        ViewShadow::splat(self.ambient.blur)
+            .color(Shadow.with_opacity(self.ambient.opacity(AMBIENT_OPACITY)))
+            .offset(0.0, self.ambient.y)
+            .silhouette(RoundedRectangle::new(corner_radius))
     }
 }
 

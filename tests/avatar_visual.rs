@@ -10,7 +10,8 @@ use core::time::Duration;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use waterui::media::photo::Event as PhotoEvent;
+use waterui::Url;
+use waterui::media::PhotoEvent;
 use waterui::prelude::*;
 use waterui::shape::{CornerRadius, RoundedRectangle};
 use waterui::theme::color::Accent;
