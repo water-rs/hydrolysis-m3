@@ -9,7 +9,7 @@ use waterui::layout::frame::Frame;
 use waterui::layout::padding::EdgeInsets;
 use waterui::reactive::SignalExt as _;
 use waterui::shape::{Rectangle, RoundedRectangle, ShapeExt as _};
-use waterui::{Binding, Environment, Str, View, ViewExt as _};
+use waterui::{Angle, Binding, Environment, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
@@ -487,8 +487,11 @@ impl View for RemoveIcon {
                 .fill(OnSurfaceVariant)
                 .size(10.5, INPUT_CHIP_REMOVE_ICON_LINE_WIDTH)
         };
-        waterui::component::zstack((line().rotation(45.0), line().rotation(-45.0)))
-            .size(INPUT_CHIP_TRAILING_ICON_SIZE, INPUT_CHIP_TRAILING_ICON_SIZE)
+        waterui::component::zstack((
+            line().rotation(Angle::degrees(45.0)),
+            line().rotation(Angle::degrees(-45.0)),
+        ))
+        .size(INPUT_CHIP_TRAILING_ICON_SIZE, INPUT_CHIP_TRAILING_ICON_SIZE)
     }
 }
 
