@@ -567,6 +567,7 @@ mod tests {
             value,
             drag,
             press_point: None,
+            velocity: None,
         }
     }
 

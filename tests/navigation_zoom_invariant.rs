@@ -25,7 +25,7 @@ fn invalid_gallery() -> impl View {
     let unmatched = NavigationLink::value(text("Unmatched tile"), Page(1));
     NavigationStack::with_path(
         NavigationPath::<Page>::new(),
-        vstack((matched, unmatched)).title("Gallery"),
+        vstack((matched, unmatched)).navigation_title("Gallery"),
     )
     .destination(|Page(index)| {
         NavigationView::new(

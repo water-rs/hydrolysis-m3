@@ -69,7 +69,7 @@ fn gallery(frames: Rc<Cell<usize>>) -> impl View {
     let counting = CountingTransition { frames };
     NavigationStack::with_path(
         NavigationPath::<Tile>::new(),
-        vstack((tile(0), tile(1))).title("Gallery"),
+        vstack((tile(0), tile(1))).navigation_title("Gallery"),
     )
     .destination(move |Tile(index)| {
         let page = NavigationView::new(
