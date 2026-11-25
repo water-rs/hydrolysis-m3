@@ -128,24 +128,24 @@ fn progress(animation: Animation) -> Motion {
 
 /// The motion of a linear indicator's value.
 pub fn progress_linear() -> Motion {
-    progress(Animation::Bezier {
-        duration: duration::MEDIUM_1,
-        x1: PROGRESS_LINEAR_DETERMINATE.0,
-        y1: PROGRESS_LINEAR_DETERMINATE.1,
-        x2: PROGRESS_LINEAR_DETERMINATE.2,
-        y2: PROGRESS_LINEAR_DETERMINATE.3,
-    })
+    progress(Animation::bezier(
+        duration::MEDIUM_1,
+        PROGRESS_LINEAR_DETERMINATE.0,
+        PROGRESS_LINEAR_DETERMINATE.1,
+        PROGRESS_LINEAR_DETERMINATE.2,
+        PROGRESS_LINEAR_DETERMINATE.3,
+    ))
 }
 
 /// The motion of a circular indicator's value.
 pub fn progress_circular() -> Motion {
-    progress(Animation::Bezier {
-        duration: duration::LONG_2,
-        x1: PROGRESS_CIRCULAR_DETERMINATE.0,
-        y1: PROGRESS_CIRCULAR_DETERMINATE.1,
-        x2: PROGRESS_CIRCULAR_DETERMINATE.2,
-        y2: PROGRESS_CIRCULAR_DETERMINATE.3,
-    })
+    progress(Animation::bezier(
+        duration::LONG_2,
+        PROGRESS_CIRCULAR_DETERMINATE.0,
+        PROGRESS_CIRCULAR_DETERMINATE.1,
+        PROGRESS_CIRCULAR_DETERMINATE.2,
+        PROGRESS_CIRCULAR_DETERMINATE.3,
+    ))
 }
 
 /// The inside label floating between resting and floating: `short3` with
@@ -273,19 +273,13 @@ pub const fn tooltip() -> Animation {
 /// stiffness = 1400)` in `StandardMotionTokens`. Springs take the stiffness and
 /// damping coefficient with unit mass: damping = 2·ζ·√k = 2·0.9·√1400 ≈ 67.4.
 pub fn fast_spatial() -> Animation {
-    Animation::Spring {
-        stiffness: 1400.0,
-        damping: 2.0 * 0.9 * 1400f32.sqrt(),
-    }
+    Animation::spring(1400.0, 2.0 * 0.9 * 1400f32.sqrt())
 }
 
 /// `MotionSchemeKeyTokens.DefaultEffects` — `spring(dampingRatio = 1.0,
 /// stiffness = 1600)` in `StandardMotionTokens`: damping = 2·1·√1600 = 80.
 pub const fn default_effects() -> Animation {
-    Animation::Spring {
-        stiffness: 1600.0,
-        damping: 80.0,
-    }
+    Animation::spring(1600.0, 80.0)
 }
 
 #[derive(Clone)]

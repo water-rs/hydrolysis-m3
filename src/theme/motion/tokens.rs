@@ -138,13 +138,7 @@ pub mod easing {
 /// Pair an easing token with a duration token.
 #[must_use]
 pub const fn motion(easing: Easing, duration: Duration) -> Animation {
-    Animation::Bezier {
-        duration,
-        x1: easing.x1,
-        y1: easing.y1,
-        x2: easing.x2,
-        y2: easing.y2,
-    }
+    Animation::bezier(duration, easing.x1, easing.y1, easing.x2, easing.y2)
 }
 
 #[cfg(test)]
