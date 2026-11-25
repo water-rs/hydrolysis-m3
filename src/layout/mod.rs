@@ -1,5 +1,6 @@
 pub mod badge;
 pub mod card;
+pub mod dialog;
 #[cfg(feature = "list")]
 pub mod list;
 #[cfg(feature = "menu")]

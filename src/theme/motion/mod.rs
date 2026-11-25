@@ -339,36 +339,6 @@ fn dialog_property(
     }
 }
 
-/// the M3 reference dialog panel transform motion.
-pub fn dialog_transform(
-    opened: Computed<bool>,
-    closed_value: f32,
-    opened_value: f32,
-) -> impl Signal<Output = f32> {
-    dialog_property(
-        opened,
-        closed_value,
-        opened_value,
-        motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_4),
-        motion(easing::EMPHASIZED_ACCELERATE, duration::SHORT_4),
-    )
-}
-
-/// the M3 reference dialog opacity motion.
-pub fn dialog_opacity(
-    opened: Computed<bool>,
-    closed_value: f32,
-    opened_value: f32,
-) -> impl Signal<Output = f32> {
-    dialog_property(
-        opened,
-        closed_value,
-        opened_value,
-        Animation::linear(duration::MEDIUM_4),
-        Animation::linear(duration::SHORT_4),
-    )
-}
-
 /// The radio dot's growth on selection: emphasized decelerate over `medium2`,
 /// so the dot arrives rather than fades up.
 #[cfg(feature = "picker")]
@@ -399,8 +369,8 @@ mod tests {
     use super::{
         DRAGGED_STATE_LAYER_OPACITY, FOCUS_STATE_LAYER_OPACITY, HOVER_STATE_LAYER_OPACITY,
         PRESSED_STATE_LAYER_OPACITY, RIPPLE_OPACITY_IN, RIPPLE_OPACITY_OUT, RIPPLE_RADIUS_IN,
-        RIPPLE_TOUCH_DELAY, dialog_opacity, dialog_transform, navigation_drawer,
-        navigation_drawer_scrim, radio_dot_grow, radio_snap, ripple, toggle_value, tooltip,
+        RIPPLE_TOUCH_DELAY, navigation_drawer, navigation_drawer_scrim, radio_dot_grow, radio_snap,
+        ripple, toggle_value, tooltip,
     };
     use core::time::Duration;
     use std::cell::RefCell;
@@ -464,42 +434,9 @@ mod tests {
         assert!(RIPPLE_TOUCH_DELAY < RIPPLE_OPACITY_IN);
     }
 
-    /// M3 gives an entering container the decelerate curve and a leaving one the
-    /// accelerate curve, and closing is quicker than opening.
-    #[test]
-    fn dialog_enters_decelerating_and_leaves_accelerating() {
-        let opened = Binding::bool(false);
-        let transitions =
-            record_transitions(&dialog_transform(opened.computed(), 0.0, 1.0), &opened);
-
-        assert_eq!(
-            transitions.as_slice(),
-            &[
-                (
-                    1.0,
-                    motion(easing::EMPHASIZED_DECELERATE, duration::MEDIUM_4)
-                ),
-                (
-                    0.0,
-                    motion(easing::EMPHASIZED_ACCELERATE, duration::SHORT_4)
-                ),
-            ]
-        );
-    }
-
     /// Opacity is always linear in M3 — an eased fade reads as a flicker.
     #[test]
-    fn dialog_and_scrim_opacity_are_linear() {
-        let opened = Binding::bool(false);
-        let dialog = record_transitions(&dialog_opacity(opened.computed(), 0.0, 1.0), &opened);
-        assert_eq!(
-            dialog.as_slice(),
-            &[
-                (1.0, Animation::linear(duration::MEDIUM_4)),
-                (0.0, Animation::linear(duration::SHORT_4)),
-            ]
-        );
-
+    fn scrim_opacity_is_linear() {
         let opened = Binding::bool(false);
         let scrim = record_transitions(
             &navigation_drawer_scrim(opened.computed(), 0.0, 0.4),
