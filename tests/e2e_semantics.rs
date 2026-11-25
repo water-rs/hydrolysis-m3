@@ -19,9 +19,7 @@ use waterui::reactive::Signal;
 use waterui::{Binding, Str};
 use waterui_controls::{TextField, Toggle, button, slider::slider, stepper::stepper};
 use waterui_core::View;
-use waterui_testing::{
-    OffscreenApp, Role, Selector, SemanticApp, UiBuilder, WaitOptions, WaitResult,
-};
+use waterui_testing::{OffscreenApp, Role, Selector, SemanticApp, UiBuilder};
 
 /// Wraps test content the way every Material control scenario in this file
 /// expects to be hosted: spaced, padded, and set against a white background.
@@ -159,15 +157,11 @@ fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBui
         "filter chip tap should invoke user action"
     );
     assert!(
-        app.wait_for(
-            &[app.expect_exists(
-                Selector::default()
-                    .role(Role::BUTTON)
-                    .label("Filter")
-                    .selected(true),
-            )],
-            WaitOptions::new(Duration::from_millis(200)),
-        ) == WaitResult::Completed,
+        app.query()
+            .role(Role::BUTTON)
+            .label("Filter")
+            .selected(true)
+            .wait_for_existence(Duration::from_millis(200)),
         "filter chip should expose selected state after tap"
     );
 }
@@ -750,14 +744,10 @@ fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
     app.query().role(Role::TAB).label("Albums").tap();
     assert_eq!(selection.snapshot(), second);
     assert!(
-        app.wait_for(
-            &[app.expect_exists(
-                Selector::default()
-                    .role(Role::LABEL)
-                    .label("albums content"),
-            )],
-            WaitOptions::new(Duration::from_millis(200)),
-        ) == WaitResult::Completed,
+        app.query()
+            .role(Role::LABEL)
+            .label("albums content")
+            .wait_for_existence(Duration::from_millis(200)),
         "material tabs should show selected tab content"
     );
 }
