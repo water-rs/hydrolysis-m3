@@ -53,7 +53,7 @@ fn card(label: &'static str) -> impl View {
 /// centred to inside it.
 fn edge_probe(
     view: impl View,
-    label: impl signal::IntoComputed<Str>,
+    label: impl waterui::text::IntoText,
     ignore: impl Into<IgnoreSafeArea>,
 ) -> impl View {
     view.ignore_safe_area(ignore)

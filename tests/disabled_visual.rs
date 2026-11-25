@@ -21,7 +21,7 @@ fn controls(checked: bool) -> impl View {
     let switch_on = binding(checked);
     let switch_off = binding(false);
     let checkbox_on = binding(checked);
-    let volume = binding(0.6);
+    let volume: waterui::Binding<f64> = binding(0.6);
     vstack((
         // `toggle()` takes the platform default, a checkbox on macOS, so the
         // switches these captures name are spelled out.

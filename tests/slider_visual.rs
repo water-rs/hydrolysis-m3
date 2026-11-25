@@ -10,10 +10,10 @@ use waterui_controls::slider::slider;
 use waterui_testing::{OffscreenApp, UiBuilder};
 
 fn sliders() -> impl View {
-    let quiet = binding(0.0_f64);
-    let low = binding(0.25_f64);
-    let mid = binding(0.5_f64);
-    let full = binding(1.0_f64);
+    let quiet: Binding<f64> = binding(0.0);
+    let low: Binding<f64> = binding(0.25);
+    let mid: Binding<f64> = binding(0.5);
+    let full: Binding<f64> = binding(1.0);
     vstack((
         slider("Zero", &quiet),
         slider("Low", &low),
@@ -40,7 +40,7 @@ fn indicated() -> impl View {
     let value = binding(30.0_f64);
     vstack((slider("Volume", &value)
         .range(0.0..=100.0)
-        .value_indicator(|value| format!("{value:.0}").into()),))
+        .value_formatter(|value| format!("{value:.0}")),))
     .padding()
 }
 
