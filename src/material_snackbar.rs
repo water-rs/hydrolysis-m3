@@ -13,7 +13,7 @@ pub type MaterialSnackbar = Snackbar;
 /// Creates a Material Design 3 snackbar.
 #[must_use]
 pub fn material_snackbar(message: impl Into<Str>) -> MaterialSnackbar {
-    Snackbar::new(message)
+    Snackbar::new(message.into())
 }
 
 #[cfg(test)]
