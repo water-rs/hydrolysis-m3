@@ -44,8 +44,6 @@ const TOOLTIP_ANCHOR_GAP: f32 = 4.0;
 /// frame (`TooltipDrawable.calculatePointerOffset`), applied as the window
 /// clamp margin.
 const TOOLTIP_WINDOW_MARGIN: f32 = 2.0;
-/// Platform long-press timeout that opens a tooltip from touch input.
-const TOOLTIP_LONG_PRESS_MS: u32 = 500;
 /// How long a non-persistent tooltip stays visible after a long-press.
 const TOOLTIP_DISMISS_DURATION: Duration = Duration::from_millis(1500);
 
@@ -218,7 +216,7 @@ where
         self.target
             .on_hover_enter(move || target_enter.set_target_hovered(true))
             .on_hover_exit(move || target_exit.set_target_hovered(false))
-            .on_long_press_gesture(TOOLTIP_LONG_PRESS_MS, move |_: Environment| {
+            .on_long_press(move |_: Environment| {
                 long_press.long_press();
             })
             .install(focus_binding)
@@ -472,7 +470,7 @@ mod tests {
         PLAIN_TOOLTIP_CONTAINER_HEIGHT, PLAIN_TOOLTIP_CONTAINER_SHAPE, PLAIN_TOOLTIP_LEADING_SPACE,
         PLAIN_TOOLTIP_TOP_SPACE, RICH_TOOLTIP_CONTAINER_SHAPE, RICH_TOOLTIP_HORIZONTAL_PADDING,
         RICH_TOOLTIP_MAX_WIDTH, TOOLTIP_ANCHOR_GAP, TOOLTIP_DISMISS_DURATION,
-        TOOLTIP_LONG_PRESS_MS, TOOLTIP_WINDOW_MARGIN, TooltipVisibility,
+        TOOLTIP_WINDOW_MARGIN, TooltipVisibility,
     };
     use core::time::Duration;
     use waterui::reactive::Signal;
@@ -485,7 +483,6 @@ mod tests {
         assert_eq!(PLAIN_TOOLTIP_LEADING_SPACE, 8.0);
         assert_eq!(TOOLTIP_ANCHOR_GAP, 4.0);
         assert_eq!(TOOLTIP_WINDOW_MARGIN, 2.0);
-        assert_eq!(TOOLTIP_LONG_PRESS_MS, 500);
         assert_eq!(TOOLTIP_DISMISS_DURATION, Duration::from_millis(1500));
     }
 
