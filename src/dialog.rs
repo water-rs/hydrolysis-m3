@@ -270,7 +270,7 @@ where
 
         absolute((scrim, surface))
             .hittable(presented)
-            .a11y_state_signal(accessibility_state)
+            .a11y_state(accessibility_state)
             .install(modal)
     }
 }

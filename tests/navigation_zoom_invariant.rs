@@ -33,7 +33,7 @@ fn invalid_gallery() -> impl View {
             text(format!("page {index} content")),
         )
     })
-    .transition(navigation_transition::zoom(matched_id()))
+    .page_transition(navigation_transition::zoom(matched_id()))
 }
 
 /// An incomplete matched pair is rejected instead of changing transition kind.

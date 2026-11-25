@@ -244,7 +244,7 @@ impl View for ConnectedButtonGroup {
                         action(&env).report_extraction();
                     })
                     .a11y_role(AccessibilityRole::Button)
-                    .a11y_state_signal(accessibility_state)
+                    .a11y_state(accessibility_state)
                     // The state layer traces the segment's resting shape.
                     .install(interaction_chrome(
                         content,
