@@ -1712,7 +1712,7 @@ fn a_stack_page_toolbar_inside_a_tab_stacks_on_the_docked_tab_bar(ui: UiBuilder)
             Tabs::new(
                 &selection,
                 (
-                    Tab::container("Messages", move || {
+                    Tab::new("Messages", move || {
                         NavigationStack::new(
                             NavigationView::new("Root", vstack((card("content"), spacer())))
                                 .navigation_toolbar(NavigationToolbar::new(vec![
@@ -1724,7 +1724,7 @@ fn a_stack_page_toolbar_inside_a_tab_stacks_on_the_docked_tab_bar(ui: UiBuilder)
                                 ])),
                         )
                     }),
-                    Tab::container("Settings", move || {
+                    Tab::new("Settings", move || {
                         NavigationStack::new(NavigationView::new("Settings", text("settings")))
                     }),
                 ),
@@ -2057,7 +2057,8 @@ fn chrome_surface_extension_captures(ui: UiBuilder) {
                             button("Mark All").action(|| {}),
                         )),
                 )
-                .searchable(&query, "Search mail"),
+                .searchable(&query)
+                .search_prompt("Search mail"),
             )
         });
     app.settle();
