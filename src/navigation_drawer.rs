@@ -123,11 +123,9 @@ where
     Content: View + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
-        let accessibility_state = self.opened.map(|opened| {
-            AccessibilityState::new()
-                .expanded(Some(opened))
-                .hidden(!opened)
-        });
+        let accessibility_state = self
+            .opened
+            .map(|opened| AccessibilityState::new().expanded(opened).hidden(!opened));
         let offset = motion::navigation_drawer(
             self.opened.computed(),
             -NAVIGATION_DRAWER_CONTAINER_WIDTH,
@@ -148,7 +146,7 @@ where
                 )
                 .a11y_label(self.accessibility_label)
                 .a11y_role(AccessibilityRole::Group)
-                .a11y_state_signal(accessibility_state);
+                .a11y_state(accessibility_state);
             let panel = material_elevation(
                 MaterialElevationLevel::LEVEL1,
                 NAVIGATION_DRAWER_CONTAINER_SHAPE,
@@ -191,7 +189,7 @@ where
                 .offset(offset, 0.0)
                 .a11y_label(self.accessibility_label)
                 .a11y_role(AccessibilityRole::Group)
-                .a11y_state_signal(accessibility_state),
+                .a11y_state(accessibility_state),
         )
     }
 }
@@ -354,7 +352,7 @@ where
         .interaction_state(&state)
         .a11y_label(accessibility_label)
         .a11y_role(AccessibilityRole::Button)
-        .a11y_state_signal(accessibility_state)
+        .a11y_state(accessibility_state)
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
         .install(interaction_chrome_radius(
             state_layer_color,

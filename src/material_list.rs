@@ -310,7 +310,7 @@ impl MaterialListItem {
         });
         AnyView::new(
             item.interaction_state(state)
-                .a11y_state_signal(a11y)
+                .a11y_state(a11y)
                 .background(fill)
                 .install(style),
         )
