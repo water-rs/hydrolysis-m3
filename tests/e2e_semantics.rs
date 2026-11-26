@@ -31,10 +31,10 @@ fn material_shell<V: View>(content: V) -> impl View {
 }
 
 fn material_controls_view() -> impl View {
-    let enabled = Binding::bool(true);
-    let value = Binding::f64(0.32);
-    let count = Binding::i32(2);
-    let name = Binding::container(Str::from("Hydrolysis"));
+    let enabled = Binding::new(true);
+    let value = Binding::new(0.32);
+    let count = Binding::new(2);
+    let name = Binding::new(Str::from("Hydrolysis"));
     material_shell(
         vstack((
             button("Save").action(|| {}),
@@ -70,7 +70,7 @@ fn material_controls_expose_accessibility_semantics(app: &mut SemanticApp) {
 }
 
 fn material_search_field_view() -> impl View {
-    let name = Binding::container(Str::from(""));
+    let name = Binding::new(Str::from(""));
     material_shell(TextField::new("Search", &name))
 }
 
@@ -85,7 +85,7 @@ fn material_text_field_focus_is_routed_through_hydrolysis_accessibility_tree(
 
 #[waterui::test(viewport = (360, 320))]
 fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
-    let tapped = Binding::bool(false);
+    let tapped = Binding::new(false);
     let tapped_for_view = tapped.clone();
     let tapped_for_action = tapped;
     let mut app = ui.theme(Material3::defaults()).mount(move || {
@@ -108,7 +108,7 @@ fn material_assist_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
 
 #[waterui::test(viewport = (360, 320))]
 fn material_suggestion_chip_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
-    let tapped = Binding::bool(false);
+    let tapped = Binding::new(false);
     let tapped_for_view = tapped.clone();
     let tapped_for_action = tapped;
     let mut app = ui.theme(Material3::defaults()).mount(move || {
@@ -131,9 +131,9 @@ fn material_suggestion_chip_exposes_button_semantics_and_tap_action(ui: UiBuilde
 
 #[waterui::test(viewport = (360, 320))]
 fn material_filter_chip_toggles_selection_and_exposes_button_semantics(ui: UiBuilder) {
-    let selected = Binding::bool(false);
+    let selected = Binding::new(false);
     let selected_for_view = selected.clone();
-    let tapped = Binding::bool(false);
+    let tapped = Binding::new(false);
     let tapped_for_action = tapped.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(filter_chip("Filter", &selected_for_view).action({
@@ -218,9 +218,9 @@ fn material_button_reserves_its_container_box_for_every_style(app: &mut Offscree
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
 fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
-    let unselected = Binding::bool(false);
+    let unselected = Binding::new(false);
     let unselected_for_view = unselected;
-    let already_selected = Binding::bool(true);
+    let already_selected = Binding::new(true);
     let mut unselected_app = ui.clone().mount_offscreen(move || {
         material_shell(
             hstack((
@@ -244,9 +244,9 @@ fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
         .single()
         .bounds();
 
-    let selected = Binding::bool(true);
+    let selected = Binding::new(true);
     let selected_for_view = selected;
-    let already_selected = Binding::bool(true);
+    let already_selected = Binding::new(true);
     let mut selected_app = ui.mount_offscreen(move || {
         material_shell(
             hstack((
@@ -282,8 +282,8 @@ fn material_filter_chip_selected_state_changes_intrinsic_layout(ui: UiBuilder) {
 
 #[waterui::test(viewport = (360, 320))]
 fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder) {
-    let primary_tapped = Binding::bool(false);
-    let remove_tapped = Binding::bool(false);
+    let primary_tapped = Binding::new(false);
+    let remove_tapped = Binding::new(false);
     let primary_for_action = primary_tapped.clone();
     let remove_for_action = remove_tapped.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
@@ -323,7 +323,7 @@ fn material_input_chip_exposes_primary_and_remove_button_semantics(ui: UiBuilder
 
 #[waterui::test(viewport = (360, 320))]
 fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
-    let tapped = Binding::bool(false);
+    let tapped = Binding::new(false);
     let tapped_for_action = tapped.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(fab("Create", text("+")).action({
@@ -342,7 +342,7 @@ fn material_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
 
 #[waterui::test(viewport = (360, 320))]
 fn material_extended_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) {
-    let tapped = Binding::bool(false);
+    let tapped = Binding::new(false);
     let tapped_for_action = tapped.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(extended_fab("Create").action({
@@ -361,9 +361,9 @@ fn material_extended_fab_exposes_button_semantics_and_tap_action(ui: UiBuilder) 
 
 #[waterui::test(viewport = (360, 320))]
 fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) {
-    let standard_tapped = Binding::bool(false);
-    let filled_tapped = Binding::bool(false);
-    let outlined_tapped = Binding::bool(false);
+    let standard_tapped = Binding::new(false);
+    let filled_tapped = Binding::new(false);
+    let outlined_tapped = Binding::new(false);
     let standard_for_action = standard_tapped.clone();
     let filled_for_action = filled_tapped.clone();
     let outlined_for_action = outlined_tapped.clone();
@@ -407,7 +407,7 @@ fn material_icon_buttons_expose_button_semantics_and_tap_actions(ui: UiBuilder) 
 
 #[waterui::test(viewport = (360, 320))]
 fn material_tooltips_expose_accessibility_labels_and_action_semantics(ui: UiBuilder) {
-    let action_tapped = Binding::bool(false);
+    let action_tapped = Binding::new(false);
     let action_for_view = action_tapped.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(
@@ -465,9 +465,9 @@ fn anchored_material_tooltip_opens_on_keyboard_focus(ui: UiBuilder) {
 
 #[waterui::test(viewport = (360, 320))]
 fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
-    let home_selected = Binding::bool(false);
-    let search_selected = Binding::bool(true);
-    let home_tapped = Binding::bool(false);
+    let home_selected = Binding::new(false);
+    let search_selected = Binding::new(true);
+    let home_tapped = Binding::new(false);
     let home_for_view = home_selected;
     let search_for_view = search_selected;
     let home_for_action = home_tapped.clone();
@@ -510,10 +510,10 @@ fn material_navigation_bar_exposes_tab_semantics_and_selection(ui: UiBuilder) {
 
 #[waterui::test(viewport = (360, 320))]
 fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilder) {
-    let opened = Binding::bool(true);
-    let inbox_selected = Binding::bool(true);
-    let archive_selected = Binding::bool(false);
-    let archive_tapped = Binding::bool(false);
+    let opened = Binding::new(true);
+    let inbox_selected = Binding::new(true);
+    let archive_selected = Binding::new(false);
+    let archive_tapped = Binding::new(false);
     let opened_for_view = opened;
     let inbox_for_view = inbox_selected;
     let archive_for_view = archive_selected;
@@ -556,14 +556,14 @@ fn material_navigation_drawer_exposes_item_semantics_and_open_state(ui: UiBuilde
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
 fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder) {
-    let opened = Binding::bool(true);
+    let opened = Binding::new(true);
     let opened_for_view = opened.clone();
-    let overlay_tapped = Binding::bool(false);
+    let overlay_tapped = Binding::new(false);
     let overlay_for_view = overlay_tapped.clone();
     let mut app = ui.mount_offscreen(move || {
         navigation_drawer(
             &opened_for_view,
-            navigation_drawer_item("Inbox", text("I"), &Binding::bool(true)),
+            navigation_drawer_item("Inbox", text("I"), &Binding::new(true)),
         )
         .modal()
         .close_on_escape()
@@ -598,9 +598,9 @@ fn material_modal_navigation_drawer_closes_from_escape_and_scrim(ui: UiBuilder) 
 
 #[waterui::test(viewport = (360, 320))]
 fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilder) {
-    let first_selected = Binding::bool(true);
-    let second_selected = Binding::bool(false);
-    let second_tapped = Binding::bool(false);
+    let first_selected = Binding::new(true);
+    let second_selected = Binding::new(false);
+    let second_tapped = Binding::new(false);
     let first_for_view = first_selected;
     let second_for_view = second_selected.clone();
     let second_for_action = second_tapped.clone();
@@ -642,7 +642,7 @@ fn material_segmented_buttons_toggle_selection_and_expose_semantics(ui: UiBuilde
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (360, 320))]
 fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder) {
-    let reports_tapped = Binding::bool(false);
+    let reports_tapped = Binding::new(false);
     let reports_for_action = reports_tapped.clone();
     let mut app = ui.mount_offscreen(move || {
         material_shell(material_list((
@@ -671,7 +671,7 @@ fn material_list_exposes_list_item_semantics_and_actions(ui: UiBuilder) {
 fn material_tabs_expose_tab_semantics_and_switch_content(ui: UiBuilder) {
     let first = 0usize;
     let second = 1usize;
-    let selection = Binding::container(first);
+    let selection = Binding::new(first);
     let selection_for_view = selection.clone();
     let mut app = ui.theme(Material3::defaults()).mount(move || {
         material_shell(material_tabs(
@@ -814,7 +814,7 @@ fn material_navigation_view_preserves_title_and_content_semantics(app: &mut Sema
 }
 
 fn material_focused_text_field_view() -> impl View {
-    let name = Binding::container(Str::from("Hydrolysis"));
+    let name = Binding::new(Str::from("Hydrolysis"));
     material_shell(TextField::new("Project", &name))
 }
 

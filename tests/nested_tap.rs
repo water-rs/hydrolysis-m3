@@ -61,7 +61,7 @@ fn message_row(row: i32, reactions: Rc<Cell<i32>>) -> impl View {
 /// else; a press inside the row but outside the pill selects the row.
 #[test]
 fn nested_tap_fires_on_offscreen_mount_without_selecting() {
-    let selection = Binding::container(Option::<i32>::None);
+    let selection = Binding::new(Option::<i32>::None);
     let binding = selection.clone();
     let reactions = Rc::new(Cell::new(0));
     let reactions_for_view = Rc::clone(&reactions);
@@ -118,7 +118,7 @@ fn centered_thumb_row(row: i32, reactions: Rc<Cell<i32>>) -> impl View {
 /// while a tap near the row's leading edge, outside the thumb, selects.
 #[test]
 fn centered_nested_tap_claims_press_on_offscreen_mount() {
-    let selection = Binding::container(Option::<i32>::None);
+    let selection = Binding::new(Option::<i32>::None);
     let binding = selection.clone();
     let reactions = Rc::new(Cell::new(0));
     let reactions_for_view = Rc::clone(&reactions);
@@ -163,7 +163,7 @@ fn tapped_row(row: i32, taps: Rc<Cell<i32>>) -> impl View {
 
 #[test]
 fn row_level_on_tap_coexists_with_press_on_offscreen_mount() {
-    let selection = Binding::container(Option::<i32>::None);
+    let selection = Binding::new(Option::<i32>::None);
     let binding = selection.clone();
     let taps = Rc::new(Cell::new(0));
     let taps_for_view = Rc::clone(&taps);

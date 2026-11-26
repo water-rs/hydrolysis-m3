@@ -437,7 +437,7 @@ mod tests {
     /// Opacity is always linear in M3 — an eased fade reads as a flicker.
     #[test]
     fn scrim_opacity_is_linear() {
-        let opened = Binding::bool(false);
+        let opened = Binding::new(false);
         let scrim = record_transitions(
             &navigation_drawer_scrim(opened.computed(), 0.0, 0.4),
             &opened,
@@ -455,7 +455,7 @@ mod tests {
     /// faster — dismissal should not feel as deliberate as summoning.
     #[test]
     fn navigation_drawer_closes_faster_than_it_opens() {
-        let opened = Binding::bool(false);
+        let opened = Binding::new(false);
         let transitions =
             record_transitions(&navigation_drawer(opened.computed(), -360.0, 0.0), &opened);
 

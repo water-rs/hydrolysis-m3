@@ -47,7 +47,7 @@ fn fixture(presented: &Binding<bool>, flag: Rc<Cell<bool>>) -> impl waterui::Vie
 
 #[test]
 fn presented_dialog_is_in_the_offscreen_a11y_tree() {
-    let presented = Binding::bool(false);
+    let presented = Binding::new(false);
     let flag = Rc::new(Cell::new(false));
     let shown = presented.clone();
     let mut app = ui()
@@ -88,7 +88,7 @@ fn content_fixture(presented: &Binding<bool>) -> impl waterui::View + use<> {
 }
 
 fn capture_presented(style: Material3, case: &str) {
-    let presented = Binding::bool(false);
+    let presented = Binding::new(false);
     let shown = presented.clone();
     let mut app = ui()
         .viewport(800, 600)
@@ -134,7 +134,7 @@ fn sibling_fixture(presented: &Binding<bool>) -> impl waterui::View + use<> {
 
 #[test]
 fn presented_dialog_makes_the_whole_window_inert_on_offscreen_mount() {
-    let presented = Binding::bool(false);
+    let presented = Binding::new(false);
     let shown = presented.clone();
     let mut app = ui()
         .viewport(400, 300)
@@ -157,7 +157,7 @@ fn presented_dialog_makes_the_whole_window_inert_on_offscreen_mount() {
 
 #[test]
 fn scrim_tap_runs_the_cancel_path() {
-    let presented = Binding::bool(false);
+    let presented = Binding::new(false);
     let shown = presented.clone();
     let cancelled = Rc::new(Cell::new(false));
     let hit = cancelled.clone();
@@ -227,8 +227,8 @@ fn assert_second_dialog_waits<R: RuntimeDriver>(
 
 #[test]
 fn a_second_dialog_waits_in_presentation_order_on_offscreen_mount() {
-    let first = Binding::bool(false);
-    let second = Binding::bool(false);
+    let first = Binding::new(false);
+    let second = Binding::new(false);
     let (f, s) = (first.clone(), second.clone());
     let mut app = ui()
         .viewport(400, 300)
@@ -248,7 +248,7 @@ fn focused_label<R>(app: &SemanticApp<R>) -> Option<String> {
 
 #[test]
 fn focus_moves_into_the_dialog_and_returns_on_dismissal() {
-    let presented = Binding::bool(false);
+    let presented = Binding::new(false);
     let flag = Rc::new(Cell::new(false));
     let shown = presented.clone();
     let mut app = ui()

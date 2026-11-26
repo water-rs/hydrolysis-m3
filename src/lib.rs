@@ -90,8 +90,9 @@ use hydrolysis_style::draw::BlendSpace;
 use hydrolysis_style::draw::WorkingColor;
 
 pub use hydrolysis_style::theme::{
-    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, IndicatorLook, InteractionFocusBinding,
-    LinearProgressLook, ModalInteraction, ProgressSpec, ScrollIndicatorLook, WidgetTheme,
+    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CardLayout, CardLook, IndicatorLook,
+    InteractionFocusBinding, LinearProgressLook, ModalInteraction, ProgressSpec,
+    ScrollIndicatorLook, WidgetTheme,
 };
 #[cfg(feature = "toggle")]
 pub use hydrolysis_style::theme::{CheckboxLook, SwitchLook, ToggleSpec};
@@ -129,6 +130,7 @@ pub use hydrolysis_style::theme::{TableLook, TableMetrics};
 use waterui::Plugin as _;
 use waterui::reactive::{Computed, Signal};
 use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
+use waterui::widget::CardStyle;
 use waterui_core::Environment;
 
 pub use button_group::{
@@ -407,7 +409,6 @@ fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
         .install(env);
     theme::typography::defaults(env);
     env.insert(colors);
-    env.insert(card::theme(&colors));
     env.insert(dialog::theme(&colors));
     env.insert(fab::theme());
     env.insert(snackbar::theme(&colors));
@@ -430,7 +431,6 @@ fn insert_dynamic_tokens(
         light,
         dark,
     ));
-    env.insert(card::theme(&initial));
     env.insert(dialog::theme(&initial));
     env.insert(fab::theme());
     env.insert(snackbar::theme(&initial));
@@ -597,6 +597,10 @@ impl WidgetTheme for Material3 {
 
     fn badge(&self, env: &Environment) -> BadgeLook {
         badge::look(env)
+    }
+
+    fn card(&self, style: CardStyle, env: &Environment) -> CardLook {
+        card::look(style, env)
     }
 
     #[cfg(feature = "list")]

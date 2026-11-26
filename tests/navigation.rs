@@ -110,7 +110,7 @@ fn assert_split_geometry(app: &mut OffscreenApp, context: &str) {
 
 #[test]
 fn navigation_split_detail_fits_pane_when_selected_after_mount() {
-    let selection = Binding::container(None::<i32>);
+    let selection = Binding::new(None::<i32>);
     let mut app = mount_split(selection.clone());
     app.settle();
     let sidebar_height_before = list_bounds(&mut app, "chats").height();
@@ -141,7 +141,7 @@ fn navigation_split_detail_fits_pane_when_selected_after_mount() {
 
     // The same geometry must result when the selection was already set at
     // mount — issue #153's before/after asymmetry.
-    let mut before = mount_split(Binding::container(Some(7)));
+    let mut before = mount_split(Binding::new(Some(7)));
     before.settle();
     let messages_after = list_bounds(&mut app, "messages");
     let composer_after = label_bounds(&mut app, "composer");
@@ -175,7 +175,7 @@ fn navigation_split_detail_fits_pane_when_selected_after_mount() {
 
 #[test]
 fn navigation_split_detail_fits_pane_when_selected_before_mount() {
-    let mut app = mount_split(Binding::container(Some(7)));
+    let mut app = mount_split(Binding::new(Some(7)));
     app.settle();
     assert_split_geometry(&mut app, "selection set before mount");
 }
@@ -186,7 +186,7 @@ fn navigation_split_detail_fits_pane_when_selected_before_mount() {
 /// window.
 #[test]
 fn tabs_content_fits_pane() {
-    let selection = Binding::container(0usize);
+    let selection = Binding::new(0usize);
     let mut app = ui()
         .viewport(WINDOW_WIDTH, WINDOW_HEIGHT)
         .theme(Material3::defaults())
@@ -238,7 +238,7 @@ fn tabs_content_fits_pane() {
 /// must still re-run the sub-view's layout and shift the sibling beside it.
 #[test]
 fn navigation_content_relayouts_when_a_measure_read_text_grows() {
-    let value = Binding::container(String::from("9"));
+    let value = Binding::new(String::from("9"));
     let value_for_view = value.clone();
     let mut app = ui()
         .viewport(320, 240)
@@ -363,7 +363,7 @@ fn navigation_toolbar_items_emit_on_offscreen_mount() {
 
 #[test]
 fn navigation_search_field_emits_on_offscreen_mount() {
-    let query = Binding::container(Str::from(""));
+    let query = Binding::new(Str::from(""));
     let mut app = ui()
         .viewport(390, 844)
         .theme(Material3::defaults())
@@ -423,7 +423,7 @@ fn navigation_back_button_emits_on_offscreen_mount() {
 /// and its activation must navigate back to the sidebar.
 #[test]
 fn collapsed_split_back_button_navigates_on_offscreen_mount() {
-    let selection = Binding::container(None::<i32>);
+    let selection = Binding::new(None::<i32>);
     let mut app = ui()
         .viewport(390, 844)
         .theme(Material3::defaults())

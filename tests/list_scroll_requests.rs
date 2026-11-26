@@ -412,7 +412,7 @@ fn animate_to_lands_then_corrects_as_rows_remeasure_offscreen() {
 /// the tap recognizer never activates.
 #[test]
 fn row_content_tap_survives_retained_swipe_order_offscreen() {
-    let highlight = Binding::bool(false);
+    let highlight = Binding::new(false);
     let taps = Rc::new(Cell::new(0));
     let mut app = ui()
         .viewport(360, 240)
@@ -556,7 +556,7 @@ fn badge_list(
 /// survives the re-materialization.
 #[test]
 fn for_each_same_id_item_update_rematerializes_row_offscreen() {
-    let items = Binding::container(
+    let items = Binding::new(
         (0..10)
             .map(|id| FieldRow {
                 id,

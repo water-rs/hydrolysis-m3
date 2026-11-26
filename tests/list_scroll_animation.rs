@@ -14,8 +14,8 @@ use waterui::prelude::*;
 use waterui::reactive::collection::StateList;
 use waterui_testing::{OffscreenApp, Role, UiBuilder};
 
-const ROWS: usize = 500;
-const TARGET_ROW: usize = 300;
+const ROWS: u64 = 500;
+const TARGET_ROW: u64 = 300;
 /// One frame at 60Hz.
 const FRAME: Duration = Duration::from_millis(16);
 /// Comfortably past the ~540ms the approach takes to settle.
@@ -30,16 +30,12 @@ struct Row {
 #[derive(Clone)]
 struct Fixture {
     rows: StateList<Row>,
-    scroll: ScrollController<usize>,
+    scroll: ScrollController<u64>,
 }
 
 fn fixture() -> Fixture {
     Fixture {
-        rows: StateList::from(
-            (0..ROWS)
-                .map(|index| Row { id: index as u64 })
-                .collect::<Vec<_>>(),
-        ),
+        rows: StateList::from((0..ROWS).map(|id| Row { id }).collect::<Vec<_>>()),
         scroll: ScrollController::new(0),
     }
 }
@@ -57,7 +53,7 @@ fn list_view(fixture: Fixture) -> impl View {
 }
 
 /// Index of the topmost row the viewport is showing, read off the a11y tree.
-fn top_visible_row(app: &mut OffscreenApp) -> Option<usize> {
+fn top_visible_row(app: &mut OffscreenApp) -> Option<u64> {
     app.query()
         .role(Role::LIST_ITEM)
         .all()
@@ -68,7 +64,7 @@ fn top_visible_row(app: &mut OffscreenApp) -> Option<usize> {
                 .label()
                 .and_then(|label| label.strip_prefix("Row ").map(str::to_owned))
         })
-        .filter_map(|index| index.parse::<usize>().ok())
+        .filter_map(|index| index.parse::<u64>().ok())
         .min()
 }
 
@@ -123,7 +119,7 @@ fn an_indexed_jump_scrolls_instead_of_teleporting(ui: UiBuilder) {
 
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (400, 420))]
 fn a_short_jump_is_animated_end_to_end(ui: UiBuilder) {
-    const NEARBY_ROW: usize = 12;
+    const NEARBY_ROW: u64 = 12;
 
     let fixture = fixture();
     let scroll = fixture.scroll.clone();

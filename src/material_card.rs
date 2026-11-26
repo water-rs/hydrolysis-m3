@@ -2,14 +2,8 @@
 
 use core::fmt::{self, Debug};
 
-use crate::elevation::{MaterialElevationLevel, shadow_layer};
-use crate::layout::card::CARD_CORNER_RADIUS;
 use waterui::accessibility::AccessibilityRole;
-use waterui::color::Color;
-use waterui::prelude::dynamic::watch;
-use waterui::reactive::binding;
-
-use waterui::widget::{Card as WaterCard, CardStyle, CardTheme};
+use waterui::widget::{Card as WaterCard, CardStyle};
 use waterui::{AnyView, Environment, Str, View, ViewExt as _};
 
 /// A Material Design 3 card container.
@@ -73,61 +67,16 @@ impl<Content> View for MaterialCard<Content>
 where
     Content: View,
 {
-    fn body(self, env: &Environment) -> impl View {
+    fn body(self, _env: &Environment) -> impl View {
         let card = WaterCard::new(self.content)
             .style(self.style)
             .a11y_role(AccessibilityRole::Group);
 
-        let card = match self.accessibility_label {
+        match self.accessibility_label {
             Some(label) => AnyView::new(card.a11y_label(label)),
             None => AnyView::new(card),
-        };
-
-        if self.style == CardStyle::Elevated {
-            elevated_hover(card, env)
-        } else {
-            card
         }
     }
-}
-
-/// `md.comp.elevated-card.*`: an elevated card rests at level1
-/// (`container.elevation`) and lifts to level2 while hovered
-/// (`hovered.elevation`). The card composer's static level1 shadows are
-/// blanked on this card's scoped theme and a hover-driven background layer
-/// carries the shadows instead.
-fn elevated_hover(card: AnyView, env: &Environment) -> AnyView {
-    let Some(theme) = env.get::<CardTheme>() else {
-        return card;
-    };
-    let mut theme = theme.clone();
-    theme.elevated.shadow_color = Color::transparent();
-    theme.elevated.ambient_shadow_color = Color::transparent();
-
-    let hovered = binding(false);
-    let enter = hovered.clone();
-    let exit = hovered;
-    let layer = watch(enter.clone(), |h| {
-        if h {
-            AnyView::new(shadow_layer(
-                MaterialElevationLevel::LEVEL2,
-                CARD_CORNER_RADIUS,
-                Color::transparent(),
-            ))
-        } else {
-            AnyView::new(shadow_layer(
-                MaterialElevationLevel::LEVEL1,
-                CARD_CORNER_RADIUS,
-                Color::transparent(),
-            ))
-        }
-    });
-    AnyView::new(
-        card.background(layer)
-            .on_hover_enter(move || enter.set(true))
-            .on_hover_exit(move || exit.set(false))
-            .with(theme),
-    )
 }
 
 /// Creates a filled Material Design 3 card.
@@ -138,21 +87,33 @@ pub const fn material_card<Content>(content: Content) -> MaterialCard<Content> {
 
 #[cfg(test)]
 mod tests {
-    use crate::MaterialColorScheme;
+    use hydrolysis_style::Style as _;
+    use hydrolysis_style::draw::kurbo::Rect;
+    use hydrolysis_style::theme::{Inputs, WidgetTheme as _};
+    use waterui::interaction::InteractionState;
     use waterui::widget::CardStyle;
+    use waterui_core::Environment;
+
+    use crate::Material3;
 
     #[test]
-    fn material_card_tokens_match_compose_card_tokens() {
-        let theme = crate::layout::card::theme(&MaterialColorScheme::baseline_light());
+    fn material_card_look_matches_compose_card_tokens() {
+        let style = Material3::defaults();
+        let mut env = Environment::new();
+        style.install_tokens(&mut env);
+        let rest = Inputs::at_rest(
+            Rect::new(0.0, 0.0, 200.0, 100.0),
+            InteractionState::empty(),
+            &(),
+        );
 
-        assert_eq!(theme.default_style, CardStyle::Filled);
-        assert_eq!(theme.elevated.corner_radius, 12.0);
-        assert_eq!(theme.filled.corner_radius, 12.0);
-        assert_eq!(theme.outlined.corner_radius, 12.0);
-        assert_eq!(theme.outlined.outline_width, 1.0);
-        assert_eq!(theme.elevated.shadow_radius, 1.5);
-        assert_eq!(theme.elevated.shadow_offset_y, 0.5);
-        assert_eq!(theme.filled.shadow_radius, 0.0);
-        assert_eq!(theme.outlined.shadow_radius, 0.0);
+        let elevated = style.card(CardStyle::Elevated, &env);
+        let filled = style.card(CardStyle::Filled, &env);
+        let outlined = style.card(CardStyle::Outlined, &env);
+
+        assert!(!elevated.surface().get_elevation().target(&rest).is_none());
+        assert!(filled.surface().get_elevation().target(&rest).is_none());
+        assert!(outlined.surface().get_border().is_some());
+        assert_eq!(outlined.layout().horizontal_padding, 16.0);
     }
 }
