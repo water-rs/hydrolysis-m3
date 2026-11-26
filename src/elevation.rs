@@ -4,7 +4,7 @@
 use hydrolysis_style::theme::{Driven, Inputs};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
+use waterui::shape::RoundedRectangle;
 use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow};
 use waterui::{Environment, View, ViewExt as _};
 #[cfg(feature = "list")]
@@ -243,21 +243,6 @@ fn floating_elevation(level: MaterialElevationLevel) -> FloatingElevation {
         ambient_shadow_offset_y: tokens.ambient.y,
         ambient_shadow_radius: tokens.ambient.blur,
     }
-}
-
-/// `level`'s two shadows as a `Shadow`-modified fill for `corner_radius` —
-/// the layer behind a surface that lifts it, so the card composer can redraw
-/// it per reported state.
-pub(crate) fn shadow_layer(
-    level: MaterialElevationLevel,
-    corner_radius: f32,
-    fill: waterui::color::Color,
-) -> impl View {
-    let tokens = ElevationTokens::for_level(level);
-    RoundedRectangle::new(corner_radius)
-        .fill(fill)
-        .shadow(tokens.ambient_shadow(corner_radius))
-        .shadow(tokens.key_shadow(corner_radius))
 }
 
 /// Installs `level` as the style's resting elevation.

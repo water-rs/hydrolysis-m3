@@ -40,10 +40,10 @@ fn labeled_card(label: &'static str, width: f32, height: f32, color: Srgb) -> im
 // unreachable, since a vertical scroll cannot scroll horizontally.
 fn chips() -> impl View {
     hstack((
-        hydrolysis_m3::filter_chip("All", &Binding::bool(false)),
-        hydrolysis_m3::filter_chip("Work", &Binding::bool(false)),
-        hydrolysis_m3::filter_chip("Personal", &Binding::bool(false)),
-        hydrolysis_m3::filter_chip("Archive", &Binding::bool(false)),
+        hydrolysis_m3::filter_chip("All", &Binding::new(false)),
+        hydrolysis_m3::filter_chip("Work", &Binding::new(false)),
+        hydrolysis_m3::filter_chip("Personal", &Binding::new(false)),
+        hydrolysis_m3::filter_chip("Archive", &Binding::new(false)),
     ))
     .spacing(8.0)
 }
@@ -412,7 +412,7 @@ fn scroll_controller_applies_requests_inside_navigation_content() {
 /// still re-lay the text out.
 #[test]
 fn scroll_child_measure_memo_cannot_hide_a_layout_dependency() {
-    let value = Binding::container(String::from("9"));
+    let value = Binding::new(String::from("9"));
     let mut app = ui()
         .viewport(320, 240)
         .theme(hydrolysis_m3::Material3::defaults())

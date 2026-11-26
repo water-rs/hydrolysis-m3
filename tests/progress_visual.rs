@@ -11,10 +11,10 @@ use waterui_testing::{OffscreenApp, UiBuilder};
 
 fn indicators() -> impl View {
     vstack((
-        progress(Binding::f64(0.25)).label("Quarter"),
-        progress(Binding::f64(0.5)).label("Half"),
-        progress(Binding::f64(0.9)).label("Nearly done"),
-        progress(Binding::f64(1.0)).label("Complete"),
+        progress(Binding::new(0.25)).label("Quarter"),
+        progress(Binding::new(0.5)).label("Half"),
+        progress(Binding::new(0.9)).label("Nearly done"),
+        progress(Binding::new(1.0)).label("Complete"),
     ))
     .spacing(20.0)
     .padding()
@@ -61,7 +61,7 @@ fn indeterminate_progress_moves_with_pumped_time(ui: UiBuilder) {
 #[ignore = "writes visual acceptance PNG files for direct image review"]
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (300, 180))]
 fn determinate_progress_animates_to_its_new_value(ui: UiBuilder) {
-    let value = Binding::f64(0.1);
+    let value = Binding::new(0.1);
     let mut app: OffscreenApp = ui.mount_offscreen({
         let value = value.clone();
         move || {
@@ -83,9 +83,9 @@ fn determinate_progress_animates_to_its_new_value(ui: UiBuilder) {
 
 fn circular_indicators() -> impl View {
     hstack((
-        progress(Binding::f64(0.25)).circular(),
-        progress(Binding::f64(0.6)).circular(),
-        progress(Binding::f64(0.95)).circular(),
+        progress(Binding::new(0.25)).circular(),
+        progress(Binding::new(0.6)).circular(),
+        progress(Binding::new(0.95)).circular(),
     ))
     .spacing(24.0)
     .padding()

@@ -21,7 +21,6 @@ use waterui::id::SelfId;
 use waterui::layout::frame::Frame;
 use waterui::layout::padding::EdgeInsets;
 use waterui::layout::safe_area::{EdgeSet, IgnoreSafeArea, SafeAreaRegions};
-use waterui::layout::scroll::ScrollView;
 use waterui::navigation::NavigationView;
 use waterui::prelude::*;
 use waterui::{AnyView, Binding, Color, View};
@@ -303,7 +302,7 @@ fn a_retained_navigation_page_keeps_its_context_on_steady_frames(ui: UiBuilder) 
 
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let draft = Binding::container(waterui::Str::from(""));
+    let draft = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
@@ -344,14 +343,14 @@ fn a_second_field_in_a_navigation_stack_still_clears_the_keyboard(ui: UiBuilder)
 
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let first = Binding::container(waterui::Str::from(""));
-    let second = Binding::container(waterui::Str::from(""));
+    let first = Binding::new(waterui::Str::from(""));
+    let second = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
             NavigationStack::new(NavigationView::new(
                 "Compose",
-                ScrollView::vertical(vstack((
+                scroll(vstack((
                     field("First", &first).size(350.0, 44.0),
                     spacer().size(390.0, 400.0),
                     field("Second", &second).size(350.0, 44.0),
@@ -682,11 +681,11 @@ fn a_non_fill_background_stays_inside_the_keyboard_region(ui: UiBuilder) {
 fn a_scroll_surface_scrolls_the_focused_field_clear_of_the_keyboard(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let value = Binding::container(waterui::Str::from(""));
+    let value = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
-            ScrollView::vertical(vstack((
+            scroll(vstack((
                 spacer().size(390.0, 560.0),
                 field("Message", &value).size(350.0, 44.0),
                 spacer().size(390.0, 380.0),
@@ -742,12 +741,12 @@ fn a_scroll_surface_scrolls_the_focused_field_clear_of_the_keyboard(ui: UiBuilde
 fn a_focused_field_clears_to_the_surface_frame_above_a_toolbar(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let value = Binding::container(waterui::Str::from(""));
+    let value = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
             vstack((
-                ScrollView::vertical(vstack((
+                scroll(vstack((
                     spacer().size(390.0, 560.0),
                     field("Message", &value).size(350.0, 44.0),
                     spacer().size(390.0, 380.0),
@@ -785,7 +784,7 @@ fn a_focused_field_clears_to_the_surface_frame_above_a_toolbar(ui: UiBuilder) {
 fn a_list_row_field_scrolls_clear_of_the_keyboard(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let value = Binding::container(waterui::Str::from(""));
+    let value = Binding::new(waterui::Str::from(""));
     let field_row = 10;
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
@@ -839,7 +838,7 @@ fn a_lazy_stack_in_a_scroll_builds_rows_under_the_keyboard_band(ui: UiBuilder) {
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
-            ScrollView::vertical(VStack::for_each(
+            scroll(VStack::for_each(
                 (0..40).map(SelfId::new).collect::<Vec<_>>(),
                 |item| Frame::new(text(format!("row-{}", *item))).size(390.0, 30.0),
             ))
@@ -871,7 +870,7 @@ fn a_touch_drag_over_several_frames_keeps_scrolling_under_nonzero_insets(ui: UiB
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
-            ScrollView::vertical(vstack(
+            scroll(vstack(
                 (0..30)
                     .map(|i| Frame::new(text(format!("row-{i}"))).size(390.0, 30.0))
                     .collect::<Vec<_>>(),
@@ -1043,14 +1042,14 @@ fn a_fill_ignore_names_the_only_edge_that_extends(ui: UiBuilder) {
 fn navigation_hosted_form_clears_the_focused_field(ui: UiBuilder, scale: f64) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let value = Binding::container(waterui::Str::from(""));
+    let value = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .scale_factor(scale)
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
             NavigationView::new(
                 "Compose",
-                ScrollView::vertical(vstack((
+                scroll(vstack((
                     spacer().size(390.0, 560.0),
                     field("Message", &value).size(350.0, 44.0),
                     spacer().size(390.0, 380.0),
@@ -1112,7 +1111,7 @@ fn a_navigation_page_background_stays_below_the_bar(ui: UiBuilder) {
         move || {
             NavigationView::new(
                 "Home",
-                ScrollView::vertical(vstack((
+                scroll(vstack((
                     card("row one"),
                     card("row two"),
                     card("row three"),
@@ -1281,7 +1280,7 @@ fn a_split_detail_background_does_not_cross_the_sidebar(ui: UiBuilder) {
     use waterui::navigation::NavigationSplitView;
 
     let insets = waterui::binding(SAFE_INSETS);
-    let selection = Binding::container(Some(0i32));
+    let selection = Binding::new(Some(0i32));
     let mut app = ui
         .install(safe_area_plugin(&insets))
         .mount_offscreen(move || {
@@ -1390,11 +1389,11 @@ fn nested_releases_never_move_the_navigation_boundary_inward(ui: UiBuilder) {
 fn a_keyboard_inset_change_clears_the_field_on_that_frame(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let value = Binding::container(waterui::Str::from(""));
+    let value = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
-            ScrollView::vertical(vstack((
+            scroll(vstack((
                 spacer().size(390.0, 560.0),
                 field("Message", &value).size(350.0, 44.0),
                 spacer().size(390.0, 380.0),
@@ -1430,13 +1429,13 @@ fn a_keyboard_inset_change_clears_the_field_on_that_frame(ui: UiBuilder) {
 fn a_field_in_a_nested_scroll_is_cleared_once(ui: UiBuilder) {
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(KEYBOARD_INSETS);
-    let value = Binding::container(waterui::Str::from(""));
+    let value = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
-            ScrollView::vertical(vstack((
+            scroll(vstack((
                 spacer().size(390.0, 430.0),
-                ScrollView::vertical(vstack((
+                scroll(vstack((
                     spacer().size(350.0, 80.0),
                     field("Message", &value).size(350.0, 44.0),
                     spacer().size(350.0, 300.0),
@@ -1486,7 +1485,7 @@ fn a_tab_page_background_stops_at_the_tab_bar(ui: UiBuilder) {
     use waterui::navigation::{Tab, Tabs};
 
     let insets = waterui::binding(SAFE_INSETS);
-    let selection = Binding::container(0usize);
+    let selection = Binding::new(0usize);
     let mut app = ui
         .install(safe_area_plugin(&insets))
         .mount_offscreen(move || {
@@ -1533,8 +1532,8 @@ fn a_tab_bar_stays_docked_under_the_keyboard(ui: UiBuilder) {
 
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(EdgeInsets::new(0.0, 0.0, 0.0, 0.0));
-    let selection = Binding::container(0usize);
-    let value = Binding::container(waterui::Str::from(""));
+    let selection = Binding::new(0usize);
+    let value = Binding::new(waterui::Str::from(""));
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
@@ -1547,7 +1546,7 @@ fn a_tab_bar_stays_docked_under_the_keyboard(ui: UiBuilder) {
                             NavigationView::new(
                                 "Messages",
                                 zstack((
-                                    ScrollView::vertical(vstack((
+                                    scroll(vstack((
                                         spacer().size(390.0, 560.0),
                                         field("Message", &value).size(350.0, 44.0),
                                         spacer().size(390.0, 380.0),
@@ -1705,7 +1704,7 @@ fn a_stack_page_toolbar_inside_a_tab_stacks_on_the_docked_tab_bar(ui: UiBuilder)
 
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(EdgeInsets::new(0.0, 0.0, 0.0, 0.0));
-    let selection = Binding::container(0usize);
+    let selection = Binding::new(0usize);
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
@@ -1779,8 +1778,8 @@ fn a_fixed_height_tabs_inside_tab_content_docks_its_own_bar(ui: UiBuilder) {
 
     let container = waterui::binding(SAFE_INSETS);
     let keyboard = waterui::binding(EdgeInsets::new(0.0, 0.0, 0.0, 0.0));
-    let selection = Binding::container(0usize);
-    let inner = Binding::container(0usize);
+    let selection = Binding::new(0usize);
+    let inner = Binding::new(0usize);
     let mut app = ui
         .install(keyboard_area_plugin(&container, &keyboard))
         .mount_offscreen(move || {
@@ -2081,7 +2080,7 @@ fn chrome_surface_extension_captures(ui: UiBuilder) {
     app.pump_for(Duration::from_millis(180));
     app.capture_snapshot("safe-area", "navigation-chrome-extension", "transition");
 
-    let selection = Binding::container(0usize);
+    let selection = Binding::new(0usize);
     let mut app = ui
         .install(safe_area_plugin(&insets))
         .mount_offscreen(move || {

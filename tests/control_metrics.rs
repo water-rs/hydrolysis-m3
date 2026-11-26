@@ -37,7 +37,7 @@ fn assert_close(actual: f64, expected: f64, epsilon: f64, context: &str) {
 // toggles the control (no dead zone beside the switch).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 240))]
 fn hidden_label_toggle_is_switch_sized_and_toggles_throughout(ui: UiBuilder) {
-    let enabled = Binding::bool(false);
+    let enabled = Binding::new(false);
     let enabled_for_view = enabled.clone();
 
     let mut app = ui.mount_offscreen(move || {
@@ -91,7 +91,7 @@ fn hidden_label_toggle_is_switch_sized_and_toggles_throughout(ui: UiBuilder) {
 // it fills only because the leaf itself answers the proposed width.
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 320))]
 fn toggle_frames_follow_style_and_label_visibility(ui: UiBuilder) {
-    let views: [_; 5] = core::array::from_fn(|_| Binding::bool(false));
+    let views: [_; 5] = core::array::from_fn(|_| Binding::new(false));
 
     let mut app = ui.mount_offscreen(move || {
         let [wifi, bluetooth, airdrop, hotspot, cellular] = views.clone();
@@ -166,7 +166,7 @@ fn toggle_frames_follow_style_and_label_visibility(ui: UiBuilder) {
 // anywhere inside them steps the value (no dead zone beside the buttons).
 #[waterui::test(theme = hydrolysis_m3::Material3::defaults(), viewport = (320, 240))]
 fn hidden_label_stepper_is_button_sized_and_steps_throughout(ui: UiBuilder) {
-    let quantity = Binding::i32(0);
+    let quantity = Binding::new(0);
     let quantity_for_view = quantity.clone();
 
     let mut app = ui.mount_offscreen(move || {

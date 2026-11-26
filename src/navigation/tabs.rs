@@ -380,7 +380,7 @@ mod tests {
     fn an_items_state_layer_follows_its_selection() {
         let colors = MaterialColorScheme::baseline_light();
         let env = environment();
-        let selected = Binding::container(false);
+        let selected = Binding::new(false);
         let chrome = item_chrome(&item(false, horizontal_item()), selected.computed());
         let color = || chrome.state_layer().color.resolve(&env).snapshot();
 

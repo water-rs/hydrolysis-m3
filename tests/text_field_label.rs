@@ -44,7 +44,7 @@ fn in_floated_label_band(run: (f64, f64)) -> bool {
 /// The issue's reproduction: a filled field whose label is hidden, carrying
 /// only a prompt.
 fn hidden_label_prompt_field() -> impl View {
-    let value = Binding::container(Str::from(""));
+    let value = Binding::new(Str::from(""));
     field("Search chats", &value)
         .hide_label()
         .prompt("Search chats")
@@ -54,14 +54,14 @@ fn hidden_label_prompt_field() -> impl View {
 /// A filled field with a visible label: the resting position the prompt
 /// case must match.
 fn labeled_field() -> impl View {
-    let value = Binding::container(Str::from(""));
+    let value = Binding::new(Str::from(""));
     field("Search chats", &value).size(280.0, 56.0)
 }
 
 /// A filled field with neither a visible label nor a prompt: M3 centres the
 /// input text vertically in the container.
 fn label_less_field() -> impl View {
-    let value = Binding::container(Str::from(""));
+    let value = Binding::new(Str::from(""));
     field("", &value).hide_label().size(280.0, 56.0)
 }
 
