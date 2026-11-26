@@ -22,7 +22,6 @@ use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryC
 use crate::dimensions::{LIST_ONE_LINE_ROW_HEIGHT, LIST_VERTICAL_INSET};
 use crate::semantics::{interaction_chrome, label_plain_text};
 use crate::theme::typography;
-use num_traits::ToPrimitive;
 
 const LIST_CONTAINER_TOP_SPACE: f32 = 8.0;
 const LIST_CONTAINER_BOTTOM_SPACE: f32 = 8.0;
@@ -179,13 +178,8 @@ impl MaterialListItem {
             LIST_ITEM_TWO_LINE_CONTAINER_HEIGHT
         } else {
             LIST_ONE_LINE_ROW_HEIGHT
-                .to_f32()
-                .expect("list row height must be representable as f32")
         };
-        let content_height = LIST_VERTICAL_INSET
-            .to_f32()
-            .expect("list vertical inset must be representable as f32")
-            .mul_add(-2.0, height);
+        let content_height = LIST_VERTICAL_INSET.mul_add(-2.0, height);
         let headline = self
             .headline
             .font(typography::body_large())
