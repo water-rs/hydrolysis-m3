@@ -1,12 +1,13 @@
 use core::time::Duration;
 
+use hydrolysis_style::theme::SnackbarLook;
 use waterui::animation::Animation;
 use waterui::prelude::EdgeInsets;
-use waterui::snackbar::SnackbarTheme;
+use waterui_core::Environment;
 
 use crate::color::{InverseOnSurface, InversePrimary, InverseSurface};
-use crate::elevation::MaterialElevationLevel;
-use crate::theme::{colors::MaterialColorScheme, typography};
+use crate::elevation::{MaterialElevationLevel, shadows_for_level};
+use crate::theme::typography;
 
 const SNACKBAR_HORIZONTAL_PADDING: f32 = 16.0;
 const SNACKBAR_VERTICAL_PADDING: f32 = 12.0;
@@ -16,6 +17,7 @@ const SNACKBAR_MIN_WIDTH: f32 = 288.0;
 const SNACKBAR_MAX_WIDTH: f32 = 568.0;
 const SNACKBAR_ACTION_TRAILING_PADDING: f32 = 8.0;
 const SNACKBAR_SINGLE_LINE_HEIGHT: f32 = 48.0;
+const SNACKBAR_STACK_GAP: f32 = 8.0;
 /// `IconButtonTokens.IconSize` — the size Compose draws `Icons.Filled.Close` at
 /// in the snackbar's `dismissAction` slot.
 const SNACKBAR_CLOSE_ICON_SIZE: f32 = 24.0;
@@ -24,10 +26,11 @@ const SNACKBAR_CLOSE_STATE_LAYER_SIZE: f32 = 40.0;
 const SNACKBAR_CORNER_RADIUS: f32 = 4.0;
 const SNACKBAR_MOTION_OFFSET_Y: f32 = 20.0;
 
-pub fn theme(_colors: &MaterialColorScheme) -> SnackbarTheme {
+#[must_use]
+pub fn look(_env: &Environment) -> SnackbarLook {
     // `SnackbarTokens.ContainerElevation` is `ElevationTokens.Level3`.
-    let (key, ambient) = crate::elevation::shadows_for_level(MaterialElevationLevel::LEVEL3);
-    SnackbarTheme {
+    let (key, ambient) = shadows_for_level(MaterialElevationLevel::LEVEL3);
+    SnackbarLook {
         container_color: InverseSurface.into(),
         supporting_text_color: InverseOnSurface.into(),
         action_label_color: InversePrimary.into(),
@@ -45,7 +48,9 @@ pub fn theme(_colors: &MaterialColorScheme) -> SnackbarTheme {
         close_icon_size: SNACKBAR_CLOSE_ICON_SIZE,
         close_state_layer_size: SNACKBAR_CLOSE_STATE_LAYER_SIZE,
         single_line_min_height: SNACKBAR_SINGLE_LINE_HEIGHT,
+        stack_gap: SNACKBAR_STACK_GAP,
         corner_radius: SNACKBAR_CORNER_RADIUS,
+        background_glass: None,
         shadow_color: key.color,
         shadow_radius: key.radius,
         shadow_offset_y: key.offset_y,
@@ -60,30 +65,30 @@ pub fn theme(_colors: &MaterialColorScheme) -> SnackbarTheme {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        SNACKBAR_CORNER_RADIUS, SNACKBAR_HORIZONTAL_PADDING, SNACKBAR_SINGLE_LINE_HEIGHT, theme,
-    };
-    use crate::MaterialColorScheme;
     use core::time::Duration;
+
     use waterui::animation::Animation;
+    use waterui_core::Environment;
+
+    use super::{
+        SNACKBAR_CORNER_RADIUS, SNACKBAR_HORIZONTAL_PADDING, SNACKBAR_SINGLE_LINE_HEIGHT, look,
+    };
 
     #[test]
-    fn snackbar_theme_matches_compose_snackbar_tokens() {
-        let theme = theme(&MaterialColorScheme::baseline_light());
+    fn snackbar_look_matches_compose_snackbar_tokens() {
+        let look = look(&Environment::new());
 
-        assert_eq!(theme.content_padding.leading(), SNACKBAR_HORIZONTAL_PADDING);
+        assert_eq!(look.content_padding.leading(), SNACKBAR_HORIZONTAL_PADDING);
+        assert_eq!(look.content_padding.trailing(), SNACKBAR_HORIZONTAL_PADDING);
+        assert_eq!(look.single_line_min_height, SNACKBAR_SINGLE_LINE_HEIGHT);
+        assert_eq!(look.corner_radius, SNACKBAR_CORNER_RADIUS);
+        assert!(look.background_glass.is_none());
+        assert_eq!(look.shadow_radius, 5.0);
+        assert_eq!(look.shadow_offset_y, 1.25);
+        assert_eq!(look.ambient_shadow_radius, 1.5);
+        assert_eq!(look.ambient_shadow_offset_y, 0.3333);
         assert_eq!(
-            theme.content_padding.trailing(),
-            SNACKBAR_HORIZONTAL_PADDING
-        );
-        assert_eq!(theme.single_line_min_height, SNACKBAR_SINGLE_LINE_HEIGHT);
-        assert_eq!(theme.corner_radius, SNACKBAR_CORNER_RADIUS);
-        assert_eq!(theme.shadow_radius, 5.0);
-        assert_eq!(theme.shadow_offset_y, 1.25);
-        assert_eq!(theme.ambient_shadow_radius, 1.5);
-        assert_eq!(theme.ambient_shadow_offset_y, 0.3333);
-        assert_eq!(
-            theme.enter_animation,
+            look.enter_animation,
             Animation::bezier(Duration::from_millis(250), 0.0, 0.0, 0.0, 1.0)
         );
     }

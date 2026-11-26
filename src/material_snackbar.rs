@@ -18,19 +18,21 @@ pub fn material_snackbar(message: impl Into<Str>) -> MaterialSnackbar {
 
 #[cfg(test)]
 mod tests {
-    use crate::MaterialColorScheme;
+    use waterui_core::Environment;
+
+    use crate::layout::snackbar;
 
     #[test]
     fn material_snackbar_tokens_match_compose_snackbar_tokens() {
-        let theme = crate::layout::snackbar::theme(&MaterialColorScheme::baseline_light());
+        let look = snackbar::look(&Environment::new());
 
-        assert_eq!(theme.single_line_min_height, 48.0);
-        assert_eq!(theme.corner_radius, 4.0);
-        assert_eq!(theme.content_padding.top(), 12.0);
-        assert_eq!(theme.content_padding.leading(), 16.0);
-        assert_eq!(theme.content_spacing, 12.0);
-        assert_eq!(theme.shadow_radius, 5.0);
-        assert_eq!(theme.shadow_offset_y, 1.25);
-        assert_eq!(theme.motion_offset_y, 20.0);
+        assert_eq!(look.single_line_min_height, 48.0);
+        assert_eq!(look.corner_radius, 4.0);
+        assert_eq!(look.content_padding.top(), 12.0);
+        assert_eq!(look.content_padding.leading(), 16.0);
+        assert_eq!(look.content_spacing, 12.0);
+        assert_eq!(look.shadow_radius, 5.0);
+        assert_eq!(look.shadow_offset_y, 1.25);
+        assert_eq!(look.motion_offset_y, 20.0);
     }
 }

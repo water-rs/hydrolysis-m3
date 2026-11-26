@@ -92,7 +92,7 @@ use hydrolysis_style::draw::WorkingColor;
 pub use hydrolysis_style::theme::{
     BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CardLayout, CardLook, IndicatorLook,
     InteractionFocusBinding, LinearProgressLook, ModalInteraction, ProgressSpec,
-    ScrollIndicatorLook, WidgetTheme,
+    ScrollIndicatorLook, SnackbarLook, WidgetTheme,
 };
 #[cfg(feature = "toggle")]
 pub use hydrolysis_style::theme::{CheckboxLook, SwitchLook, ToggleSpec};
@@ -411,7 +411,6 @@ fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
     env.insert(colors);
     env.insert(dialog::theme(&colors));
     env.insert(fab::theme());
-    env.insert(snackbar::theme(&colors));
 }
 
 /// Installs the paired light/dark schemes bound to `scheme`, the
@@ -433,7 +432,6 @@ fn insert_dynamic_tokens(
     ));
     env.insert(dialog::theme(&initial));
     env.insert(fab::theme());
-    env.insert(snackbar::theme(&initial));
 }
 
 /// Projects each `WaterUI` color token onto the Material role that carries it,
@@ -601,6 +599,10 @@ impl WidgetTheme for Material3 {
 
     fn card(&self, style: CardStyle, env: &Environment) -> CardLook {
         card::look(style, env)
+    }
+
+    fn snackbar(&self, env: &Environment) -> SnackbarLook {
+        snackbar::look(env)
     }
 
     #[cfg(feature = "list")]
