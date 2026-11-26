@@ -12,15 +12,6 @@
 use crate::NavigationMetrics;
 use crate::color::OnSurface;
 use crate::controls::button::{container_corners, interactive, solid_paint};
-use crate::dimensions::{
-    NAVIGATION_BACK_BUTTON_LEADING_INSET, NAVIGATION_BACK_BUTTON_SIZE,
-    NAVIGATION_BACK_BUTTON_TOP_INSET, NAVIGATION_BAR_AUTOMATIC_HEIGHT,
-    NAVIGATION_BAR_HORIZONTAL_INSET, NAVIGATION_BAR_INLINE_HEIGHT, NAVIGATION_BAR_ITEM_SPACING,
-    NAVIGATION_BAR_LARGE_HEIGHT, NAVIGATION_BAR_MEDIUM_HEIGHT, NAVIGATION_LARGE_TITLE_BOTTOM_INSET,
-    NAVIGATION_SEARCH_HEIGHT, NAVIGATION_SEARCH_VERTICAL_INSET, NAVIGATION_TITLE_INLINE_HEIGHT,
-    NAVIGATION_TITLE_LARGE_HEIGHT, NAVIGATION_TITLE_LEADING_INSET, NAVIGATION_TITLE_MEDIUM_HEIGHT,
-    NAVIGATION_TITLE_TRAILING_INSET,
-};
 use crate::icon_button::pressed_corner_radius;
 use crate::icon_paths::{self, IconGrid};
 use crate::theme::motion;
@@ -33,23 +24,23 @@ use waterui_graphics::color::Color;
 
 pub const fn metrics() -> NavigationMetrics {
     NavigationMetrics {
-        automatic_bar_height: NAVIGATION_BAR_AUTOMATIC_HEIGHT,
-        inline_bar_height: NAVIGATION_BAR_INLINE_HEIGHT,
-        medium_bar_height: NAVIGATION_BAR_MEDIUM_HEIGHT,
-        large_bar_height: NAVIGATION_BAR_LARGE_HEIGHT,
-        inline_title_height: NAVIGATION_TITLE_INLINE_HEIGHT,
-        medium_title_height: NAVIGATION_TITLE_MEDIUM_HEIGHT,
-        large_title_height: NAVIGATION_TITLE_LARGE_HEIGHT,
-        title_leading_inset: NAVIGATION_TITLE_LEADING_INSET,
-        title_trailing_inset: NAVIGATION_TITLE_TRAILING_INSET,
-        large_title_bottom_inset: NAVIGATION_LARGE_TITLE_BOTTOM_INSET,
-        horizontal_inset: NAVIGATION_BAR_HORIZONTAL_INSET,
-        item_spacing: NAVIGATION_BAR_ITEM_SPACING,
-        search_height: NAVIGATION_SEARCH_HEIGHT,
-        search_vertical_inset: NAVIGATION_SEARCH_VERTICAL_INSET,
-        back_button_size: NAVIGATION_BACK_BUTTON_SIZE,
-        back_button_leading_inset: NAVIGATION_BACK_BUTTON_LEADING_INSET,
-        back_button_top_inset: NAVIGATION_BACK_BUTTON_TOP_INSET,
+        automatic_bar_height: 64.0,
+        inline_bar_height: 64.0,
+        medium_bar_height: 112.0,
+        large_bar_height: 152.0,
+        inline_title_height: 28.0,
+        medium_title_height: 36.0,
+        large_title_height: 36.0,
+        title_leading_inset: 16.0,
+        title_trailing_inset: 16.0,
+        large_title_bottom_inset: 28.0,
+        horizontal_inset: 4.0,
+        item_spacing: 0.0,
+        search_height: 56.0,
+        search_vertical_inset: 4.0,
+        back_button_size: 40.0,
+        back_button_leading_inset: 4.0,
+        back_button_top_inset: 12.0,
     }
 }
 
@@ -98,16 +89,6 @@ fn back_button(env: &Environment) -> Chrome {
 mod tests {
     use super::{back_button, container_paint, look};
     use crate::MaterialColorScheme;
-    use crate::dimensions::{
-        NAVIGATION_BACK_BUTTON_LEADING_INSET, NAVIGATION_BACK_BUTTON_SIZE,
-        NAVIGATION_BACK_BUTTON_TOP_INSET, NAVIGATION_BAR_AUTOMATIC_HEIGHT,
-        NAVIGATION_BAR_HORIZONTAL_INSET, NAVIGATION_BAR_INLINE_HEIGHT, NAVIGATION_BAR_ITEM_SPACING,
-        NAVIGATION_BAR_LARGE_HEIGHT, NAVIGATION_BAR_MEDIUM_HEIGHT,
-        NAVIGATION_LARGE_TITLE_BOTTOM_INSET, NAVIGATION_SEARCH_HEIGHT,
-        NAVIGATION_SEARCH_VERTICAL_INSET, NAVIGATION_TITLE_LEADING_INSET,
-        NAVIGATION_TITLE_TRAILING_INSET,
-    };
-    use crate::theme::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
     use crate::theme::motion::tokens::duration;
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::Paint;
@@ -128,49 +109,22 @@ mod tests {
         let metrics = look.metrics();
 
         assert_eq!(metrics, super::metrics());
-        assert_eq!(
-            metrics.automatic_bar_height,
-            NAVIGATION_BAR_AUTOMATIC_HEIGHT
-        );
-        assert_eq!(metrics.inline_bar_height, NAVIGATION_BAR_INLINE_HEIGHT);
-        assert_eq!(metrics.medium_bar_height, NAVIGATION_BAR_MEDIUM_HEIGHT);
-        assert_eq!(metrics.large_bar_height, NAVIGATION_BAR_LARGE_HEIGHT);
-        assert_eq!(metrics.title_leading_inset, NAVIGATION_TITLE_LEADING_INSET);
-        assert_eq!(
-            metrics.title_trailing_inset,
-            NAVIGATION_TITLE_TRAILING_INSET
-        );
-        assert_eq!(
-            metrics.large_title_bottom_inset,
-            NAVIGATION_LARGE_TITLE_BOTTOM_INSET
-        );
-        assert_eq!(metrics.horizontal_inset, NAVIGATION_BAR_HORIZONTAL_INSET);
-        assert_eq!(metrics.item_spacing, NAVIGATION_BAR_ITEM_SPACING);
-        assert_eq!(metrics.search_height, NAVIGATION_SEARCH_HEIGHT);
-        assert_eq!(
-            metrics.search_vertical_inset,
-            NAVIGATION_SEARCH_VERTICAL_INSET
-        );
-        assert_eq!(metrics.back_button_size, NAVIGATION_BACK_BUTTON_SIZE);
-        assert_eq!(
-            metrics.back_button_leading_inset,
-            NAVIGATION_BACK_BUTTON_LEADING_INSET
-        );
-        assert_eq!(
-            metrics.back_button_top_inset,
-            NAVIGATION_BACK_BUTTON_TOP_INSET
-        );
-        assert_eq!(NAVIGATION_BAR_AUTOMATIC_HEIGHT, 64.0);
-        assert_eq!(NAVIGATION_BAR_INLINE_HEIGHT, 64.0);
+        assert_eq!(metrics.automatic_bar_height, 64.0);
+        assert_eq!(metrics.inline_bar_height, 64.0);
         // AppBarMediumFlexibleTokens.ContainerHeight, and
         // AppBarLargeFlexibleTokens.LargeContainerHeight.
-        assert_eq!(NAVIGATION_BAR_MEDIUM_HEIGHT, 112.0);
-        assert_eq!(NAVIGATION_BAR_LARGE_HEIGHT, 152.0);
-        assert_eq!(NAVIGATION_TITLE_LEADING_INSET, 16.0);
-        assert_eq!(NAVIGATION_LARGE_TITLE_BOTTOM_INSET, 28.0);
-        assert_eq!(NAVIGATION_SEARCH_HEIGHT, 56.0);
-        assert_eq!(NAVIGATION_BAR_HORIZONTAL_INSET, 4.0);
-        assert_eq!(NAVIGATION_BACK_BUTTON_SIZE, 40.0);
+        assert_eq!(metrics.medium_bar_height, 112.0);
+        assert_eq!(metrics.large_bar_height, 152.0);
+        assert_eq!(metrics.title_leading_inset, 16.0);
+        assert_eq!(metrics.title_trailing_inset, 16.0);
+        assert_eq!(metrics.large_title_bottom_inset, 28.0);
+        assert_eq!(metrics.horizontal_inset, 4.0);
+        assert_eq!(metrics.item_spacing, 0.0);
+        assert_eq!(metrics.search_height, 56.0);
+        assert_eq!(metrics.search_vertical_inset, 4.0);
+        assert_eq!(metrics.back_button_size, 40.0);
+        assert_eq!(metrics.back_button_leading_inset, 4.0);
+        assert_eq!(metrics.back_button_top_inset, 12.0);
     }
 
     #[test]
@@ -178,10 +132,7 @@ mod tests {
         let motion = look(&environment()).motion();
 
         assert_eq!(motion.transition_duration, duration::LONG_1);
-        assert_eq!(
-            motion.shared_axis_slide_distance,
-            NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE
-        );
+        assert_eq!(motion.shared_axis_slide_distance, 30.0);
     }
 
     #[test]

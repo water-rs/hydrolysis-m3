@@ -1,7 +1,7 @@
 //! The Material 3 button look: filled, outlined, text and link buttons
 //! from the `md.comp.button.*` tokens.
 
-use hydrolysis_style::draw::kurbo::{Line, Point, Stroke};
+use hydrolysis_style::draw::kurbo::{Line, Point, RoundedRectRadii, Stroke};
 use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
 use hydrolysis_style::theme::{
     Border, ButtonLook, ButtonSpec, Chrome, CornerShape, Corners, Custom, Driven, Elevation,
@@ -17,9 +17,8 @@ use waterui_graphics::color::Color;
 use crate::color::{OnPrimary, OnSurface, OnSurfaceVariant, OutlineVariant, Shadow};
 use crate::dimensions::{
     BUTTON_LINK_HORIZONTAL_PADDING, BUTTON_LINK_UNDERLINE_BOTTOM_INSET,
-    BUTTON_LINK_UNDERLINE_THICKNESS, BUTTON_LINK_VERTICAL_PADDING, BUTTON_MIN_WIDTH,
-    BUTTON_TEXT_VERTICAL_PADDING, SHAPE_CORNER_LARGE, SHAPE_CORNER_MEDIUM, SHAPE_CORNER_SMALL,
-    button_size_tokens,
+    BUTTON_LINK_UNDERLINE_THICKNESS, BUTTON_MIN_WIDTH, SHAPE_CORNER_LARGE, SHAPE_CORNER_MEDIUM,
+    SHAPE_CORNER_SMALL, button_size_tokens,
 };
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 use crate::semantics::{focus_indicator, state_layer};
@@ -92,10 +91,10 @@ pub fn look(spec: &ButtonSpec, env: &Environment) -> ButtonLook {
     if style == ButtonStyle::Link {
         // A link has no container, so it takes neither the size scale's
         // padding nor its minimum box.
-        look.padding(BUTTON_LINK_HORIZONTAL_PADDING, BUTTON_LINK_VERTICAL_PADDING)
+        look.padding(12.0, 8.0)
     } else {
         let tokens = button_size_tokens(spec.size());
-        look.padding(tokens.horizontal_space, BUTTON_TEXT_VERTICAL_PADDING)
+        look.padding(tokens.horizontal_space.into(), 8.0)
             .minimum_size(hydrolysis_style::draw::kurbo::Size::new(
                 BUTTON_MIN_WIDTH,
                 tokens.container_height,
@@ -184,13 +183,13 @@ pub fn disabled_paint<V: 'static>(
 /// `width`.
 pub fn outline(
     color: impl Into<Color>,
-    width: fn(f64) -> f64,
+    width: fn(f64) -> f32,
     env: &Environment,
 ) -> Driven<Border> {
     Driven::follow(
         color.into().resolve(env),
         move |color: &WorkingColor, inputs: &Inputs<'_, ()>| {
-            Border::new(width(inputs.frame.height()), *color)
+            Border::new(width(inputs.frame.height()).into(), *color)
         },
     )
 }
@@ -202,7 +201,9 @@ pub fn outline(
 pub fn container_corners(pressed: fn(f64) -> f64) -> Driven<Corners> {
     Driven::new(move |inputs: &Inputs<'_, ()>| {
         if inputs.state.contains(InteractionState::PRESSED) {
-            Corners::from(pressed(inputs.frame.height()))
+            Corners::Radii(RoundedRectRadii::from_single_radius(pressed(
+                inputs.frame.height(),
+            )))
         } else {
             Corners::Full
         }
@@ -269,7 +270,7 @@ fn pressed_corner_radius(height: f64) -> f64 {
 
 /// `md.comp.button.<size>.outlined.outline-width`: 1dp through medium, 2dp at
 /// large, 3dp at extra-large.
-fn outline_width(height: f64) -> f64 {
+fn outline_width(height: f64) -> f32 {
     if height <= BUTTON_MEDIUM_HEIGHT_BAND {
         1.0
     } else if height <= BUTTON_LARGE_HEIGHT_BAND {
@@ -289,7 +290,7 @@ mod tests {
     use crate::MaterialColorScheme;
     use crate::dimensions::{
         BUTTON_EXTRA_LARGE, BUTTON_EXTRA_SMALL, BUTTON_LARGE, BUTTON_MEDIUM, BUTTON_MIN_WIDTH,
-        BUTTON_SMALL, BUTTON_TEXT_VERTICAL_PADDING,
+        BUTTON_SMALL,
     };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, Vec2};
@@ -435,7 +436,7 @@ mod tests {
                 let look = look(&spec(style, size), &env);
                 assert_eq!(
                     look.get_padding(),
-                    Vec2::new(tokens.horizontal_space, BUTTON_TEXT_VERTICAL_PADDING),
+                    Vec2::new(f64::from(tokens.horizontal_space), 8.0),
                     "{style:?} {size:?}"
                 );
                 assert_eq!(look.get_minimum_size().width, BUTTON_MIN_WIDTH);
@@ -446,9 +447,8 @@ mod tests {
                 );
             }
         }
-        // ButtonDefaults.MinWidth and ContentPadding vertical.
+        // ButtonDefaults.MinWidth.
         assert_eq!(BUTTON_MIN_WIDTH, 58.0);
-        assert_eq!(BUTTON_TEXT_VERTICAL_PADDING, 8.0);
     }
 
     /// `Automatic` is the theme's default button; in M3 that is the filled

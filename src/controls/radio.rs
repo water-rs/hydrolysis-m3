@@ -18,13 +18,10 @@ use waterui_graphics::color::Color;
 
 use crate::color::{OnSurface, OnSurfaceVariant};
 use crate::controls::selection::{
-    STATE_LAYER_RADIUS, Toggled, centered_ripple, centered_state_layer, disabled, faded,
-    toggle_motion,
+    Toggled, centered_ripple, centered_state_layer, disabled, faded, toggle_motion,
 };
 use crate::dimensions::{
-    PICKER_HORIZONTAL_INSET, PICKER_LABEL_SPACING, PICKER_MIN_HEIGHT, PICKER_RADIO_INDICATOR_SIZE,
-    PICKER_RADIO_INNER_DOT_RADIUS, PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_MIN_WIDTH,
-    PICKER_RADIO_OUTER_RING_WIDTH, PICKER_RADIO_ROW_SPACING, PICKER_VERTICAL_INSET,
+    PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS, PICKER_RADIO_OUTER_RING_WIDTH,
 };
 use crate::semantics::gather;
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
@@ -41,10 +38,10 @@ pub fn look(spec: &PickerSpec, env: &Environment) -> RadioGroupLook {
         Size::new(PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INDICATOR_SIZE),
         toggle_motion(),
     )
-    .label_spacing(PICKER_RADIO_LABEL_SPACING)
+    .label_spacing(8.0)
     // The state layer's circle reaches past the indicator by the difference
-    // of their radii.
-    .reach(STATE_LAYER_RADIUS - PICKER_RADIO_INDICATOR_SIZE / 2.0)
+    // of their radii (20 - 10 = 10).
+    .reach(10.0)
     .hit(motion::hit_region())
     .part(ring(&tint, env))
     .part(dot(&tint, env))
@@ -62,12 +59,12 @@ pub fn look(spec: &PickerSpec, env: &Environment) -> RadioGroupLook {
 /// with the rows 6 apart.
 const fn layout() -> RadioLayout {
     RadioLayout {
-        min_width: PICKER_RADIO_MIN_WIDTH,
-        min_height: PICKER_MIN_HEIGHT,
-        horizontal_inset: PICKER_HORIZONTAL_INSET,
-        vertical_inset: PICKER_VERTICAL_INSET,
-        label_spacing: PICKER_LABEL_SPACING,
-        row_spacing: PICKER_RADIO_ROW_SPACING,
+        min_width: 72.0,
+        min_height: 56.0,
+        horizontal_inset: 16.0,
+        vertical_inset: 8.0,
+        label_spacing: 8.0,
+        row_spacing: 6.0,
     }
 }
 
@@ -168,8 +165,7 @@ mod tests {
     use crate::MaterialColorScheme;
     use crate::color::Primary;
     use crate::dimensions::{
-        PICKER_LABEL_SPACING, PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS,
-        PICKER_RADIO_LABEL_SPACING, PICKER_RADIO_OUTER_RING_WIDTH,
+        PICKER_RADIO_INDICATOR_SIZE, PICKER_RADIO_INNER_DOT_RADIUS, PICKER_RADIO_OUTER_RING_WIDTH,
     };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, Size};
@@ -217,8 +213,8 @@ mod tests {
         let indicator = look.indicator();
 
         assert_eq!(indicator.size(), Size::new(20.0, 20.0));
-        assert_eq!(indicator.get_label_spacing(), PICKER_RADIO_LABEL_SPACING);
-        assert_eq!(layout().label_spacing, PICKER_LABEL_SPACING);
+        assert_eq!(indicator.get_label_spacing(), 8.0);
+        assert_eq!(layout().label_spacing, 8.0);
         assert_eq!(PICKER_RADIO_INDICATOR_SIZE, 20.0);
         assert_eq!(PICKER_RADIO_OUTER_RING_WIDTH, 2.0);
         // RadioButtonDotSize is 12dp across, so half of it here.

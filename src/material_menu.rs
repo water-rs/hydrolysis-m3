@@ -48,7 +48,6 @@ pub const fn material_menu_icon_label<K: LabelKind>(label: Label<K>) -> Label<K>
 
 #[cfg(test)]
 mod tests {
-    use crate::dimensions::MENU_CONTAINER_SHAPE;
     use crate::layout::menu::layout;
 
     #[test]
@@ -58,7 +57,6 @@ mod tests {
         assert_eq!(metrics.row_height, 48.0);
         assert_eq!(metrics.min_width, 112.0);
         assert_eq!(metrics.max_width, 280.0);
-        assert_eq!(MENU_CONTAINER_SHAPE, 4.0);
         assert_eq!(metrics.separator_thickness, 1.0);
     }
 }

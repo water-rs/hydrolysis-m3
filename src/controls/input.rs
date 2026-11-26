@@ -101,7 +101,7 @@ pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
             motion::text_field_label(),
         )
         .scale(INPUT_LABEL_FLOAT_SCALE)
-        .top(f64::from(INPUT_LABEL_FLOAT_TOP)),
+        .top(INPUT_LABEL_FLOAT_TOP.into()),
         Caret::new(solid_paint(Primary, env), motion::text_caret()),
         selection(env),
     )
@@ -221,10 +221,14 @@ fn active_indicator(env: &Environment) -> Driven<Border> {
     Driven::follow(
         indicator_colors(env),
         |colors: &IndicatorColors, inputs: &Inputs<'_, ()>| {
-            Border::new(
-                indicator_height(inputs.state),
-                indicator_color(colors, inputs.state),
-            )
+            let width = if inputs.state.contains(InteractionState::FOCUSED)
+                && !inputs.state.contains(InteractionState::DISABLED)
+            {
+                2.0
+            } else {
+                1.0
+            };
+            Border::new(width, indicator_color(colors, inputs.state))
         },
     )
 }

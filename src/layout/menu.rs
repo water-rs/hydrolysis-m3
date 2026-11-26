@@ -15,12 +15,7 @@ use waterui_graphics::color::Color;
 
 use crate::color::{Shadow, SurfaceContainer, SurfaceContainerHighest, SurfaceVariant};
 use crate::controls::button::solid_paint;
-use crate::dimensions::{
-    MENU_CONTAINER_SHAPE, MENU_HORIZONTAL_PADDING, MENU_MAX_WIDTH, MENU_MIN_WIDTH, MENU_ROW_HEIGHT,
-    MENU_SELECTED_ROW_HORIZONTAL_INSET, MENU_SELECTED_ROW_VERTICAL_INSET,
-    MENU_SEPARATOR_HORIZONTAL_INSET, MENU_SEPARATOR_THICKNESS, MENU_VERTICAL_PADDING,
-    MENU_WIDTH_PER_CHAR,
-};
+use crate::dimensions::{MENU_SELECTED_ROW_HORIZONTAL_INSET, MENU_SELECTED_ROW_VERTICAL_INSET};
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 
 /// The measures of a menu: rows 48 tall, padded 12 by 8, 112 to 280 wide,
@@ -29,14 +24,14 @@ use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 /// `DropdownMenuItemDefaultMaxWidth`).
 pub const fn layout() -> MenuLayout {
     MenuLayout {
-        row_height: MENU_ROW_HEIGHT,
-        horizontal_padding: MENU_HORIZONTAL_PADDING,
-        vertical_padding: MENU_VERTICAL_PADDING,
-        min_width: MENU_MIN_WIDTH,
-        max_width: MENU_MAX_WIDTH,
-        width_per_char: MENU_WIDTH_PER_CHAR,
-        separator_horizontal_inset: MENU_SEPARATOR_HORIZONTAL_INSET,
-        separator_thickness: MENU_SEPARATOR_THICKNESS,
+        row_height: 48.0,
+        horizontal_padding: 12.0,
+        vertical_padding: 8.0,
+        min_width: 112.0,
+        max_width: 280.0,
+        width_per_char: 8.5,
+        separator_horizontal_inset: 16.0,
+        separator_thickness: 1.0,
     }
 }
 
@@ -54,7 +49,7 @@ pub fn look(_spec: MenuSpec, env: &Environment) -> MenuLook {
 /// The panel: the `surface-container` fill on corner 4, raised to level 2.
 fn panel(env: &Environment) -> Surface {
     Surface::new(
-        CornerShape::radius(MENU_CONTAINER_SHAPE),
+        CornerShape::radius(4.0),
         solid_paint::<()>(SurfaceContainer, env),
     )
     .elevation(panel_elevation(env))
@@ -98,10 +93,6 @@ fn selected_row(env: &Environment) -> Custom<(), (Driven<Paint>,)> {
 #[cfg(test)]
 mod tests {
     use super::{layout, look, selected_row_rect};
-    use crate::dimensions::{
-        MENU_HORIZONTAL_PADDING, MENU_MAX_WIDTH, MENU_MIN_WIDTH, MENU_ROW_HEIGHT,
-        MENU_VERTICAL_PADDING,
-    };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::Rect;
     use hydrolysis_style::theme::MenuSpec;
@@ -112,15 +103,10 @@ mod tests {
     fn menu_layout_matches_compose_menu_tokens() {
         let layout = layout();
 
-        assert_eq!(layout.row_height, MENU_ROW_HEIGHT);
         assert_eq!(layout.row_height, 48.0);
-        assert_eq!(layout.horizontal_padding, MENU_HORIZONTAL_PADDING);
         assert_eq!(layout.horizontal_padding, 12.0);
-        assert_eq!(layout.vertical_padding, MENU_VERTICAL_PADDING);
         assert_eq!(layout.vertical_padding, 8.0);
-        assert_eq!(layout.min_width, MENU_MIN_WIDTH);
         assert_eq!(layout.min_width, 112.0);
-        assert_eq!(layout.max_width, MENU_MAX_WIDTH);
         assert_eq!(layout.max_width, 280.0);
         assert_eq!(layout.separator_thickness, 1.0);
     }

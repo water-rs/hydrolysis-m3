@@ -22,8 +22,7 @@ use crate::controls::button::disabled_paint;
 use crate::controls::input::{self, IndicatorColors};
 use crate::dimensions::{
     PICKER_CHEVRON_HALF_HEIGHT, PICKER_CHEVRON_HALF_WIDTH, PICKER_CHEVRON_STROKE_WIDTH,
-    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING, PICKER_MENU_MIN_WIDTH,
-    PICKER_MENU_POPUP_TOP_SPACING, PICKER_MIN_HEIGHT, PICKER_VERTICAL_INSET,
+    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE,
 };
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
 use crate::theme::typography;
@@ -45,13 +44,13 @@ pub fn look(_spec: &PickerSpec, env: &Environment) -> MenuPickerLook {
 /// and 56 tall, inset 16 by 8, with 18 reserved for the chevron.
 const fn layout() -> MenuPickerLayout {
     MenuPickerLayout {
-        min_width: PICKER_MENU_MIN_WIDTH,
-        min_height: PICKER_MIN_HEIGHT,
-        horizontal_inset: PICKER_HORIZONTAL_INSET,
-        vertical_inset: PICKER_VERTICAL_INSET,
-        label_spacing: PICKER_LABEL_SPACING,
-        indicator_space: PICKER_INDICATOR_SPACE,
-        popup_gap: PICKER_MENU_POPUP_TOP_SPACING,
+        min_width: 280.0,
+        min_height: 56.0,
+        horizontal_inset: 16.0,
+        vertical_inset: 8.0,
+        label_spacing: 8.0,
+        indicator_space: 18.0,
+        popup_gap: 4.0,
     }
 }
 

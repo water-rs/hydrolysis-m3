@@ -11,22 +11,14 @@ use waterui_core::Environment;
 
 use crate::color::OnSurfaceVariant;
 use crate::controls::button::solid_paint;
-use crate::dimensions::{
-    SCROLL_INDICATOR_CORNER_RADIUS, SCROLL_INDICATOR_DRAG_THICKNESS, SCROLL_INDICATOR_EDGE_INSET,
-    SCROLL_INDICATOR_GUTTER, SCROLL_INDICATOR_MIN_EXTENT, SCROLL_INDICATOR_OPACITY,
-    SCROLL_INDICATOR_THICKNESS,
-};
+use crate::dimensions::{SCROLL_INDICATOR_CORNER_RADIUS, SCROLL_INDICATOR_OPACITY};
 
 /// The look of a scroll indicator.
 pub fn look(env: &Environment) -> ScrollIndicatorLook {
-    ScrollIndicatorLook::new(
-        SCROLL_INDICATOR_THICKNESS,
-        SCROLL_INDICATOR_DRAG_THICKNESS,
-        thumb(env),
-    )
-    .edge_inset(SCROLL_INDICATOR_EDGE_INSET)
-    .min_extent(SCROLL_INDICATOR_MIN_EXTENT)
-    .gutter(SCROLL_INDICATOR_GUTTER)
+    ScrollIndicatorLook::new(2.5, 6.5, thumb(env))
+        .edge_inset(1.5)
+        .min_extent(12.0)
+        .gutter(12.0)
 }
 
 fn thumb(env: &Environment) -> Custom<(), (Driven<Paint>,)> {

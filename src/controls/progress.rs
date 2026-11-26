@@ -32,9 +32,7 @@ use crate::controls::button::solid_paint;
 use crate::dimensions::{
     PROGRESS_CIRCULAR_DIAMETER, PROGRESS_CIRCULAR_STROKE_WIDTH,
     PROGRESS_CIRCULAR_TRACK_ACTIVE_SPACE, PROGRESS_LINEAR_BAR_HEIGHT,
-    PROGRESS_LINEAR_BAR_HORIZONTAL_INSET, PROGRESS_LINEAR_BAR_TOP_OFFSET,
-    PROGRESS_LINEAR_LABEL_HEIGHT, PROGRESS_LINEAR_MIN_TRACK_WIDTH, PROGRESS_LINEAR_STOP_SIZE,
-    PROGRESS_LINEAR_TRACK_ACTIVE_SPACE, PROGRESS_LINEAR_VALUE_LABEL_TOP_SPACING,
+    PROGRESS_LINEAR_MIN_TRACK_WIDTH, PROGRESS_LINEAR_STOP_SIZE, PROGRESS_LINEAR_TRACK_ACTIVE_SPACE,
 };
 use crate::material_shapes::{material_shape_sequence, radii_to_path};
 use crate::theme::motion;
@@ -197,9 +195,9 @@ pub fn linear(spec: &ProgressSpec, env: &Environment) -> LinearProgressLook {
     } else {
         control.part(linear_indeterminate(spec, rtl, env))
     };
-    LinearProgressLook::new(control, PROGRESS_LINEAR_BAR_HORIZONTAL_INSET)
-        .label_band(PROGRESS_LINEAR_LABEL_HEIGHT, PROGRESS_LINEAR_BAR_TOP_OFFSET)
-        .value_label_band(PROGRESS_LINEAR_VALUE_LABEL_TOP_SPACING)
+    LinearProgressLook::new(control, 8.0)
+        .label_band(18.0, 10.0)
+        .value_label_band(6.0)
 }
 
 /// The look of a circular progress indicator.
