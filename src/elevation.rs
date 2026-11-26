@@ -2,10 +2,11 @@
 
 #[cfg(feature = "list")]
 use hydrolysis_style::theme::{Driven, Inputs};
+use hydrolysis_style::theme::{FloatingElevation, FloatingStyle};
 use waterui::contract_violation;
 use waterui::interaction::{InteractionState, StateValue};
 use waterui::shape::RoundedRectangle;
-use waterui::style::{FloatingElevation, FloatingStyle, Shadow as ViewShadow};
+use waterui::style::Shadow as ViewShadow;
 use waterui::{Environment, View, ViewExt as _};
 #[cfg(feature = "list")]
 use waterui_graphics::color::Color;
