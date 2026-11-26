@@ -1,8 +1,11 @@
+//! The Material 3 dialog look from `DialogTokens`.
+
+use hydrolysis_style::theme::DialogLook;
 use waterui::layout::Alignment;
-use waterui::prelude::{DialogTheme, EdgeInsets};
+use waterui::prelude::EdgeInsets;
+use waterui_core::Environment;
 
 use crate::color::{Error, OnSurface, OnSurfaceVariant, Primary, SurfaceContainerHigh};
-use crate::theme::colors::MaterialColorScheme;
 
 /// M3 `DialogTokens.ContainerMinWidth` (280 dp).
 const DIALOG_MIN_WIDTH: f32 = 280.0;
@@ -19,8 +22,9 @@ const DIALOG_ACTIONS_TOP_PADDING: f32 = 8.0;
 /// M3 spacing between adjacent dialog action buttons (8 dp).
 const DIALOG_ACTIONS_SPACING: f32 = 8.0;
 
-pub fn theme(_colors: &MaterialColorScheme) -> DialogTheme {
-    DialogTheme {
+#[must_use]
+pub fn look(_env: &Environment) -> DialogLook {
+    DialogLook {
         container_color: SurfaceContainerHigh.into(),
         title_color: OnSurface.into(),
         message_color: OnSurfaceVariant.into(),
@@ -40,28 +44,29 @@ pub fn theme(_colors: &MaterialColorScheme) -> DialogTheme {
 
 #[cfg(test)]
 mod tests {
+    use waterui::layout::Alignment;
+    use waterui_core::Environment;
+
     use super::{
         DIALOG_ACTIONS_SPACING, DIALOG_ACTIONS_TOP_PADDING, DIALOG_CONTENT_PADDING,
-        DIALOG_CONTENT_SPACING, DIALOG_CORNER_RADIUS, DIALOG_MAX_WIDTH, DIALOG_MIN_WIDTH, theme,
+        DIALOG_CONTENT_SPACING, DIALOG_CORNER_RADIUS, DIALOG_MAX_WIDTH, DIALOG_MIN_WIDTH, look,
     };
-    use crate::MaterialColorScheme;
-    use waterui::layout::Alignment;
 
     #[test]
-    fn dialog_theme_matches_material_dialog_tokens() {
-        let dialog_theme = theme(&MaterialColorScheme::baseline_light());
+    fn dialog_look_matches_material_dialog_tokens() {
+        let dialog_look = look(&Environment::new());
 
-        assert_eq!(dialog_theme.min_width, DIALOG_MIN_WIDTH);
-        assert_eq!(dialog_theme.max_width, DIALOG_MAX_WIDTH);
-        assert_eq!(dialog_theme.corner_radius, DIALOG_CORNER_RADIUS);
-        assert_eq!(dialog_theme.content_padding.top(), DIALOG_CONTENT_PADDING);
+        assert_eq!(dialog_look.min_width, DIALOG_MIN_WIDTH);
+        assert_eq!(dialog_look.max_width, DIALOG_MAX_WIDTH);
+        assert_eq!(dialog_look.corner_radius, DIALOG_CORNER_RADIUS);
+        assert_eq!(dialog_look.content_padding.top(), DIALOG_CONTENT_PADDING);
         assert_eq!(
-            dialog_theme.content_padding.leading(),
+            dialog_look.content_padding.leading(),
             DIALOG_CONTENT_PADDING
         );
-        assert_eq!(dialog_theme.content_spacing, DIALOG_CONTENT_SPACING);
-        assert_eq!(dialog_theme.actions_top_padding, DIALOG_ACTIONS_TOP_PADDING);
-        assert_eq!(dialog_theme.actions_spacing, DIALOG_ACTIONS_SPACING);
-        assert_eq!(dialog_theme.actions_alignment, Alignment::Trailing);
+        assert_eq!(dialog_look.content_spacing, DIALOG_CONTENT_SPACING);
+        assert_eq!(dialog_look.actions_top_padding, DIALOG_ACTIONS_TOP_PADDING);
+        assert_eq!(dialog_look.actions_spacing, DIALOG_ACTIONS_SPACING);
+        assert_eq!(dialog_look.actions_alignment, Alignment::Trailing);
     }
 }
