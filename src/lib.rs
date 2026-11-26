@@ -78,7 +78,7 @@ pub(crate) use layout::list;
 pub(crate) use layout::menu;
 #[cfg(feature = "table")]
 pub(crate) use layout::table;
-pub(crate) use layout::{badge, card, dialog, scroll, snackbar};
+pub(crate) use layout::{badge, card, dialog, scroll, sheet, snackbar};
 
 #[cfg(feature = "navigation")]
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
@@ -90,9 +90,9 @@ use hydrolysis_style::draw::BlendSpace;
 use hydrolysis_style::draw::WorkingColor;
 
 pub use hydrolysis_style::theme::{
-    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CardLayout, CardLook, IndicatorLook,
-    InteractionFocusBinding, LinearProgressLook, ModalInteraction, ProgressSpec,
-    ScrollIndicatorLook, SnackbarLook, WidgetTheme,
+    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CardLayout, CardLook, DialogLook,
+    IndicatorLook, InteractionFocusBinding, LinearProgressLook, ModalInteraction, ProgressSpec,
+    ScrollIndicatorLook, SheetLook, SnackbarLook, WidgetTheme,
 };
 #[cfg(feature = "toggle")]
 pub use hydrolysis_style::theme::{CheckboxLook, SwitchLook, ToggleSpec};
@@ -409,7 +409,6 @@ fn insert_static_tokens(env: &mut Environment, colors: MaterialColorScheme) {
         .install(env);
     theme::typography::defaults(env);
     env.insert(colors);
-    env.insert(dialog::theme(&colors));
     env.insert(fab::theme());
 }
 
@@ -430,7 +429,6 @@ fn insert_dynamic_tokens(
         light,
         dark,
     ));
-    env.insert(dialog::theme(&initial));
     env.insert(fab::theme());
 }
 
@@ -603,6 +601,14 @@ impl WidgetTheme for Material3 {
 
     fn snackbar(&self, env: &Environment) -> SnackbarLook {
         snackbar::look(env)
+    }
+
+    fn dialog(&self, env: &Environment) -> DialogLook {
+        dialog::look(env)
+    }
+
+    fn sheet(&self, env: &Environment) -> SheetLook {
+        sheet::look(env)
     }
 
     #[cfg(feature = "list")]

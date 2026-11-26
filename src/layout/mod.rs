@@ -6,6 +6,7 @@ pub mod list;
 #[cfg(feature = "menu")]
 pub mod menu;
 pub mod scroll;
+pub mod sheet;
 pub mod snackbar;
 #[cfg(feature = "table")]
 pub mod table;
