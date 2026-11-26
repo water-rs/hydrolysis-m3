@@ -184,7 +184,7 @@ pub(crate) fn pressed_corner_radius(side: f64) -> f64 {
 
 /// `md.comp.icon-button.<size>.outlined.outline-width`: 1dp through medium,
 /// 2dp at large, 3dp at xlarge.
-fn outline_width(side: f64) -> f64 {
+fn outline_width(side: f64) -> f32 {
     if side <= 56.0 {
         1.0
     } else if side <= 96.0 {

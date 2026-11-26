@@ -14,11 +14,6 @@ use crate::color::{
 use crate::controls::button::solid_paint;
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 
-const CARD_CONTENT_PADDING: f64 = 16.0;
-const CARD_CONTENT_SPACING: f64 = 4.0;
-const CARD_CORNER_RADIUS: f64 = 12.0;
-const CARD_OUTLINE_WIDTH: f64 = 1.0;
-
 fn card_elevation(level: MaterialElevationLevel, env: &Environment) -> Driven<Elevation> {
     Driven::follow(
         Color::from(Shadow).resolve(env),
@@ -29,9 +24,7 @@ fn card_elevation(level: MaterialElevationLevel, env: &Environment) -> Driven<El
 fn outline_border(env: &Environment) -> Driven<Border> {
     Driven::follow(
         Color::from(OutlineVariant).resolve(env),
-        |outline: &WorkingColor, _inputs: &Inputs<'_, ()>| {
-            Border::new(CARD_OUTLINE_WIDTH, Paint::from(*outline))
-        },
+        |outline: &WorkingColor, _inputs: &Inputs<'_, ()>| Border::new(1.0, Paint::from(*outline)),
     )
 }
 
@@ -42,7 +35,7 @@ fn outline_border(env: &Environment) -> Driven<Border> {
 /// - `Outlined`: `surface` at level 0 with a 1 dp `outline-variant` stroke.
 #[must_use]
 pub fn look(style: CardStyle, env: &Environment) -> CardLook {
-    let shape = CornerShape::radius(CARD_CORNER_RADIUS);
+    let shape = CornerShape::radius(12.0);
     let surface = match style {
         CardStyle::Elevated => Surface::new(shape, solid_paint::<()>(SurfaceContainerLow, env))
             .elevation(card_elevation(MaterialElevationLevel::LEVEL1, env)),
@@ -53,10 +46,7 @@ pub fn look(style: CardStyle, env: &Environment) -> CardLook {
             Surface::new(shape, solid_paint::<()>(SurfaceContainerHighest, env))
         }
     };
-    CardLook::new(
-        surface,
-        CardLayout::uniform(CARD_CONTENT_PADDING, CARD_CONTENT_SPACING),
-    )
+    CardLook::new(surface, CardLayout::uniform(16.0, 4.0))
 }
 
 #[cfg(test)]
@@ -68,7 +58,7 @@ mod tests {
     use waterui::widget::CardStyle;
     use waterui_core::Environment;
 
-    use super::{CARD_CONTENT_PADDING, CARD_CONTENT_SPACING, CARD_CORNER_RADIUS, look};
+    use super::look;
     use crate::Material3;
 
     #[test]
@@ -79,12 +69,12 @@ mod tests {
         let rest = Inputs::at_rest(frame, InteractionState::empty(), &());
 
         let filled = look(CardStyle::Filled, &env);
-        assert_eq!(filled.layout().horizontal_padding, CARD_CONTENT_PADDING);
-        assert_eq!(filled.layout().vertical_padding, CARD_CONTENT_PADDING);
-        assert_eq!(filled.layout().content_spacing, CARD_CONTENT_SPACING);
+        assert_eq!(filled.layout().horizontal_padding, 16.0);
+        assert_eq!(filled.layout().vertical_padding, 16.0);
+        assert_eq!(filled.layout().content_spacing, 4.0);
         assert_eq!(
             filled.surface().shape().corners().target(&rest),
-            Corners::from(CARD_CORNER_RADIUS)
+            Corners::from(12.0)
         );
         assert!(filled.surface().get_border().is_none());
         assert!(filled.surface().get_elevation().target(&rest).is_none());

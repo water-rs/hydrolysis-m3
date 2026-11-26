@@ -27,7 +27,7 @@ pub struct ButtonSizeTokens {
     /// `ContainerHeight`.
     pub container_height: f64,
     /// `LeadingSpace` / `TrailingSpace`.
-    pub horizontal_space: f64,
+    pub horizontal_space: f32,
     /// `IconSize`.
     pub icon_size: f64,
     /// `IconLabelSpace`.
@@ -121,14 +121,10 @@ pub const MINIMUM_TOUCH_TARGET: f64 = 48.0;
 
 /// `ButtonDefaults.MinWidth`.
 pub const BUTTON_MIN_WIDTH: f64 = 58.0;
-/// `ButtonDefaults.ContentPadding` vertical.
-pub const BUTTON_TEXT_VERTICAL_PADDING: f64 = 8.0;
 pub const BUTTON_LINK_UNDERLINE_BOTTOM_INSET: f64 = 2.0;
 pub const BUTTON_LINK_UNDERLINE_THICKNESS: f64 = 1.0;
 /// `ButtonDefaults.TextButtonContentPadding` horizontal.
 pub const BUTTON_LINK_HORIZONTAL_PADDING: f64 = 12.0;
-/// `ButtonDefaults.TextButtonContentPadding` vertical.
-pub const BUTTON_LINK_VERTICAL_PADDING: f64 = 8.0;
 
 #[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_WIDTH: f64 = 52.0;
@@ -159,8 +155,6 @@ pub const TOGGLE_SWITCH_ICON_SIZE: f64 = 16.0;
 #[cfg(feature = "toggle")]
 pub const TOGGLE_SWITCH_ICON_SCALE_START: f64 = 0.92;
 #[cfg(feature = "toggle")]
-pub const TOGGLE_LABEL_SPACING: f64 = 8.0;
-#[cfg(feature = "toggle")]
 pub const TOGGLE_CHECKBOX_SIZE: f64 = 18.0;
 #[cfg(feature = "toggle")]
 pub const TOGGLE_CHECKBOX_CONTAINER_SHAPE: f64 = 2.0;
@@ -171,10 +165,6 @@ pub const TOGGLE_CHECKBOX_SELECTED_SCALE_START: f64 = 0.6;
 
 #[cfg(feature = "stepper")]
 pub const STEPPER_BUTTON_SIZE: f64 = 40.0;
-#[cfg(feature = "stepper")]
-pub const STEPPER_BUTTON_SPACING: f64 = 2.0;
-#[cfg(feature = "stepper")]
-pub const STEPPER_LABEL_SPACING: f64 = 8.0;
 #[cfg(feature = "stepper")]
 pub const STEPPER_ICON_SIZE: f64 = 24.0;
 #[cfg(feature = "stepper")]
@@ -285,24 +275,6 @@ pub const INPUT_SELECTION_OPACITY: f32 = 0.28;
 ))]
 pub const INPUT_FILLED_DISABLED_CONTAINER_OPACITY: f32 = 0.04;
 
-#[cfg(feature = "menu")]
-pub const MENU_ROW_HEIGHT: f64 = 48.0;
-#[cfg(feature = "menu")]
-pub const MENU_HORIZONTAL_PADDING: f64 = 12.0;
-#[cfg(feature = "menu")]
-pub const MENU_VERTICAL_PADDING: f64 = 8.0;
-#[cfg(feature = "menu")]
-pub const MENU_MIN_WIDTH: f64 = 112.0;
-#[cfg(feature = "menu")]
-pub const MENU_MAX_WIDTH: f64 = 280.0;
-#[cfg(feature = "menu")]
-pub const MENU_WIDTH_PER_CHAR: f64 = 8.5;
-#[cfg(feature = "menu")]
-pub const MENU_CONTAINER_SHAPE: f64 = 4.0;
-#[cfg(feature = "menu")]
-pub const MENU_SEPARATOR_HORIZONTAL_INSET: f64 = 16.0;
-#[cfg(feature = "menu")]
-pub const MENU_SEPARATOR_THICKNESS: f64 = 1.0;
 /// A picker popup's selected row sits this far in from the row's sides.
 #[cfg(feature = "menu")]
 pub const MENU_SELECTED_ROW_HORIZONTAL_INSET: f64 = 2.0;
@@ -311,22 +283,8 @@ pub const MENU_SELECTED_ROW_HORIZONTAL_INSET: f64 = 2.0;
 #[cfg(feature = "menu")]
 pub const MENU_SELECTED_ROW_VERTICAL_INSET: f64 = 1.0;
 
-/// Compose `TextFieldDefaults.MinWidth`, which the menu-style picker's
-/// filled-field chrome inherits via `ExposedDropdownMenuBox`.
-#[cfg(any(feature = "picker", feature = "date-picker"))]
-pub const PICKER_MENU_MIN_WIDTH: f64 = 280.0;
-/// No spec floor exists for a radio column; this keeps a lone row from
-/// collapsing below a tappable width.
-#[cfg(feature = "picker")]
-pub const PICKER_RADIO_MIN_WIDTH: f64 = 72.0;
-#[cfg(any(feature = "picker", feature = "date-picker"))]
-pub const PICKER_MIN_HEIGHT: f64 = 56.0;
 #[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_HORIZONTAL_INSET: f64 = 16.0;
-#[cfg(any(feature = "picker", feature = "date-picker"))]
-pub const PICKER_VERTICAL_INSET: f64 = 8.0;
-#[cfg(any(feature = "picker", feature = "date-picker"))]
-pub const PICKER_LABEL_SPACING: f64 = 8.0;
 #[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_INDICATOR_SPACE: f64 = 18.0;
 #[cfg(feature = "picker")]
@@ -337,12 +295,6 @@ pub const PICKER_RADIO_OUTER_RING_WIDTH: f64 = 2.0;
 /// Half of Compose's `RadioButtonDotSize` (12dp).
 #[cfg(feature = "picker")]
 pub const PICKER_RADIO_INNER_DOT_RADIUS: f64 = 6.0;
-#[cfg(feature = "picker")]
-pub const PICKER_RADIO_LABEL_SPACING: f64 = 8.0;
-#[cfg(feature = "picker")]
-pub const PICKER_RADIO_ROW_SPACING: f64 = 6.0;
-#[cfg(any(feature = "picker", feature = "date-picker"))]
-pub const PICKER_MENU_POPUP_TOP_SPACING: f64 = 4.0;
 /// The dropdown chevron's half width.
 #[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_CHEVRON_HALF_WIDTH: f64 = 4.0;
@@ -352,11 +304,6 @@ pub const PICKER_CHEVRON_HALF_HEIGHT: f64 = 2.0;
 /// The dropdown chevron's stroke width.
 #[cfg(any(feature = "picker", feature = "date-picker"))]
 pub const PICKER_CHEVRON_STROKE_WIDTH: f64 = 1.5;
-/// Compose `ButtonDefaults.MinWidth`, enforced per segment.
-#[cfg(feature = "picker")]
-pub const PICKER_SEGMENTED_MIN_WIDTH: f64 = 58.0;
-#[cfg(feature = "picker")]
-pub const PICKER_SEGMENTED_MIN_HEIGHT: f64 = 40.0;
 #[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_HORIZONTAL_INSET: f64 = 12.0;
 #[cfg(feature = "picker")]
@@ -364,14 +311,6 @@ pub const PICKER_SEGMENTED_CONTAINER_RADIUS: f64 = 20.0;
 #[cfg(feature = "picker")]
 pub const PICKER_SEGMENTED_OUTLINE_WIDTH: f64 = 1.0;
 
-#[cfg(feature = "slider")]
-pub const SLIDER_HORIZONTAL_INSET: f64 = 20.0;
-#[cfg(feature = "slider")]
-pub const SLIDER_HORIZONTAL_SPACING: f64 = 8.0;
-#[cfg(feature = "slider")]
-pub const SLIDER_VERTICAL_SPACING: f64 = 6.0;
-#[cfg(feature = "slider")]
-pub const SLIDER_MIN_TRACK_WIDTH: f64 = 72.0;
 /// `SliderTokens.HandleWidth` — a narrow vertical bar, not a circular thumb.
 #[cfg(feature = "slider")]
 pub const SLIDER_HANDLE_WIDTH: f64 = 4.0;
@@ -461,18 +400,6 @@ pub fn slider_size_tokens(size: waterui_controls::ControlSize) -> SliderSizeToke
     }
 }
 
-/// `md.comp.slider.value-indicator.active.bottom-space`: the gap between the
-/// value indicator and the top of the handle while dragging.
-#[cfg(feature = "slider")]
-pub const SLIDER_VALUE_INDICATOR_BOTTOM_SPACE: f64 = 12.0;
-/// No horizontal padding token exists for the value indicator; 12dp matches
-/// the side padding Material gives its other label bubbles.
-#[cfg(feature = "slider")]
-pub const SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING: f64 = 12.0;
-/// Same fallback for the vertical direction: padding past the 44dp container
-/// height only ever enlarges the bubble.
-#[cfg(feature = "slider")]
-pub const SLIDER_VALUE_INDICATOR_VERTICAL_PADDING: f64 = 4.0;
 /// `md.comp.slider.value-indicator.label.container.height` per the current
 /// spec (44), replacing the deprecated 28dp `md.comp.slider.label.container.height`.
 #[cfg(feature = "slider")]
@@ -482,11 +409,7 @@ pub const SLIDER_VALUE_INDICATOR_MIN_HEIGHT: f64 = 44.0;
 #[cfg(feature = "slider")]
 pub const SLIDER_VALUE_INDICATOR_MIN_WIDTH: f64 = 48.0;
 
-pub const PROGRESS_LINEAR_LABEL_HEIGHT: f64 = 18.0;
-pub const PROGRESS_LINEAR_BAR_TOP_OFFSET: f64 = 10.0;
 pub const PROGRESS_LINEAR_BAR_HEIGHT: f64 = 4.0;
-pub const PROGRESS_LINEAR_BAR_HORIZONTAL_INSET: f64 = 8.0;
-pub const PROGRESS_LINEAR_VALUE_LABEL_TOP_SPACING: f64 = 6.0;
 pub const PROGRESS_LINEAR_MIN_TRACK_WIDTH: f64 = 80.0;
 /// `CircularProgressIndicatorTokens.Size`.
 pub const PROGRESS_CIRCULAR_DIAMETER: f64 = 40.0;
@@ -501,83 +424,14 @@ pub const PROGRESS_LINEAR_TRACK_ACTIVE_SPACE: f64 = 4.0;
 /// `LinearProgressIndicatorTokens.StopSize`: the dot marking the bar's end.
 pub const PROGRESS_LINEAR_STOP_SIZE: f64 = 4.0;
 
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BAR_AUTOMATIC_HEIGHT: f64 = 64.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BAR_INLINE_HEIGHT: f64 = 64.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BAR_MEDIUM_HEIGHT: f64 = 112.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BAR_LARGE_HEIGHT: f64 = 152.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_TITLE_INLINE_HEIGHT: f64 = 28.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_TITLE_MEDIUM_HEIGHT: f64 = 36.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_TITLE_LARGE_HEIGHT: f64 = 36.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_TITLE_LEADING_INSET: f64 = 16.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_TITLE_TRAILING_INSET: f64 = 16.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_LARGE_TITLE_BOTTOM_INSET: f64 = 28.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BAR_HORIZONTAL_INSET: f64 = 4.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BAR_ITEM_SPACING: f64 = 0.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_SEARCH_HEIGHT: f64 = 56.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_SEARCH_VERTICAL_INSET: f64 = 4.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BACK_BUTTON_SIZE: f64 = 40.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BACK_BUTTON_LEADING_INSET: f64 = 4.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_BACK_BUTTON_TOP_INSET: f64 = 12.0;
-#[cfg(feature = "navigation")]
-pub const NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE: f64 = 30.0;
 pub const SCROLL_INDICATOR_CORNER_RADIUS: f64 = 1.25;
-/// Thickness of the scroll indicator's thumb at rest. Material has no scroll
-/// indicator component; this is the thumb the renderer drew before the theme
-/// owned it.
-pub const SCROLL_INDICATOR_THICKNESS: f64 = 2.5;
-/// Thickness of the thumb while it is dragged.
-pub const SCROLL_INDICATOR_DRAG_THICKNESS: f64 = 6.5;
-/// Inset of the thumb from the scrolling surface's edge.
-pub const SCROLL_INDICATOR_EDGE_INSET: f64 = 1.5;
-/// The shortest the thumb gets along its track.
-pub const SCROLL_INDICATOR_MIN_EXTENT: f64 = 12.0;
-/// Width of the gutter along the edge that takes a thumb drag, wider than
-/// the drawn thumb so it is comfortable to pick up.
-pub const SCROLL_INDICATOR_GUTTER: f64 = 12.0;
 /// Opacity of the thumb's `on-surface-variant` colour.
 pub const SCROLL_INDICATOR_OPACITY: f32 = 0.55;
 #[cfg(feature = "navigation")]
-pub const TABS_BAR_HEIGHT: f64 = 48.0;
-#[cfg(feature = "navigation")]
-pub const TABS_BUTTON_MIN_WIDTH: f64 = 48.0;
-#[cfg(feature = "navigation")]
 pub const TABS_BUTTON_HORIZONTAL_INSET: f64 = 16.0;
-/// `md.comp.nav-bar.container.height`: the horizontal-item bar is the M3
-/// navigation bar.
-#[cfg(feature = "navigation")]
-pub const NAV_BAR_HEIGHT: f64 = 64.0;
 /// `md.comp.nav-bar.item.horizontal.active-indicator.height`.
 #[cfg(feature = "navigation")]
 pub const NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT: f64 = 40.0;
-/// `md.comp.nav-bar.item.vertical.icon-label-space`: the gap between a
-/// vertical item's icon and its label.
-#[cfg(feature = "navigation")]
-pub const NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE: f64 = 4.0;
-/// `md.comp.nav-bar.item.horizontal.icon-label-space`: the gap between a
-/// horizontal item's icon and its label inside the indicator.
-#[cfg(feature = "navigation")]
-pub const NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE: f64 = 4.0;
-/// The M3 medium window width class boundary: at and above it the
-/// navigation bar uses horizontal items.
-#[cfg(feature = "navigation")]
-pub const MEDIUM_WINDOW_WIDTH: f64 = 600.0;
 #[cfg(feature = "list")]
 pub const LIST_ONE_LINE_ROW_HEIGHT: f32 = 56.0;
 #[cfg(feature = "list")]
@@ -613,15 +467,6 @@ pub const LIST_MOVE_STATE_LAYER_SIZE: f32 = 2.0f32.mul_add(
     -LIST_TRAILING_CONTROL_VERTICAL_INSET,
     LIST_ONE_LINE_ROW_HEIGHT,
 ) / 2.0;
-/// Fraction of a row's width a swipe must cross to dismiss on release:
-/// Compose's `SwipeToDismissBoxDefaults.positionalThreshold`,
-/// `distance * 0.5`.
-#[cfg(feature = "list")]
-pub const LIST_SWIPE_DISMISS_THRESHOLD: f64 = 0.5;
-/// Fraction of a slot a reorder drag must cross to step the lifted row over
-/// its neighbour: its midpoint.
-#[cfg(feature = "list")]
-pub const LIST_REORDER_THRESHOLD: f64 = 0.5;
 /// Distance the pointer travels before a row drag is recognised, matching
 /// Android's `ViewConfiguration` touch slop.
 #[cfg(feature = "list")]

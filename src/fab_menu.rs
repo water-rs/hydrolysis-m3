@@ -252,7 +252,7 @@ fn item_style() -> FloatingStyle {
         content_inset_x: 0.0,
         content_inset_y: 0.0,
         minimum_width: 0.0,
-        minimum_height: f64::from(ITEM_HEIGHT),
+        minimum_height: ITEM_HEIGHT.into(),
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };
@@ -279,7 +279,7 @@ fn toggle_style() -> FloatingStyle {
         content_inset_x: 0.0,
         content_inset_y: 0.0,
         minimum_width: 0.0,
-        minimum_height: f64::from(CLOSE_BUTTON_CONTAINER),
+        minimum_height: CLOSE_BUTTON_CONTAINER.into(),
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };

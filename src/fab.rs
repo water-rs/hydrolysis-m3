@@ -281,11 +281,8 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
         let size = self.size.tokens();
-        let floating_style = floating_style::<Tokens>(
-            f64::from(size.container),
-            f64::from(size.container),
-            size.clip_radius(),
-        );
+        let floating_style =
+            floating_style::<Tokens>(size.container, size.container, size.clip_radius());
 
         self.content
             .foreground(Tokens::content_color())
@@ -399,8 +396,8 @@ where
     fn body(self, _env: &Environment) -> impl View {
         let mut action = self.action;
         let floating_style = floating_style::<Tokens>(
-            f64::from(EXTENDED_FAB_MINIMUM_WIDTH),
-            f64::from(EXTENDED_FAB_HEIGHT),
+            EXTENDED_FAB_MINIMUM_WIDTH,
+            EXTENDED_FAB_HEIGHT,
             EXTENDED_FAB_CLIP_RADIUS,
         );
 
@@ -431,16 +428,12 @@ where
 
 pub(crate) fn theme() -> FloatingStyle {
     let size = FabSize::Baseline.tokens();
-    floating_style::<PrimaryFab>(
-        f64::from(size.container),
-        f64::from(size.container),
-        size.clip_radius(),
-    )
+    floating_style::<PrimaryFab>(size.container, size.container, size.clip_radius())
 }
 
 fn floating_style<Tokens>(
-    minimum_width: f64,
-    minimum_height: f64,
+    minimum_width: f32,
+    minimum_height: f32,
     clip_radius: f32,
 ) -> FloatingStyle
 where
@@ -453,8 +446,8 @@ where
         clip_radius,
         content_inset_x: 0.0,
         content_inset_y: 0.0,
-        minimum_width,
-        minimum_height,
+        minimum_width: minimum_width.into(),
+        minimum_height: minimum_height.into(),
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };

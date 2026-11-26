@@ -34,22 +34,16 @@ use crate::color::{
 };
 use crate::dimensions::{
     TOGGLE_CHECKBOX_CONTAINER_SHAPE, TOGGLE_CHECKBOX_OUTLINE_WIDTH,
-    TOGGLE_CHECKBOX_SELECTED_SCALE_START, TOGGLE_CHECKBOX_SIZE, TOGGLE_LABEL_SPACING,
-    TOGGLE_SWITCH_HEIGHT, TOGGLE_SWITCH_ICON_SCALE_START, TOGGLE_SWITCH_ICON_SIZE,
-    TOGGLE_SWITCH_OUTLINE_WIDTH, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE,
-    TOGGLE_SWITCH_SELECTED_HANDLE_SIZE, TOGGLE_SWITCH_THUMB_PADDING,
-    TOGGLE_SWITCH_UNSELECTED_HANDLE_SIZE, TOGGLE_SWITCH_WIDTH,
+    TOGGLE_CHECKBOX_SELECTED_SCALE_START, TOGGLE_CHECKBOX_SIZE, TOGGLE_SWITCH_HEIGHT,
+    TOGGLE_SWITCH_ICON_SCALE_START, TOGGLE_SWITCH_ICON_SIZE, TOGGLE_SWITCH_OUTLINE_WIDTH,
+    TOGGLE_SWITCH_PRESSED_HANDLE_SIZE, TOGGLE_SWITCH_SELECTED_HANDLE_SIZE,
+    TOGGLE_SWITCH_THUMB_PADDING, TOGGLE_SWITCH_UNSELECTED_HANDLE_SIZE, TOGGLE_SWITCH_WIDTH,
 };
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
 use crate::theme::motion::tokens::duration;
 use crate::theme::motion::{self};
 
-/// The distance the switch thumb travels between its resting centres.
-const SWITCH_TRAVEL: f64 = 2.0f64.mul_add(
-    -(TOGGLE_SWITCH_THUMB_PADDING + SWITCH_SLOT_HALF),
-    TOGGLE_SWITCH_WIDTH,
-);
 /// Half the slot the thumb centres in at each end of the track: Compose
 /// reserves the *selected* handle's width, so growing or shrinking the thumb
 /// never moves it sideways.
@@ -126,7 +120,8 @@ impl Progress {
 
 /// The look of a switch in `spec`.
 pub fn switch(spec: &ToggleSpec, env: &Environment) -> SwitchLook {
-    let drag = SwitchDrag::new(SWITCH_TRAVEL, spec.direction());
+    // 52 - 2 * (4 + 12) = 20 dp between resting centres.
+    let drag = SwitchDrag::new(20.0, spec.direction());
     let progress = Progress {
         drag,
         direction: spec.direction(),
@@ -136,8 +131,8 @@ pub fn switch(spec: &ToggleSpec, env: &Environment) -> SwitchLook {
         Size::new(TOGGLE_SWITCH_WIDTH, TOGGLE_SWITCH_HEIGHT),
         toggle_motion(),
     )
-    .label_spacing(TOGGLE_LABEL_SPACING)
-    .reach(STATE_LAYER_RADIUS)
+    .label_spacing(8.0)
+    .reach(20.0)
     .hit(motion::hit_region())
     .part(switch_track(progress, &tint, env))
     .part(switch_outline(progress, env))
@@ -161,8 +156,8 @@ pub fn checkbox(spec: &ToggleSpec, env: &Environment) -> CheckboxLook {
         Size::new(TOGGLE_CHECKBOX_SIZE, TOGGLE_CHECKBOX_SIZE),
         toggle_motion(),
     )
-    .label_spacing(TOGGLE_LABEL_SPACING)
-    .reach(STATE_LAYER_RADIUS)
+    .label_spacing(8.0)
+    .reach(20.0)
     .hit(motion::hit_region())
     .part(checkbox_outline(progress, env))
     .part(checkbox_container(progress, &tint, env))
@@ -525,8 +520,7 @@ mod tests {
     use super::{checkbox, icon_fade, switch};
     use crate::color::Primary;
     use crate::dimensions::{
-        TOGGLE_LABEL_SPACING, TOGGLE_SWITCH_HEIGHT, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE,
-        TOGGLE_SWITCH_WIDTH,
+        TOGGLE_SWITCH_HEIGHT, TOGGLE_SWITCH_PRESSED_HANDLE_SIZE, TOGGLE_SWITCH_WIDTH,
     };
     use crate::theme::motion::tokens::duration;
     use hydrolysis_style::Style as _;
@@ -600,8 +594,7 @@ mod tests {
             look.control().size(),
             kurbo_size(TOGGLE_SWITCH_WIDTH, TOGGLE_SWITCH_HEIGHT)
         );
-        assert_eq!(look.control().get_label_spacing(), TOGGLE_LABEL_SPACING);
-        assert_eq!(TOGGLE_LABEL_SPACING, 8.0);
+        assert_eq!(look.control().get_label_spacing(), 8.0);
         let checkbox = checkbox(
             &spec(ToggleStyle::Checkbox, LayoutDirection::LeftToRight),
             &env(),

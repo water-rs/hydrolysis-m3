@@ -22,12 +22,9 @@ use crate::color::{
 };
 use crate::controls::button::disabled_paint;
 use crate::dimensions::{
-    SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_HORIZONTAL_INSET, SLIDER_HORIZONTAL_SPACING,
-    SLIDER_MIN_TRACK_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH, SLIDER_STOP_INDICATOR_END_SPACE,
-    SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_INSIDE_CORNER_SIZE,
-    SLIDER_VALUE_INDICATOR_BOTTOM_SPACE, SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING,
-    SLIDER_VALUE_INDICATOR_MIN_HEIGHT, SLIDER_VALUE_INDICATOR_MIN_WIDTH,
-    SLIDER_VALUE_INDICATOR_VERTICAL_PADDING, SLIDER_VERTICAL_SPACING, SliderSizeTokens,
+    SLIDER_HANDLE_PADDING, SLIDER_HANDLE_WIDTH, SLIDER_PRESSED_HANDLE_WIDTH,
+    SLIDER_STOP_INDICATOR_END_SPACE, SLIDER_STOP_INDICATOR_SIZE, SLIDER_TRACK_INSIDE_CORNER_SIZE,
+    SLIDER_VALUE_INDICATOR_MIN_HEIGHT, SLIDER_VALUE_INDICATOR_MIN_WIDTH, SliderSizeTokens,
     slider_size_tokens,
 };
 use crate::elevation::{MaterialElevationLevel, chrome_elevation};
@@ -64,13 +61,19 @@ const STATE_LAYER_RADIUS: f64 = 20.0;
 pub fn look(spec: &SliderSpec, env: &Environment) -> SliderLook {
     let tokens = slider_size_tokens(spec.size());
     let tint = spec.tint();
+    let row_height = match spec.size() {
+        waterui_controls::ControlSize::ExtraSmall | waterui_controls::ControlSize::Small => 44.0,
+        waterui_controls::ControlSize::Large => 68.0,
+        waterui_controls::ControlSize::ExtraLarge => 108.0,
+        _ => 52.0,
+    };
     let layout = SliderLayout {
-        row_height: tokens.handle_height.max(tokens.track_height),
-        track_inset: SLIDER_HORIZONTAL_INSET,
-        label_inset: SLIDER_HORIZONTAL_INSET,
-        label_gap: SLIDER_HORIZONTAL_SPACING,
-        minimum_track: SLIDER_MIN_TRACK_WIDTH,
-        label_spacing: Some(SLIDER_VERTICAL_SPACING),
+        row_height,
+        track_inset: 20.0,
+        label_inset: 20.0,
+        label_gap: 8.0,
+        minimum_track: 72.0,
+        label_spacing: Some(6.0),
     };
     let knob = Knob {
         size: Size::new(SLIDER_HANDLE_WIDTH, tokens.handle_height),
@@ -371,15 +374,12 @@ fn value_indicator(env: &Environment) -> ValueIndicator {
             },
         ),
     )
-    .padding(
-        SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING,
-        SLIDER_VALUE_INDICATOR_VERTICAL_PADDING,
-    )
+    .padding(12.0, 4.0)
     .minimum_size(Size::new(
         SLIDER_VALUE_INDICATOR_MIN_WIDTH,
         SLIDER_VALUE_INDICATOR_MIN_HEIGHT,
     ))
-    .gap(SLIDER_VALUE_INDICATOR_BOTTOM_SPACE)
+    .gap(12.0)
 }
 
 #[cfg(test)]
@@ -453,16 +453,10 @@ mod tests {
         );
         let look = look(&spec(ControlSize::Small, true), &env());
         let indicator = look.get_value_indicator().expect("the spec asks for one");
-        assert_eq!(indicator.get_gap(), SLIDER_VALUE_INDICATOR_BOTTOM_SPACE);
+        assert_eq!(indicator.get_gap(), 12.0);
         assert_eq!(indicator.get_minimum_size(), Size::new(48.0, 44.0));
-        assert_eq!(
-            indicator.get_padding().x,
-            SLIDER_VALUE_INDICATOR_HORIZONTAL_PADDING
-        );
-        assert_eq!(
-            indicator.get_padding().y,
-            SLIDER_VALUE_INDICATOR_VERTICAL_PADDING
-        );
+        assert_eq!(indicator.get_padding().x, 12.0);
+        assert_eq!(indicator.get_padding().y, 4.0);
     }
 
     /// Pressing narrows the handle, and the track gap narrows with it.
