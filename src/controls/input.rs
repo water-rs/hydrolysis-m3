@@ -56,21 +56,17 @@ use crate::controls::button::disabled_paint;
     feature = "color-picker"
 ))]
 use crate::controls::button::solid_paint;
+use crate::dimensions::{
+    INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
+    INPUT_FILLED_DISABLED_CONTAINER_OPACITY, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
+};
 #[cfg(any(
     feature = "text-field",
     feature = "secure-field",
     feature = "date-picker",
     feature = "color-picker"
 ))]
-use crate::dimensions::{
-    INPUT_FIELD_HORIZONTAL_INSET, INPUT_FIELD_MIN_HEIGHT, INPUT_FIELD_MIN_WIDTH,
-    INPUT_FIELD_VERTICAL_INSET, INPUT_LABEL_FLOAT_SCALE, INPUT_LABEL_FLOAT_TOP, INPUT_LABEL_HEIGHT,
-    INPUT_SELECTION_OPACITY,
-};
-use crate::dimensions::{
-    INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
-    INPUT_FILLED_DISABLED_CONTAINER_OPACITY, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
-};
+use crate::dimensions::{INPUT_LABEL_FLOAT_SCALE, INPUT_LABEL_FLOAT_TOP, INPUT_SELECTION_OPACITY};
 use crate::semantics::gather;
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
 use crate::theme::motion;
@@ -120,13 +116,7 @@ pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
     feature = "color-picker"
 ))]
 const fn metrics() -> InputFieldMetrics {
-    InputFieldMetrics::new(
-        INPUT_LABEL_HEIGHT,
-        INPUT_FIELD_MIN_WIDTH,
-        INPUT_FIELD_MIN_HEIGHT,
-        INPUT_FIELD_HORIZONTAL_INSET,
-        INPUT_FIELD_VERTICAL_INSET,
-    )
+    InputFieldMetrics::new(16.0, 280.0, 56.0, 16.0, 8.0)
 }
 
 /// The container: `corner-extra-small-top`, square below the active
@@ -306,9 +296,8 @@ mod tests {
     };
     use crate::MaterialColorScheme;
     use crate::dimensions::{
-        INPUT_FIELD_MIN_HEIGHT, INPUT_FIELD_MIN_WIDTH, INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT,
-        INPUT_FILLED_CONTAINER_TOP_RADIUS, INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT,
-        INPUT_LABEL_FLOAT_SCALE,
+        INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, INPUT_FILLED_CONTAINER_TOP_RADIUS,
+        INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT, INPUT_LABEL_FLOAT_SCALE,
     };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii};
@@ -346,10 +335,11 @@ mod tests {
     fn filled_text_field_metrics_match_compose_filled_text_field_tokens() {
         let metrics = metrics();
 
-        assert_eq!(metrics.min_height, INPUT_FIELD_MIN_HEIGHT);
-        assert_eq!(metrics.min_width, INPUT_FIELD_MIN_WIDTH);
-        assert_eq!(INPUT_FIELD_MIN_HEIGHT, 56.0);
-        assert_eq!(INPUT_FIELD_MIN_WIDTH, 280.0);
+        assert_eq!(metrics.label_height, 16.0);
+        assert_eq!(metrics.min_height, 56.0);
+        assert_eq!(metrics.min_width, 280.0);
+        assert_eq!(metrics.horizontal_inset, 16.0);
+        assert_eq!(metrics.vertical_inset, 8.0);
         assert_eq!(INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT, 1.0);
         assert_eq!(field_look().metrics().min_height, metrics.min_height);
     }
