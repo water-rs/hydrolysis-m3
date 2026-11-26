@@ -1,5 +1,13 @@
 use waterui::contract_violation;
 
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+use super::typography::BODY_SMALL_LINE_HEIGHT;
+
 /// `ShapeTokens.CornerSmall`.
 pub const SHAPE_CORNER_SMALL: f64 = 8.0;
 /// `ShapeTokens.CornerMedium`.
@@ -174,13 +182,44 @@ pub const STEPPER_INNER_CORNER_RADIUS: f64 = 8.0;
 #[cfg(feature = "stepper")]
 pub const STEPPER_PRESSED_INNER_CORNER_RADIUS: f64 = 4.0;
 
+/// The floating label's line box: Material sets the floated label in Body
+/// Small, so the field reserves exactly that role's line height.
 #[cfg(any(
     feature = "text-field",
     feature = "secure-field",
     feature = "date-picker",
     feature = "color-picker"
 ))]
-pub const INPUT_FIELD_VERTICAL_INSET: f64 = 8.0;
+pub const INPUT_LABEL_HEIGHT: f32 = BODY_SMALL_LINE_HEIGHT;
+/// `TextFieldDefaults.MinWidth` — 280dp for both filled and outlined fields.
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+pub const INPUT_FIELD_MIN_WIDTH: f32 = 280.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+pub const INPUT_FIELD_MIN_HEIGHT: f32 = 56.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+pub const INPUT_FIELD_HORIZONTAL_INSET: f32 = 16.0;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+pub const INPUT_FIELD_VERTICAL_INSET: f32 = 8.0;
 #[cfg(any(
     feature = "text-field",
     feature = "secure-field",
@@ -223,7 +262,7 @@ pub const INPUT_LABEL_FLOAT_SCALE: f64 = 12.0 / 16.0;
     feature = "date-picker",
     feature = "color-picker"
 ))]
-pub const INPUT_LABEL_FLOAT_TOP: f64 = INPUT_FIELD_VERTICAL_INSET;
+pub const INPUT_LABEL_FLOAT_TOP: f32 = INPUT_FIELD_VERTICAL_INSET;
 /// The opacity of the selection's `primary` highlight. Material 3 has no
 /// `md.comp` token for it; the value is the one this theme has always drawn.
 #[cfg(any(
@@ -540,11 +579,26 @@ pub const NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE: f64 = 4.0;
 #[cfg(feature = "navigation")]
 pub const MEDIUM_WINDOW_WIDTH: f64 = 600.0;
 #[cfg(feature = "list")]
-pub const LIST_ONE_LINE_ROW_HEIGHT: f64 = 56.0;
+pub const LIST_ONE_LINE_ROW_HEIGHT: f32 = 56.0;
 #[cfg(feature = "list")]
-pub const LIST_VERTICAL_INSET: f64 = 10.0;
+pub const LIST_HORIZONTAL_INSET: f32 = 16.0;
 #[cfg(feature = "list")]
-pub const LIST_TRAILING_CONTROL_VERTICAL_INSET: f64 = 4.0;
+pub const LIST_VERTICAL_INSET: f32 = 10.0;
+#[cfg(feature = "list")]
+pub const LIST_DIVIDER_LEADING_INSET: f32 = 16.0;
+#[cfg(feature = "list")]
+pub const LIST_DIVIDER_TRAILING_INSET: f32 = 16.0;
+/// Hit box for the reorder grip: Material's 48dp minimum touch target,
+/// holding a 24dp `drag_handle` icon.
+#[cfg(feature = "list")]
+pub const LIST_MOVE_CONTROL_WIDTH: f32 = 48.0;
+/// Hit box for the delete affordance, sized like the grip beside it.
+#[cfg(feature = "list")]
+pub const LIST_DELETE_CONTROL_WIDTH: f32 = 48.0;
+#[cfg(feature = "list")]
+pub const LIST_TRAILING_CONTROL_SPACING: f32 = 8.0;
+#[cfg(feature = "list")]
+pub const LIST_TRAILING_CONTROL_VERTICAL_INSET: f32 = 4.0;
 /// Diameter of a trailing control's state layer, matching
 /// `IconButtonTokens.StateLayerSize`.
 #[cfg(feature = "list")]
@@ -555,7 +609,7 @@ pub const LIST_CONTROL_ICON_SIZE: f64 = 24.0;
 /// Diameter of a move half's state layer: the half's inscribed circle on a
 /// one-line row, whose 48dp control splits into two 24dp halves.
 #[cfg(feature = "list")]
-pub const LIST_MOVE_STATE_LAYER_SIZE: f64 = 2.0f64.mul_add(
+pub const LIST_MOVE_STATE_LAYER_SIZE: f32 = 2.0f32.mul_add(
     -LIST_TRAILING_CONTROL_VERTICAL_INSET,
     LIST_ONE_LINE_ROW_HEIGHT,
 ) / 2.0;
@@ -583,5 +637,22 @@ pub const LIST_SWIPE_ICON_EDGE_INSET: f64 = 16.0;
 /// reaches its dismiss threshold.
 #[cfg(feature = "list")]
 pub const LIST_SWIPE_ICON_MIN_SCALE: f64 = 0.7;
+/// Material list subheader line (`md.sys.list.subheader`), a 48dp band.
+#[cfg(feature = "list")]
+pub const LIST_SECTION_HEADER_HEIGHT: f32 = 48.0;
+/// Supporting text closing a section, on the same 40dp rhythm as a one-line
+/// supporting paragraph.
+#[cfg(feature = "list")]
+pub const LIST_SECTION_FOOTER_HEIGHT: f32 = 40.0;
 #[cfg(feature = "table")]
-pub const TABLE_OUTLINE_WIDTH: f64 = 1.0;
+pub const TABLE_MIN_COLUMN_WIDTH: f32 = 72.0;
+#[cfg(feature = "table")]
+pub const TABLE_CELL_HORIZONTAL_PADDING: f32 = 32.0;
+#[cfg(feature = "table")]
+pub const TABLE_CELL_VERTICAL_INSET: f32 = 16.0;
+#[cfg(feature = "table")]
+pub const TABLE_HEADER_HEIGHT: f32 = 56.0;
+#[cfg(feature = "table")]
+pub const TABLE_ROW_HEIGHT: f32 = 52.0;
+#[cfg(feature = "table")]
+pub const TABLE_OUTLINE_WIDTH: f32 = 1.0;
