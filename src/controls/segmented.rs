@@ -25,8 +25,8 @@ use waterui_graphics::color::Color;
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer};
 use crate::controls::button::disabled_paint;
 use crate::dimensions::{
-    PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
-    PICKER_SEGMENTED_OUTLINE_WIDTH,
+    PICKER_LABEL_SPACING, PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
+    PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_MIN_WIDTH, PICKER_SEGMENTED_OUTLINE_WIDTH,
 };
 use crate::semantics::{focus_indicator, state_layer};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
@@ -43,13 +43,13 @@ type ShapePart = Custom<Segment, (Driven<RoundedRect, Segment>, Driven<Paint, Se
 /// on-surface 12%, its selected container likewise and its labels at 38%.
 pub fn look(spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {
     let layout = SegmentedLayout {
-        row_height: 40.0,
+        row_height: PICKER_SEGMENTED_MIN_HEIGHT,
         label_padding: Vec2::new(PICKER_SEGMENTED_HORIZONTAL_INSET, 0.0),
-        minimum_segment_width: 58.0,
-        minimum_width: 58.0,
-        label_spacing: 8.0,
-        // The outline is stroked centred on the row's edge (1.0 / 2.0).
-        reach: 0.5,
+        minimum_segment_width: PICKER_SEGMENTED_MIN_WIDTH,
+        minimum_width: PICKER_SEGMENTED_MIN_WIDTH,
+        label_spacing: PICKER_LABEL_SPACING,
+        // The outline is stroked centred on the row's edge.
+        reach: PICKER_SEGMENTED_OUTLINE_WIDTH / 2.0,
     };
     // md.comp.segmented-button.label-text = label-large.
     let label = SegmentLabel::new(typography::label_large(), label_color());
@@ -118,7 +118,7 @@ fn container(env: &Environment) -> Custom<SegmentedValue, (Driven<Paint, Segment
                 frame,
                 RoundedRectRadii::from_single_radius(PICKER_SEGMENTED_CONTAINER_RADIUS),
             ),
-            Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH),
+            Stroke::new(f64::from(PICKER_SEGMENTED_OUTLINE_WIDTH)),
             paint,
         );
     })
@@ -146,7 +146,11 @@ fn separators(
             path.move_to(Point::new(x, frame.y0));
             path.line_to(Point::new(x, frame.y1));
         }
-        recorder.stroke(path, Stroke::new(PICKER_SEGMENTED_OUTLINE_WIDTH), paint);
+        recorder.stroke(
+            path,
+            Stroke::new(f64::from(PICKER_SEGMENTED_OUTLINE_WIDTH)),
+            paint,
+        );
     })
 }
 
@@ -205,7 +209,10 @@ fn segment_chrome(segment: Segment, selected: Computed<bool>) -> Chrome {
 mod tests {
     use super::{label_color, look, segment_radii};
     use crate::MaterialColorScheme;
-    use crate::dimensions::{PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET};
+    use crate::dimensions::{
+        PICKER_SEGMENTED_CONTAINER_RADIUS, PICKER_SEGMENTED_HORIZONTAL_INSET,
+        PICKER_SEGMENTED_MIN_HEIGHT, PICKER_SEGMENTED_MIN_WIDTH,
+    };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii};
     use hydrolysis_style::theme::{Inputs, Segment, SegmentedSpec, SpecTint};
@@ -253,9 +260,11 @@ mod tests {
         let look = look(&spec, &env);
         let layout = look.layout();
 
-        assert_eq!(layout.row_height, 40.0);
+        assert_eq!(layout.row_height, PICKER_SEGMENTED_MIN_HEIGHT);
         assert_eq!(layout.label_padding.x, PICKER_SEGMENTED_HORIZONTAL_INSET);
-        assert_eq!(layout.minimum_segment_width, 58.0);
+        assert_eq!(layout.minimum_segment_width, PICKER_SEGMENTED_MIN_WIDTH);
+        assert_eq!(PICKER_SEGMENTED_MIN_HEIGHT, 40.0);
+        assert_eq!(PICKER_SEGMENTED_MIN_WIDTH, 58.0);
         assert!(
             look.get_drag().is_none(),
             "a Material segmented button has no drag"

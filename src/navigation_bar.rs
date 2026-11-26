@@ -194,7 +194,7 @@ where
         .install(
             interaction_chrome_radius(
                 state_layer_color,
-                f64::from(NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT * 0.5),
+                NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT * 0.5,
             )
             // The state layer is the active indicator's pill, centred
             // horizontally at the item's top padding.

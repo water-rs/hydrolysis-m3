@@ -202,7 +202,7 @@ impl View for FloatingActionButtonMenu {
                 .a11y_role(AccessibilityRole::Button)
                 .install(interaction_chrome_radius(
                     OnPrimaryContainer,
-                    f64::from(ITEM_HEIGHT / 2.0),
+                    ITEM_HEIGHT / 2.0,
                 ));
                 waterui::layout::frame::Frame::new(row).height(height)
             })
@@ -223,7 +223,7 @@ impl View for FloatingActionButtonMenu {
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
             .install(interaction_chrome_radius(
                 OnPrimary,
-                f64::from(CLOSE_BUTTON_CONTAINER / 2.0),
+                CLOSE_BUTTON_CONTAINER / 2.0,
             ));
 
         waterui::component::vstack((
@@ -252,7 +252,7 @@ fn item_style() -> FloatingStyle {
         content_inset_x: 0.0,
         content_inset_y: 0.0,
         minimum_width: 0.0,
-        minimum_height: ITEM_HEIGHT.into(),
+        minimum_height: ITEM_HEIGHT,
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };
@@ -279,7 +279,7 @@ fn toggle_style() -> FloatingStyle {
         content_inset_x: 0.0,
         content_inset_y: 0.0,
         minimum_width: 0.0,
-        minimum_height: CLOSE_BUTTON_CONTAINER.into(),
+        minimum_height: CLOSE_BUTTON_CONTAINER,
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };

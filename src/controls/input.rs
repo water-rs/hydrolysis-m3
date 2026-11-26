@@ -101,7 +101,7 @@ pub fn look(_spec: &TextFieldSpec, env: &Environment) -> TextFieldLook {
             motion::text_field_label(),
         )
         .scale(INPUT_LABEL_FLOAT_SCALE)
-        .top(INPUT_LABEL_FLOAT_TOP.into()),
+        .top(INPUT_LABEL_FLOAT_TOP),
         Caret::new(solid_paint(Primary, env), motion::text_caret()),
         selection(env),
     )
@@ -165,7 +165,7 @@ pub fn container(env: &Environment) -> Chrome {
 /// The active indicator's height: 1 and 2 while focused
 /// (`md.comp.filled-text-field.{active-indicator,focus.active-indicator}.height`),
 /// 1 while disabled.
-pub const fn indicator_height(state: InteractionState) -> f64 {
+pub const fn indicator_height(state: InteractionState) -> f32 {
     if state.contains(InteractionState::FOCUSED) && !state.contains(InteractionState::DISABLED) {
         INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT
     } else {
@@ -221,14 +221,10 @@ fn active_indicator(env: &Environment) -> Driven<Border> {
     Driven::follow(
         indicator_colors(env),
         |colors: &IndicatorColors, inputs: &Inputs<'_, ()>| {
-            let width = if inputs.state.contains(InteractionState::FOCUSED)
-                && !inputs.state.contains(InteractionState::DISABLED)
-            {
-                2.0
-            } else {
-                1.0
-            };
-            Border::new(width, indicator_color(colors, inputs.state))
+            Border::new(
+                indicator_height(inputs.state),
+                indicator_color(colors, inputs.state),
+            )
         },
     )
 }

@@ -303,7 +303,7 @@ where
                     .background(Capsule.fill(indicator_color))
                     .install(interaction_chrome_radius(
                         state_layer_color,
-                        f64::from(EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0),
+                        EXPANDED_ACTIVE_INDICATOR_HEIGHT / 2.0,
                     ))
                     .height(ITEM_HEIGHT),
             )
@@ -323,7 +323,7 @@ where
                     ))
                     .install(interaction_chrome_radius(
                         state_layer_color,
-                        f64::from(COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0),
+                        COLLAPSED_ACTIVE_INDICATOR_HEIGHT / 2.0,
                     )),
                     label,
                 ))
