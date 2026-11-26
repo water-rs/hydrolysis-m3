@@ -6,6 +6,7 @@
 //! long menu appearing as a wall and keeps the eye travelling away from the
 //! button that produced it.
 
+use hydrolysis_style::theme::{FloatingOverride, FloatingStyle};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
@@ -192,7 +193,8 @@ impl View for FloatingActionButtonMenu {
                     ITEM_HORIZONTAL_SPACE,
                 ))
                 .foreground(OnPrimaryContainer)
-                .floating_with(item_style())
+                .floating()
+                .install(FloatingOverride::style(item_style()))
                 .opacity(opacity)
                 .on_tap(move |env: Environment| {
                     action(&env).report_extraction();
@@ -211,7 +213,8 @@ impl View for FloatingActionButtonMenu {
             .size(CLOSE_BUTTON_ICON_SIZE, CLOSE_BUTTON_ICON_SIZE)
             .foreground(OnPrimary)
             .size(CLOSE_BUTTON_CONTAINER, CLOSE_BUTTON_CONTAINER)
-            .floating_with(toggle_style())
+            .floating()
+            .install(FloatingOverride::style(toggle_style()))
             .on_tap(move |_env: Environment| {
                 expanded_for_toggle.toggle();
             })
@@ -240,8 +243,8 @@ impl View for FloatingActionButtonMenu {
 /// .list-item.container.color = primary-container` at
 /// `md.comp.fab-menu.menu-item.container.elevation = level0`, fully rounded.
 /// Hover and keyboard focus rise to level4, a press to level3.
-fn item_style() -> waterui::style::FloatingStyle {
-    let mut style = waterui::style::FloatingStyle {
+fn item_style() -> FloatingStyle {
+    let mut style = FloatingStyle {
         container_color: PrimaryContainer.into(),
         content_color: OnPrimaryContainer.into(),
         state_layer_color: OnPrimaryContainer.into(),
@@ -251,7 +254,7 @@ fn item_style() -> waterui::style::FloatingStyle {
         minimum_width: 0.0,
         minimum_height: f64::from(ITEM_HEIGHT),
         disabled_content_opacity: 0.38,
-        ..waterui::style::FloatingStyle::default()
+        ..FloatingStyle::default()
     };
     crate::elevation::apply_to_floating_style_states(
         &mut style,
@@ -267,8 +270,8 @@ fn item_style() -> waterui::style::FloatingStyle {
 
 /// The close-button chrome: `md.comp.fab-menu.primary.close-button
 /// .container.color = primary` at `container.elevation = level3`.
-fn toggle_style() -> waterui::style::FloatingStyle {
-    let mut style = waterui::style::FloatingStyle {
+fn toggle_style() -> FloatingStyle {
+    let mut style = FloatingStyle {
         container_color: Primary.into(),
         content_color: OnPrimary.into(),
         state_layer_color: OnPrimary.into(),
@@ -278,7 +281,7 @@ fn toggle_style() -> waterui::style::FloatingStyle {
         minimum_width: 0.0,
         minimum_height: f64::from(CLOSE_BUTTON_CONTAINER),
         disabled_content_opacity: 0.38,
-        ..waterui::style::FloatingStyle::default()
+        ..FloatingStyle::default()
     };
     crate::elevation::apply_to_floating_style(&mut style, MaterialElevationLevel::LEVEL3);
     style

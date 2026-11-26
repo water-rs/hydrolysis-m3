@@ -3,11 +3,11 @@
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
+use hydrolysis_style::theme::{FloatingOverride, FloatingStyle};
 use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui::color::Color;
 use waterui::interaction::InteractionState;
 use waterui::layout::padding::EdgeInsets;
-use waterui::style::FloatingStyle;
 use waterui::{Environment, Signal, Str, View, ViewExt as _};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
@@ -292,7 +292,8 @@ where
             .size(size.icon, size.icon)
             .padding_with(size.icon_padding())
             .size(size.container, size.container)
-            .floating_with(floating_style)
+            .floating()
+            .install(FloatingOverride::style(floating_style))
             .on_tap(move |env: Environment| {
                 action(&env).report_extraction();
             })
@@ -413,7 +414,8 @@ where
                 0.0,
                 EXTENDED_FAB_TRAILING_SPACE,
             ))
-            .floating_with(floating_style)
+            .floating()
+            .install(FloatingOverride::style(floating_style))
             .on_tap(move |env: Environment| {
                 action(&env).report_extraction();
             })
@@ -526,5 +528,35 @@ mod tests {
         assert_eq!(EXTENDED_FAB_MINIMUM_WIDTH, 80.0);
         assert_eq!(EXTENDED_FAB_LEADING_SPACE_WITHOUT_ICON, 20.0);
         assert_eq!(EXTENDED_FAB_TRAILING_SPACE, 20.0);
+    }
+
+    #[test]
+    fn material3_floating_look_uses_baseline_fab_metrics_and_hover_elevation() {
+        use hydrolysis_style::Style as _;
+        use hydrolysis_style::draw::kurbo::Rect;
+        use hydrolysis_style::theme::{Inputs, WidgetTheme as _};
+        use waterui::Environment;
+        use waterui::interaction::InteractionState;
+
+        use crate::Material3;
+
+        let style = Material3::defaults();
+        let mut env = Environment::new();
+        style.install_tokens(&mut env);
+
+        let look = style.floating(&env);
+        assert_eq!(look.minimum_width(), 56.0);
+        assert_eq!(look.minimum_height(), 56.0);
+
+        let elevation = look.surface().get_elevation();
+        let frame = Rect::new(0.0, 0.0, 56.0, 56.0);
+        let rest = elevation.target(&Inputs::at_rest(frame, InteractionState::empty(), &()));
+        let hovered = elevation.target(&Inputs::at_rest(frame, InteractionState::HOVERED, &()));
+        assert!(
+            hovered.key.sigma > rest.key.sigma,
+            "hovered floating elevation must rise above rest ({} vs {})",
+            hovered.key.sigma,
+            rest.key.sigma
+        );
     }
 }
