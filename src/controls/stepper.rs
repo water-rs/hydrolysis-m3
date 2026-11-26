@@ -23,8 +23,8 @@ use waterui_graphics::color::Color;
 use crate::color::{OnSurface, OnSurfaceVariant, SurfaceContainer};
 use crate::controls::button::{disabled_paint, interactive};
 use crate::dimensions::{
-    STEPPER_BUTTON_SIZE, STEPPER_ICON_SIZE, STEPPER_INNER_CORNER_RADIUS,
-    STEPPER_PRESSED_INNER_CORNER_RADIUS,
+    STEPPER_BUTTON_SIZE, STEPPER_BUTTON_SPACING, STEPPER_ICON_SIZE, STEPPER_INNER_CORNER_RADIUS,
+    STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
 };
 use crate::icon_paths::{IconGrid, add, remove};
 use crate::theme::colors::{DISABLED_CONTAINER_OPACITY, DISABLED_CONTENT_OPACITY};
@@ -48,8 +48,8 @@ pub fn look(spec: &StepperSpec, env: &Environment) -> StepperLook {
         end(End::Increment, direction, env),
         Size::new(STEPPER_BUTTON_SIZE, STEPPER_BUTTON_SIZE),
     )
-    .spacing(2.0)
-    .label_spacing(8.0)
+    .spacing(STEPPER_BUTTON_SPACING)
+    .label_spacing(STEPPER_LABEL_SPACING)
 }
 
 /// One end's chrome: the `surface-container` container on the end's
@@ -126,8 +126,8 @@ fn glyph(end: End, frame: Rect) -> BezPath {
 mod tests {
     use super::{End, corners, glyph, look, outer_on_left};
     use crate::dimensions::{
-        STEPPER_BUTTON_SIZE, STEPPER_ICON_SIZE, STEPPER_INNER_CORNER_RADIUS,
-        STEPPER_PRESSED_INNER_CORNER_RADIUS,
+        STEPPER_BUTTON_SIZE, STEPPER_BUTTON_SPACING, STEPPER_ICON_SIZE,
+        STEPPER_INNER_CORNER_RADIUS, STEPPER_LABEL_SPACING, STEPPER_PRESSED_INNER_CORNER_RADIUS,
     };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
@@ -153,13 +153,14 @@ mod tests {
         let look = look(&spec, &env);
         assert_eq!(look.button().width, STEPPER_BUTTON_SIZE);
         assert_eq!(look.button().height, STEPPER_BUTTON_SIZE);
-        assert_eq!(look.get_spacing(), 2.0);
-        assert_eq!(look.get_label_spacing(), 8.0);
+        assert_eq!(look.get_spacing(), STEPPER_BUTTON_SPACING);
+        assert_eq!(look.get_label_spacing(), STEPPER_LABEL_SPACING);
         assert_eq!(STEPPER_BUTTON_SIZE, 40.0);
         assert_eq!(STEPPER_ICON_SIZE, 24.0);
-        // ConnectedButtonGroupSmallTokens: InnerCornerCornerSize
+        // ConnectedButtonGroupSmallTokens: BetweenSpace, InnerCornerCornerSize
         // (CornerValueSmall) and PressedInnerCornerCornerSize
         // (CornerValueExtraSmall).
+        assert_eq!(STEPPER_BUTTON_SPACING, 2.0);
         assert_eq!(STEPPER_INNER_CORNER_RADIUS, 8.0);
         assert_eq!(STEPPER_PRESSED_INNER_CORNER_RADIUS, 4.0);
     }

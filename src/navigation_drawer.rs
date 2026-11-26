@@ -357,7 +357,7 @@ where
         .a11y_children(AccessibilityChildren::ExcludeDescendants)
         .install(interaction_chrome_radius(
             state_layer_color,
-            f64::from(NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE),
+            NAVIGATION_DRAWER_ITEM_CONTAINER_SHAPE,
         ))
     }
 }

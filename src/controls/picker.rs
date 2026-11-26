@@ -22,7 +22,8 @@ use crate::controls::button::disabled_paint;
 use crate::controls::input::{self, IndicatorColors};
 use crate::dimensions::{
     PICKER_CHEVRON_HALF_HEIGHT, PICKER_CHEVRON_HALF_WIDTH, PICKER_CHEVRON_STROKE_WIDTH,
-    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE,
+    PICKER_HORIZONTAL_INSET, PICKER_INDICATOR_SPACE, PICKER_LABEL_SPACING, PICKER_MENU_MIN_WIDTH,
+    PICKER_MENU_POPUP_TOP_SPACING, PICKER_MIN_HEIGHT, PICKER_VERTICAL_INSET,
 };
 use crate::theme::colors::DISABLED_CONTENT_OPACITY;
 use crate::theme::typography;
@@ -44,13 +45,13 @@ pub fn look(_spec: &PickerSpec, env: &Environment) -> MenuPickerLook {
 /// and 56 tall, inset 16 by 8, with 18 reserved for the chevron.
 const fn layout() -> MenuPickerLayout {
     MenuPickerLayout {
-        min_width: 280.0,
-        min_height: 56.0,
-        horizontal_inset: 16.0,
-        vertical_inset: 8.0,
-        label_spacing: 8.0,
-        indicator_space: 18.0,
-        popup_gap: 4.0,
+        min_width: PICKER_MENU_MIN_WIDTH,
+        min_height: PICKER_MIN_HEIGHT,
+        horizontal_inset: PICKER_HORIZONTAL_INSET,
+        vertical_inset: PICKER_VERTICAL_INSET,
+        label_spacing: PICKER_LABEL_SPACING,
+        indicator_space: PICKER_INDICATOR_SPACE,
+        popup_gap: PICKER_MENU_POPUP_TOP_SPACING,
     }
 }
 
@@ -67,7 +68,7 @@ fn chrome(env: &Environment) -> Chrome {
 /// The active indicator's rect: a line along the field's bottom edge, 1 tall
 /// and 2 while focused.
 fn indicator_rect(inputs: &Inputs<'_, ()>) -> Rect {
-    let height = input::indicator_height(inputs.state);
+    let height = f64::from(input::indicator_height(inputs.state));
     Rect::new(
         inputs.frame.x0,
         inputs.frame.y1 - height,
@@ -96,7 +97,8 @@ fn active_indicator(env: &Environment) -> Custom<(), (Driven<Rect>, Driven<Paint
 
 /// The dropdown chevron, centred in the indicator space at the trailing end.
 fn chevron_path(frame: Rect) -> BezPath {
-    let x = PICKER_INDICATOR_SPACE.mul_add(-0.5, frame.x1 - PICKER_HORIZONTAL_INSET);
+    let x = f64::from(PICKER_INDICATOR_SPACE)
+        .mul_add(-0.5, frame.x1 - f64::from(PICKER_HORIZONTAL_INSET));
     let y = frame.center().y;
     let mut path = BezPath::new();
     path.move_to(Point::new(
@@ -178,8 +180,14 @@ mod tests {
         let rest = indicator_rect(&at(InteractionState::empty()));
         let focused = indicator_rect(&at(InteractionState::FOCUSED));
 
-        assert_eq!(rest.height(), INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT);
-        assert_eq!(focused.height(), INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT);
+        assert_eq!(
+            rest.height(),
+            f64::from(INPUT_FILLED_ACTIVE_INDICATOR_HEIGHT)
+        );
+        assert_eq!(
+            focused.height(),
+            f64::from(INPUT_FILLED_FOCUS_ACTIVE_INDICATOR_HEIGHT)
+        );
         assert_eq!(rest.y1, FIELD.y1);
         assert_eq!(focused.y1, FIELD.y1);
         assert_eq!(rest.width(), FIELD.width());
@@ -221,7 +229,8 @@ mod tests {
 
         assert!((bounds.center().y - FIELD.center().y).abs() < 1e-6);
         assert!(
-            (bounds.center().x - (FIELD.x1 - 16.0 - PICKER_INDICATOR_SPACE / 2.0)).abs() < 1e-6
+            (bounds.center().x - (FIELD.x1 - 16.0 - f64::from(PICKER_INDICATOR_SPACE) / 2.0)).abs()
+                < 1e-6
         );
     }
 

@@ -20,10 +20,10 @@ use crate::dimensions::{
     LIST_CONTROL_ICON_SIZE, LIST_CONTROL_STATE_LAYER_SIZE, LIST_DELETE_CONTROL_WIDTH,
     LIST_DIVIDER_LEADING_INSET, LIST_DIVIDER_TRAILING_INSET, LIST_HORIZONTAL_INSET,
     LIST_MOVE_CONTROL_WIDTH, LIST_MOVE_STATE_LAYER_SIZE, LIST_ONE_LINE_ROW_HEIGHT,
-    LIST_ROW_DRAG_SLOP, LIST_SECTION_FOOTER_HEIGHT, LIST_SECTION_HEADER_HEIGHT,
-    LIST_SWIPE_ICON_EDGE_INSET, LIST_SWIPE_ICON_MIN_SCALE, LIST_SWIPE_ICON_SIZE,
-    LIST_TRAILING_CONTROL_SPACING, LIST_TRAILING_CONTROL_VERTICAL_INSET, LIST_VERTICAL_INSET,
-    SHAPE_CORNER_LARGE,
+    LIST_REORDER_THRESHOLD, LIST_ROW_DRAG_SLOP, LIST_SECTION_FOOTER_HEIGHT,
+    LIST_SECTION_HEADER_HEIGHT, LIST_SWIPE_DISMISS_THRESHOLD, LIST_SWIPE_ICON_EDGE_INSET,
+    LIST_SWIPE_ICON_MIN_SCALE, LIST_SWIPE_ICON_SIZE, LIST_TRAILING_CONTROL_SPACING,
+    LIST_TRAILING_CONTROL_VERTICAL_INSET, LIST_VERTICAL_INSET, SHAPE_CORNER_LARGE,
 };
 use crate::elevation::{MaterialElevationLevel, cast_shadows};
 use crate::icon_paths::{self, IconGrid};
@@ -71,8 +71,8 @@ pub const fn metrics() -> ListMetrics {
 /// and a released row settles on the fast spatial spring.
 fn gestures() -> ListGestures {
     ListGestures {
-        swipe_threshold: 0.5,
-        reorder_threshold: 0.5,
+        swipe_threshold: LIST_SWIPE_DISMISS_THRESHOLD,
+        reorder_threshold: LIST_REORDER_THRESHOLD,
         slop: LIST_ROW_DRAG_SLOP,
         settle: motion::fast_spatial(),
     }
@@ -198,7 +198,7 @@ fn lifted_row(env: &Environment) -> LiftedRow {
         |recorder, frame, (key, ambient, paint)| {
             let shape = RoundedRect::from_rect(
                 frame,
-                RoundedRectRadii::from_single_radius(SHAPE_CORNER_LARGE),
+                RoundedRectRadii::from_single_radius(f64::from(SHAPE_CORNER_LARGE)),
             );
             recorder.shadow(shape, key);
             recorder.shadow(shape, ambient);

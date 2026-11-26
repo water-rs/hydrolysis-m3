@@ -143,7 +143,7 @@ where
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
             .install(interaction_chrome_radius(
                 LabelColor::default(),
-                f64::from(ASSIST_CHIP_CONTAINER_SHAPE),
+                ASSIST_CHIP_CONTAINER_SHAPE,
             ))
     }
 }
@@ -370,7 +370,7 @@ where
         .a11y_state(accessibility_state)
         .install(interaction_chrome_radius(
             state_layer_color,
-            f64::from(FILTER_CHIP_CONTAINER_SHAPE),
+            FILTER_CHIP_CONTAINER_SHAPE,
         ))
     }
 }
@@ -405,7 +405,7 @@ where
                 .a11y_children(AccessibilityChildren::ExcludeDescendants)
                 .install(interaction_chrome_radius(
                     OnSurfaceVariant,
-                    f64::from(INPUT_CHIP_CONTAINER_SHAPE),
+                    INPUT_CHIP_CONTAINER_SHAPE,
                 )),
             RemoveButton {
                 accessibility_label: remove_accessibility_label,
@@ -473,7 +473,7 @@ impl View for RemoveButton {
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
             .install(interaction_chrome_radius(
                 OnSurfaceVariant,
-                f64::from(INPUT_CHIP_TRAILING_ICON_SIZE * 0.5),
+                INPUT_CHIP_TRAILING_ICON_SIZE * 0.5,
             ))
     }
 }

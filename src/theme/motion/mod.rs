@@ -25,8 +25,14 @@ use waterui::{Computed, Signal};
 
 use super::dimensions::MINIMUM_TOUCH_TARGET;
 #[cfg(feature = "navigation")]
+use super::dimensions::NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE;
+#[cfg(feature = "navigation")]
 use hydrolysis_style::theme::NavigationMotion;
 use tokens::{duration, easing, motion};
+
+/// Minimum ripple diameter (Material Web `MINIMUM_PRESS_DIAMETER`): small
+/// targets still produce a ripple at least this wide.
+pub const RIPPLE_MINIMUM_DIAMETER: f32 = 48.0;
 
 /// `StateTokens.HoverStateLayerOpacity`.
 pub const HOVER_STATE_LAYER_OPACITY: f32 = 0.08;
@@ -61,13 +67,13 @@ const RIPPLE_STATE_LAYER_FADE: Duration = Duration::from_millis(280);
 const RIPPLE_TOUCH_DELAY: Duration = Duration::from_millis(70);
 
 /// The Material ripple: a wave of [`RIPPLE_INITIAL_SCALE`] of
-/// the surface diagonal — floored at 48 dp (`MINIMUM_PRESS_DIAMETER`) — that
-/// grows from the press point to full size while drifting to the surface centre,
+/// the surface diagonal — floored at [`RIPPLE_MINIMUM_DIAMETER`] — that grows
+/// from the press point to full size while drifting to the surface centre,
 /// fades in linearly as it grows, and fades out only once its growth has
 /// completed, so a release never plays the growth backwards.
 pub const fn ripple() -> Ripple {
     Ripple {
-        min_diameter: 48.0,
+        min_diameter: RIPPLE_MINIMUM_DIAMETER,
         initial_scale: RIPPLE_INITIAL_SCALE,
         drift: 1.0,
         grow: material_standard(RIPPLE_RADIUS_IN),
@@ -92,14 +98,17 @@ pub fn chrome() -> Motion {
     }
 }
 
+/// Android's `ViewConfiguration` touch slop: a touch that moves no farther
+/// than this while its ripple waits stays a press.
+const TOUCH_SLOP: f32 = 8.0;
+
 /// Where a Material control takes touches: at least the 48dp
 /// `minimumInteractiveComponentSize`, a touch press holding its ripple back
-/// for [`RIPPLE_TOUCH_DELAY`] and surviving the 8dp Android `ViewConfiguration`
-/// touch slop meanwhile.
+/// for [`RIPPLE_TOUCH_DELAY`] and surviving the touch slop meanwhile.
 pub const fn hit_region() -> HitRegion {
     HitRegion::NONE
         .minimum(Size::new(MINIMUM_TOUCH_TARGET, MINIMUM_TOUCH_TARGET))
-        .slop(8.0)
+        .slop(TOUCH_SLOP)
         .press_delay(RIPPLE_TOUCH_DELAY)
 }
 
@@ -193,7 +202,7 @@ pub const fn navigation() -> NavigationMotion {
     NavigationMotion {
         transition_duration: duration::LONG_1,
         transition_easing: navigation_transition_easing(),
-        shared_axis_slide_distance: 30.0,
+        shared_axis_slide_distance: NAVIGATION_SHARED_AXIS_SLIDE_DISTANCE,
         fade_through_threshold: NAVIGATION_FADE_THROUGH_THRESHOLD,
     }
 }

@@ -1,5 +1,4 @@
 use hydrolysis_style::draw::WorkingColor;
-use hydrolysis_style::draw::kurbo::RoundedRectRadii;
 use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
@@ -63,11 +62,8 @@ pub fn interaction_chrome(
 }
 
 /// [`interaction_chrome`] on corners of `radius`.
-pub fn interaction_chrome_radius(state_layer_color: impl Into<Color>, radius: f64) -> Chrome {
-    interaction_chrome(
-        state_layer_color,
-        Corners::Radii(RoundedRectRadii::from_single_radius(radius)),
-    )
+pub fn interaction_chrome_radius(state_layer_color: impl Into<Color>, radius: f32) -> Chrome {
+    interaction_chrome(state_layer_color, Corners::from(radius))
 }
 
 pub fn conditional_color(

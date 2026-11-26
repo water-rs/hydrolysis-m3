@@ -20,7 +20,7 @@ pub type Toggled<T> = Driven<T, bool>;
 
 /// `md.comp.switch.state-layer.size` / `md.comp.checkbox.state-layer.size`
 /// over two: the unbounded state layer's radius.
-pub const STATE_LAYER_RADIUS: f64 = 20.0;
+pub const STATE_LAYER_RADIUS: f32 = 20.0;
 
 /// The Material toggle's motion: the control chrome's, with the value
 /// running the 200 ms standard easing whatever animation the change names.
@@ -89,9 +89,9 @@ pub(super) fn ripple_motion() -> Motion {
 
 pub(super) fn ripple_radius(inputs: &Inputs<'_, bool>) -> f64 {
     if inputs.state.contains(InteractionState::PRESSED) {
-        STATE_LAYER_RADIUS
+        f64::from(STATE_LAYER_RADIUS)
     } else {
-        STATE_LAYER_RADIUS * RIPPLE_INITIAL_SCALE
+        f64::from(STATE_LAYER_RADIUS) * RIPPLE_INITIAL_SCALE
     }
 }
 
@@ -108,7 +108,7 @@ pub(super) fn ripple_opacity(inputs: &Inputs<'_, bool>) -> f64 {
 /// on and on-surface while off.
 pub fn centered_state_layer(tint: &Color, env: &Environment) -> ShapePart {
     let circle = Driven::new(|inputs: &Inputs<'_, bool>| {
-        Circle::new(inputs.frame.center(), STATE_LAYER_RADIUS)
+        Circle::new(inputs.frame.center(), f64::from(STATE_LAYER_RADIUS))
     });
     Custom::new(
         (circle, layer_paint(tint, env, state_layer_opacity)),

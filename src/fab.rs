@@ -299,7 +299,7 @@ where
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
             .install(interaction_chrome_radius(
                 Tokens::content_color(),
-                f64::from(size.corner_radius),
+                size.corner_radius,
             ))
     }
 }
@@ -421,7 +421,7 @@ where
             .a11y_children(AccessibilityChildren::ExcludeDescendants)
             .install(interaction_chrome_radius(
                 Tokens::content_color(),
-                f64::from(EXTENDED_FAB_SHAPE),
+                EXTENDED_FAB_SHAPE,
             ))
     }
 }
@@ -446,8 +446,8 @@ where
         clip_radius,
         content_inset_x: 0.0,
         content_inset_y: 0.0,
-        minimum_width: minimum_width.into(),
-        minimum_height: minimum_height.into(),
+        minimum_width,
+        minimum_height,
         disabled_content_opacity: 0.38,
         ..FloatingStyle::default()
     };
