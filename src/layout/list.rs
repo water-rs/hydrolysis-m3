@@ -17,13 +17,10 @@ use crate::color::{
 };
 use crate::controls::button::{interactive, solid_paint};
 use crate::dimensions::{
-    LIST_CONTROL_ICON_SIZE, LIST_CONTROL_STATE_LAYER_SIZE, LIST_DELETE_CONTROL_WIDTH,
-    LIST_DIVIDER_LEADING_INSET, LIST_DIVIDER_TRAILING_INSET, LIST_HORIZONTAL_INSET,
-    LIST_MOVE_CONTROL_WIDTH, LIST_MOVE_STATE_LAYER_SIZE, LIST_ONE_LINE_ROW_HEIGHT,
-    LIST_REORDER_THRESHOLD, LIST_ROW_DRAG_SLOP, LIST_SECTION_FOOTER_HEIGHT,
-    LIST_SECTION_HEADER_HEIGHT, LIST_SWIPE_DISMISS_THRESHOLD, LIST_SWIPE_ICON_EDGE_INSET,
-    LIST_SWIPE_ICON_MIN_SCALE, LIST_SWIPE_ICON_SIZE, LIST_TRAILING_CONTROL_SPACING,
-    LIST_TRAILING_CONTROL_VERTICAL_INSET, LIST_VERTICAL_INSET, SHAPE_CORNER_LARGE,
+    LIST_CONTROL_ICON_SIZE, LIST_CONTROL_STATE_LAYER_SIZE, LIST_MOVE_STATE_LAYER_SIZE,
+    LIST_REORDER_THRESHOLD, LIST_ROW_DRAG_SLOP, LIST_SWIPE_DISMISS_THRESHOLD,
+    LIST_SWIPE_ICON_EDGE_INSET, LIST_SWIPE_ICON_MIN_SCALE, LIST_SWIPE_ICON_SIZE,
+    SHAPE_CORNER_LARGE,
 };
 use crate::elevation::{MaterialElevationLevel, cast_shadows};
 use crate::icon_paths::{self, IconGrid};
@@ -49,19 +46,10 @@ type LiftedRow = Custom<(), (Driven<ShadowCast>, Driven<ShadowCast>, Driven<Pain
 
 pub const fn metrics() -> ListMetrics {
     ListMetrics::new(
-        ListRowMetrics::new(
-            LIST_ONE_LINE_ROW_HEIGHT,
-            LIST_HORIZONTAL_INSET,
-            LIST_VERTICAL_INSET,
-        ),
-        ListDividerMetrics::new(LIST_DIVIDER_LEADING_INSET, LIST_DIVIDER_TRAILING_INSET),
-        ListTrailingControlMetrics::new(
-            LIST_MOVE_CONTROL_WIDTH,
-            LIST_DELETE_CONTROL_WIDTH,
-            LIST_TRAILING_CONTROL_SPACING,
-            LIST_TRAILING_CONTROL_VERTICAL_INSET,
-        ),
-        ListSectionMetrics::new(LIST_SECTION_HEADER_HEIGHT, LIST_SECTION_FOOTER_HEIGHT),
+        ListRowMetrics::new(56.0, 16.0, 10.0),
+        ListDividerMetrics::new(16.0, 16.0),
+        ListTrailingControlMetrics::new(48.0, 48.0, 8.0, 4.0),
+        ListSectionMetrics::new(48.0, 40.0),
     )
 }
 
@@ -252,38 +240,24 @@ fn swipe_glyph(frame: Rect, progress: f64) -> hydrolysis_style::draw::kurbo::Bez
 #[cfg(test)]
 mod tests {
     use super::{gestures, metrics, swipe_glyph};
-    use crate::dimensions::{
-        LIST_DELETE_CONTROL_WIDTH, LIST_DIVIDER_LEADING_INSET, LIST_DIVIDER_TRAILING_INSET,
-        LIST_HORIZONTAL_INSET, LIST_MOVE_CONTROL_WIDTH, LIST_MOVE_STATE_LAYER_SIZE,
-        LIST_ONE_LINE_ROW_HEIGHT, LIST_TRAILING_CONTROL_SPACING,
-        LIST_TRAILING_CONTROL_VERTICAL_INSET, LIST_VERTICAL_INSET,
-    };
+    use crate::dimensions::LIST_MOVE_STATE_LAYER_SIZE;
     use hydrolysis_style::draw::kurbo::{Rect, Shape as _};
 
     #[test]
     fn list_metrics_match_compose_list_tokens() {
         let metrics = metrics();
 
-        assert_eq!(metrics.one_line_row_height, LIST_ONE_LINE_ROW_HEIGHT);
-        assert_eq!(metrics.horizontal_inset, LIST_HORIZONTAL_INSET);
-        assert_eq!(metrics.vertical_inset, LIST_VERTICAL_INSET);
-        assert_eq!(metrics.divider_leading_inset, LIST_DIVIDER_LEADING_INSET);
-        assert_eq!(metrics.divider_trailing_inset, LIST_DIVIDER_TRAILING_INSET);
-        assert_eq!(metrics.move_control_width, LIST_MOVE_CONTROL_WIDTH);
-        assert_eq!(metrics.delete_control_width, LIST_DELETE_CONTROL_WIDTH);
-        assert_eq!(
-            metrics.trailing_control_spacing,
-            LIST_TRAILING_CONTROL_SPACING
-        );
-        assert_eq!(
-            metrics.trailing_control_vertical_inset,
-            LIST_TRAILING_CONTROL_VERTICAL_INSET
-        );
-        assert_eq!(LIST_ONE_LINE_ROW_HEIGHT, 56.0);
-        assert_eq!(LIST_HORIZONTAL_INSET, 16.0);
-        assert_eq!(LIST_VERTICAL_INSET, 10.0);
-        assert_eq!(LIST_DIVIDER_LEADING_INSET, 16.0);
-        assert_eq!(LIST_DIVIDER_TRAILING_INSET, 16.0);
+        assert_eq!(metrics.one_line_row_height, 56.0);
+        assert_eq!(metrics.horizontal_inset, 16.0);
+        assert_eq!(metrics.vertical_inset, 10.0);
+        assert_eq!(metrics.divider_leading_inset, 16.0);
+        assert_eq!(metrics.divider_trailing_inset, 16.0);
+        assert_eq!(metrics.move_control_width, 48.0);
+        assert_eq!(metrics.delete_control_width, 48.0);
+        assert_eq!(metrics.trailing_control_spacing, 8.0);
+        assert_eq!(metrics.trailing_control_vertical_inset, 4.0);
+        assert_eq!(metrics.section_header_height, 48.0);
+        assert_eq!(metrics.section_footer_height, 40.0);
     }
 
     /// The renderer's constants before the look carried them: a swipe
