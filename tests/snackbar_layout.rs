@@ -1,6 +1,6 @@
 //! Snackbar layout under Material 3: the bar hugs its message (pinned at the
-//! `SnackbarTheme` `min_width` floor when a close control rides along) rather
-//! than stretching to the `max_width` cap.
+//! Material 3 `SnackbarLook` `min_width` floor when a close control rides along)
+//! rather than stretching to the `max_width` cap.
 //!
 //! Moved out of hydrolysis's own suite under water-rs/hydrolysis-m3#113 —
 //! origin: waterui `tests/snackbar_layout.rs`. The assertions mount
@@ -12,22 +12,17 @@ use std::rc::Rc;
 use std::time::Duration;
 
 use waterui::prelude::*;
-use waterui::snackbar::{Snackbar, SnackbarManager, SnackbarTheme};
+use waterui::snackbar::{Snackbar, SnackbarManager};
 use waterui_testing::{OffscreenApp, UiBuilder};
 
-const MIN_WIDTH: f32 = 300.0;
-const MAX_WIDTH: f32 = 600.0;
+const MIN_WIDTH: f32 = 288.0;
+const MAX_WIDTH: f32 = 568.0;
 
 /// Mounts an app whose window shows `snackbar`, and returns it settled.
 fn show(ui: UiBuilder, snackbar: Snackbar) -> (OffscreenApp, SnackbarManager) {
-    let theme = SnackbarTheme {
-        min_width: MIN_WIDTH,
-        max_width: MAX_WIDTH,
-        ..SnackbarTheme::default()
-    };
     let captured = Rc::new(RefCell::new(None));
     let captured_mount = Rc::clone(&captured);
-    let mut app = ui.with(theme).mount_offscreen(move || {
+    let mut app = ui.mount_offscreen(move || {
         let captured = Rc::clone(&captured_mount);
         SnackbarManager::host(move |manager: SnackbarManager| {
             *captured.borrow_mut() = Some(manager);
