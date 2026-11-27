@@ -574,6 +574,11 @@ pub const NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE: f32 = 4.0;
 /// horizontal item's icon and its label inside the indicator.
 #[cfg(feature = "navigation")]
 pub const NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE: f32 = 4.0;
+/// `md.comp.nav-bar.item.icon.size` and
+/// `md.comp.primary-navigation-tab.with-icon.icon.size`: the icon size of
+/// a navigation bar or primary navigation tab item.
+#[cfg(feature = "navigation")]
+pub const NAV_BAR_ITEM_ICON_SIZE: f32 = 24.0;
 /// The M3 medium window width class boundary: at and above it the
 /// navigation bar uses horizontal items.
 #[cfg(feature = "navigation")]
