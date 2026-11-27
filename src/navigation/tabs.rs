@@ -18,8 +18,9 @@ use crate::color::{
 use crate::controls::button::{interactive, solid_paint};
 use crate::dimensions::{
     MEDIUM_WINDOW_WIDTH, NAV_BAR_HEIGHT, NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE,
-    NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
-    TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
+    NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_ICON_SIZE,
+    NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE, TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET,
+    TABS_BUTTON_MIN_WIDTH,
 };
 use crate::navigation_bar::{
     NAVIGATION_BAR_ACTIVE_INDICATOR_HEIGHT, NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH,
@@ -37,24 +38,28 @@ use waterui_graphics::color::Color;
 use waterui_navigation::tab::TabStyle;
 
 /// The measures of the compact bar's vertical items
-/// (`md.comp.primary-navigation-tab.container.height` and
-/// `md.comp.nav-bar.item.vertical.icon-label-space`).
-const VERTICAL: TabsMetrics = TabsMetrics::new(
-    TABS_BAR_HEIGHT,
-    TABS_BUTTON_MIN_WIDTH,
-    TABS_BUTTON_HORIZONTAL_INSET,
-    NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
-);
+/// (`md.comp.primary-navigation-tab.container.height`,
+/// `md.comp.nav-bar.item.vertical.icon-label-space`, and
+/// `md.comp.primary-navigation-tab.with-icon.icon.size`).
+const VERTICAL: TabsMetrics = TabsMetrics {
+    bar_height: TABS_BAR_HEIGHT,
+    button_min_width: TABS_BUTTON_MIN_WIDTH,
+    button_horizontal_inset: TABS_BUTTON_HORIZONTAL_INSET,
+    icon_label_spacing: NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
+    icon_size: NAV_BAR_ITEM_ICON_SIZE,
+};
 
 /// The measures of the medium-width bar's horizontal items: the
-/// `md.comp.nav-bar` container and
-/// `md.comp.nav-bar.item.horizontal.icon-label-space`.
-const HORIZONTAL: TabsMetrics = TabsMetrics::new(
-    NAV_BAR_HEIGHT,
-    TABS_BUTTON_MIN_WIDTH,
-    TABS_BUTTON_HORIZONTAL_INSET,
-    NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE,
-);
+/// `md.comp.nav-bar` container,
+/// `md.comp.nav-bar.item.horizontal.icon-label-space`, and
+/// `md.comp.nav-bar.item.icon.size`.
+const HORIZONTAL: TabsMetrics = TabsMetrics {
+    bar_height: NAV_BAR_HEIGHT,
+    button_min_width: TABS_BUTTON_MIN_WIDTH,
+    button_horizontal_inset: TABS_BUTTON_HORIZONTAL_INSET,
+    icon_label_spacing: NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE,
+    icon_size: NAV_BAR_ITEM_ICON_SIZE,
+};
 
 /// What a tab item's highlight draws: the pill as a shape, and its paint.
 type Highlight = Custom<TabItem, (Driven<RoundedRect, TabItem>, Driven<Paint, TabItem>)>;
@@ -218,8 +223,9 @@ mod tests {
     use crate::MaterialColorScheme;
     use crate::dimensions::{
         MEDIUM_WINDOW_WIDTH, NAV_BAR_HEIGHT, NAV_BAR_ITEM_HORIZONTAL_ICON_LABEL_SPACE,
-        NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE,
-        TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET, TABS_BUTTON_MIN_WIDTH,
+        NAV_BAR_ITEM_HORIZONTAL_INDICATOR_HEIGHT, NAV_BAR_ITEM_ICON_SIZE,
+        NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE, TABS_BAR_HEIGHT, TABS_BUTTON_HORIZONTAL_INSET,
+        TABS_BUTTON_MIN_WIDTH,
     };
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::Rect;
@@ -253,6 +259,9 @@ mod tests {
         // md.comp.nav-bar.item.vertical.icon-label-space = 4
         assert_eq!(NAV_BAR_ITEM_VERTICAL_ICON_LABEL_SPACE, 4.0);
         assert_eq!(metrics.icon_label_spacing, 4.0);
+        // md.comp.primary-navigation-tab.with-icon.icon.size = 24
+        assert_eq!(NAV_BAR_ITEM_ICON_SIZE, 24.0);
+        assert_eq!(metrics.icon_size, 24.0);
     }
 
     #[test]
@@ -284,6 +293,9 @@ mod tests {
         assert_eq!(metrics, HORIZONTAL);
         assert_eq!(metrics.icon_label_spacing, 4.0);
         assert_eq!(metrics.bar_height, NAV_BAR_HEIGHT);
+        // md.comp.nav-bar.item.icon.size = 24
+        assert_eq!(metrics.icon_size, NAV_BAR_ITEM_ICON_SIZE);
+        assert_eq!(metrics.icon_size, 24.0);
     }
 
     fn vertical_item(placement: TabStyle, icon: Option<Rect>) -> TabItemGeometry {
