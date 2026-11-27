@@ -7,12 +7,12 @@ use hydrolysis_style::theme::{
     Border, ButtonLook, ButtonSpec, Chrome, CornerShape, Corners, Custom, Driven, Elevation,
     Inputs, Label, PressFeedback, Surface,
 };
-use waterui::contract_violation;
-use waterui::interaction::InteractionState;
-use waterui::reactive::zip::zip;
+use nami::zip::zip;
 use waterui_controls::button::ButtonStyle;
 use waterui_core::Environment;
+use waterui_core::contract_violation;
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 use crate::color::{OnPrimary, OnSurface, OnSurfaceVariant, OutlineVariant, Shadow};
 use crate::dimensions::{
@@ -145,7 +145,7 @@ pub fn label_color(style: ButtonStyle, icon_only: bool, tint: Color) -> Driven<C
     };
     // MD3 disabled button label: on-surface at the 38% disabled-content
     // opacity, regardless of variant.
-    waterui::interaction::StateValue::new(rest)
+    waterui_interaction::interaction::StateValue::new(rest)
         .when(
             InteractionState::DISABLED,
             Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY)),
@@ -296,14 +296,14 @@ mod tests {
     use hydrolysis_style::draw::kurbo::{Rect, Vec2};
     use hydrolysis_style::draw::{Paint, WorkingColor};
     use hydrolysis_style::theme::{ButtonLook, ButtonSpec, Corners, Fill, Inputs, SpecTint};
-    use waterui::interaction::InteractionState;
-    use waterui::theme::Tint;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
+    use waterui_controls::theme::Tint;
     use waterui_core::Environment;
     use waterui_core::Signal as _;
     use waterui_core::layout::LayoutDirection;
     use waterui_graphics::color::{Color, Working};
+    use waterui_interaction::interaction::InteractionState;
 
     fn env() -> Environment {
         let mut env = Environment::new();

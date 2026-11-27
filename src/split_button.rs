@@ -9,17 +9,18 @@
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
-use waterui::color::Color;
-use waterui::component::hstack;
-use waterui::interaction::{InteractionState, StateValue};
-use waterui::layout::padding::EdgeInsets;
-use waterui::prelude::dynamic::watch;
-use waterui::reactive::{SignalExt as _, binding};
-use waterui::shape::{CornerRadii, FilledShape, Path, RoundedRectangle, ShapeExt as _};
-use waterui::{AnyView, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::{SignalExt as _, binding};
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
+use waterui_core::dynamic::watch;
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{AnyView, Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_interaction::interaction::{InteractionState, StateValue};
+use waterui_layout::padding::EdgeInsets;
+use waterui_layout::stack::hstack;
+use waterui_shape::{CornerRadii, FilledShape, Path, RoundedRectangle, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 use hydrolysis_style::draw::kurbo::RoundedRectRadii;
@@ -365,7 +366,7 @@ struct ReactiveSplitShape<S> {
 
 impl<S> View for ReactiveSplitShape<S>
 where
-    S: waterui::Signal<Output = RoundedRectangle> + 'static,
+    S: nami::Signal<Output = RoundedRectangle> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let color = self.color;

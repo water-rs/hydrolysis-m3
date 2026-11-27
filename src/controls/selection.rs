@@ -7,10 +7,10 @@ use crate::theme::motion::{
 use hydrolysis_style::draw::kurbo::Circle;
 use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
 use hydrolysis_style::theme::{Custom, Driven, Inputs, Motion, Transition};
-use waterui::interaction::InteractionState;
-use waterui::reactive::Computed;
+use nami::Computed;
 use waterui_core::Environment;
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 /// A part drawing a shape and its paint.
 pub type ShapePart = Custom<bool, (Toggled<Circle>, Toggled<Paint>)>;

@@ -8,7 +8,7 @@ use material_color_utils::{
     theme_from_color,
     utils::color_utils::Argb,
 };
-use waterui::contract_violation;
+use waterui_core::contract_violation;
 use waterui_graphics::color::{Color as WaterColor, Srgb};
 
 const fn role(red: u8, green: u8, blue: u8) -> MaterialRoleColor {

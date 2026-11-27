@@ -15,10 +15,10 @@ use hydrolysis_style::draw::{Draw as _, Paint};
 use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Custom, Driven, Inputs, StepperLook, StepperSpec, Surface,
 };
-use waterui::interaction::InteractionState;
 use waterui_core::Environment;
 use waterui_core::layout::LayoutDirection;
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 use crate::color::{OnSurface, OnSurfaceVariant, SurfaceContainer};
 use crate::controls::button::{disabled_paint, interactive};
@@ -132,9 +132,9 @@ mod tests {
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii, Shape as _};
     use hydrolysis_style::theme::{Corners, Inputs, SpecTint, StepperSpec};
-    use waterui::interaction::InteractionState;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;
+    use waterui_interaction::interaction::InteractionState;
 
     const BOUNDS: Rect = Rect::new(0.0, 0.0, 40.0, 40.0);
 

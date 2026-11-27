@@ -1,15 +1,16 @@
 //! Material Design 3 elevation composed from `WaterUI` primitives.
 
+use crate::view_ext::ViewExt as _;
 #[cfg(feature = "list")]
 use hydrolysis_style::theme::{Driven, Inputs};
 use hydrolysis_style::theme::{FloatingElevation, FloatingStyle};
-use waterui::contract_violation;
-use waterui::interaction::{InteractionState, StateValue};
-use waterui::shape::RoundedRectangle;
-use waterui::style::Shadow as ViewShadow;
-use waterui::{Environment, View, ViewExt as _};
+use waterui_core::contract_violation;
+use waterui_core::{Environment, View};
 #[cfg(feature = "list")]
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::{InteractionState, StateValue};
+use waterui_shape::RoundedRectangle;
+use waterui_shape::style::Shadow as ViewShadow;
 
 use crate::color::Shadow;
 
@@ -155,7 +156,7 @@ impl ElevationTokens {
 #[derive(Debug, Clone)]
 pub(crate) struct LevelShadow {
     /// Shadow colour, already carrying the level's opacity.
-    pub color: waterui::color::Color,
+    pub color: waterui_graphics::color::Color,
     /// Vertical offset.
     pub offset_y: f32,
     /// Blur radius.

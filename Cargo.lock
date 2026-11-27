@@ -1824,22 +1824,30 @@ dependencies = [
 name = "hydrolysis-m3"
 version = "0.3.1"
 dependencies = [
+ "executor-core",
  "hydrolysis",
  "hydrolysis-style",
  "image",
  "material-color-utils",
+ "nami",
+ "native-executor",
  "num-traits",
  "pollster",
  "tracing",
  "waterkit-core",
  "waterui",
+ "waterui-accessibility",
  "waterui-controls",
  "waterui-core",
  "waterui-form",
  "waterui-graphics",
  "waterui-inspector-app",
+ "waterui-interaction",
+ "waterui-layout",
  "waterui-navigation",
+ "waterui-shape",
  "waterui-testing",
+ "waterui-text",
 ]
 
 [[package]]

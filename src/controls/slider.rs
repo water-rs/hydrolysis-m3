@@ -11,10 +11,10 @@ use hydrolysis_style::draw::{Draw as _, Paint, Shadow, WorkingColor};
 use hydrolysis_style::theme::{
     Custom, DragMapping, Driven, Inputs, Knob, SliderLayout, SliderLook, SliderSpec, ValueIndicator,
 };
-use waterui::interaction::InteractionState;
-use waterui::reactive::zip::zip;
+use nami::zip::zip;
 use waterui_core::Environment;
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 use crate::color::{
     Background, InverseOnSurface, InverseSurface, OnSecondaryContainer, OnSurface,

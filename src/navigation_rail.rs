@@ -7,16 +7,18 @@
 //! is an attribute of the rail rather than two separate item types.
 
 use core::fmt::{self, Debug};
-use waterui::OneOf2;
+use waterui_core::OneOf2;
 
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
-use waterui::color::Color;
-use waterui::layout::padding::EdgeInsets;
-use waterui::reactive::SignalExt as _;
-use waterui::shape::{Capsule, ShapeExt as _};
-use waterui::{Binding, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::Binding;
+use nami::SignalExt as _;
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_layout::padding::EdgeInsets;
+use waterui_shape::{Capsule, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 use waterui_core::view::ViewSequence;
@@ -161,7 +163,7 @@ where
 {
     fn body(self, _env: &Environment) -> impl View {
         let layout = self.layout;
-        waterui::component::vstack(self.items)
+        waterui_layout::stack::vstack(self.items)
             .spacing(layout.item_spacing())
             .padding_with(EdgeInsets::new(TOP_SPACE, 0.0, 0.0, 0.0))
             .min_width(layout.container_width())
@@ -290,7 +292,7 @@ where
         // stacks it beneath, so only the icon sits on the active indicator.
         let content = if self.layout.is_expanded() {
             OneOf2::A(
-                waterui::component::hstack((icon, label))
+                waterui_layout::stack::hstack((icon, label))
                     .spacing(ACTIVE_INDICATOR_ICON_LABEL_SPACE)
                     .padding_with(EdgeInsets::new(
                         0.0,
@@ -309,12 +311,12 @@ where
             )
         } else {
             OneOf2::B(
-                waterui::component::vstack((
+                waterui_layout::stack::vstack((
                     // The whole item is selectable, but only the indicator pill
                     // carries the state layer — Compose clips the indication to
                     // the indicator shape and re-maps the item's interactions
                     // onto it.
-                    waterui::component::zstack((
+                    waterui_layout::stack::zstack((
                         Capsule
                             .fill(indicator_color)
                             .width(COLLAPSED_ACTIVE_INDICATOR_WIDTH)

@@ -4,7 +4,7 @@ use hydrolysis_style::draw::{Paint, WorkingColor};
 use hydrolysis_style::theme::{
     Border, CardLayout, CardLook, CornerShape, Driven, Elevation, Inputs, Surface,
 };
-use waterui::widget::CardStyle;
+use waterui_controls::card::CardStyle;
 use waterui_core::Environment;
 use waterui_graphics::color::Color;
 
@@ -64,9 +64,9 @@ mod tests {
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::Rect;
     use hydrolysis_style::theme::{Corners, Inputs};
-    use waterui::interaction::InteractionState;
-    use waterui::widget::CardStyle;
+    use waterui_controls::card::CardStyle;
     use waterui_core::Environment;
+    use waterui_interaction::interaction::InteractionState;
 
     use super::{CARD_CONTENT_PADDING, CARD_CONTENT_SPACING, CARD_CORNER_RADIUS, look};
     use crate::Material3;

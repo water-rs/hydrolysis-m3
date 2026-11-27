@@ -15,11 +15,11 @@ use hydrolysis_style::theme::{
     CheckboxLook, Custom, Driven, Inputs, SwitchDrag, SwitchLook, ToggleControl, ToggleSpec,
     ValueMotion,
 };
-use waterui::animation::Animation;
-use waterui::interaction::InteractionState;
 use waterui_core::Environment;
+use waterui_core::animation::Animation;
 use waterui_core::layout::LayoutDirection;
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 use super::selection::{
     STATE_LAYER_RADIUS, ShapePart, Toggled, centered_ripple, centered_state_layer, disabled, faded,
@@ -537,12 +537,12 @@ mod tests {
     use hydrolysis_style::draw::kurbo::{Circle, Point, Rect, Vec2};
     use hydrolysis_style::theme::ValueMotion;
     use hydrolysis_style::theme::{Inputs, SpecTint, SwitchDrag, SwitchLook, ToggleSpec};
-    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::toggle::ToggleStyle;
     use waterui_core::Environment;
     use waterui_core::layout::LayoutDirection;
     use waterui_graphics::color::Color;
+    use waterui_interaction::interaction::InteractionState;
 
     fn env() -> Environment {
         let mut env = Environment::new();
@@ -740,7 +740,7 @@ mod tests {
     #[test]
     fn toggles_draw_with_the_subtrees_tint() {
         use hydrolysis_style::draw::WorkingColor;
-        use waterui::theme::Tint;
+        use waterui_controls::theme::Tint;
         use waterui_core::Signal as _;
         use waterui_graphics::color::Working;
 

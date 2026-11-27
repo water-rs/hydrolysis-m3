@@ -17,11 +17,11 @@ use hydrolysis_style::draw::kurbo::Size;
 ))]
 use hydrolysis_style::theme::TextCaretMotion;
 use hydrolysis_style::theme::{HitRegion, Motion, Ripple, Transition, ValueMotion};
-use waterui::animation::Animation;
+use nami::watcher::Context;
+use nami::{Computed, Signal};
+use waterui_core::animation::Animation;
 #[cfg(feature = "navigation")]
-use waterui::easing::EasingCurve;
-use waterui::reactive::watcher::Context;
-use waterui::{Computed, Signal};
+use waterui_core::easing::EasingCurve;
 
 use super::dimensions::MINIMUM_TOUCH_TARGET;
 #[cfg(feature = "navigation")]
@@ -373,12 +373,12 @@ mod tests {
         ripple, toggle_value, tooltip,
     };
     use core::time::Duration;
+    use nami::{Binding, Signal, SignalExt as _};
     use std::cell::RefCell;
     use std::rc::Rc;
-    use waterui::animation::Animation;
+    use waterui_core::animation::Animation;
     #[cfg(feature = "navigation")]
-    use waterui::easing::EasingCurve;
-    use waterui::{Binding, Signal, SignalExt as _};
+    use waterui_core::easing::EasingCurve;
 
     /// Collect the (value, animation) pairs a motion signal emits, so a test can
     /// assert which curve each direction of a transition uses.

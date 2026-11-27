@@ -2,14 +2,16 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
-use waterui::color::Color;
-use waterui::layout::padding::EdgeInsets;
-use waterui::reactive::SignalExt as _;
-use waterui::shape::{Capsule, ShapeExt as _};
-use waterui::{Binding, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::Binding;
+use nami::SignalExt as _;
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_layout::padding::EdgeInsets;
+use waterui_shape::{Capsule, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 use waterui_core::view::ViewSequence;
@@ -66,7 +68,7 @@ where
             MaterialElevationLevel::LEVEL2,
             // The bar is a full-width rectangle: no corner rounding.
             0.0,
-            waterui::component::hstack(self.tabs)
+            waterui_layout::stack::hstack(self.tabs)
                 .height(NAVIGATION_BAR_CONTAINER_HEIGHT)
                 .max_width(f32::INFINITY)
                 .background(SurfaceContainer),
@@ -222,13 +224,13 @@ fn navigation_tab_content<L: LabelKind>(
     indicator_color: Color,
     icon_color: Color,
     label_color: Color,
-    label_font: waterui::text::font::Font,
+    label_font: waterui_text::font::Font,
 ) -> impl View {
     let icon_slot = icon
         .foreground(icon_color)
         .width(NAVIGATION_BAR_ICON_SIZE)
         .height(NAVIGATION_BAR_ICON_SIZE);
-    let icon_container = waterui::component::zstack((
+    let icon_container = waterui_layout::stack::zstack((
         Capsule
             .fill(indicator_color)
             .width(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH)
@@ -236,7 +238,7 @@ fn navigation_tab_content<L: LabelKind>(
         icon_slot,
     ));
 
-    waterui::component::vstack((
+    waterui_layout::stack::vstack((
         icon_container
             .width(NAVIGATION_BAR_ACTIVE_INDICATOR_WIDTH)
             .height(NAVIGATION_BAR_ICON_SLOT_HEIGHT),

@@ -5,12 +5,12 @@
 //! color is accepted.
 
 use hydrolysis_style::draw::WorkingColor;
-use waterui::View;
-use waterui::color::{Color, WithOpacity};
-use waterui::contract_violation;
-use waterui::reactive::{Computed, Signal, SignalExt as _, impl_constant};
-use waterui::theme::{ColorScheme, current_color_scheme};
+use nami::{Computed, Signal, SignalExt as _, impl_constant};
+use waterui_controls::theme::{ColorScheme, current_color_scheme};
+use waterui_core::View;
+use waterui_core::contract_violation;
 use waterui_core::{Environment, resolve::Resolvable};
+use waterui_graphics::color::{Color, WithOpacity};
 
 use crate::theme::colors::{MaterialColorScheme, MaterialColorSchemes, MaterialRoleColor};
 
@@ -186,12 +186,12 @@ define_material_color_tokens! {
 #[cfg(test)]
 mod tests {
     use material_color_utils::utils::color_utils::Argb;
-    use waterui::Plugin as _;
-    use waterui::reactive::Computed;
-    use waterui::theme::color as theme_color;
-    use waterui::theme::{
+    use nami::Computed;
+    use waterui_controls::theme::color as theme_color;
+    use waterui_controls::theme::{
         ColorScheme, Theme, current_color_scheme, installed_color_scheme, installed_color_signal,
     };
+    use waterui_core::plugin::Plugin as _;
 
     use super::*;
     use crate::{Material3, MaterialColorMode};

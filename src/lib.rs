@@ -50,6 +50,7 @@ mod navigation;
 mod semantics;
 pub mod split_button;
 mod theme;
+mod view_ext;
 
 #[cfg(any(
     feature = "text-field",
@@ -128,11 +129,10 @@ pub use hydrolysis_style::theme::{SliderLook, SliderSpec};
 pub use hydrolysis_style::theme::{StepperLook, StepperSpec};
 #[cfg(feature = "table")]
 pub use hydrolysis_style::theme::{TableLook, TableMetrics};
-use waterui::Plugin as _;
-use waterui::reactive::{Computed, Signal};
-use waterui::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
-use waterui::widget::CardStyle;
-use waterui_core::Environment;
+use nami::{Computed, Signal};
+use waterui_controls::card::CardStyle;
+use waterui_controls::theme::{self as waterui_theme, ColorScheme, ColorSettings, Theme};
+use waterui_core::{Environment, plugin::Plugin as _};
 
 pub use button_group::{
     ButtonGroup, ConnectedButton, ConnectedButtonGroup, GroupButton, button_group,

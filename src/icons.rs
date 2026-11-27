@@ -6,10 +6,10 @@
 //! precise update the reactive contract asks for.
 
 use hydrolysis_style::draw::WorkingColor;
-use waterui::{Environment, View};
 use waterui_core::layout::{Point, Size};
 use waterui_core::reactive::SignalExt as _;
 use waterui_core::resolve::Resolvable;
+use waterui_core::{Environment, View};
 use waterui_graphics::canvas::{Canvas, Cap, Join, Path, StrokeStyle};
 
 /// The miter limit Material icon strokes are authored against.
@@ -85,8 +85,8 @@ mod tests {
     use core::time::Duration;
 
     use hydrolysis_style::draw::WorkingColor;
-    use waterui::Environment;
-    use waterui::reactive::binding;
+    use nami::binding;
+    use waterui_core::Environment;
     use waterui_core::reactive::SignalExt as _;
     use waterui_core::reactive::signal::Computed;
     use waterui_core::resolve::Resolvable;

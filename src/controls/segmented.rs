@@ -16,11 +16,11 @@ use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Custom, Driven, Inputs, PressFeedback, Segment, SegmentLabel,
     SegmentedLayout, SegmentedLook, SegmentedSpec, SegmentedValue, Surface,
 };
+use nami::zip::zip;
 use num_traits::ToPrimitive;
-use waterui::interaction::InteractionState;
-use waterui::reactive::zip::zip;
 use waterui_core::{Computed, Environment, SignalExt};
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer};
 use crate::controls::button::disabled_paint;
@@ -64,7 +64,7 @@ pub fn look(spec: &SegmentedSpec, env: &Environment) -> SegmentedLook {
 /// A segment's label colour: `on-secondary-container` while selected,
 /// `on-surface` otherwise, on-surface at 38% while disabled.
 fn label_color() -> Driven<Color, Segment> {
-    waterui::interaction::StateValue::new(Color::from(OnSurface))
+    waterui_interaction::interaction::StateValue::new(Color::from(OnSurface))
         .when(
             InteractionState::DISABLED,
             Color::from(OnSurface.with_opacity(DISABLED_CONTENT_OPACITY)),
@@ -216,10 +216,10 @@ mod tests {
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii};
     use hydrolysis_style::theme::{Inputs, Segment, SegmentedSpec, SpecTint};
-    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;
     use waterui_core::{Environment, Signal as _};
+    use waterui_interaction::interaction::InteractionState;
 
     fn segment(index: usize, count: usize) -> Segment {
         Segment { index, count }

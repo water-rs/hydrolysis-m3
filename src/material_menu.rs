@@ -1,8 +1,8 @@
 //! Material Design 3 menu convenience API.
 
-use waterui::component::label::LabelKind;
-use waterui::component::{IntoLabel, Label};
-use waterui::widget::Divider;
+use waterui_controls::Divider;
+use waterui_controls::label::LabelKind;
+use waterui_controls::label::{IntoLabel, Label};
 use waterui_controls::menu::{Command, CommandBuilder, Menu, MenuItem, MenuView};
 
 /// A Material Design 3 menu trigger and popup menu.

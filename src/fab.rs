@@ -3,14 +3,16 @@
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 
+use crate::view_ext::ViewExt as _;
 use hydrolysis_style::theme::{FloatingOverride, FloatingStyle};
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
-use waterui::color::Color;
-use waterui::interaction::InteractionState;
-use waterui::layout::padding::EdgeInsets;
-use waterui::{Environment, Signal, Str, View, ViewExt as _};
+use nami::Signal;
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
+use waterui_layout::padding::EdgeInsets;
 
 use crate::action::{NoAction, noop};
 use crate::color::{
@@ -528,8 +530,8 @@ mod tests {
         use hydrolysis_style::Style as _;
         use hydrolysis_style::draw::kurbo::Rect;
         use hydrolysis_style::theme::{Inputs, WidgetTheme as _};
-        use waterui::Environment;
-        use waterui::interaction::InteractionState;
+        use waterui_core::Environment;
+        use waterui_interaction::interaction::InteractionState;
 
         use crate::Material3;
 

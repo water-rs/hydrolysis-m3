@@ -1,4 +1,4 @@
-use waterui::contract_violation;
+use waterui_core::contract_violation;
 
 #[cfg(any(
     feature = "text-field",

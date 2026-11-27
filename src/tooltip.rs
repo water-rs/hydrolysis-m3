@@ -2,20 +2,23 @@
 
 use core::fmt::{self, Debug};
 use core::time::Duration;
-use waterui::OneOf2;
+use waterui_core::OneOf2;
 
+use crate::view_ext::ViewExt as _;
+use executor_core::spawn_local;
 use hydrolysis_style::theme::InteractionFocusBinding;
-use waterui::accessibility::AccessibilityRole;
-use waterui::layout::padding::EdgeInsets;
-use waterui::metadata::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
-use waterui::prelude::dynamic::watch;
-use waterui::reactive::{Signal, SignalExt as _, binding};
-use waterui::shape::{CornerRadius, RoundedRectangle, ShapeExt as _};
-use waterui::style::Anchor;
-use waterui::task::{sleep, spawn_local};
-use waterui::{Binding, Environment, Str, View, ViewExt as _};
+use nami::Binding;
+use nami::{Signal, SignalExt as _, binding};
+use native_executor::sleep;
+use waterui_accessibility::AccessibilityRole;
+use waterui_controls::anchored_overlay::{AnchorEdge, AnchoredOverlay, Clamp, EdgeAlignment};
 use waterui_controls::label::{IntoLabel, Label, LabelKind, TitleLabel};
+use waterui_core::dynamic::watch;
 use waterui_core::handler::{Handler, SharedAction};
+use waterui_core::{Environment, Str, View};
+use waterui_layout::padding::EdgeInsets;
+use waterui_shape::style::Anchor;
+use waterui_shape::{CornerRadius, RoundedRectangle, ShapeExt as _};
 
 use crate::color::{InverseOnSurface, InverseSurface, OnSurfaceVariant, Primary, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
@@ -389,7 +392,7 @@ impl<S, T, A> RichTooltip<S, T, A> {
 
 impl<S: LabelKind, T: LabelKind, A: LabelKind> View for RichTooltip<S, T, A> {
     fn body(self, _env: &Environment) -> impl View {
-        let content = waterui::component::vstack((
+        let content = waterui_layout::stack::vstack((
             self.subhead
                 .font(typography::title_small())
                 .foreground(OnSurfaceVariant),
@@ -425,7 +428,7 @@ impl<S: LabelKind, T: LabelKind, A: LabelKind> View for RichTooltip<S, T, A> {
 
 fn rich_tooltip_action<A: LabelKind>(action: Option<(Label<A>, SharedAction)>) -> impl View {
     let Some((label, action)) = action else {
-        return OneOf2::A(waterui::component::hstack(((),)));
+        return OneOf2::A(waterui_layout::stack::hstack(((),)));
     };
     let accessibility_label = label_plain_text(&label);
 
@@ -473,7 +476,7 @@ mod tests {
         TOOLTIP_WINDOW_MARGIN, TooltipVisibility,
     };
     use core::time::Duration;
-    use waterui::reactive::Signal;
+    use nami::Signal;
 
     #[test]
     fn plain_tooltip_tokens_match_compose_plain_tooltip_tokens() {

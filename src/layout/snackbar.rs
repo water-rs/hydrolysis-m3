@@ -1,9 +1,9 @@
 use core::time::Duration;
 
 use hydrolysis_style::theme::SnackbarLook;
-use waterui::animation::Animation;
-use waterui::prelude::EdgeInsets;
 use waterui_core::Environment;
+use waterui_core::animation::Animation;
+use waterui_layout::padding::EdgeInsets;
 
 use crate::color::{InverseOnSurface, InversePrimary, InverseSurface};
 use crate::elevation::{MaterialElevationLevel, shadows_for_level};
@@ -67,8 +67,8 @@ pub fn look(_env: &Environment) -> SnackbarLook {
 mod tests {
     use core::time::Duration;
 
-    use waterui::animation::Animation;
     use waterui_core::Environment;
+    use waterui_core::animation::Animation;
 
     use super::{
         SNACKBAR_CORNER_RADIUS, SNACKBAR_HORIZONTAL_PADDING, SNACKBAR_SINGLE_LINE_HEIGHT, look,

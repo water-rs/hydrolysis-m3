@@ -1,4 +1,4 @@
-use waterui::layout::{
+use waterui_layout::{
     LayoutError, ProposalSize, Rect, ResolvedExtent, Size, StretchAxis, SubView, ViewDimensions,
 };
 

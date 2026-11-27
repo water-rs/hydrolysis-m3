@@ -5,12 +5,13 @@
 //! being held, so the thing under the finger is unmistakably the thing that
 //! moves.
 
-use waterui::gesture::{DragEvent, DragGesture};
-use waterui::layout::frame::Frame;
-use waterui::reactive::{SignalExt as _, binding};
-use waterui::shape::{Capsule, ShapeExt as _};
-use waterui::{Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::{SignalExt as _, binding};
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{Environment, Str, View};
+use waterui_interaction::gesture::{DragEvent, DragGesture};
+use waterui_layout::frame::Frame;
+use waterui_shape::{Capsule, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 use crate::color::{OnSurface, Outline};

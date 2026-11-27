@@ -1,19 +1,21 @@
 //! Material Design 3 chip components composed from `WaterUI` primitives.
 
+use crate::view_ext::ViewExt as _;
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
-use waterui::border::Border;
-use waterui::color::Color;
-use waterui::layout::frame::Frame;
-use waterui::layout::padding::EdgeInsets;
-use waterui::reactive::SignalExt as _;
-use waterui::shape::{Rectangle, RoundedRectangle, ShapeExt as _};
-use waterui::{Angle, Binding, Environment, Str, View, ViewExt as _};
+use nami::Binding;
+use nami::SignalExt as _;
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
+use waterui_core::{Angle, Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_layout::frame::Frame;
+use waterui_layout::padding::EdgeInsets;
+use waterui_shape::border::Border;
+use waterui_shape::{Rectangle, RoundedRectangle, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 
@@ -341,7 +343,7 @@ where
         )
         .width(checkmark_width);
 
-        waterui::component::hstack((
+        waterui_layout::stack::hstack((
             checkmark,
             self.label
                 .font(typography::label_large())
@@ -393,7 +395,7 @@ where
         let accessibility_label = self.accessibility_label;
         let remove_accessibility_label = self.remove_accessibility_label;
 
-        waterui::component::hstack((
+        waterui_layout::stack::hstack((
             self.label
                 .font(typography::label_large())
                 .foreground(OnSurfaceVariant)
@@ -463,7 +465,7 @@ impl View for RemoveButton {
     fn body(self, _env: &Environment) -> impl View {
         let accessibility_label = self.accessibility_label;
         let action = self.action;
-        waterui::component::hstack((RemoveIcon,))
+        waterui_layout::stack::hstack((RemoveIcon,))
             .size(INPUT_CHIP_TRAILING_ICON_SIZE, INPUT_CHIP_TRAILING_ICON_SIZE)
             .on_tap(move |env: Environment| {
                 action.run(&env);
@@ -487,7 +489,7 @@ impl View for RemoveIcon {
                 .fill(OnSurfaceVariant)
                 .size(10.5, INPUT_CHIP_REMOVE_ICON_LINE_WIDTH)
         };
-        waterui::component::zstack((
+        waterui_layout::stack::zstack((
             line().rotation(Angle::degrees(45.0)),
             line().rotation(Angle::degrees(-45.0)),
         ))
