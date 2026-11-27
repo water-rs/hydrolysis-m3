@@ -79,7 +79,7 @@ pub(crate) use layout::list;
 pub(crate) use layout::menu;
 #[cfg(feature = "table")]
 pub(crate) use layout::table;
-pub(crate) use layout::{badge, card, dialog, scroll, sheet, snackbar};
+pub(crate) use layout::{badge, card, code, dialog, scroll, sheet, snackbar};
 
 #[cfg(feature = "navigation")]
 pub(crate) use navigation::{navigation as navigation_chrome, tabs};
@@ -91,8 +91,8 @@ use hydrolysis_style::draw::BlendSpace;
 use hydrolysis_style::draw::WorkingColor;
 
 pub use hydrolysis_style::theme::{
-    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CardLayout, CardLook, DialogLook,
-    FloatingElevation, FloatingLook, FloatingOverride, FloatingStyle, IndicatorLook,
+    BadgeLook, BadgeMetrics, ButtonLook, ButtonSpec, CardLayout, CardLook, CodeLook, CodeMetrics,
+    DialogLook, FloatingElevation, FloatingLook, FloatingOverride, FloatingStyle, IndicatorLook,
     InteractionFocusBinding, LinearProgressLook, ModalInteraction, ProgressSpec,
     ScrollIndicatorLook, SheetLook, SnackbarLook, WidgetTheme,
 };
@@ -596,6 +596,10 @@ impl WidgetTheme for Material3 {
 
     fn card(&self, style: CardStyle, env: &Environment) -> CardLook {
         card::look(style, env)
+    }
+
+    fn code(&self, env: &Environment) -> CodeLook {
+        code::look(env)
     }
 
     fn snackbar(&self, env: &Environment) -> SnackbarLook {
