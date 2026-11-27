@@ -5,13 +5,14 @@ use core::marker::PhantomData;
 use hydrolysis_style::draw::kurbo::Size;
 use hydrolysis_style::theme::{ButtonLook, ButtonSpec, CornerShape, Corners, Surface};
 
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
-use waterui::border::Border;
-use waterui::color::Color;
-use waterui::contract_violation;
-use waterui::shape::{Circle, ShapeExt as _};
-use waterui::{Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole};
+use waterui_core::contract_violation;
 use waterui_core::handler::{ExtractionError, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_shape::border::Border;
+use waterui_shape::{Circle, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 
@@ -518,13 +519,13 @@ mod tests {
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::{Rect, Size, Vec2};
     use hydrolysis_style::theme::{ButtonSpec, Fill, Inputs, SpecTint};
-    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_controls::button::ButtonStyle;
     use waterui_core::layout::LayoutDirection;
+    use waterui_interaction::interaction::InteractionState;
 
     fn icon_look(style: ButtonStyle, size: ControlSize) -> hydrolysis_style::theme::ButtonLook {
-        let mut env = waterui::Environment::new();
+        let mut env = waterui_core::Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
         look(
             &ButtonSpec::new(
@@ -588,7 +589,7 @@ mod tests {
             fill.target(&rest),
             hydrolysis_style::draw::Paint::from(hydrolysis_style::draw::WorkingColor::TRANSPARENT,)
         );
-        let mut env = waterui::Environment::new();
+        let mut env = waterui_core::Environment::new();
         crate::Material3::defaults().install_tokens(&mut env);
         let label = automatic
             .label()
@@ -596,7 +597,7 @@ mod tests {
             .expect("the icon button colours its label")
             .target(&rest);
         assert_eq!(
-            waterui::Signal::snapshot(&label.resolve(&env)).components,
+            nami::Signal::snapshot(&label.resolve(&env)).components,
             colors.on_surface_variant.working().components
         );
 
@@ -672,7 +673,8 @@ mod tests {
         use crate::{Material3, theme::colors::MaterialColorScheme};
         use hydrolysis_style::Style as _;
         use hydrolysis_style::draw::WorkingColor;
-        use waterui::{Environment, Signal};
+        use nami::Signal;
+        use waterui_core::Environment;
 
         fn assert_resolves_to(actual: WorkingColor, expected: WorkingColor) {
             assert_eq!(

@@ -17,35 +17,43 @@ categories = ["gui"]
 [features]
 default = ["all-controls"]
 all-controls = ["menu", "calendar", "color-picker", "date-picker", "file-picker", "multi-date-picker", "picker", "secure-field", "slider", "stepper", "text-field", "toggle", "validation", "list", "table", "navigation"]
-menu = ["hydrolysis-style/menu", "waterui/menu"]
-calendar = ["hydrolysis-style/calendar", "waterui/calendar"]
-color-picker = ["hydrolysis-style/color-picker", "waterui/color-picker"]
-date-picker = ["calendar", "stepper", "menu", "hydrolysis-style/date-picker", "waterui/date-picker"]
-file-picker = ["hydrolysis-style/file-picker", "waterui/file-picker"]
-multi-date-picker = ["calendar", "hydrolysis-style/multi-date-picker", "waterui/multi-date-picker"]
-picker = ["menu", "hydrolysis-style/picker", "waterui/picker"]
-secure-field = ["menu", "hydrolysis-style/secure-field", "waterui/secure-field"]
-slider = ["hydrolysis-style/slider", "waterui/slider"]
-stepper = ["hydrolysis-style/stepper", "waterui/stepper"]
-text-field = ["menu", "hydrolysis-style/text-field", "waterui/text-field"]
-toggle = ["hydrolysis-style/toggle", "waterui/toggle"]
-validation = ["text-field", "hydrolysis-style/validation", "waterui/validation"]
-list = ["hydrolysis-style/list", "waterui/list"]
-table = ["list", "hydrolysis-style/table", "waterui/table"]
-navigation = ["text-field", "hydrolysis-style/navigation", "waterui/navigation"]
+menu = ["hydrolysis-style/menu", "waterui-controls/menu"]
+calendar = ["hydrolysis-style/calendar"]
+color-picker = ["hydrolysis-style/color-picker"]
+date-picker = ["calendar", "stepper", "menu", "hydrolysis-style/date-picker"]
+file-picker = ["hydrolysis-style/file-picker"]
+multi-date-picker = ["calendar", "hydrolysis-style/multi-date-picker"]
+picker = ["menu", "hydrolysis-style/picker"]
+secure-field = ["menu", "hydrolysis-style/secure-field"]
+slider = ["hydrolysis-style/slider", "waterui-controls/slider"]
+stepper = ["hydrolysis-style/stepper", "waterui-controls/stepper"]
+text-field = ["menu", "hydrolysis-style/text-field", "waterui-controls/text-field"]
+toggle = ["hydrolysis-style/toggle", "waterui-controls/toggle"]
+validation = ["text-field", "hydrolysis-style/validation"]
+list = ["hydrolysis-style/list", "waterui-controls/list"]
+table = ["list", "hydrolysis-style/table", "waterui-controls/table"]
+navigation = ["text-field", "hydrolysis-style/navigation", "dep:waterui-navigation"]
 
 [dependencies]
+executor-core = { version = "0.7.1", default-features = false, features = ["std"] }
 hydrolysis-style = { version = "0.5.1", default-features = false }
 material-color-utils = { version = "0.1.3", default-features = false }
+nami = { version = "0.13", default-features = false }
+native-executor = { version = "0.8.0" }
 num-traits = { version = "0.2", default-features = false }
-waterui = { version = "0.5.2", default-features = false, features = ["snackbar"] }
+waterui-accessibility = { version = "0.5.1", default-features = false }
+waterui-controls = { version = "0.5.1", default-features = false, features = ["snackbar"] }
 waterui-core = { version = "0.5.1", default-features = false }
-waterui-controls = { version = "0.5.1", default-features = false }
 waterui-graphics = { version = "0.5.1", default-features = false }
+waterui-interaction = { version = "0.5.1", default-features = false }
+waterui-layout = { version = "0.5.1", default-features = false }
+waterui-navigation = { version = "0.5.1", default-features = false, optional = true }
+waterui-shape = { version = "0.5.1", default-features = false }
+waterui-text = { version = "0.5.1", default-features = false }
 
 [dev-dependencies]
 waterui-form = { version = "0.5.1", default-features = false, features = ["all"] }
-waterui = { version = "0.5.2", default-features = false, features = ["avatar", "image"] }
+waterui = { version = "0.5.2", default-features = false, features = ["avatar", "calendar", "color-picker", "date-picker", "file-picker", "image", "list", "menu", "multi-date-picker", "navigation", "picker", "secure-field", "slider", "snackbar", "stepper", "table", "text-field", "toggle", "validation"] }
 # The tests render through hydrolysis's default Cherenkov painter and
 # `tests/inspect_element.rs` exercises the opt-in `inspector` context-menu entry.
 hydrolysis = { version = "0.3.1", features = ["inspector"] }

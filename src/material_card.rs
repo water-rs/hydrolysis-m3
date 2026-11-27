@@ -2,9 +2,10 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::accessibility::AccessibilityRole;
-use waterui::widget::{Card as WaterCard, CardStyle};
-use waterui::{AnyView, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use waterui_accessibility::AccessibilityRole;
+use waterui_controls::card::{Card as WaterCard, CardStyle};
+use waterui_core::{AnyView, Environment, Str, View};
 
 /// A Material Design 3 card container.
 #[derive(Clone)]
@@ -90,9 +91,9 @@ mod tests {
     use hydrolysis_style::Style as _;
     use hydrolysis_style::draw::kurbo::Rect;
     use hydrolysis_style::theme::{Inputs, WidgetTheme as _};
-    use waterui::interaction::InteractionState;
-    use waterui::widget::CardStyle;
+    use waterui_controls::card::CardStyle;
     use waterui_core::Environment;
+    use waterui_interaction::interaction::InteractionState;
 
     use crate::Material3;
 

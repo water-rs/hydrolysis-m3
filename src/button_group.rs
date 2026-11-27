@@ -8,23 +8,25 @@
 
 use core::fmt::{self, Debug};
 
+use crate::view_ext::ViewExt as _;
 use hydrolysis_style::draw::kurbo::RoundedRectRadii;
-use waterui::accessibility::{AccessibilityRole, AccessibilityState};
-use waterui::color::Color;
-use waterui::gesture::{DragEvent, DragGesture};
-use waterui::layout::padding::EdgeInsets;
-use waterui::layout::{
+use nami::Binding;
+use nami::watcher::BoxWatcherGuard;
+use nami::{Signal as _, SignalExt as _, binding, zip};
+use waterui_accessibility::{AccessibilityRole, AccessibilityState};
+use waterui_controls::button::Button;
+use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
+use waterui_core::dynamic::watch;
+use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{AnyView, Environment, View};
+use waterui_graphics::color::Color;
+use waterui_interaction::gesture::{DragEvent, DragGesture};
+use waterui_layout::padding::EdgeInsets;
+use waterui_layout::{
     Layout, LayoutError, LayoutInvalidationCallback, PlacementInput, Point, ProposalSize, Rect,
     Size, SubView, SubviewPlacement, UnitPoint, container::FixedContainer,
 };
-use waterui::prelude::dynamic::watch;
-use waterui::reactive::watcher::BoxWatcherGuard;
-use waterui::reactive::{Signal as _, SignalExt as _, binding, zip};
-use waterui::shape::{CornerRadii, RoundedRectangle, ShapeExt as _};
-use waterui::{AnyView, Binding, Environment, View, ViewExt as _};
-use waterui_controls::button::Button;
-use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
-use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
+use waterui_shape::{CornerRadii, RoundedRectangle, ShapeExt as _};
 
 use crate::color::{OnSecondaryContainer, OnSurface, SecondaryContainer, SurfaceContainer};
 use crate::semantics::{conditional_color, interaction_chrome, is_drag_held};
@@ -253,8 +255,8 @@ impl View for ConnectedButtonGroup {
             })
             .collect::<Vec<_>>();
 
-        waterui::component::HStack::new(
-            waterui::layout::stack::VerticalAlignment::Center,
+        waterui_layout::stack::HStack::new(
+            waterui_layout::stack::VerticalAlignment::Center,
             BETWEEN_SPACE,
             segments,
         )
@@ -276,7 +278,7 @@ struct ReactiveSegmentShape<S> {
 
 impl<S> View for ReactiveSegmentShape<S>
 where
-    S: waterui::Signal<Output = RoundedRectangle> + 'static,
+    S: nami::Signal<Output = RoundedRectangle> + 'static,
 {
     fn body(self, _env: &Environment) -> impl View {
         let color = self.color;
@@ -563,7 +565,7 @@ mod tests {
         GROUP_EXPANDED_RATIO, INNER_CORNER_RADIUS, OUTER_CORNER_RADIUS,
         PRESSED_INNER_CORNER_RADIUS, SegmentPosition, inner_radius,
     };
-    use waterui::reactive::binding;
+    use nami::binding;
 
     /// Builds a layout over `widths.len()` buttons, with `pressed` held down.
     fn layout(limits: &[f32], pressed: Option<usize>) -> ButtonGroupLayout {
@@ -699,7 +701,7 @@ mod tests {
     #[test]
     fn layout_contract_button_press_updates_child_offers() {
         use crate::layout_test_support::FixedLeaf;
-        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        use waterui_layout::{Layout, ProposalSize, Rect, Size};
         let child = FixedLeaf(Size::new(100.0, 40.0));
         let layout = layout(&[20.0, 20.0], None);
         let bounds = Rect::from_size(Size::new(212.0, 40.0));

@@ -1,6 +1,6 @@
 //! The action a Material control stores when none was configured.
 
-use waterui::Environment;
+use waterui_core::Environment;
 use waterui_core::handler::ExtractionError;
 
 /// The stored action's signature: a handler that runs against the

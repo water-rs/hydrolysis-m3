@@ -2,10 +2,11 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::component::badge::{Badge as WaterBadge, BadgeValue};
-use waterui::reactive::signal::IntoComputed;
-use waterui::{AnyView, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::signal::IntoComputed;
+use waterui_controls::badge::{Badge as WaterBadge, BadgeValue};
 use waterui_core::Computed;
+use waterui_core::{AnyView, Environment, Str, View};
 
 /// A Material Design 3 badge attached to another view.
 #[derive(Clone)]

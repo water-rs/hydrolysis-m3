@@ -113,8 +113,8 @@ mod tests {
     use hydrolysis_style::draw::Paint;
     use hydrolysis_style::draw::kurbo::Rect;
     use hydrolysis_style::theme::{BarSurface, Corners, Inputs};
-    use waterui::interaction::InteractionState;
     use waterui_core::{Environment, Signal as _};
+    use waterui_interaction::interaction::InteractionState;
 
     fn environment() -> Environment {
         let mut env = Environment::new();

@@ -1,6 +1,6 @@
 //! Material Design 3 divider composed from the `WaterUI` divider primitive.
 
-use waterui::widget::Divider;
+use waterui_controls::Divider;
 
 /// A Material Design 3 divider.
 ///

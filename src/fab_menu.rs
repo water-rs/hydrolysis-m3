@@ -6,14 +6,15 @@
 //! long menu appearing as a wall and keeps the eye travelling away from the
 //! button that produced it.
 
+use crate::view_ext::ViewExt as _;
 use hydrolysis_style::theme::{FloatingOverride, FloatingStyle};
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole};
-use waterui::interaction::InteractionState;
-use waterui::layout::padding::EdgeInsets;
-use waterui::reactive::{Binding, Computed, SignalExt as _};
-use waterui::{AnyView, Environment, Str, View, ViewExt as _};
+use nami::{Binding, Computed, SignalExt as _};
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole};
 use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
 use waterui_core::handler::{BoxedAction, Handler, ReportExtraction as _, boxed_action};
+use waterui_core::{AnyView, Environment, Str, View};
+use waterui_interaction::interaction::InteractionState;
+use waterui_layout::padding::EdgeInsets;
 
 use crate::color::{OnPrimary, OnPrimaryContainer, Primary, PrimaryContainer};
 use crate::elevation::MaterialElevationLevel;
@@ -181,7 +182,7 @@ impl View for FloatingActionButtonMenu {
                 let height = progress
                     .clone()
                     .map(move |progress| ITEM_HEIGHT * item_opacity(progress, index, count));
-                let row = waterui::component::hstack((
+                let row = waterui_layout::stack::hstack((
                     item.icon.size(ITEM_ICON_SIZE, ITEM_ICON_SIZE),
                     item.label,
                 ))
@@ -204,7 +205,7 @@ impl View for FloatingActionButtonMenu {
                     OnPrimaryContainer,
                     ITEM_HEIGHT / 2.0,
                 ));
-                waterui::layout::frame::Frame::new(row).height(height)
+                waterui_layout::frame::Frame::new(row).height(height)
             })
             .collect::<Vec<_>>();
 
@@ -226,16 +227,16 @@ impl View for FloatingActionButtonMenu {
                 CLOSE_BUTTON_CONTAINER / 2.0,
             ));
 
-        waterui::component::vstack((
-            waterui::component::VStack::new(
-                waterui::layout::stack::HorizontalAlignment::Trailing,
+        waterui_layout::stack::vstack((
+            waterui_layout::stack::VStack::new(
+                waterui_layout::stack::HorizontalAlignment::Trailing,
                 ITEM_BETWEEN_SPACE,
                 rows,
             ),
             toggle_button,
         ))
         .spacing(CLOSE_BUTTON_BETWEEN_SPACE)
-        .alignment(waterui::layout::stack::HorizontalAlignment::Trailing)
+        .alignment(waterui_layout::stack::HorizontalAlignment::Trailing)
     }
 }
 

@@ -2,17 +2,18 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::navigation::tab::{TabSet, TabStyle, Tabs};
-use waterui::navigation::{NavigationToolbarItems, NavigationView};
-use waterui::{Binding, Environment, View};
+use nami::Binding;
 use waterui_controls::label::IntoLabel;
 use waterui_core::handler::ViewBuilder;
+use waterui_core::{Environment, View};
+use waterui_navigation::tab::{TabSet, TabStyle, Tabs};
+use waterui_navigation::{NavigationToolbarItems, NavigationView};
 
 /// A Material Design 3 tab item — the shared [`Tab`] shape under the
 /// Material name: a tab is label + content on every platform.
 ///
-/// [`Tab`]: waterui::navigation::tab::Tab
-pub use waterui::navigation::tab::Tab as MaterialTab;
+/// [`Tab`]: waterui_navigation::tab::Tab
+pub use waterui_navigation::tab::Tab as MaterialTab;
 
 /// A Material Design 3 primary tabs container.
 ///

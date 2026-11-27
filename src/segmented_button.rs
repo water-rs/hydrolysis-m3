@@ -2,22 +2,24 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
-use waterui::border::Border;
-use waterui::component::hstack;
-use waterui::layout::padding::EdgeInsets;
-use waterui::reactive::SignalExt as _;
-use waterui::shape::{CornerRadii, CornerRadius, Rectangle, RoundedRectangle, ShapeExt as _};
-use waterui::{AnyView, Binding, Computed, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::SignalExt as _;
+use nami::{Binding, Computed};
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
+use waterui_core::{AnyView, Environment, Str, View};
+use waterui_layout::padding::EdgeInsets;
+use waterui_layout::stack::hstack;
+use waterui_shape::border::Border;
+use waterui_shape::{CornerRadii, CornerRadius, Rectangle, RoundedRectangle, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 use hydrolysis_style::draw::kurbo::RoundedRectRadii;
-use waterui::interaction::Disabled;
 use waterui_core::view::ViewSequence;
+use waterui_interaction::interaction::Disabled;
 
 use crate::color::{OnSecondaryContainer, OnSurface, Outline, SecondaryContainer, Surface};
 use crate::icons::CheckmarkIcon;

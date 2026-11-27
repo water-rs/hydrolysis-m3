@@ -1,7 +1,7 @@
 //! Material Design 3 snackbar convenience API.
 
-use waterui::Str;
-use waterui::snackbar::Snackbar;
+use waterui_controls::snackbar::Snackbar;
+use waterui_core::Str;
 
 /// A Material Design 3 snackbar configuration.
 ///

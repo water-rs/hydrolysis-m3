@@ -144,10 +144,10 @@ mod tests {
     use hydrolysis_style::draw::Paint;
     use hydrolysis_style::draw::kurbo::{Rect, Shape as _};
     use hydrolysis_style::theme::{Inputs, PickerSpec, SpecTint};
-    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;
     use waterui_core::{Environment, Signal as _};
+    use waterui_interaction::interaction::InteractionState;
 
     const FIELD: Rect = Rect::new(0.0, 0.0, 280.0, 56.0);
 

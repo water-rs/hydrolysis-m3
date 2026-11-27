@@ -32,9 +32,9 @@ use hydrolysis_style::theme::{
     Chrome, CornerShape, Custom, Driven, Inputs, Surface, TabItem, TabItemGeometry, TabItemLayout,
     TabsLook, TabsMetrics,
 };
-use waterui::navigation::tab::TabStyle;
 use waterui_core::{Computed, Environment, SignalExt as _};
 use waterui_graphics::color::Color;
+use waterui_navigation::tab::TabStyle;
 
 /// The measures of the compact bar's vertical items
 /// (`md.comp.primary-navigation-tab.container.height` and
@@ -225,9 +225,9 @@ mod tests {
     use hydrolysis_style::draw::kurbo::Rect;
     use hydrolysis_style::draw::{Paint, WorkingColor};
     use hydrolysis_style::theme::{Inputs, TabItem, TabItemGeometry, TabItemLayout};
-    use waterui::interaction::InteractionState;
-    use waterui::navigation::tab::TabStyle;
     use waterui_core::{Binding, Environment, Signal as _, SignalExt as _};
+    use waterui_interaction::interaction::InteractionState;
+    use waterui_navigation::tab::TabStyle;
 
     fn environment() -> Environment {
         let mut env = Environment::new();

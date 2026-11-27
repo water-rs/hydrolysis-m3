@@ -2,21 +2,23 @@
 
 use core::fmt::{self, Debug};
 
+use crate::view_ext::ViewExt as _;
 use hydrolysis_style::theme::Chrome;
-use waterui::accessibility::AccessibilityState;
-use waterui::color::Color;
-use waterui::component::list::{
-    ContentTags, List as WaterList, ListContent, ListItemSink, Untagged,
-};
-use waterui::component::{hstack, spacer, vstack};
-use waterui::interaction::{InteractionState, StateValue};
-use waterui::layout::{HorizontalAlignment, padding::EdgeInsets};
-use waterui::prelude::dynamic::watch;
-use waterui::reactive::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
-use waterui::shape::{RoundedRectangle, ShapeExt as _};
-use waterui::{AnyView, Environment, Str, View, ViewExt as _};
+use nami::{Binding, Computed, SignalExt as _, binding, signal::IntoComputed, zip};
+use waterui_accessibility::AccessibilityState;
 use waterui_controls::label::{ErasedLabel, IntoLabel, Label};
+use waterui_controls::list::{ContentTags, List as WaterList, ListContent, ListItemSink, Untagged};
+use waterui_core::dynamic::watch;
 use waterui_core::handler::{AnyViewBuilder, Handler, SharedAction};
+use waterui_core::{AnyView, Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_interaction::interaction::{InteractionState, StateValue};
+use waterui_layout::{HorizontalAlignment, padding::EdgeInsets};
+use waterui_layout::{
+    spacer::spacer,
+    stack::{hstack, vstack},
+};
+use waterui_shape::{RoundedRectangle, ShapeExt as _};
 
 use crate::color::{OnSecondaryContainer, OnSurface, OnSurfaceVariant, SecondaryContainer};
 use crate::dimensions::{LIST_ONE_LINE_ROW_HEIGHT, LIST_VERTICAL_INSET};
@@ -383,15 +385,16 @@ mod tests {
     /// `InteractionState::SELECTED`.
     #[test]
     fn list_selection_reports_selected() {
+        use crate::view_ext::ViewExt as _;
+        use nami::Signal as _;
+        use nami::binding;
+        use nami::collection::SignalCollection;
         use std::cell::RefCell;
-        use waterui::component::list::List;
-        use waterui::interaction::InteractionState;
-        use waterui::reactive::Signal as _;
-        use waterui::reactive::binding;
-        use waterui::reactive::collection::SignalCollection;
-        use waterui::{AnyView, Environment, ViewExt as _};
+        use waterui_controls::list::List;
         use waterui_core::handler::AnyViewBuilder;
         use waterui_core::id::SelfId;
+        use waterui_core::{AnyView, Environment};
+        use waterui_interaction::interaction::InteractionState;
 
         let report = binding(InteractionState::empty());
         let selection = binding(None::<u64>);

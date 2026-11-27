@@ -12,7 +12,7 @@
 use core::time::Duration;
 use hydrolysis_style::draw::{Curve, curve_value};
 use num_traits::ToPrimitive as _;
-use waterui::animation::Animation;
+use waterui_core::animation::Animation;
 
 /// A cubic-bezier easing token: the shape of a curve, before a duration
 /// token gives it a length.
@@ -145,7 +145,7 @@ pub const fn motion(easing: Easing, duration: Duration) -> Animation {
 mod tests {
     use super::{Easing, duration, easing, motion};
     use core::time::Duration;
-    use waterui::animation::Animation;
+    use waterui_core::animation::Animation;
 
     /// Pins the duration scale to the M3 specification. Every component timing
     /// that claims to be a token is built from this table, so this is the one

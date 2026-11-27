@@ -10,11 +10,12 @@ use core::fmt::{self, Debug};
 
 // `WaterUI` has no `Toolbar` role, so a toolbar announces as the group of
 // controls it is.
-use waterui::accessibility::AccessibilityRole;
-use waterui::layout::padding::EdgeInsets;
-use waterui::shape::{Capsule, ShapeExt as _};
-use waterui::{Environment, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use waterui_accessibility::AccessibilityRole;
 use waterui_core::view::ViewSequence;
+use waterui_core::{Environment, View};
+use waterui_layout::padding::EdgeInsets;
+use waterui_shape::{Capsule, ShapeExt as _};
 
 use crate::color::{OnPrimaryContainer, OnSurface, PrimaryContainer, SurfaceContainer};
 use crate::elevation::{MaterialElevationLevel, material_elevation};
@@ -49,7 +50,7 @@ pub enum FloatingToolbarStyle {
 impl FloatingToolbarStyle {
     /// The container colour for this style.
     #[must_use]
-    fn container_color(self) -> waterui::color::Color {
+    fn container_color(self) -> waterui_graphics::color::Color {
         match self {
             Self::Standard => SurfaceContainer.into(),
             Self::Vibrant => PrimaryContainer.into(),
@@ -58,7 +59,7 @@ impl FloatingToolbarStyle {
 
     /// The colour actions take on this container.
     #[must_use]
-    fn content_color(self) -> waterui::color::Color {
+    fn content_color(self) -> waterui_graphics::color::Color {
         match self {
             // `VibrantButtonUnselectedIconColor` / `TextColor`; the standard
             // toolbar sits on a surface, so its content is on-surface.
@@ -109,7 +110,7 @@ where
         material_elevation(
             MaterialElevationLevel::LEVEL3,
             CONTAINER_HEIGHT / 2.0,
-            waterui::component::hstack(self.actions)
+            waterui_layout::stack::hstack(self.actions)
                 .spacing(FLOATING_BETWEEN_SPACE)
                 .padding_with(EdgeInsets::new(
                     0.0,
@@ -172,7 +173,7 @@ where
     fn body(self, _env: &Environment) -> impl View {
         // `DockedToolbarTokens.ContainerShape` is `CornerNone`: it is flush
         // against its edge, so it takes no corner and no external padding.
-        waterui::component::hstack(self.actions)
+        waterui_layout::stack::hstack(self.actions)
             .spacing(self.spacing)
             .padding_with(EdgeInsets::new(
                 0.0,

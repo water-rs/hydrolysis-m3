@@ -2,13 +2,14 @@ use hydrolysis_style::draw::WorkingColor;
 use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, Driven, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
-use waterui::color::Color;
-use waterui::gesture::{DragEvent, GesturePhase};
-use waterui::reactive::{Computed, SignalExt as _, impl_constant, signal::IntoComputed, zip};
-use waterui::text::font::{Font, ResolvedFont};
-use waterui::{Environment, Signal as _, Str};
+use nami::Signal as _;
+use nami::{Computed, SignalExt as _, impl_constant, signal::IntoComputed, zip};
 use waterui_controls::label::{Label, LabelKind};
 use waterui_core::resolve::Resolvable;
+use waterui_core::{Environment, Str};
+use waterui_graphics::color::Color;
+use waterui_interaction::gesture::{DragEvent, GesturePhase};
+use waterui_text::font::{Font, ResolvedFont};
 
 use crate::color::Secondary;
 use crate::theme::motion;
@@ -88,7 +89,7 @@ pub struct ConditionalColor {
 impl Resolvable for ConditionalColor {
     type Resolved = WorkingColor;
 
-    fn resolve(&self, env: &Environment) -> impl waterui::Signal<Output = Self::Resolved> {
+    fn resolve(&self, env: &Environment) -> impl nami::Signal<Output = Self::Resolved> {
         zip::zip(
             zip::zip(self.condition.clone(), self.when_true.resolve(env)),
             self.when_false.resolve(env),
@@ -128,7 +129,7 @@ struct ConditionalFont {
 impl Resolvable for ConditionalFont {
     type Resolved = ResolvedFont;
 
-    fn resolve(&self, env: &Environment) -> impl waterui::Signal<Output = Self::Resolved> {
+    fn resolve(&self, env: &Environment) -> impl nami::Signal<Output = Self::Resolved> {
         zip::zip(
             zip::zip(self.condition.clone(), self.when_true.resolve(env)),
             self.when_false.resolve(env),
@@ -176,8 +177,8 @@ pub fn gather<const N: usize>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use waterui::gesture::PointerButton;
-    use waterui::layout::Point;
+    use waterui_interaction::gesture::PointerButton;
+    use waterui_layout::Point;
 
     #[test]
     fn drag_is_held_only_while_started_or_updated() {

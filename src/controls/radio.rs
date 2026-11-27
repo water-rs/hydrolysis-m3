@@ -12,9 +12,9 @@ use hydrolysis_style::draw::{Draw as _, Paint, WorkingColor};
 use hydrolysis_style::theme::{
     Custom, Driven, Inputs, Label, PickerSpec, RadioGroupLook, RadioLayout, ToggleControl,
 };
-use waterui::interaction::InteractionState;
 use waterui_core::Environment;
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
 
 use crate::color::{OnSurface, OnSurfaceVariant};
 use crate::controls::selection::{
@@ -178,11 +178,11 @@ mod tests {
     use hydrolysis_style::draw::kurbo::{Rect, Size};
     use hydrolysis_style::draw::{Paint, WorkingColor};
     use hydrolysis_style::theme::{Inputs, PickerSpec, SpecTint};
-    use waterui::interaction::InteractionState;
     use waterui_controls::ControlSize;
     use waterui_core::layout::LayoutDirection;
     use waterui_core::{Environment, Signal as _};
     use waterui_graphics::color::Color;
+    use waterui_interaction::interaction::InteractionState;
 
     const INDICATOR: Rect = Rect::new(0.0, 0.0, 20.0, 20.0);
 

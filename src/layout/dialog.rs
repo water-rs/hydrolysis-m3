@@ -1,9 +1,9 @@
 //! The Material 3 dialog look from `DialogTokens`.
 
 use hydrolysis_style::theme::DialogLook;
-use waterui::layout::Alignment;
-use waterui::prelude::EdgeInsets;
 use waterui_core::Environment;
+use waterui_layout::Alignment;
+use waterui_layout::padding::EdgeInsets;
 
 use crate::color::{Error, OnSurface, OnSurfaceVariant, Primary, SurfaceContainerHigh};
 
@@ -44,8 +44,8 @@ pub fn look(_env: &Environment) -> DialogLook {
 
 #[cfg(test)]
 mod tests {
-    use waterui::layout::Alignment;
     use waterui_core::Environment;
+    use waterui_layout::Alignment;
 
     use super::{
         DIALOG_ACTIONS_SPACING, DIALOG_ACTIONS_TOP_PADDING, DIALOG_CONTENT_PADDING,

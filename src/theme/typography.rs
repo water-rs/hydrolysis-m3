@@ -1,9 +1,9 @@
-use waterui::reactive::{Computed, Signal};
-use waterui::text::font::{
+use nami::{Computed, Signal};
+use waterui_controls::theme::install_font_signal;
+use waterui_core::{Environment, resolve::Resolvable};
+use waterui_text::font::{
     Body, Caption, Font, FontWeight, Footnote, Headline, ResolvedFont, Subheadline, Title,
 };
-use waterui::theme::install_font_signal;
-use waterui_core::{Environment, resolve::Resolvable};
 
 const MATERIAL_TYPEFACE: &str = "Roboto, sans-serif";
 
@@ -234,20 +234,20 @@ mod tests {
         MATERIAL_TYPEFACE, body_large, body_medium, body_small, defaults, label_large,
         label_medium, label_small, title_small,
     };
-    use waterui::Plugin as _;
-    use waterui::env::Environment;
-    use waterui::reactive::Signal as _;
-    use waterui::text::font::{
+    use nami::Signal as _;
+    use waterui_core::env::Environment;
+    use waterui_core::plugin::Plugin as _;
+    use waterui_core::resolve::Resolvable as _;
+    use waterui_text::font::{
         Body, Caption, FontWeight, Footnote, Headline, ResolvedFont, Subheadline, Title,
     };
-    use waterui_core::resolve::Resolvable as _;
 
     #[allow(
         clippy::needless_pass_by_value,
         reason = "test helper; passing assertion inputs by value reads clearest"
     )]
     fn assert_material_font(
-        font: waterui::text::font::ResolvedFont,
+        font: waterui_text::font::ResolvedFont,
         expected_size: f32,
         expected_weight: FontWeight,
         expected_line_height: f32,
@@ -258,7 +258,7 @@ mod tests {
         assert_eq!(font.line_height(), Some(expected_line_height));
         assert_eq!(font.letter_spacing(), expected_letter_spacing);
         assert_eq!(
-            font.family().map(waterui::Str::as_str),
+            font.family().map(waterui_core::Str::as_str),
             Some(MATERIAL_TYPEFACE)
         );
     }
@@ -324,7 +324,7 @@ mod tests {
     fn font_slots_keep_the_framework_slot_order() {
         let mut env = Environment::new();
         defaults(&mut env);
-        let size = |font: waterui::text::font::ResolvedFont| font.size();
+        let size = |font: waterui_text::font::ResolvedFont| font.size();
 
         let title = size(Title.resolve(&env).snapshot());
         let headline = size(Headline.resolve(&env).snapshot());
@@ -361,13 +361,13 @@ mod tests {
         // environment over them while the style installs, and the
         // application's environment over the style's tokens at the end.
         let mut framework = Environment::new();
-        waterui::theme::Theme::new()
-            .fonts(waterui::theme::FontSettings::default_scale())
+        waterui_controls::theme::Theme::new()
+            .fonts(waterui_controls::theme::FontSettings::default_scale())
             .install(&mut framework);
         let app_body = ResolvedFont::new(27.0, FontWeight::Bold);
         let mut app = Environment::new();
-        waterui::theme::Theme::new()
-            .fonts(waterui::theme::FontSettings::new().body(app_body.clone()))
+        waterui_controls::theme::Theme::new()
+            .fonts(waterui_controls::theme::FontSettings::new().body(app_body.clone()))
             .install(&mut app);
 
         let mut styled = Environment::new().layered_on(&framework);

@@ -29,15 +29,7 @@ use hydrolysis_style::theme::{
 use hydrolysis_style::theme::{
     Chrome, CornerShape, Corners, FocusIndicator, PressFeedback, StateLayer, Surface,
 };
-use waterui::interaction::InteractionState;
-#[cfg(any(
-    feature = "text-field",
-    feature = "secure-field",
-    feature = "date-picker",
-    feature = "color-picker"
-))]
-use waterui::interaction::StateValue;
-use waterui::reactive::Computed;
+use nami::Computed;
 use waterui_core::Environment;
 #[cfg(any(
     feature = "text-field",
@@ -46,6 +38,14 @@ use waterui_core::Environment;
     feature = "color-picker"
 ))]
 use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
+#[cfg(any(
+    feature = "text-field",
+    feature = "secure-field",
+    feature = "date-picker",
+    feature = "color-picker"
+))]
+use waterui_interaction::interaction::StateValue;
 
 use crate::color::{OnSurface, OnSurfaceVariant, Primary, SurfaceContainerHighest};
 use crate::controls::button::disabled_paint;
@@ -315,10 +315,10 @@ mod tests {
     use hydrolysis_style::draw::kurbo::{Rect, RoundedRectRadii};
     use hydrolysis_style::draw::{Paint, WorkingColor};
     use hydrolysis_style::theme::{Inputs, Label, SpecTint, TextFieldLook, TextFieldSpec};
-    use waterui::interaction::InteractionState;
     use waterui_core::layout::LayoutDirection;
     use waterui_core::{Environment, Signal as _};
     use waterui_graphics::color::Color;
+    use waterui_interaction::interaction::InteractionState;
 
     const FIELD: Rect = Rect::new(0.0, 0.0, 280.0, 56.0);
 

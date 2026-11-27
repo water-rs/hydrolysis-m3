@@ -2,21 +2,24 @@
 
 use core::fmt::{self, Debug};
 
-use waterui::accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
-use waterui::color::Color;
-use waterui::interaction::InteractionState;
-use waterui::layout::{
-    Layout, LayoutError, PlacementInput, ProposalSize, Rect, Size, StretchAxis, SubView,
-    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
-};
-use waterui::prelude::{PositionExt as _, UnitPoint, absolute};
-use waterui::reactive::{SignalExt as _, binding};
-use waterui::shape::{Capsule, CornerRadii, RoundedRectangle, ShapeExt as _};
-use waterui::{AnyView, Binding, Environment, Str, View, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::Binding;
+use nami::{SignalExt as _, binding};
+use waterui_accessibility::{AccessibilityChildren, AccessibilityRole, AccessibilityState};
 use waterui_controls::label::{IntoLabel, Label, LabelKind};
 use waterui_core::handler::{
     ExtractionError, Handler, ReportExtraction as _, SharedAction, boxed_action,
 };
+use waterui_core::{AnyView, Environment, Str, View};
+use waterui_graphics::color::Color;
+use waterui_interaction::interaction::InteractionState;
+use waterui_layout::UnitPoint;
+use waterui_layout::absolute::{PositionExt as _, absolute};
+use waterui_layout::{
+    Layout, LayoutError, PlacementInput, ProposalSize, Rect, Size, StretchAxis, SubView,
+    SubviewPlacement, container::FixedContainer, padding::EdgeInsets,
+};
+use waterui_shape::{Capsule, CornerRadii, RoundedRectangle, ShapeExt as _};
 
 use crate::action::{NoAction, noop};
 
@@ -367,14 +370,14 @@ fn drawer_item_content<L: LabelKind>(
     icon: impl View,
     foreground: Color,
     background: Color,
-    label_font: waterui::text::font::Font,
+    label_font: waterui_text::font::Font,
 ) -> impl View {
-    waterui::component::hstack((
+    waterui_layout::stack::hstack((
         icon.foreground(foreground.clone())
             .width(NAVIGATION_DRAWER_ITEM_ICON_SIZE)
             .height(NAVIGATION_DRAWER_ITEM_ICON_SIZE),
         label.font(label_font).foreground(foreground),
-        waterui::component::spacer(),
+        waterui_layout::spacer::spacer(),
     ))
     .spacing(NAVIGATION_DRAWER_ITEM_ICON_LABEL_SPACE)
     .height(NAVIGATION_DRAWER_ITEM_HEIGHT)
@@ -429,7 +432,7 @@ mod tests {
     fn layout_contract_drawer_distinguishes_equal_height_offers() {
         use super::NavigationDrawerPanelLayout;
         use crate::layout_test_support::FixedLeaf;
-        use waterui::layout::{Layout, ProposalSize, Rect, Size};
+        use waterui_layout::{Layout, ProposalSize, Rect, Size};
         let child = FixedLeaf(Size::new(240.0, 100.0));
         let layout = NavigationDrawerPanelLayout;
         for height in [None, Some(100.0), None] {

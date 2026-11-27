@@ -2,13 +2,14 @@
 
 use crate::color::{Surface, SurfaceContainer};
 use crate::semantics::label_plain_text;
-use waterui::View;
-use waterui::color::Color;
-use waterui::component::IntoLabel;
-use waterui::layout::Point;
-use waterui::navigation::{NavigationTitleDisplayMode, NavigationView};
-use waterui::reactive::{Binding, SignalExt as _};
-use waterui::{Environment, Str, ViewExt as _};
+use crate::view_ext::ViewExt as _;
+use nami::{Binding, SignalExt as _};
+use waterui_controls::label::IntoLabel;
+use waterui_core::View;
+use waterui_core::{Environment, Str};
+use waterui_graphics::color::Color;
+use waterui_layout::Point;
+use waterui_navigation::{NavigationTitleDisplayMode, NavigationView};
 
 /// A Material Design 3 navigation view with top app bar chrome, keeping its
 /// content's type `V`.

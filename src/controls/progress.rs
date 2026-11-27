@@ -817,7 +817,7 @@ mod tests {
         env
     }
 
-    fn spec(style: waterui::component::progress::ProgressStyle, determinate: bool) -> ProgressSpec {
+    fn spec(style: waterui_controls::progress::ProgressStyle, determinate: bool) -> ProgressSpec {
         ProgressSpec::new(
             style,
             determinate,
@@ -1095,7 +1095,7 @@ mod tests {
     /// The indicators have the Compose progress tokens' sizes.
     #[test]
     fn looks_match_compose_progress_tokens() {
-        use waterui::component::progress::ProgressStyle;
+        use waterui_controls::progress::ProgressStyle;
 
         let env = env();
         let linear = linear(&spec(ProgressStyle::Linear, true), &env);
